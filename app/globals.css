@@ -16,8 +16,22 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
+/* JS sets --app-h to the exact visible innerHeight; 100dvh is the pre-hydration
+   fallback. Android Chrome updates dvh unreliably when the URL bar toggles on a
+   refresh, so the shell height is driven by --app-h instead (see layout.tsx). */
+:root { --app-h: 100dvh; }
+html, body { margin: 0; padding: 0; height: 100%; }
 body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+/* Mobile: lock the document so ONLY the app shell's inner area scrolls. Stops the
+   URL bar show/hide — and the browser's reload scroll-restoration — from pushing
+   the bottom nav and action buttons below the fold after a refresh. */
+@media (max-width: 767px) {
+  body { overflow: hidden; overscroll-behavior: none; }
+}
+/* Phone shell height tracks the real visible viewport on mobile; the desktop
+   mockup uses its fixed aspect ratio instead. */
+.app-frame { height: var(--app-h); }
+@media (min-width: 768px) { .app-frame { height: auto; } }
 
 @keyframes pop {
   from { opacity: 0; transform: translateY(8px); }

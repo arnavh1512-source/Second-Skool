@@ -25,6 +25,18 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* Drive the app-shell height from the real visible viewport height.
+            Runs before paint (no flash) and re-syncs when the URL bar toggles,
+            the keyboard opens, or the device rotates — so a refresh never leaves
+            the bottom nav / buttons below the fold. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){function s(){document.documentElement.style.setProperty('--app-h',window.innerHeight+'px')}s();addEventListener('resize',s);addEventListener('orientationchange',s);window.visualViewport&&visualViewport.addEventListener('resize',s)})()",
+          }}
+        />
+      </head>
       <body className={jakarta.className}>{children}</body>
     </html>
   )
