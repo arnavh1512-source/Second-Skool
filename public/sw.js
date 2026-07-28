@@ -1,7 +1,7 @@
 // Second Skool — push service worker.
 self.addEventListener('push', (event) => {
   let data = {}
-  try { data = event.data ? event.data.json() : {} } catch (e) { data = { body: event.data && event.data.text() } }
+  try { data = event.data ? event.data.json() : {} } catch { data = { body: event.data && event.data.text() } }
   const title = data.title || 'Second Skool'
   const options = {
     body: data.body || '',
