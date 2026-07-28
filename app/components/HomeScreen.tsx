@@ -20,7 +20,7 @@ export function HomeScreen() {
   ]
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
@@ -47,7 +47,7 @@ export function HomeScreen() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+      <div className="grid grid-cols-2 gap-2.5 mb-3.5 lg:max-w-md">
         <div className="rounded-[18px] p-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
           <div className="text-2xl font-extrabold leading-none">{schedule.length}</div>
           <div className="text-[11px] opacity-85 mt-1.5 font-semibold">Classes today</div>
@@ -59,7 +59,7 @@ export function HomeScreen() {
       </div>
 
       <div className="text-base font-extrabold text-td-dark mb-[13px]">Quick actions</div>
-      <div className="grid grid-cols-4 gap-[11px] mb-[26px]">
+      <div className="grid grid-cols-4 gap-[11px] mb-[26px] lg:max-w-2xl">
         {quickActions.map(a => (
           <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-white rounded-[18px] py-3 px-1.5 cursor-pointer flex flex-col items-center gap-[7px]">
             <div className="w-[42px] h-[42px] rounded-[13px] flex items-center justify-center text-xl" style={{ background: a.tint }}>{a.icon}</div>
@@ -72,7 +72,7 @@ export function HomeScreen() {
       {schedule.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No classes scheduled for today</div>
       ) : (
-        <div className="flex flex-col gap-2.5 mb-[26px]">
+        <div className="flex flex-col gap-2.5 mb-[26px] lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {schedule.map((c, i) => (
             <div key={i} className="flex items-center gap-[13px] bg-white border border-td-border rounded-[18px] py-3.5 px-[15px]">
               <div className="text-center shrink-0 w-[52px]">

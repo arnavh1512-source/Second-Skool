@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import type { ComponentType } from 'react'
 import { useDashboard } from './store'
 import { PhoneFrame } from './components/Shell'
+import { DesktopShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LoginScreen, RegisterScreen, PendingScreen, DeniedScreen } from './components/AuthScreens'
@@ -62,12 +63,23 @@ export default function Page() {
   return (
     <ErrorBoundary>
       <SupabaseProvider>
-        <PhoneFrame>
+        <AppShell>
           <ScreenRouter />
-        </PhoneFrame>
+        </AppShell>
       </SupabaseProvider>
     </ErrorBoundary>
   )
+}
+
+// Approved staff on a laptop get the wide sidebar console; students, mobile,
+// and not-yet-approved staff keep the phone layout.
+function AppShell({ children }: { children: React.ReactNode }) {
+  const { role, staffStatus, supabaseUserId } = useDashboard()
+  const desktop = useIsDesktop()
+  const isStaff = role === 'admin' || role === 'teacher'
+  const approvedStaff = isStaff && !(supabaseUserId && staffStatus !== 'approved')
+  if (desktop && approvedStaff) return <DesktopShell>{children}</DesktopShell>
+  return <PhoneFrame>{children}</PhoneFrame>
 }
 
 function ScreenRouter() {

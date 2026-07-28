@@ -59,14 +59,14 @@ export function TimetableScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 td-wide">
       <ScreenHeader title="Timetable" onBack={back} right={isAdmin ? (
         <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
         </button>
       ) : undefined} />
 
-      <div className="flex gap-2 overflow-x-auto mb-[18px] scrollbar-hide">
+      <div className="flex gap-2 overflow-x-auto mb-[18px] scrollbar-hide lg:hidden">
         {days.map(d => {
           const active = d.s === ttDay
           return (
@@ -79,7 +79,7 @@ export function TimetableScreen() {
       </div>
 
       {isAdmin && showForm && (
-        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
           <div className="text-sm font-extrabold text-td-dark">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Start</label>
@@ -109,6 +109,45 @@ export function TimetableScreen() {
         </div>
       )}
 
+      {/* Desktop: full Mon–Sat week grid. Click a day header to target it for
+          adding; edit/delete act on that day's period directly. */}
+      <div className="hidden lg:grid grid-cols-6 gap-3">
+        {days.map(d => {
+          const ps = timetableData[d.s] || []
+          return (
+            <div key={d.s} className={`rounded-2xl border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-[#f7faff]' : 'border-td-border bg-white'}`}>
+              <button onClick={() => set({ ttDay: d.s })} className="w-full text-center mb-2 cursor-pointer bg-transparent border-none">
+                <div className="text-[11px] font-bold text-td-muted">{d.s}</div>
+                <div className="text-[15px] font-extrabold text-td-dark">{d.d}</div>
+              </button>
+              {ps.length === 0 ? (
+                <div className="text-center text-td-subtle text-[11px] py-3">—</div>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {ps.map((p, i) => {
+                    const s = periodStyle(p)
+                    return (
+                      <div key={i} className="rounded-[11px] border p-2" style={{ background: s.bg, borderColor: s.border }}>
+                        <div className="text-[10.5px] font-bold text-td-muted">{p[0]}–{p[1]}</div>
+                        <div className="text-[12px] font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
+                        <div className="text-[10.5px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
+                        {isAdmin && (
+                          <div className="flex gap-1 mt-1.5">
+                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-[#dbe6fa] bg-[#eaf1fc] text-td-primary text-[11px] cursor-pointer">✎</button>
+                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] cursor-pointer">×</button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="lg:hidden">
       <div className="text-[13px] text-td-muted font-semibold mb-3.5">{dayNames[ttDay]} · {periods.length} periods</div>
 
       {periods.length === 0 ? (
@@ -145,6 +184,7 @@ export function TimetableScreen() {
           })}
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -157,7 +197,7 @@ export function AttendanceScreen() {
   const presentCount = roster.length - absentCount
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 td-wide">
       <div className="flex items-center gap-3.5 mb-[18px]">
         <button onClick={back} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center cursor-pointer shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -193,7 +233,7 @@ export function AttendanceScreen() {
           </div>
 
           <div className="text-xs text-td-subtle font-semibold mb-2.5">Tap a student to toggle present / absent</div>
-          <div className="flex flex-col gap-[9px] mb-5">
+          <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
             {roster.map((name, i) => {
               const absent = att[i] === 'absent'
               return (
@@ -208,7 +248,7 @@ export function AttendanceScreen() {
               )
             })}
           </div>
-          <PrimaryButton onClick={() => saveAttendance(roster)}>Save attendance</PrimaryButton>
+          <div className="lg:max-w-xs"><PrimaryButton onClick={() => saveAttendance(roster)}>Save attendance</PrimaryButton></div>
         </>
       )}
     </div>
@@ -253,7 +293,7 @@ export function ResultsScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title="Enter Results" onBack={back} />
 
       <div className="grid grid-cols-2 gap-[11px] mb-[13px]">
@@ -277,7 +317,7 @@ export function ResultsScreen() {
       {roster.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No students in {selKlass || 'this class'}</div>
       ) : (
-        <div className="flex flex-col gap-[9px] mb-5">
+        <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {roster.map((name, i) => (
             <div key={name} className="border border-td-border bg-white rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
               <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(name)}</div>
@@ -288,7 +328,7 @@ export function ResultsScreen() {
           ))}
         </div>
       )}
-      <PrimaryButton onClick={handlePublish}>Publish results</PrimaryButton>
+      <div className="lg:max-w-xs"><PrimaryButton onClick={handlePublish}>Publish results</PrimaryButton></div>
     </div>
   )
 }

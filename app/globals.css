@@ -31,3 +31,10 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { scrollbar-width: none; }
+
+/* Desktop staff console: every screen renders as a readable centered column by
+   default (forms, lists), while data-heavy screens opt into full width with the
+   .td-wide class. Only applies inside the desktop shell — the phone layout and
+   the student app are never touched. */
+.td-desktop > * { max-width: 760px; margin-inline: auto; }
+.td-desktop > .td-wide { max-width: none; }

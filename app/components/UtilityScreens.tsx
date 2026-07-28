@@ -27,14 +27,14 @@ export function FeesScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title="Fees" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add fee'}
         </button>
       } />
 
-      <div className="flex gap-2.5 mb-[18px]">
+      <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
         <div className="flex-1 bg-[#e7f5ee] rounded-2xl p-3.5">
           <div className="text-[22px] font-extrabold text-td-green">{paidCount}</div>
           <div className="text-[11px] text-[#5a8a72] font-semibold mt-[3px]">Paid</div>
@@ -46,7 +46,7 @@ export function FeesScreen() {
       </div>
 
       {showForm && (
-        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
           <div className="text-sm font-extrabold text-td-dark">Add fee record</div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Student</label>
             <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
@@ -69,12 +69,12 @@ export function FeesScreen() {
         </div>
       )}
 
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full border border-td-red bg-white text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
+      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-white text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
 
       {rows.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No students added yet</div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {rows.map(d => {
             const realIdx = students.findIndex(s => s.id === d.id)
             const f = feeColor(d.feeStatus)

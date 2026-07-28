@@ -26,13 +26,13 @@ export function StaffApprovalsScreen() {
   const active = staffList.filter(s => s.status === 'approved')
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title="Staff access" onBack={back} />
 
-      <div className="text-[13px] text-td-muted leading-relaxed mb-4">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
+      <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
 
       {joinCode && (
-        <button onClick={() => { navigator.clipboard.writeText(joinCode); notify('Join code copied!') }} className="w-full text-left border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5 cursor-pointer flex items-center justify-between">
+        <button onClick={() => { navigator.clipboard.writeText(joinCode); notify('Join code copied!') }} className="w-full lg:max-w-md text-left border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5 cursor-pointer flex items-center justify-between">
           <div>
             <div className="text-[11px] font-bold text-td-muted">{centreName || 'Your centre'} · JOIN CODE</div>
             <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{joinCode}</div>
@@ -49,7 +49,7 @@ export function StaffApprovalsScreen() {
       {pending.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-4 bg-white border border-td-border rounded-[16px] mb-6">No one waiting</div>
       ) : (
-        <div className="flex flex-col gap-2.5 mb-6">
+        <div className="flex flex-col gap-2.5 mb-6 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {pending.map((s, i) => (
             <div key={s.id} className="bg-white border border-td-border rounded-[16px] p-3.5">
               <div className="flex items-center gap-3 mb-3">
@@ -72,7 +72,7 @@ export function StaffApprovalsScreen() {
       {active.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-4 bg-white border border-td-border rounded-[16px]">No active staff yet</div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {active.map((s, i) => {
             const isHead = s.role === 'admin'
             const isSelf = s.id === supabaseUserId
@@ -111,7 +111,7 @@ export function ReportsScreen() {
   const inr = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title={period === 7 ? 'Weekly Report' : 'Monthly Report'} onBack={back} right={
         <div className="flex bg-[#eef1f7] rounded-[12px] p-[3px]">
           {([7, 30] as const).map(d => (
@@ -120,7 +120,7 @@ export function ReportsScreen() {
         </div>
       } />
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-4 lg:max-w-md">
         {(['branches', 'students', 'teachers'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} className="flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize" style={{ background: tab === t ? '#2a6fdb' : '#fff', color: tab === t ? '#fff' : '#3a4456', borderColor: tab === t ? '#2a6fdb' : '#e6eaf2' }}>{t}</button>
         ))}
@@ -132,8 +132,8 @@ export function ReportsScreen() {
         ) : teacherActivity.length === 0 ? (
           <div className="text-center text-td-muted text-sm py-10 bg-white border border-td-border rounded-[16px]">No approved staff yet.</div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <div className="text-[12px] text-td-muted mb-1">What each staff member logged in the last 7 days.</div>
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+            <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">What each staff member logged in the last 7 days.</div>
             {teacherActivity.map(t => (
               <div key={t.email + t.name} className="bg-white border border-td-border rounded-[18px] p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -157,7 +157,7 @@ export function ReportsScreen() {
                 </div>
               </div>
             ))}
-            <div className="text-[11px] text-td-subtle text-center leading-relaxed mt-1">Activity is counted from when staff started using the app — older records aren&apos;t attributed.</div>
+            <div className="text-[11px] text-td-subtle text-center leading-relaxed mt-1 lg:col-span-full">Activity is counted from when staff started using the app — older records aren&apos;t attributed.</div>
           </div>
         )
       ) : tab === 'students' ? (
@@ -166,8 +166,8 @@ export function ReportsScreen() {
         ) : studentReports.length === 0 ? (
           <div className="text-center text-td-muted text-sm py-10 bg-white border border-td-border rounded-[16px]">No students yet.</div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <div className="text-[12px] text-td-muted mb-1">Send each parent their child&apos;s weekly progress.</div>
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+            <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">Send each parent their child&apos;s weekly progress.</div>
             {studentReports.map(s => {
               const attPct = s.att_total > 0 ? Math.round((s.att_present / s.att_total) * 100) : null
               return (
@@ -198,7 +198,7 @@ export function ReportsScreen() {
           {r.branches.length === 0 ? (
             <div className="text-center text-td-muted text-sm py-8 bg-white border border-td-border rounded-[16px] mb-4">No branches configured yet — add branches and assign students to see per-branch numbers.</div>
           ) : (
-            <div className="flex flex-col gap-3 mb-4">
+            <div className="flex flex-col gap-3 mb-4 lg:grid lg:grid-cols-2 xl:grid-cols-3">
               {r.branches.map(b => (
                 <div key={b.name} className="bg-white border border-td-border rounded-[18px] p-4">
                   <div className="text-[15px] font-extrabold text-td-dark mb-3">{b.name}</div>
@@ -221,12 +221,12 @@ export function ReportsScreen() {
             </div>
           )}
 
-          <div className="bg-[#f4f6fb] border border-[#e6eaf2] rounded-[14px] p-3.5 text-[12.5px] text-td-muted mb-4">
+          <div className="bg-[#f4f6fb] border border-[#e6eaf2] rounded-[14px] p-3.5 text-[12.5px] text-td-muted mb-4 lg:max-w-xl">
             {r.unassigned_students > 0 && <div>Unassigned students: <span className="font-bold text-td-text">{r.unassigned_students}</span></div>}
             <div>Tests conducted this {period === 7 ? 'week' : 'month'}: <span className="font-bold text-td-text">{r.tests_this_week}</span></div>
           </div>
 
-          <button onClick={() => window.open(whatsappShareUrl(myPhone, weeklyReportMessage(r, centreName || undefined, period)), '_blank')} className="w-full border-none bg-[#25D366] text-white text-[14px] font-extrabold py-[14px] rounded-[14px] cursor-pointer flex items-center justify-center gap-2">
+          <button onClick={() => window.open(whatsappShareUrl(myPhone, weeklyReportMessage(r, centreName || undefined, period)), '_blank')} className="w-full lg:max-w-md border-none bg-[#25D366] text-white text-[14px] font-extrabold py-[14px] rounded-[14px] cursor-pointer flex items-center justify-center gap-2">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
             Send to WhatsApp
           </button>
