@@ -513,7 +513,7 @@ create policy att_monthly_read on public.attendance_monthly for select to authen
 revoke insert, update on public.profiles from authenticated;
 grant update (full_name, phone, avatar_url) on public.profiles to authenticated;
 revoke update on public.centres from authenticated;
-grant update (name) on public.centres to authenticated;
+grant update (name, logo_url) on public.centres to authenticated;
 revoke all on public.subscriptions from authenticated, anon;
 
 -- ─── FUNCTION GRANTS ─────────────────────────────────────────────────────────
