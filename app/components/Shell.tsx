@@ -8,7 +8,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
     // Mobile: fills the screen (no bezel). md+: framed phone mockup.
     <div className="min-h-[100dvh] w-full flex md:items-center md:justify-center md:bg-[#dfe4ee] md:p-10">
       <div className="w-full flex md:max-w-[402px] md:bg-[#0b0d12] md:rounded-[56px] md:p-[13px] md:shadow-[0_40px_90px_-20px_rgba(20,30,60,.45)]">
-        <div className="relative w-full min-h-[100dvh] md:min-h-0 md:aspect-[376/812] bg-td-bg md:rounded-[44px] overflow-hidden flex flex-col">
+        <div className="relative w-full h-[100dvh] md:h-auto md:aspect-[376/812] bg-td-bg md:rounded-[44px] overflow-hidden flex flex-col">
           <StatusBar />
           <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide pt-[env(safe-area-inset-top)] md:pt-0">{children}</div>
           <BottomTabBar />
