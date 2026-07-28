@@ -146,6 +146,7 @@ interface Actions {
   refreshData: () => Promise<void>
   setAuth: (userId: string | null, role: Role, email: string, staffStatus: StaffStatus, headExists: boolean, name?: string, phone?: string) => void
   saveStaffProfile: (name: string, phone: string) => Promise<void>
+  setMyPassword: (password: string) => Promise<boolean>
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
@@ -799,6 +800,18 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (error) { get().notify('Could not save profile — check your connection'); return }
     set({ myName: trimmed, myPhone: phone.trim() })
     get().notify('Profile updated')
+  },
+
+  // Set (or change) an email+password sign-in for a staff member. Lets a
+  // Google-created head/teacher pick a password once, then sign in on the
+  // installed PWA with email+password — a fully in-app flow that survives
+  // relaunches (unlike Google's redirect, which escapes to the browser).
+  setMyPassword: async (password) => {
+    if (password.length < 8) { get().notify('Password must be at least 8 characters'); return false }
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) { get().notify(error.message || 'Could not set password'); return false }
+    get().notify('Password set — you can now sign in with your email')
+    return true
   },
 }))
 

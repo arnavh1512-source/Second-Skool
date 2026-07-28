@@ -367,7 +367,7 @@ export function MoreScreen() {
 }
 
 export function StaffProfileScreen() {
-  const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify } = useDashboard()
+  const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'
   const logoInput = useRef<HTMLInputElement>(null)
   const [logoBusy, setLogoBusy] = useState(false)
@@ -402,6 +402,20 @@ export function StaffProfileScreen() {
     await saveStaffProfile(name, phone)
     if (isAdmin && centre.trim() && centre.trim() !== centreName) await renameCentre(centre)
     setBusy(false)
+  }
+
+  // Set an email+password login so this device (esp. the installed home-screen
+  // app) can sign in without Google's redirect, which drops the session.
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [pwOpen, setPwOpen] = useState(false)
+  const [pwBusy, setPwBusy] = useState(false)
+  const savePassword = async () => {
+    if (pw !== pw2) { notify('Passwords do not match'); return }
+    setPwBusy(true)
+    const ok = await setMyPassword(pw)
+    setPwBusy(false)
+    if (ok) { setPw(''); setPw2(''); setPwOpen(false) }
   }
 
   return (
@@ -460,6 +474,24 @@ export function StaffProfileScreen() {
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           {pushOn ? 'Notifications enabled' : 'Enable notifications'}
         </button>
+      )}
+
+      {!pwOpen ? (
+        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Set password for phone login
+        </button>
+      ) : (
+        <div className="border border-td-border rounded-2xl p-4 mt-3">
+          <div className="text-sm font-extrabold text-td-dark">Set a password</div>
+          <p className="text-[11.5px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
+          <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder="New password (min 8 chars)" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-3" />
+          <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-2.5" />
+          <div className="flex gap-2 mt-3">
+            <button onClick={savePassword} disabled={pwBusy} className="flex-1 border-none bg-td-primary text-white text-[13.5px] font-extrabold py-[12px] rounded-[12px] cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
+            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-white text-td-muted text-[13.5px] font-bold py-[12px] px-4 rounded-[12px] cursor-pointer">Cancel</button>
+          </div>
+        </div>
       )}
 
       <button onClick={signOut} className="w-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-[9px]">

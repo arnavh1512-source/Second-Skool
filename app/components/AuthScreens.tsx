@@ -18,8 +18,7 @@ export function LoginScreen() {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
+  const [password, setPassword] = useState('')
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -29,36 +28,21 @@ export function LoginScreen() {
     if (error) notify('Google sign-in failed')
   }
 
-  // Email-code (OTP) sign-in: the reliable path for the installed (home-screen)
-  // app, where Google's redirect escapes to the phone browser and the session
-  // never lands back in the PWA. Typing a code stays fully in-app.
-  const sendEmailCode = async () => {
+  // Email+password sign-in: the reliable path for the installed (home-screen)
+  // app. Google's redirect escapes to the phone browser and the session never
+  // lands back in the PWA, so the head is logged out on every launch. A password
+  // login stays fully in-app, so the session persists. Staff set their password
+  // once from My Profile (Set password) after a Google sign-in.
+  const signInWithPassword = async () => {
     const e = email.trim().toLowerCase()
     if (!e.includes('@') || e.length < 5) { notify('Enter your email'); return }
-    setBusy(true)
-    // shouldCreateUser:false — only existing teachers/heads can get a code, so a
-    // stranger can't mint a staff account just by entering any email.
-    const { error } = await supabase.auth.signInWithOtp({ email: e, options: { shouldCreateUser: false } })
-    setBusy(false)
-    if (error) {
-      const m = error.message.toLowerCase()
-      notify(m.includes('not allowed') || m.includes('signups') ? 'No teacher account uses that email' : 'Could not send code — try again')
-      return
-    }
-    setOtpSent(true)
-    notify('Code sent — check your email')
-  }
-
-  const verifyEmailCode = async () => {
-    const e = email.trim().toLowerCase()
-    const token = otp.trim()
-    if (token.length < 6) { notify('Enter the 6-digit code'); return }
+    if (!password) { notify('Enter your password'); return }
     setBusy(true)
     // On success, SupabaseProvider's onAuthStateChange picks up the session and
-    // routes the head/teacher into the app — no redirect, no browser hand-off.
-    const { error } = await supabase.auth.verifyOtp({ email: e, token, type: 'email' })
+    // routes the head/teacher into the app.
+    const { error } = await supabase.auth.signInWithPassword({ email: e, password })
     setBusy(false)
-    if (error) notify('Wrong or expired code — try again')
+    if (error) notify('Wrong email or password')
   }
 
   const submitCode = async () => {
@@ -99,10 +83,10 @@ export function LoginScreen() {
           </button>
 
           <button onClick={() => setMode('email')} className="w-full border border-[#dfe3ea] bg-white rounded-[14px] p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-            <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with email code</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with password</span>
           </button>
-          <div className="text-[11.5px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use the email code — it keeps you signed in.</div>
+          <div className="text-[11.5px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
 
           <div className="flex items-center gap-3 mt-5">
             <div className="flex-1 h-px bg-[#e6eaf2]" />
@@ -146,35 +130,23 @@ export function LoginScreen() {
 
       {mode === 'email' && (
         <>
-          {!otpSent ? (
-            <>
-              <div className="text-sm text-td-muted mt-2 leading-relaxed">Enter your teacher email. We&apos;ll send a 6-digit code — use the same email as your Google account.</div>
-              <input
-                autoFocus value={email} type="email" inputMode="email" autoComplete="email"
-                onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !busy && sendEmailCode()}
-                placeholder="you@example.com"
-                className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-7"
-              />
-              <button onClick={sendEmailCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Sending…' : 'Send me a code'}</button>
-              <button onClick={() => { setMode('choose'); setEmail(''); setOtp('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
-            </>
-          ) : (
-            <>
-              <div className="text-sm text-td-muted mt-2 leading-relaxed">Enter the 6-digit code we sent to <span className="font-bold text-td-dark">{email.trim().toLowerCase()}</span>.</div>
-              <input
-                autoFocus value={otp} inputMode="numeric" autoComplete="one-time-code" maxLength={6}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                onKeyDown={e => e.key === 'Enter' && !busy && verifyEmailCode()}
-                placeholder="123456"
-                className="w-full border border-td-border rounded-[14px] p-[15px] text-2xl text-td-dark outline-none focus:border-td-primary text-center tracking-[0.4em] font-extrabold mt-7"
-              />
-              <button onClick={verifyEmailCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Verifying…' : 'Sign in'}</button>
-              <button onClick={sendEmailCode} disabled={busy} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-white text-[13.5px] font-bold text-td-primary mt-3 disabled:opacity-60">Resend code</button>
-              <button onClick={() => { setOtpSent(false); setOtp('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Use a different email</button>
-            </>
-          )}
-          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Only emails that already have teacher access can sign in this way.</div>
+          <div className="text-sm text-td-muted mt-2 leading-relaxed">Sign in with your teacher email and password. Use the same email as your Google account.</div>
+          <input
+            autoFocus value={email} type="email" inputMode="email" autoComplete="email"
+            onChange={e => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-7"
+          />
+          <input
+            value={password} type="password" autoComplete="current-password"
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !busy && signInWithPassword()}
+            placeholder="Password"
+            className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-3"
+          />
+          <button onClick={signInWithPassword} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
+          <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
+          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
         </>
       )}
 
