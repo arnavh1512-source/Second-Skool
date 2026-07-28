@@ -191,15 +191,45 @@ export function PendingScreen() {
 }
 
 export function DeniedScreen() {
-  const { signOut } = useDashboard()
+  const { signOut, joinCentre } = useDashboard()
+  const [mode, setMode] = useState<'view' | 'join'>('view')
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const submit = async () => {
+    if (busy || code.trim().length < 4) return
+    setBusy(true)
+    await joinCentre(code)
+    setBusy(false)
+  }
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
       <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fdecea] flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8553c" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
       </div>
       <div className="text-[20px] font-extrabold text-td-dark">Access not granted</div>
-      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">This account doesn&apos;t have access to the centre. If you&apos;re a student, sign out and use your code instead.</div>
-      <button onClick={signOut} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Sign out</button>
+
+      {mode === 'view' && (
+        <>
+          <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
+          <button onClick={() => setMode('join')} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Enter a join code</button>
+          <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent mt-2">Sign out</button>
+        </>
+      )}
+
+      {mode === 'join' && (
+        <div className="w-full max-w-[300px] mt-6 flex flex-col gap-3">
+          <input
+            autoFocus value={code}
+            onChange={e => setCode(e.target.value.toUpperCase())}
+            onKeyDown={e => e.key === 'Enter' && submit()}
+            placeholder="e.g. 7X2K9Q"
+            className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary text-center tracking-[0.2em] font-bold"
+          />
+          <button onClick={submit} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[14px] rounded-2xl cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>
+          <div className="text-[12px] text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get in once they approve you.</div>
+          <button onClick={() => { setMode('view'); setCode('') }} className="text-[13px] text-td-muted font-bold py-2 cursor-pointer border-none bg-transparent">Back</button>
+        </div>
+      )}
     </div>
   )
 }

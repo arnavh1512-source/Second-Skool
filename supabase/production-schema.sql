@@ -314,7 +314,9 @@ begin if not public.is_head() then raise exception 'Not authorized'; end if;
 create or replace function public.reject_teacher(p_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin if not public.is_head() then raise exception 'Not authorized'; end if;
-  update public.profiles set staff_status='rejected', head_requested=false where id=p_id and centre_id=public.current_centre(); end; $$;
+  -- Free the account (clear centre_id) so a declined teacher can join another
+  -- centre later instead of being permanently stuck on the "denied" screen.
+  update public.profiles set role='student', staff_status='rejected', centre_id=null, head_requested=false where id=p_id and centre_id=public.current_centre(); end; $$;
 create or replace function public.grant_head(p_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin if not public.is_head() then raise exception 'Not authorized'; end if;
@@ -323,7 +325,7 @@ create or replace function public.remove_staff(p_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin if not public.is_head() then raise exception 'Not authorized'; end if;
   if p_id = auth.uid() then raise exception 'You cannot remove yourself'; end if;
-  update public.profiles set role='student', staff_status='rejected', head_requested=false where id=p_id and centre_id=public.current_centre(); end; $$;
+  update public.profiles set role='student', staff_status='rejected', centre_id=null, head_requested=false where id=p_id and centre_id=public.current_centre(); end; $$;
 
 -- ─── REPORTS (head only, own centre, p_days window) ──────────────────────────
 create or replace function public.weekly_branch_report(p_days int default 7)
