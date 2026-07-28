@@ -833,6 +833,12 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
     icon: n.icon ?? '📢', tint: '#eaf1fc', title: n.title ?? '', detail: n.detail ?? '',
     when: timeAgo(n.createdAt), dbId: n.createdAt,
   }))
+  // Home surfaces only the last 2 days of notifications so the feed stays short;
+  // older ones drop off the home but remain in the bell (stuNotif) history.
+  const reminderCutoff = Date.now() - 2 * 86400000
+  const stuReminders = stuNotifications
+    .filter(n => n.dbId && new Date(n.dbId).getTime() >= reminderCutoff)
+    .slice(0, 4)
 
   const teachers: Teacher[] = (snap.teachers ?? []).map((t: SnapRow) => ({
     name: t.name, subject: t.subject, experience: t.experience ?? 0,
@@ -872,7 +878,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
     students: [student], currentStudentDbId: student.dbId ?? null,
     centreName: snap.centre?.name ?? '', centreLogo: snap.centre?.logo_url ?? '',
     stuAttendanceLog, stuResults, stuFeeHistory, stuPendingFee,
-    stuNotifications, stuReminders: stuNotifications.slice(0, 3),
+    stuNotifications, stuReminders,
     teachers, rankData, timetableData, stuAssignments, stuMonthly,
   }
 }
