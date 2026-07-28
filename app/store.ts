@@ -46,7 +46,7 @@ interface State {
   attClass: string; att: Record<number, string>; rankSubject: string; ttDay: string
   toast: string; editIndex: number
   staffStatus: StaffStatus; headExists: boolean; staffList: StaffMember[]; weeklyReport: WeeklyReport | null; studentReports: StudentReport[] | null; teacherActivity: TeacherActivity[] | null
-  googleEmail: string; myName: string; myPhone: string; centreName: string; joinCode: string; reminderType: string; plan: string
+  googleEmail: string; myName: string; myPhone: string; centreName: string; centreLogo: string; joinCode: string; reminderType: string; plan: string
   newTeacher: { name: string; subject: string; qualification: string; experience: string; branch: string }
   newStudent: { name: string; school: string; klass: string; batch: string; branch: string; parent: string; address: string; fee: string; feeDue: string }
   stuTeacherIndex: number; stuRankSubject: string
@@ -114,6 +114,7 @@ interface Actions {
   joinCentre: (code: string) => Promise<void>
   loadMyCentre: () => Promise<void>
   renameCentre: (name: string) => Promise<void>
+  saveCentreLogo: (dataUrl: string) => Promise<void>
   loadStaff: () => Promise<void>
   loadWeeklyReport: (days?: number) => Promise<void>
   loadStudentReports: (days?: number) => Promise<void>
@@ -137,7 +138,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
   toast: '', editIndex: 0,
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
-  googleEmail: '', myName: '', myPhone: '', centreName: '', joinCode: '', reminderType: 'Test', plan: 'Monthly',
+  googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', reminderType: 'Test', plan: 'Monthly',
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
   newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   teachers: [], students: [],
@@ -560,7 +561,23 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   loadMyCentre: async () => {
     const { data } = await supabase.rpc('my_centre')
-    if (data) set({ centreName: (data as { name?: string }).name ?? '', joinCode: (data as { join_code?: string }).join_code ?? '' })
+    if (data) {
+      const d = data as { name?: string; join_code?: string; logo_url?: string }
+      set({ centreName: d.name ?? '', joinCode: d.join_code ?? '', centreLogo: d.logo_url ?? '' })
+    }
+  },
+
+  // White-label: the head sets a centre logo that students see after they log
+  // in with a centre code. Stored as a small data-URL in centres.logo_url;
+  // RLS centres_write lets only the owner update their centre row. Pass '' to
+  // clear it and fall back to the default branding.
+  saveCentreLogo: async (dataUrl) => {
+    const id = get().supabaseUserId
+    if (!id) return
+    const { error } = await supabase.from('centres').update({ logo_url: dataUrl || null }).eq('owner_id', id)
+    if (error) { get().notify('Could not save logo — only the centre owner can'); return }
+    set({ centreLogo: dataUrl })
+    get().notify(dataUrl ? 'Centre logo updated' : 'Centre logo removed')
   },
 
   renameCentre: async (name) => {
@@ -750,6 +767,7 @@ type SnapRow = {
 }
 type Snapshot = {
   student?: { [key: string]: string | undefined }
+  centre?: { name?: string; logo_url?: string }
   attendance?: SnapRow[]; results?: SnapRow[]; fees?: SnapRow[]; notifications?: SnapRow[]
   teachers?: SnapRow[]; timetable?: SnapRow[]; assignments?: SnapRow[]
   rankings?: Record<string, [string, number][]>
@@ -829,6 +847,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
 
   return {
     students: [student], currentStudentDbId: student.dbId ?? null,
+    centreName: snap.centre?.name ?? '', centreLogo: snap.centre?.logo_url ?? '',
     stuAttendanceLog, stuResults, stuFeeHistory, stuPendingFee,
     stuNotifications, stuReminders: stuNotifications.slice(0, 3),
     teachers, rankData, timetableData, stuAssignments, stuMonthly,

@@ -44,8 +44,9 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function Sidebar() {
-  const { role, go, signOut, centreName, myName, googleEmail, staffList } = useDashboard()
+  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, loadMyCentre } = useDashboard()
   const isAdmin = role === 'admin'
+  useEffect(() => { if (!centreName) loadMyCentre() }, [centreName, loadMyCentre])
   const name = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
   const pending = staffList.filter(s => s.status === 'pending').length
 
@@ -75,7 +76,10 @@ function Sidebar() {
   return (
     <aside className="w-[248px] shrink-0 h-[100dvh] sticky top-0 bg-white border-r border-td-border flex flex-col">
       <div className="flex items-center gap-2.5 px-5 pt-6 pb-4">
-        <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-extrabold text-[15px]" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>
+        {centreLogo
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-[11px] object-cover shrink-0" />
+          : <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-extrabold text-[15px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
         <div className="min-w-0">
           <div className="text-[14.5px] font-extrabold text-td-dark truncate">{centreName || 'Second Skool'}</div>
           <div className="text-[11px] text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
@@ -127,6 +131,56 @@ export function DesktopShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="flex-1 min-w-0 overflow-y-auto h-[100dvh]">
         <div className="max-w-[1180px] mx-auto w-full px-8 py-7 td-desktop">{children}</div>
+      </main>
+      <DesktopToast />
+    </div>
+  )
+}
+
+// Desktop shell for the pre-app screens (login / register / pending / denied).
+// A split brand panel + a centered auth card, so a laptop never shows the tiny
+// phone mockup floating in grey. The auth screens render unchanged inside.
+const AUTH_FEATURES = [
+  'Mark attendance & publish results in seconds',
+  'Track fees and notify parents automatically',
+  'Live rankings, reports and timetables — every branch',
+]
+
+export function DesktopAuthShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex h-[100dvh] bg-white overflow-hidden">
+      <aside className="hidden lg:flex flex-col justify-between w-[46%] max-w-[640px] p-14 text-white relative overflow-hidden" style={{ background: 'linear-gradient(150deg,#2a6fdb 0%,#1f56ad 58%,#173f88 100%)' }}>
+        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute bottom-[-6rem] left-[-4rem] w-72 h-72 rounded-full bg-white/10 blur-2xl" />
+
+        <div className="relative flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icon-512.png" alt="Second Skool" width={42} height={42} className="rounded-[12px] object-cover shadow-[0_2px_10px_rgba(0,0,0,.18)]" />
+          <span className="text-[19px] font-extrabold tracking-tight">Second Skool</span>
+        </div>
+
+        <div className="relative">
+          <h1 className="text-[38px] font-extrabold leading-[1.12] tracking-tight">Run your whole tuition centre from one screen.</h1>
+          <p className="text-[15px] text-white/80 mt-5 max-w-[430px] leading-relaxed">Attendance, results, fees and parent updates — for every branch, every teacher, every student.</p>
+          <ul className="mt-9 flex flex-col gap-[18px]">
+            {AUTH_FEATURES.map(f => (
+              <li key={f} className="flex items-center gap-3.5">
+                <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m20 6-11 11-5-5"/></svg>
+                </span>
+                <span className="text-[14.5px] font-semibold text-white/95">{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="relative text-[12.5px] text-white/60">Built for tuition centres to stay organised every day.</div>
+      </aside>
+
+      <main className="flex-1 flex items-center justify-center overflow-y-auto h-[100dvh] bg-[#f6f8fc] lg:bg-white px-5 py-8">
+        <div className="w-full max-w-[440px] bg-white rounded-[28px] shadow-[0_18px_50px_-24px_rgba(20,30,60,.28)] lg:shadow-none lg:rounded-none">
+          {children}
+        </div>
       </main>
       <DesktopToast />
     </div>

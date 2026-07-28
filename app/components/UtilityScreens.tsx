@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { enablePush, pushSupported } from '../lib/push'
+import { fileToLogoDataUrl } from '../lib/image'
 
 export function FeesScreen() {
   const { students, back, notify, addFee, toggleFeeStatus, saveReminder } = useDashboard()
@@ -364,8 +365,17 @@ export function MoreScreen() {
 }
 
 export function StaffProfileScreen() {
-  const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, loadMyCentre, renameCentre, supabaseUserId, notify } = useDashboard()
+  const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify } = useDashboard()
   const isAdmin = role === 'admin'
+  const logoInput = useRef<HTMLInputElement>(null)
+  const [logoBusy, setLogoBusy] = useState(false)
+  const pickLogo = async (file?: File) => {
+    if (!file) return
+    setLogoBusy(true)
+    try { await saveCentreLogo(await fileToLogoDataUrl(file)) }
+    catch (e) { notify(e instanceof Error ? e.message : 'Could not use that image') }
+    finally { setLogoBusy(false); if (logoInput.current) logoInput.current.value = '' }
+  }
   const [pushOn, setPushOn] = useState(false)
   const enableNotifs = async () => {
     if (!supabaseUserId) return
@@ -411,6 +421,29 @@ export function StaffProfileScreen() {
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         {isAdmin && (
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Centre name</label><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+        )}
+        {isAdmin && (
+          <div>
+            <label className="text-xs font-bold text-td-muted mb-[7px] block">Centre logo</label>
+            <div className="flex items-center gap-3.5 border border-td-border rounded-[14px] p-3">
+              <div className="w-14 h-14 rounded-[14px] overflow-hidden shrink-0 flex items-center justify-center bg-[#f4f6fb] border border-td-border">
+                {centreLogo
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={centreLogo} alt="Centre logo" className="w-full h-full object-cover" />
+                  : <span className="font-extrabold text-td-primary text-xl">{initials(centre || centreName || 'S')}</span>}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex gap-2">
+                  <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-white text-td-dark text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
+                  {centreLogo && !logoBusy && (
+                    <button onClick={() => saveCentreLogo('')} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer">Remove</button>
+                  )}
+                </div>
+                <p className="text-[11.5px] text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
+              </div>
+              <input ref={logoInput} type="file" accept="image/*" className="hidden" onChange={e => pickLogo(e.target.files?.[0])} />
+            </div>
+          </div>
         )}
         <div className="flex items-center gap-2.5 bg-[#f4f6fb] border border-[#e6eaf2] rounded-[14px] p-3">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4b6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>

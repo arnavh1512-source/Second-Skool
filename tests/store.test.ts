@@ -84,6 +84,17 @@ describe('mapSnapshot', () => {
     expect(empty.stuResults).toEqual([])
     expect(empty.stuPendingFee).toBeNull()
     expect(empty.students?.[0].attendance).toBe(0)
+    expect(empty.centreName).toBe('')
+    expect(empty.centreLogo).toBe('')
+  })
+
+  it('passes through centre branding (white-label logo)', () => {
+    const branded = mapSnapshot({
+      student: { dbId: 'd', code: 'c' },
+      centre: { name: 'Bright Future Tuition', logo_url: 'data:image/png;base64,AAA' },
+    })
+    expect(branded.centreName).toBe('Bright Future Tuition')
+    expect(branded.centreLogo).toBe('data:image/png;base64,AAA')
   })
 
   it('computes the 30-day monthly summary from raw dates', () => {

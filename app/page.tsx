@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import type { ComponentType } from 'react'
 import { useDashboard } from './store'
 import { PhoneFrame } from './components/Shell'
-import { DesktopShell, useIsDesktop } from './components/DesktopShell'
+import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { LoginScreen, RegisterScreen, PendingScreen, DeniedScreen } from './components/AuthScreens'
@@ -71,14 +71,18 @@ export default function Page() {
   )
 }
 
-// Approved staff on a laptop get the wide sidebar console; students, mobile,
-// and not-yet-approved staff keep the phone layout.
+// Laptop layout: approved staff get the wide sidebar console; the pre-app
+// screens (login, and staff setup/pending/denied) get the split-screen auth
+// shell. Students and every mobile viewport keep the phone layout.
 function AppShell({ children }: { children: React.ReactNode }) {
   const { role, staffStatus, supabaseUserId } = useDashboard()
   const desktop = useIsDesktop()
   const isStaff = role === 'admin' || role === 'teacher'
   const approvedStaff = isStaff && !(supabaseUserId && staffStatus !== 'approved')
-  if (desktop && approvedStaff) return <DesktopShell>{children}</DesktopShell>
+  if (desktop) {
+    if (approvedStaff) return <DesktopShell>{children}</DesktopShell>
+    if (role !== 'student') return <DesktopAuthShell>{children}</DesktopAuthShell>
+  }
   return <PhoneFrame>{children}</PhoneFrame>
 }
 

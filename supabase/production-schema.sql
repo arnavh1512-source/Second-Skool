@@ -28,6 +28,7 @@ create table if not exists public.centres (
   name text not null,
   join_code text unique not null,
   owner_id uuid references public.profiles(id),
+  logo_url text,
   created_at timestamptz default now()
 );
 
@@ -241,6 +242,8 @@ alter table public.timetable     add column if not exists centre_id uuid referen
 alter table public.attendance    add column if not exists recorded_by uuid references public.profiles(id) default auth.uid();
 alter table public.tests         add column if not exists recorded_by uuid references public.profiles(id) default auth.uid();
 alter table public.assignments   add column if not exists recorded_by uuid references public.profiles(id) default auth.uid();
+-- White-label: head-set centre logo (small data-URL) shown to students on login.
+alter table public.centres       add column if not exists logo_url text;
 
 -- Subject deletes must propagate: a removed subject takes its tests/results
 -- with it (cascade); assignments survive but drop the subject label (set null).
@@ -301,7 +304,7 @@ end; $$;
 create or replace function public.my_centre()
 returns json language plpgsql security definer set search_path = public as $$
 declare v json;
-begin select json_build_object('name',c.name,'join_code',c.join_code) into v from public.centres c where c.id=public.current_centre(); return v; end; $$;
+begin select json_build_object('name',c.name,'join_code',c.join_code,'logo_url',c.logo_url) into v from public.centres c where c.id=public.current_centre(); return v; end; $$;
 
 -- ─── STAFF MANAGEMENT (head only, own centre) ────────────────────────────────
 create or replace function public.approve_teacher(p_id uuid)
@@ -390,6 +393,7 @@ begin
   v_c := v_student.centre_id;
   select json_build_object(
     'student', json_build_object('dbId',v_student.id,'name',v_student.name,'klass',v_student.class,'school',v_student.school,'code',v_student.student_code,'parent',v_student.parent_contact,'address',v_student.address,'feeStatus',v_student.fee_status),
+    'centre', (select json_build_object('name',c.name,'logo_url',c.logo_url) from public.centres c where c.id=v_c),
     'attendance', coalesce((select json_agg(json_build_object('date',a.date,'status',a.status) order by a.date desc) from public.attendance a where a.student_id=v_student.id),'[]'::json),
     'results', coalesce((select json_agg(json_build_object('subject',s.name,'test',t.name,'date',t.date,'marks',r.marks,'total',t.max_marks) order by t.date desc) from public.results r join public.tests t on t.id=r.test_id join public.subjects s on s.id=t.subject_id where r.student_id=v_student.id),'[]'::json),
     'fees', coalesce((select json_agg(json_build_object('period',f.period,'amount',f.amount,'status',f.status,'dueDate',f.due_date,'paidDate',f.paid_date) order by f.due_date desc) from public.fees f where f.student_id=v_student.id),'[]'::json),
