@@ -10,7 +10,13 @@ self.addEventListener('push', (event) => {
     tag: data.tag || undefined,
     data: { url: data.url || '/' },
   }
-  event.waitUntil(self.registration.showNotification(title, options))
+  event.waitUntil((async () => {
+    await self.registration.showNotification(title, options)
+    // Nudge any open app window to re-pull data so the reminder shows in-app
+    // immediately, not only as a system notification.
+    const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    for (const c of list) c.postMessage({ type: 'refresh' })
+  })())
 })
 
 self.addEventListener('notificationclick', (event) => {

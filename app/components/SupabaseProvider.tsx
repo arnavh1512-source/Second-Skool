@@ -313,6 +313,18 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount; auth listener must not rebind per render
   }, [])
 
+  // Pull fresh data for whoever is signed in — approved staff get the full
+  // dataset; a code-access student re-pulls their snapshot. Best-effort.
+  const refreshCurrentData = () => {
+    const st = useDashboard.getState()
+    if (st.supabaseUserId && (st.role === 'admin' || st.role === 'teacher') && st.staffStatus === 'approved') {
+      fetchAllData().catch(() => {}) // ignore transient failures
+    } else if (!st.supabaseUserId && st.currentStudentDbId) {
+      const code = localStorage.getItem('student_code')
+      if (code) st.loadStudentByCode(code, false) // refresh without navigating
+    }
+  }
+
   // Refresh-on-focus: re-pull fresh data whenever the user returns to the app
   // (tab/app regains focus). Throttled so quick tab-switches don't spam queries.
   useEffect(() => {
@@ -320,13 +332,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (document.visibilityState !== 'visible') return
       if (Date.now() - lastRefresh.current < 8000) return
       lastRefresh.current = Date.now()
-      const st = useDashboard.getState()
-      if (st.supabaseUserId && (st.role === 'admin' || st.role === 'teacher') && st.staffStatus === 'approved') {
-        fetchAllData().catch(() => {}) // best-effort background refresh; ignore transient failures
-      } else if (!st.supabaseUserId && st.currentStudentDbId) {
-        const code = localStorage.getItem('student_code')
-        if (code) st.loadStudentByCode(code, false) // refresh data without navigating
-      }
+      refreshCurrentData()
     }
     document.addEventListener('visibilitychange', refresh)
     window.addEventListener('focus', refresh)
@@ -335,6 +341,32 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('focus', refresh)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount; focus listener reads fresh state via getState()
+  }, [])
+
+  // Instant in-app update: the push service worker posts a 'refresh' message the
+  // moment a notification arrives, so a reminder appears in-app right away without
+  // waiting for a focus change or reload (covers users sitting in the foreground).
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const onMsg = (e: MessageEvent) => { if (e.data?.type === 'refresh') refreshCurrentData() }
+    navigator.serviceWorker.addEventListener('message', onMsg)
+    return () => navigator.serviceWorker.removeEventListener('message', onMsg)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount; handler reads fresh state via getState()
+  }, [])
+
+  // Foreground poll (students only): a code-access student's snapshot is a single
+  // cheap RPC, so re-pull it periodically while the app is visible — the fallback
+  // for students who haven't enabled push (they get no service-worker message).
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState !== 'visible') return
+      const st = useDashboard.getState()
+      if (!st.supabaseUserId && st.currentStudentDbId) {
+        const code = localStorage.getItem('student_code')
+        if (code) st.loadStudentByCode(code, false)
+      }
+    }, 60000)
+    return () => clearInterval(id)
   }, [])
 
   return <>{children}</>
