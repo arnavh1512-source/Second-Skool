@@ -106,14 +106,38 @@ export function StaffApprovalsScreen() {
 // Head/teacher review of self-registered students. Approve (optionally setting
 // batch/branch + a first fee) turns their code live; reject declines it.
 export function StudentRequestsScreen() {
-  const { back, pendingStudents, branchesList, refreshData, approveStudent, rejectStudent } = useDashboard()
+  const { back, pendingStudents, branchesList, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
 
-  useEffect(() => { refreshData() }, [refreshData])
+  useEffect(() => { refreshData(); loadMyCentre() }, [refreshData, loadMyCentre])
 
   return (
     <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title="Student requests" onBack={back} />
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Students who registered themselves. Review their details, set their batch and fee, then approve — their code only works once you do.</div>
+
+      {studentJoinCode && (
+        <div className="w-full lg:max-w-md border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5">
+          <div className="flex items-start justify-between gap-3">
+            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-left flex-1 min-w-0 cursor-pointer">
+              <div className="text-[11px] font-bold text-td-muted">{centreName || 'Your centre'} · STUDENT CODE</div>
+              <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{studentJoinCode}</div>
+              <div className="text-[11px] text-td-muted mt-0.5">Share with students so they can register themselves.</div>
+            </button>
+            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-[11px] font-bold text-td-primary flex items-center gap-1 shrink-0 cursor-pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          {role === 'admin' && (
+            <button
+              onClick={() => { if (confirm('Generate a new student code? The old one will stop working immediately.')) regenerateStudentCode() }}
+              className="text-[11px] font-bold text-td-muted underline mt-2 cursor-pointer"
+            >
+              Generate a new code
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="text-sm font-extrabold text-td-dark mb-3">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
       {pendingStudents.length === 0 ? (

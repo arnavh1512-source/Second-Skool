@@ -55,7 +55,7 @@ interface State {
   attClass: string; att: Record<number, string>; rankSubject: string; ttDay: string
   toast: string; editIndex: number
   staffStatus: StaffStatus; headExists: boolean; staffList: StaffMember[]; weeklyReport: WeeklyReport | null; studentReports: StudentReport[] | null; teacherActivity: TeacherActivity[] | null
-  googleEmail: string; myName: string; myPhone: string; centreName: string; centreLogo: string; joinCode: string; reminderType: string; plan: string
+  googleEmail: string; myName: string; myPhone: string; centreName: string; centreLogo: string; joinCode: string; studentJoinCode: string; reminderType: string; plan: string
   newTeacher: { name: string; subject: string; qualification: string; experience: string; branch: string }
   newStudent: { name: string; school: string; klass: string; batch: string; branch: string; parent: string; address: string; fee: string; feeDue: string }
   stuSignup: { joinCode: string; name: string; parent: string; klass: string; school: string; address: string }
@@ -129,6 +129,7 @@ interface Actions {
   createCentre: (name: string) => Promise<void>
   joinCentre: (code: string) => Promise<void>
   loadMyCentre: () => Promise<void>
+  regenerateStudentCode: () => Promise<void>
   renameCentre: (name: string) => Promise<void>
   saveCentreLogo: (dataUrl: string) => Promise<void>
   loadStaff: () => Promise<void>
@@ -155,7 +156,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
   toast: '', editIndex: 0,
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
-  googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', reminderType: 'Test', plan: 'Monthly',
+  googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', studentJoinCode: '', reminderType: 'Test', plan: 'Monthly',
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
   newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
@@ -643,9 +644,16 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   loadMyCentre: async () => {
     const { data } = await supabase.rpc('my_centre')
     if (data) {
-      const d = data as { name?: string; join_code?: string; logo_url?: string }
-      set({ centreName: d.name ?? '', joinCode: d.join_code ?? '', centreLogo: d.logo_url ?? '' })
+      const d = data as { name?: string; join_code?: string; student_join_code?: string; logo_url?: string }
+      set({ centreName: d.name ?? '', joinCode: d.join_code ?? '', studentJoinCode: d.student_join_code ?? '', centreLogo: d.logo_url ?? '' })
     }
+  },
+
+  regenerateStudentCode: async () => {
+    const { data, error } = await supabase.rpc('regenerate_student_code')
+    if (error || !data) { get().notify(error?.message || 'Could not change the code'); return }
+    set({ studentJoinCode: data as string })
+    get().notify('New student code generated')
   },
 
   // White-label: the head sets a centre logo that students see after they log
@@ -765,7 +773,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
       timetableData: {}, schedule: [], rankData: {}, subjects: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
-      currentStudentDbId: null, stuPendingFee: null, stuPending: null, pendingStudents: [],
+      currentStudentDbId: null, stuPendingFee: null, stuPending: null, pendingStudents: [], studentJoinCode: '',
     })
     get().notify('Signed out')
   },

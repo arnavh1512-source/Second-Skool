@@ -108,8 +108,9 @@ export function LoginScreen() {
           <div className="text-sm text-td-muted mt-2 leading-relaxed">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
           <div className="flex flex-col gap-3 mt-6">
             <div>
-              <label className="text-xs font-bold text-td-muted">Centre code <span className="text-[#e8553c]">*</span></label>
+              <label className="text-xs font-bold text-td-muted">Student code <span className="text-[#e8553c]">*</span></label>
               <input value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 tracking-[0.15em] font-bold text-center" />
+              <div className="text-[11px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
               <label className="text-xs font-bold text-td-muted">Full name <span className="text-[#e8553c]">*</span></label>

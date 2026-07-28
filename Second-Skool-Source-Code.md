@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-28 · commit `e48b986` · fix: reminders update in-app instantly, no refresh needed
+Generated 2026-07-28 · commit `801834d` · fix: add Student requests to desktop sidebar
 
 
 ## .claude/launch.json
@@ -460,14 +460,38 @@ export function StaffApprovalsScreen() {
 // Head/teacher review of self-registered students. Approve (optionally setting
 // batch/branch + a first fee) turns their code live; reject declines it.
 export function StudentRequestsScreen() {
-  const { back, pendingStudents, branchesList, refreshData, approveStudent, rejectStudent } = useDashboard()
+  const { back, pendingStudents, branchesList, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
 
-  useEffect(() => { refreshData() }, [refreshData])
+  useEffect(() => { refreshData(); loadMyCentre() }, [refreshData, loadMyCentre])
 
   return (
     <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title="Student requests" onBack={back} />
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Students who registered themselves. Review their details, set their batch and fee, then approve — their code only works once you do.</div>
+
+      {studentJoinCode && (
+        <div className="w-full lg:max-w-md border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5">
+          <div className="flex items-start justify-between gap-3">
+            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-left flex-1 min-w-0 cursor-pointer">
+              <div className="text-[11px] font-bold text-td-muted">{centreName || 'Your centre'} · STUDENT CODE</div>
+              <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{studentJoinCode}</div>
+              <div className="text-[11px] text-td-muted mt-0.5">Share with students so they can register themselves.</div>
+            </button>
+            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-[11px] font-bold text-td-primary flex items-center gap-1 shrink-0 cursor-pointer">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+          </div>
+          {role === 'admin' && (
+            <button
+              onClick={() => { if (confirm('Generate a new student code? The old one will stop working immediately.')) regenerateStudentCode() }}
+              className="text-[11px] font-bold text-td-muted underline mt-2 cursor-pointer"
+            >
+              Generate a new code
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="text-sm font-extrabold text-td-dark mb-3">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
       {pendingStudents.length === 0 ? (
@@ -811,8 +835,9 @@ export function LoginScreen() {
           <div className="text-sm text-td-muted mt-2 leading-relaxed">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
           <div className="flex flex-col gap-3 mt-6">
             <div>
-              <label className="text-xs font-bold text-td-muted">Centre code <span className="text-[#e8553c]">*</span></label>
+              <label className="text-xs font-bold text-td-muted">Student code <span className="text-[#e8553c]">*</span></label>
               <input value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 tracking-[0.15em] font-bold text-center" />
+              <div className="text-[11px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
               <label className="text-xs font-bold text-td-muted">Full name <span className="text-[#e8553c]">*</span></label>
@@ -1085,11 +1110,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function Sidebar() {
-  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, loadMyCentre } = useDashboard()
+  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, pendingStudents, loadMyCentre } = useDashboard()
   const isAdmin = role === 'admin'
   useEffect(() => { if (!centreName) loadMyCentre() }, [centreName, loadMyCentre])
   const name = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
   const pending = staffList.filter(s => s.status === 'pending').length
+  const stuReq = pendingStudents.length
 
   const main: NavItem[] = [
     { icon: '🏠', label: 'Dashboard', screen: 'home', tab: 'home' },
@@ -1106,6 +1132,7 @@ function Sidebar() {
   ]
   const manage: NavItem[] = [
     { icon: '🛡️', label: 'Approvals', screen: 'staffApprovals', badge: pending },
+    { icon: '🙋', label: 'Student requests', screen: 'studentRequests', badge: stuReq },
     { icon: '📈', label: 'Reports', screen: 'reports' },
     { icon: '💳', label: 'Fees', screen: 'fees' },
     { icon: '🏆', label: 'Rankings', screen: 'rankings' },
@@ -4705,7 +4732,7 @@ interface State {
   attClass: string; att: Record<number, string>; rankSubject: string; ttDay: string
   toast: string; editIndex: number
   staffStatus: StaffStatus; headExists: boolean; staffList: StaffMember[]; weeklyReport: WeeklyReport | null; studentReports: StudentReport[] | null; teacherActivity: TeacherActivity[] | null
-  googleEmail: string; myName: string; myPhone: string; centreName: string; centreLogo: string; joinCode: string; reminderType: string; plan: string
+  googleEmail: string; myName: string; myPhone: string; centreName: string; centreLogo: string; joinCode: string; studentJoinCode: string; reminderType: string; plan: string
   newTeacher: { name: string; subject: string; qualification: string; experience: string; branch: string }
   newStudent: { name: string; school: string; klass: string; batch: string; branch: string; parent: string; address: string; fee: string; feeDue: string }
   stuSignup: { joinCode: string; name: string; parent: string; klass: string; school: string; address: string }
@@ -4779,6 +4806,7 @@ interface Actions {
   createCentre: (name: string) => Promise<void>
   joinCentre: (code: string) => Promise<void>
   loadMyCentre: () => Promise<void>
+  regenerateStudentCode: () => Promise<void>
   renameCentre: (name: string) => Promise<void>
   saveCentreLogo: (dataUrl: string) => Promise<void>
   loadStaff: () => Promise<void>
@@ -4805,7 +4833,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
   toast: '', editIndex: 0,
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
-  googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', reminderType: 'Test', plan: 'Monthly',
+  googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', studentJoinCode: '', reminderType: 'Test', plan: 'Monthly',
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
   newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
@@ -5293,9 +5321,16 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   loadMyCentre: async () => {
     const { data } = await supabase.rpc('my_centre')
     if (data) {
-      const d = data as { name?: string; join_code?: string; logo_url?: string }
-      set({ centreName: d.name ?? '', joinCode: d.join_code ?? '', centreLogo: d.logo_url ?? '' })
+      const d = data as { name?: string; join_code?: string; student_join_code?: string; logo_url?: string }
+      set({ centreName: d.name ?? '', joinCode: d.join_code ?? '', studentJoinCode: d.student_join_code ?? '', centreLogo: d.logo_url ?? '' })
     }
+  },
+
+  regenerateStudentCode: async () => {
+    const { data, error } = await supabase.rpc('regenerate_student_code')
+    if (error || !data) { get().notify(error?.message || 'Could not change the code'); return }
+    set({ studentJoinCode: data as string })
+    get().notify('New student code generated')
   },
 
   // White-label: the head sets a centre logo that students see after they log
@@ -5415,7 +5450,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
       timetableData: {}, schedule: [], rankData: {}, subjects: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
-      currentStudentDbId: null, stuPendingFee: null, stuPending: null, pendingStudents: [],
+      currentStudentDbId: null, stuPendingFee: null, stuPending: null, pendingStudents: [], studentJoinCode: '',
     })
     get().notify('Signed out')
   },
@@ -7876,6 +7911,183 @@ begin
   return new;
 end;
 $$ language plpgsql security definer set search_path = public;
+```
+
+## supabase/student-join-code.sql
+
+```sql
+-- ============================================================================
+-- SEPARATE STUDENT JOIN CODE — Second Skool
+-- Teachers and students used to share one centre join code. This splits them:
+--   • centres.join_code          → teachers (Google sign-in + code)   [unchanged]
+--   • centres.student_join_code   → students (self-registration form)  [new]
+-- A code entered on the student form now ONLY matches student_join_code, and a
+-- code entered on the teacher form ONLY matches join_code — so the two audiences
+-- can never use each other's code.
+--
+-- Idempotent. Existing centres are backfilled with a fresh student code.
+-- ⚠️ Back up first (Supabase → Database → Backups) before running in production.
+-- ============================================================================
+
+-- 1) New column + unique index ------------------------------------------------
+alter table public.centres add column if not exists student_join_code text;
+
+-- Backfill every centre that doesn't have one yet with a unique, human-friendly
+-- 6-char code (confusable-free alphabet), distinct from all existing codes.
+do $$
+declare
+  c        record;
+  v_code   text;
+  v_alpha  constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  i        int;
+begin
+  for c in select id from public.centres where student_join_code is null loop
+    loop
+      v_code := '';
+      for i in 1..6 loop
+        v_code := v_code || substr(v_alpha, 1 + floor(random() * length(v_alpha))::int, 1);
+      end loop;
+      exit when not exists (select 1 from public.centres where student_join_code = v_code)
+            and not exists (select 1 from public.centres where join_code = v_code);
+    end loop;
+    update public.centres set student_join_code = v_code where id = c.id;
+  end loop;
+end $$;
+
+create unique index if not exists centres_student_join_code_idx on public.centres (student_join_code);
+
+-- 2) student_signup now resolves the centre by the STUDENT code ----------------
+create or replace function public.student_signup(
+  p_join_code text,
+  p_name      text,
+  p_parent    text,
+  p_class     text,
+  p_school    text,
+  p_address   text default null
+)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  v_centre  uuid;
+  v_cname   text;
+  v_code    text;
+  v_id      uuid;
+  v_name    text := trim(coalesce(p_name, ''));
+  v_parent  text := trim(coalesce(p_parent, ''));
+  v_class   text := trim(coalesce(p_class, ''));
+  v_school  text := trim(coalesce(p_school, ''));
+  v_fails   int;
+  v_pending int;
+  v_alpha   constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; -- no confusable chars
+  i         int;
+begin
+  -- Required fields (school is compulsory alongside name, parent, class).
+  if length(v_name)   < 2 then raise exception 'Enter your full name'; end if;
+  if v_parent !~ '^\+?\d[\d\s\-]{6,}$' then raise exception 'Enter a valid parent phone number'; end if;
+  if length(v_class)  < 1 then raise exception 'Select your class'; end if;
+  if length(v_school) < 2 then raise exception 'Enter your school name'; end if;
+
+  -- Resolve the centre from its STUDENT join code; throttle repeated invalid attempts.
+  select id, name into v_centre, v_cname
+    from public.centres where student_join_code = upper(trim(coalesce(p_join_code, '')));
+  if v_centre is null then
+    select count(*) into v_fails from public.code_attempts where at > now() - interval '1 minute';
+    if v_fails >= 25 then raise exception 'Too many attempts — please try again in a minute'; end if;
+    insert into public.code_attempts default values;
+    delete from public.code_attempts where at < now() - interval '5 minutes';
+    raise exception 'Invalid student code — check with your teacher';
+  end if;
+
+  -- Flood guard: cap outstanding pending requests per centre.
+  select count(*) into v_pending from public.students where centre_id = v_centre and status = 'pending';
+  if v_pending >= 300 then raise exception 'Too many pending requests — please ask your teacher'; end if;
+
+  -- Unique, human-readable login code (TUT- + 8 chars from the confusable-free alphabet).
+  loop
+    v_code := '';
+    for i in 1..8 loop
+      v_code := v_code || substr(v_alpha, 1 + floor(random() * length(v_alpha))::int, 1);
+    end loop;
+    v_code := 'TUT-' || v_code;
+    exit when not exists (select 1 from public.students where student_code = v_code);
+  end loop;
+
+  insert into public.students (name, class, school, parent_contact, address, student_code, fee_status, centre_id, status)
+  values (v_name, v_class, v_school, v_parent, nullif(trim(coalesce(p_address, '')), ''), v_code, 'Due', v_centre, 'pending')
+  returning id into v_id;
+
+  return json_build_object('code', v_code, 'name', v_name, 'centre', v_cname);
+end; $$;
+
+revoke all on function public.student_signup(text,text,text,text,text,text) from public;
+grant execute on function public.student_signup(text,text,text,text,text,text) to anon, authenticated;
+
+-- 3) my_centre returns both codes so the head can show/copy each --------------
+create or replace function public.my_centre()
+returns json language plpgsql security definer set search_path = public as $$
+declare v json;
+begin
+  select json_build_object('name',c.name,'join_code',c.join_code,'student_join_code',c.student_join_code,'logo_url',c.logo_url)
+    into v from public.centres c where c.id = public.current_centre();
+  return v;
+end; $$;
+
+revoke all on function public.my_centre() from public, anon;
+grant execute on function public.my_centre() to authenticated;
+
+-- 4) New centres get a student code too ---------------------------------------
+create or replace function public.create_centre(p_name text)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  v_id     uuid;
+  v_code   text;
+  v_scode  text;
+  v_alpha  constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  i        int;
+begin
+  if length(coalesce(trim(p_name),'')) < 2 or length(trim(p_name)) > 80 then raise exception 'Enter a centre name (2-80 characters)'; end if;
+  if (select centre_id from public.profiles where id=auth.uid()) is not null then raise exception 'You already belong to a centre'; end if;
+  loop v_code := upper(substr(replace(gen_random_uuid()::text,'-',''),1,10)); exit when not exists (select 1 from public.centres where join_code=v_code); end loop;
+  loop
+    v_scode := '';
+    for i in 1..6 loop v_scode := v_scode || substr(v_alpha, 1 + floor(random() * length(v_alpha))::int, 1); end loop;
+    exit when not exists (select 1 from public.centres where student_join_code = v_scode)
+          and not exists (select 1 from public.centres where join_code = v_scode);
+  end loop;
+  begin
+    insert into public.centres (name, join_code, student_join_code, owner_id)
+    values (trim(p_name), v_code, v_scode, auth.uid()) returning id into v_id;
+  exception when unique_violation then
+    raise exception 'You already created a centre';
+  end;
+  update public.profiles set role='admin', staff_status='approved', centre_id=v_id, head_requested=false where id=auth.uid();
+  return json_build_object('centre_id',v_id,'join_code',v_code,'student_join_code',v_scode,'name',trim(p_name));
+end; $$;
+
+revoke all on function public.create_centre(text) from public, anon;
+grant execute on function public.create_centre(text) to authenticated;
+
+-- 5) Let the head rotate the student code if it leaks -------------------------
+create or replace function public.regenerate_student_code()
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  v_centre uuid := public.current_centre();
+  v_code   text;
+  v_alpha  constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  i        int;
+begin
+  if not public.is_head() then raise exception 'Only the head can change the student code'; end if;
+  loop
+    v_code := '';
+    for i in 1..6 loop v_code := v_code || substr(v_alpha, 1 + floor(random() * length(v_alpha))::int, 1); end loop;
+    exit when not exists (select 1 from public.centres where student_join_code = v_code)
+          and not exists (select 1 from public.centres where join_code = v_code);
+  end loop;
+  update public.centres set student_join_code = v_code where id = v_centre;
+  return v_code;
+end; $$;
+
+revoke all on function public.regenerate_student_code() from public, anon;
+grant execute on function public.regenerate_student_code() to authenticated;
 ```
 
 ## supabase/student-onboarding.sql
