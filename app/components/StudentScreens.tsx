@@ -50,21 +50,15 @@ export function StuHomeScreen() {
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
-      {(centreLogo || centreName) && (
-        <div className="flex items-center gap-2.5 mb-4 pb-4 border-b border-td-border">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3 min-w-0">
           {centreLogo
             // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-[11px] object-cover border border-td-border" />
-            : <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-extrabold text-sm" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{initials(centreName)}</div>}
-          <span className="text-[15px] font-extrabold text-td-dark truncate">{centreName || 'Your centre'}</span>
-        </div>
-      )}
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>{ini}</div>
-          <div>
-            <div className="text-xs text-td-muted font-semibold">Good morning</div>
-            <div className="text-[17px] font-extrabold text-td-dark">{displayName}</div>
+            ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-[46px] h-[46px] rounded-2xl object-cover border border-td-border shrink-0" />
+            : <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px] shrink-0" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>{ini}</div>}
+          <div className="min-w-0">
+            <div className="text-xs text-td-muted font-semibold truncate">{centreName || 'Good morning'}</div>
+            <div className="text-[17px] font-extrabold text-td-dark truncate">{displayName}</div>
           </div>
         </div>
         <button onClick={() => go('stuNotif', 'stuHome')} className="relative w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center cursor-pointer">
