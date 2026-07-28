@@ -15,4 +15,23 @@ if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey))
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder',
+  {
+    auth: {
+      // Keep the head/teacher signed in across app launches. These are the
+      // supabase-js defaults, but we set them explicitly so a future default
+      // change can't silently start logging users out on mobile.
+      persistSession: true,
+      autoRefreshToken: true,
+      // Parse the token that Google returns in the redirect URL and store it.
+      detectSessionInUrl: true,
+      // Implicit flow returns the session directly in the redirect hash. PKCE
+      // needs the code-verifier to still be in storage at exchange time, which
+      // breaks when an installed PWA hands OAuth to an external browser — so
+      // implicit is the more reliable choice for this add-to-home-screen app.
+      flowType: 'implicit',
+      // Stable, app-specific key so the session isn't lost if the default
+      // storage key ever changes between SDK versions.
+      storageKey: 'second-skool-auth',
+    },
+  },
 )

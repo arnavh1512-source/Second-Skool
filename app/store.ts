@@ -564,9 +564,14 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (trimmed.length < 4) { if (navigate) get().notify('Enter your code'); return false }
     const { data, error } = await supabase.rpc('get_student_snapshot', { p_code: trimmed })
     if (error || !data) {
-      // Surface the rate-limit message; otherwise a generic invalid-code note.
-      const msg = error?.message?.includes('Too many') ? error.message : 'Invalid code — check with your teacher'
-      if (navigate) get().notify(msg)
+      // Distinguish a transient throttle from a genuinely dead code.
+      const throttled = error?.message?.includes('Too many')
+      // A code that resolves to nothing is dead (deleted/never valid). Drop it
+      // so it stops re-firing "Invalid code" on every launch — this is what
+      // hijacks a head's device when a stale test code is left in storage.
+      // Never clear on a rate-limit: the code may be perfectly valid.
+      if (!throttled && typeof window !== 'undefined') localStorage.removeItem('student_code')
+      if (navigate) get().notify(throttled ? error!.message : 'Invalid code — check with your teacher')
       return false
     }
     const snap = data as { status?: string; student?: { name?: string; code?: string } }

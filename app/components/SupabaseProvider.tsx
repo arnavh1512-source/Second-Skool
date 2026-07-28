@@ -93,6 +93,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function handleAuth(userId: string, email: string) {
+    // A Google-authenticated user is staff, never a code-access student. Purge
+    // any student_code left over from testing so a session blip can't drop this
+    // device into the student "invalid code" path.
+    if (typeof window !== 'undefined') localStorage.removeItem('student_code')
     try {
       const { data: profile } = await supabase.from('profiles').select('role, staff_status, full_name, phone').eq('id', userId).single()
       const role = (profile?.role as Role) ?? 'student'
