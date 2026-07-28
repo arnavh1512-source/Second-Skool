@@ -7,7 +7,7 @@ import { PhoneFrame } from './components/Shell'
 import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { LoginScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen } from './components/AuthScreens'
+import { LoginScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen } from './components/AuthScreens'
 import { HomeScreen } from './components/HomeScreen'
 
 function ScreenLoading() {
@@ -129,6 +129,7 @@ function ScreenRouter() {
     case 'pending': return <PendingScreen />
     case 'denied': return <DeniedScreen />
     case 'stuPending': return <StuPendingScreen />
+    case 'stuDenied': return <StuDeniedScreen />
     case 'stuHome': return <StuHomeScreen />
     case 'stuAttendance': return <StuAttendanceScreen />
     case 'stuResults': return <StuResultsScreen />

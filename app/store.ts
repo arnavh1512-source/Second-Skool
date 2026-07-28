@@ -16,7 +16,7 @@ export type Screen =
   | 'students' | 'editStudent' | 'addStudent' | 'teachers' | 'addTeacher'
   | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'notes' | 'more'
   | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
-  | 'stuSignup' | 'stuPending'
+  | 'stuSignup' | 'stuPending' | 'stuDenied'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
   | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
 
@@ -60,6 +60,7 @@ interface State {
   newStudent: { name: string; school: string; klass: string; batch: string; branch: string; parent: string; address: string; fee: string; feeDue: string }
   stuSignup: { joinCode: string; name: string; parent: string; klass: string; school: string; address: string }
   stuPending: { name: string; code: string; centre: string } | null
+  stuDenied: { name: string; centre: string } | null
   pendingStudents: PendingStudent[]
   stuTeacherIndex: number; stuRankSubject: string
   supabaseUserId: string | null; authLoading: boolean; dataLoading: boolean
@@ -158,7 +159,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
   newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
-  stuPending: null, pendingStudents: [],
+  stuPending: null, stuDenied: null, pendingStudents: [],
   teachers: [], students: [],
   stuTeacherIndex: 0, stuRankSubject: '',
   supabaseUserId: null, authLoading: true, dataLoading: false,
@@ -575,16 +576,24 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       if (typeof window !== 'undefined') localStorage.setItem('student_code', trimmed)
       set({
         stuPending: { name: snap.student?.name ?? '', code: snap.student?.code ?? trimmed, centre: get().stuPending?.centre ?? '' },
+        stuDenied: null,
         role: 'student', staffStatus: 'none', screen: 'stuPending', tab: 'stuHome', authLoading: false,
       })
       return false
     }
 
-    // Request declined (or any non-approved state) — clear the saved code so a
-    // returning device doesn't get stuck retrying it.
+    // Request declined (or any non-approved state) — send the student to a clear
+    // "declined" screen instead of leaving them on the hopeful waiting page. Drop
+    // the saved code so a returning device doesn't silently retry it. This runs on
+    // background polls too, so a live decline flips the screen immediately.
     if (snap.status && snap.status !== 'approved') {
+      const prev = get().stuPending
       if (typeof window !== 'undefined') localStorage.removeItem('student_code')
-      if (navigate) get().notify('Your request was declined — please contact your teacher')
+      set({
+        stuDenied: { name: prev?.name ?? snap.student?.name ?? '', centre: prev?.centre ?? '' },
+        stuPending: null,
+        role: 'student', staffStatus: 'none', screen: 'stuDenied', tab: 'stuHome', authLoading: false,
+      })
       return false
     }
 
@@ -595,7 +604,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (navigate) {
       Object.assign(patch, {
         role: 'student', staffStatus: 'none', screen: 'stuHome', tab: 'stuHome' as Tab,
-        authLoading: false, stuPending: null, stuRankSubject: Object.keys(patch.rankData ?? {})[0] ?? '',
+        authLoading: false, stuPending: null, stuDenied: null, stuRankSubject: Object.keys(patch.rankData ?? {})[0] ?? '',
       })
       // Auto-prompt for push on login so students don't have to hunt for a
       // button. enablePush is idempotent and stays silent once permission is
@@ -753,7 +762,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
       timetableData: {}, schedule: [], rankData: {}, subjects: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
-      currentStudentDbId: null, stuPendingFee: null, stuPending: null, pendingStudents: [], studentJoinCode: '',
+      currentStudentDbId: null, stuPendingFee: null, stuPending: null, stuDenied: null, pendingStudents: [], studentJoinCode: '',
     })
     get().notify('Signed out')
   },

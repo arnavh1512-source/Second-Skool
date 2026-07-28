@@ -166,7 +166,10 @@ export function StuPendingScreen() {
     setBusy(true)
     const ok = await loadStudentByCode(code, true)
     setBusy(false)
-    if (!ok) notify('Still awaiting approval — hang tight')
+    // Only reassure if they're genuinely still pending. If the head declined,
+    // loadStudentByCode has already routed to the declined screen — don't
+    // flash a "hang tight" toast that contradicts it.
+    if (!ok && useDashboard.getState().screen === 'stuPending') notify('Still awaiting approval — hang tight')
   }
 
   const copyCode = () => {
@@ -191,6 +194,24 @@ export function StuPendingScreen() {
 
       <button onClick={checkNow} disabled={busy} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
       <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent mt-2">Use a different code</button>
+    </div>
+  )
+}
+
+// Shown when the head declines a student's registration. Replaces the hopeful
+// "you're on the list" screen so a rejected student gets a clear, honest state
+// instead of waiting forever for an approval that will never come.
+export function StuDeniedScreen() {
+  const { stuDenied, signOut } = useDashboard()
+  const first = stuDenied?.name ? `, ${stuDenied.name.split(' ')[0]}` : ''
+  return (
+    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fdecea] flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e0533c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+      </div>
+      <div className="text-[20px] font-extrabold text-td-dark">Registration not approved</div>
+      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your teacher{stuDenied?.centre ? ` at ${stuDenied.centre}` : ''} didn&apos;t approve this request{first}. If you think this is a mistake, reach out to them directly — or register again with the correct details.</div>
+      <button onClick={signOut} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Back to start</button>
     </div>
   )
 }
