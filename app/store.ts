@@ -15,7 +15,8 @@ export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
   | 'students' | 'editStudent' | 'addStudent' | 'teachers' | 'addTeacher'
   | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'notes' | 'more'
-  | 'admin' | 'staffApprovals' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
+  | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
+  | 'stuSignup' | 'stuPending'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
   | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuEditProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
 
@@ -28,7 +29,9 @@ export type FeeStatus = 'Paid' | 'Due' | 'Overdue'
 export interface StaffMember { id: string; name: string; email: string; role: string; status: StaffStatus; headRequested: boolean }
 
 export interface Teacher { name: string; subject: string; experience: number; qualification: string; rating?: string; about?: string; dbId?: string }
-export interface Student { name: string; klass: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string }
+export interface Student { name: string; klass: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
+// A self-registered student awaiting the head's approval (roster is separate).
+export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
 export interface ScheduleItem { time: string; ampm: string; subject: string; klass: string; room: string; status: string; statusColor: string; statusBg: string }
 export interface MeetingItem { day: string; mon: string; title: string; time: string; kind: string; dbId?: string }
@@ -55,6 +58,9 @@ interface State {
   googleEmail: string; myName: string; myPhone: string; centreName: string; centreLogo: string; joinCode: string; reminderType: string; plan: string
   newTeacher: { name: string; subject: string; qualification: string; experience: string; branch: string }
   newStudent: { name: string; school: string; klass: string; batch: string; branch: string; parent: string; address: string; fee: string; feeDue: string }
+  stuSignup: { joinCode: string; name: string; parent: string; klass: string; school: string; address: string }
+  stuPending: { name: string; code: string; centre: string } | null
+  pendingStudents: PendingStudent[]
   stuTeacherIndex: number; stuRankSubject: string
   stuEdit: { name: string; parentNumber: string; address: string }
   supabaseUserId: string | null; authLoading: boolean; dataLoading: boolean
@@ -93,6 +99,10 @@ interface Actions {
   setStudentField: (patch: Partial<Student>) => void
   setNewTeacher: (patch: Partial<State['newTeacher']>) => void
   setNewStudent: (patch: Partial<State['newStudent']>) => void
+  setStuSignup: (patch: Partial<State['stuSignup']>) => void
+  studentSignup: () => Promise<void>
+  approveStudent: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string) => Promise<void>
+  rejectStudent: (dbId: string) => Promise<void>
   deleteStudent: () => void
   saveTeacher: () => void
   addStudent: () => void
@@ -148,6 +158,8 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', reminderType: 'Test', plan: 'Monthly',
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
   newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' },
+  stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
+  stuPending: null, pendingStudents: [],
   teachers: [], students: [],
   stuTeacherIndex: 0, stuRankSubject: '',
   stuEdit: { name: '', parentNumber: '', address: '' },
@@ -189,6 +201,33 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   setNewTeacher: (patch) => set((s) => ({ newTeacher: { ...s.newTeacher, ...patch } })),
   setNewStudent: (patch) => set((s) => ({ newStudent: { ...s.newStudent, ...patch } })),
+  setStuSignup: (patch) => set((s) => ({ stuSignup: { ...s.stuSignup, ...patch } })),
+
+  // Student self-registration. The RPC validates the centre join code + required
+  // fields (name, parent, class, school), mints a code, and inserts a PENDING
+  // student the head must approve. On success we land the student on the waiting
+  // screen with their code (they save it now; it only works once approved).
+  studentSignup: async () => {
+    const { stuSignup: f } = get()
+    if (f.name.trim().length < 2) { get().notify('Enter your full name'); return }
+    if (!/^\+?\d[\d\s\-]{6,}$/.test(f.parent.trim())) { get().notify('Enter a valid parent phone number'); return }
+    if (!f.klass.trim()) { get().notify('Select your class'); return }
+    if (f.school.trim().length < 2) { get().notify('Enter your school name'); return }
+    const { data, error } = await supabase.rpc('student_signup', {
+      p_join_code: f.joinCode.trim(), p_name: f.name.trim(), p_parent: f.parent.trim(),
+      p_class: f.klass.trim(), p_school: f.school.trim(), p_address: f.address.trim() || null,
+    })
+    if (error || !data) { get().notify(error?.message || 'Could not register — check the centre code'); return }
+    const d = data as { code: string; name: string; centre: string }
+    if (typeof window !== 'undefined') localStorage.setItem('student_code', d.code)
+    // Let the head know a request is waiting (best-effort push).
+    sendPush({ notifyHead: true, title: 'New student request', body: `${d.name} has requested to join. Review and approve.` }).catch(() => {})
+    set({
+      stuPending: { name: d.name, code: d.code, centre: d.centre },
+      stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
+      role: 'student', staffStatus: 'none', screen: 'stuPending', tab: 'stuHome', authLoading: false,
+    })
+  },
 
   deleteStudent: () => {
     const { editIndex, students } = get()
@@ -548,6 +587,26 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       if (navigate) get().notify(msg)
       return false
     }
+    const snap = data as { status?: string; student?: { name?: string; code?: string } }
+
+    // Awaiting the head's approval — hold on the waiting screen (no dashboard data).
+    if (snap.status === 'pending') {
+      if (typeof window !== 'undefined') localStorage.setItem('student_code', trimmed)
+      set({
+        stuPending: { name: snap.student?.name ?? '', code: snap.student?.code ?? trimmed, centre: get().stuPending?.centre ?? '' },
+        role: 'student', staffStatus: 'none', screen: 'stuPending', tab: 'stuHome', authLoading: false,
+      })
+      return false
+    }
+
+    // Request declined (or any non-approved state) — clear the saved code so a
+    // returning device doesn't get stuck retrying it.
+    if (snap.status && snap.status !== 'approved') {
+      if (typeof window !== 'undefined') localStorage.removeItem('student_code')
+      if (navigate) get().notify('Your request was declined — please contact your teacher')
+      return false
+    }
+
     if (typeof window !== 'undefined') localStorage.setItem('student_code', trimmed)
     const patch: Partial<State> = mapSnapshot(data)
     // Only navigate on the initial load; a background (focus) refresh just
@@ -555,7 +614,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (navigate) {
       Object.assign(patch, {
         role: 'student', staffStatus: 'none', screen: 'stuHome', tab: 'stuHome' as Tab,
-        authLoading: false, stuRankSubject: Object.keys(patch.rankData ?? {})[0] ?? '',
+        authLoading: false, stuPending: null, stuRankSubject: Object.keys(patch.rankData ?? {})[0] ?? '',
       })
       // Auto-prompt for push on login so students don't have to hunt for a
       // button. enablePush is idempotent and stays silent once permission is
@@ -661,6 +720,28 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     get().notify('Teacher rejected'); await get().loadStaff()
   },
 
+  approveStudent: async (dbId, klass, branchId, fee, feeDue) => {
+    const amt = Number(fee)
+    const { error } = await supabase.rpc('approve_student', {
+      p_id: dbId,
+      p_class: klass.trim() || null,
+      p_branch_id: branchId,
+      p_fee: fee.trim() && amt > 0 ? amt : null,
+      p_fee_due: feeDue || null,
+    })
+    if (error) { get().notify(error.message || 'Could not approve'); return }
+    set((s) => ({ pendingStudents: s.pendingStudents.filter(p => p.dbId !== dbId) }))
+    get().notify('Student approved')
+    await get().refreshData()
+  },
+
+  rejectStudent: async (dbId) => {
+    const { error } = await supabase.rpc('reject_student', { p_id: dbId })
+    if (error) { get().notify(error.message || 'Could not decline'); return }
+    set((s) => ({ pendingStudents: s.pendingStudents.filter(p => p.dbId !== dbId) }))
+    get().notify('Request declined')
+  },
+
   grantHead: async (id) => {
     const { error } = await supabase.rpc('grant_head', { p_id: id })
     if (error) { get().notify('Could not grant head access'); return }
@@ -684,7 +765,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
       timetableData: {}, schedule: [], rankData: {}, subjects: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
-      currentStudentDbId: null, stuPendingFee: null,
+      currentStudentDbId: null, stuPendingFee: null, stuPending: null, pendingStudents: [],
     })
     get().notify('Signed out')
   },

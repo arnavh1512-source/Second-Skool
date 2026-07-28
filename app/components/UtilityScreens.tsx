@@ -296,15 +296,17 @@ export function SubjectsScreen() {
 type MoreItem = { icon: string; label: string; tint: string; screen: Screen; badge?: number }
 
 export function MoreScreen() {
-  const { go, signOut, role, myName, googleEmail, staffList, loadStaff } = useDashboard()
+  const { go, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents } = useDashboard()
   const isAdmin = role === 'admin'
   const profileName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
 
   // Head: keep the approvals badge fresh (Admin Dashboard now lives here).
   useEffect(() => { if (isAdmin) loadStaff() }, [isAdmin, loadStaff])
   const pendingCount = staffList.filter(s => s.status === 'pending').length
+  const studentRequestCount = pendingStudents.length
 
   const daily: MoreItem[] = [
+    { icon: '🙋', label: 'Student requests', tint: '#e7f5ee', screen: 'studentRequests', badge: studentRequestCount },
     { icon: '✅', label: 'Mark attendance', tint: '#e7f5ee', screen: 'attendance' },
     { icon: '📊', label: 'Enter results', tint: '#eaf1fc', screen: 'results' },
     { icon: '📚', label: 'Assignments', tint: '#fcf3e3', screen: 'assign' },

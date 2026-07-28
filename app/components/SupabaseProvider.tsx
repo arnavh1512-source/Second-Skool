@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { useDashboard, registerRefresh, type Role, type StaffStatus, type Teacher, type Student, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type StuResultItem, type AttLogItem, type NotifItem, type FeeHistoryItem, type ScheduleItem } from '../store'
+import { useDashboard, registerRefresh, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type StuResultItem, type AttLogItem, type NotifItem, type FeeHistoryItem, type ScheduleItem } from '../store'
 
 // Minimal shape of the Supabase rows this provider reads — the DB schema is the
 // source of truth, and existing `??` fallbacks handle nullable columns.
@@ -62,6 +62,26 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => { supabase.removeChannel(ch) }
   }, [role, staffStatus])
 
+  // Staff (head or teacher): alert + refresh the moment a student self-registers,
+  // so pending requests surface live. RLS (students_staff) scopes events to the
+  // caller's own centre.
+  useEffect(() => {
+    if ((role !== 'admin' && role !== 'teacher') || staffStatus !== 'approved') return
+    const ch = supabase
+      .channel('student-requests-watch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, (payload) => {
+        const st = useDashboard.getState()
+        const row = payload.new as { status?: string; name?: string } | null
+        const was = (payload.old as { status?: string } | null)?.status
+        if (row?.status === 'pending' && was !== 'pending') {
+          st.notify(`${row.name || 'A student'} requested to join — check Student requests`)
+        }
+        st.refreshData()
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [role, staffStatus])
+
   // No Google session: a returning student may have a saved code; otherwise land on login.
   function resumeStudentOrLanding() {
     const code = typeof window !== 'undefined' ? localStorage.getItem('student_code') : null
@@ -113,7 +133,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Defensive caps: orderings put the newest rows first, so a centre that
       // outgrows a cap loses only the oldest tail, never current data.
       supabase.from('teachers').select('*').order('created_at', { ascending: false }).limit(300),
-      supabase.from('students').select('id,name,class,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,created_at').order('created_at', { ascending: false }).limit(2000),
+      supabase.from('students').select('id,name,class,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at').order('created_at', { ascending: false }).limit(2000),
       supabase.from('branches').select('*').order('is_main', { ascending: false }).limit(50),
       supabase.from('meetings').select('*').order('date', { ascending: false }).limit(200),
       supabase.from('assignments').select('*').order('due_date', { ascending: false }).limit(500),
@@ -136,11 +156,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       attByStudent[k].t++
       if (a.status === 'Present') attByStudent[k].p++
     }
-    const mappedStudents = (students ?? []).map((row) => {
+    // Self-registered students awaiting approval are held out of the roster (and
+    // every count/ranking derived from it) until the head approves them.
+    const approvedRows = (students ?? []).filter((s) => ((s.status as string) ?? 'approved') === 'approved')
+    const pendingRows = (students ?? []).filter((s) => (s.status as string) === 'pending')
+    const mappedStudents = approvedRows.map((row) => {
       const st = mapStudent(row)
       const att = attByStudent[st.dbId ?? '']
       return att && att.t > 0 ? { ...st, attendance: Math.round((att.p / att.t) * 100) } : st
     })
+    const pendingStudents: PendingStudent[] = pendingRows.map((s) => ({
+      dbId: s.id as string, name: (s.name as string) ?? '', klass: (s.class as string) ?? '',
+      school: (s.school as string) ?? '', parent: (s.parent_contact as string) ?? '',
+      address: (s.address as string) ?? '', code: (s.student_code as string) ?? '',
+      when: timeAgo(s.created_at as string),
+    }))
     const subjectList = (subjects ?? []).map((s: Row) => ({ name: s.name as string, dbId: s.id as string }))
     const subjectMap = Object.fromEntries(subjectList.map(s => [s.dbId, s.name]))
     const studentMap = Object.fromEntries(mappedStudents.map(s => [s.dbId, s]))
@@ -151,7 +181,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // Branches — count per-branch
     const branchesList: BranchItem[] = (branches ?? []).map((b: Row) => ({
       name: b.name, address: b.address ?? '', main: !!b.is_main,
-      students: (students ?? []).filter((s) => s.branch_id === b.id).length,
+      students: approvedRows.filter((s) => s.branch_id === b.id).length,
       staff: (teachers ?? []).filter((t: Row) => t.branch_id === b.id).length,
       dbId: b.id,
     }))
@@ -280,7 +310,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     set({
       branchesList, meetingsList, assignmentsList, timetableData, schedule,
       rankData, subjects: subjectItems, stuResults, stuAttendanceLog,
-      stuFeeHistory, stuPendingFee, stuNotifications, stuReminders,
+      stuFeeHistory, stuPendingFee, stuNotifications, stuReminders, pendingStudents,
     })
   }
 
@@ -387,7 +417,7 @@ function mapStudent(s: Record<string, unknown>): Student {
     attendance: 0, feeStatus: ((s.fee_status as string) ?? 'Due') as FeeStatus,
     school: (s.school as string) ?? '', parent: (s.parent_contact as string) ?? '',
     id: (s.student_code as string) ?? '', address: (s.address as string) ?? '',
-    dbId: s.id as string,
+    dbId: s.id as string, status: (s.status as string) ?? 'approved',
   }
 }
 

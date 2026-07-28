@@ -103,6 +103,112 @@ export function StaffApprovalsScreen() {
   )
 }
 
+// Head/teacher review of self-registered students. Approve (optionally setting
+// batch/branch + a first fee) turns their code live; reject declines it.
+export function StudentRequestsScreen() {
+  const { back, pendingStudents, branchesList, refreshData, approveStudent, rejectStudent } = useDashboard()
+
+  useEffect(() => { refreshData() }, [refreshData])
+
+  return (
+    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ScreenHeader title="Student requests" onBack={back} />
+      <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Students who registered themselves. Review their details, set their batch and fee, then approve — their code only works once you do.</div>
+
+      <div className="text-sm font-extrabold text-td-dark mb-3">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
+      {pendingStudents.length === 0 ? (
+        <div className="text-center text-td-muted text-[13px] py-6 bg-white border border-td-border rounded-[16px]">No requests waiting</div>
+      ) : (
+        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+          {pendingStudents.map((s, i) => (
+            <StudentRequestCard key={s.dbId} s={s} idx={i} branches={branchesList} onApprove={approveStudent} onReject={rejectStudent} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StudentRequestCard({ s, idx, branches, onApprove, onReject }: {
+  s: import('../store').PendingStudent
+  idx: number
+  branches: import('../store').BranchItem[]
+  onApprove: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string) => Promise<void>
+  onReject: (dbId: string) => Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [klass, setKlass] = useState(s.klass)
+  const [branch, setBranch] = useState('')
+  const [fee, setFee] = useState('')
+  const [feeDue, setFeeDue] = useState('')
+
+  const confirm = async () => {
+    if (busy) return
+    setBusy(true)
+    const branchId = branch ? branches.find(b => b.name === branch)?.dbId ?? null : null
+    await onApprove(s.dbId, klass, branchId, fee, feeDue)
+    setBusy(false)
+  }
+
+  return (
+    <div className="bg-white border border-td-border rounded-[16px] p-3.5 self-start">
+      <div className="flex items-center gap-3 mb-2.5">
+        <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(idx) }}>{initials(s.name)}</div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-extrabold text-td-dark truncate">{s.name}</div>
+          <div className="text-[11.5px] text-td-muted truncate">{s.klass} · {s.school}</div>
+        </div>
+        {s.when && <span className="text-[10.5px] text-td-subtle shrink-0">{s.when}</span>}
+      </div>
+      <div className="text-[12px] text-td-muted leading-relaxed mb-3 bg-[#f7f9fc] rounded-[10px] p-2.5">
+        <div>Parent: <span className="font-semibold text-td-text">{s.parent || '—'}</span></div>
+        {s.address && <div>Address: <span className="font-semibold text-td-text">{s.address}</span></div>}
+        <div>Code: <span className="font-bold text-td-text tracking-wide">{s.code}</span></div>
+      </div>
+
+      {!open ? (
+        <div className="flex gap-2.5">
+          <button onClick={() => setOpen(true)} className="flex-1 border-none bg-td-green text-white text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer">Approve</button>
+          <button onClick={() => onReject(s.dbId)} className="flex-1 border border-td-border bg-white text-td-muted text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer">Decline</button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          <div className="flex gap-2.5">
+            <div className="flex-1">
+              <label className="text-[11px] font-bold text-td-muted">Batch / class</label>
+              <input value={klass} onChange={e => setKlass(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
+            </div>
+            {branches.length > 0 && (
+              <div className="flex-1">
+                <label className="text-[11px] font-bold text-td-muted">Branch</label>
+                <select value={branch} onChange={e => setBranch(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1 bg-white">
+                  <option value="">—</option>
+                  {branches.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
+                </select>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-2.5">
+            <div className="flex-1">
+              <label className="text-[11px] font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
+              <input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="e.g. 800" className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
+            </div>
+            <div className="flex-1">
+              <label className="text-[11px] font-bold text-td-muted">Due date</label>
+              <input type="date" value={feeDue} onChange={e => setFeeDue(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
+            </div>
+          </div>
+          <div className="flex gap-2.5 mt-0.5">
+            <button onClick={confirm} disabled={busy} className="flex-1 border-none bg-td-green text-white text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer disabled:opacity-60">{busy ? 'Approving…' : 'Confirm approval'}</button>
+            <button onClick={() => setOpen(false)} className="border border-td-border bg-white text-td-muted text-[13px] font-bold py-2.5 px-4 rounded-[12px] cursor-pointer">Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function ReportsScreen() {
   const { back, weeklyReport: r, loadWeeklyReport, studentReports, loadStudentReports, teacherActivity, loadTeacherActivity, myPhone, centreName, loadMyCentre } = useDashboard()
   const [tab, setTab] = useState<'branches' | 'students' | 'teachers'>('branches')

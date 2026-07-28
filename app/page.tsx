@@ -7,7 +7,7 @@ import { PhoneFrame } from './components/Shell'
 import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { LoginScreen, RegisterScreen, PendingScreen, DeniedScreen } from './components/AuthScreens'
+import { LoginScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen } from './components/AuthScreens'
 import { HomeScreen } from './components/HomeScreen'
 
 function ScreenLoading() {
@@ -22,6 +22,7 @@ const dyn = (importFn: () => Promise<Record<string, ComponentType>>, name: strin
   dynamic(() => importFn().then(m => ({ default: m[name] })), { loading: ScreenLoading })
 
 const StaffApprovalsScreen = dyn(() => import('./components/AdminScreens'), 'StaffApprovalsScreen')
+const StudentRequestsScreen = dyn(() => import('./components/AdminScreens'), 'StudentRequestsScreen')
 const ReportsScreen = dyn(() => import('./components/AdminScreens'), 'ReportsScreen')
 
 const TimetableScreen = dyn(() => import('./components/TeachingScreens'), 'TimetableScreen')
@@ -123,10 +124,12 @@ function ScreenRouter() {
     case 'more': return <MoreScreen />
     case 'staffProfile': return <StaffProfileScreen />
     case 'staffApprovals': return <StaffApprovalsScreen />
+    case 'studentRequests': return <StudentRequestsScreen />
     case 'reports': return <ReportsScreen />
     case 'register': return <RegisterScreen />
     case 'pending': return <PendingScreen />
     case 'denied': return <DeniedScreen />
+    case 'stuPending': return <StuPendingScreen />
     case 'stuHome': return <StuHomeScreen />
     case 'stuAttendance': return <StuAttendanceScreen />
     case 'stuResults': return <StuResultsScreen />

@@ -51,6 +51,7 @@ export interface Student {
   address: string | null
   fee_status: FeeStatus
   branch_id: string | null
+  status: string
   created_at: string
   updated_at: string
 }

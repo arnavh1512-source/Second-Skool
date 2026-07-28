@@ -10,9 +10,11 @@ const LOGO = (
   <img src="/icon-512.png" alt="Second Skool" width={72} height={72} className="rounded-[18px] object-cover shadow-[0_2px_10px_rgba(20,30,60,.12)]" />
 )
 
+const CLASS_OPTIONS = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12']
+
 export function LoginScreen() {
-  const { authLoading, notify, loadStudentByCode } = useDashboard()
-  const [mode, setMode] = useState<'choose' | 'student'>('choose')
+  const { authLoading, notify, loadStudentByCode, stuSignup, setStuSignup, studentSignup } = useDashboard()
+  const [mode, setMode] = useState<'choose' | 'student' | 'register'>('choose')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -28,6 +30,13 @@ export function LoginScreen() {
     if (busy) return
     setBusy(true)
     await loadStudentByCode(code)
+    setBusy(false)
+  }
+
+  const submitSignup = async () => {
+    if (busy) return
+    setBusy(true)
+    await studentSignup()
     setBusy(false)
   }
 
@@ -88,10 +97,99 @@ export function LoginScreen() {
           <button onClick={submitCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">
             {busy ? 'Checking…' : 'View my updates'}
           </button>
+          <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-white text-[13.5px] font-bold text-td-primary mt-3">New here? Register yourself</button>
           <button onClick={() => { setMode('choose'); setCode('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Ask your teacher to add you and share it.</div>
+          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
         </>
       )}
+
+      {mode === 'register' && (
+        <>
+          <div className="text-sm text-td-muted mt-2 leading-relaxed">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
+          <div className="flex flex-col gap-3 mt-6">
+            <div>
+              <label className="text-xs font-bold text-td-muted">Centre code <span className="text-[#e8553c]">*</span></label>
+              <input value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 tracking-[0.15em] font-bold text-center" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-td-muted">Full name <span className="text-[#e8553c]">*</span></label>
+              <input value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-td-muted">Parent&apos;s phone <span className="text-[#e8553c]">*</span></label>
+              <input value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="text-xs font-bold text-td-muted">Class <span className="text-[#e8553c]">*</span></label>
+                <select value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 bg-white">
+                  {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="text-xs font-bold text-td-muted">School <span className="text-[#e8553c]">*</span></label>
+                <input value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-td-muted">Address <span className="text-td-subtle font-semibold">(optional)</span></label>
+              <input value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+            </div>
+          </div>
+          <button onClick={submitSignup} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-4 disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for approval'}</button>
+          <button onClick={() => setMode('student')} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">I already have a code</button>
+        </>
+      )}
+    </div>
+  )
+}
+
+// Shown after a student self-registers (or when a returning pending student
+// opens the app). Polls their snapshot; the moment the head approves, the
+// snapshot flips to 'approved' and routes them straight into the dashboard.
+export function StuPendingScreen() {
+  const { stuPending, signOut, loadStudentByCode, notify } = useDashboard()
+  const [busy, setBusy] = useState(false)
+  const code = stuPending?.code || (typeof window !== 'undefined' ? localStorage.getItem('student_code') ?? '' : '')
+
+  useEffect(() => {
+    if (!code) return
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') loadStudentByCode(code, false)
+    }, 15000)
+    return () => clearInterval(id)
+  }, [code, loadStudentByCode])
+
+  const checkNow = async () => {
+    if (busy || !code) return
+    setBusy(true)
+    const ok = await loadStudentByCode(code, true)
+    setBusy(false)
+    if (!ok) notify('Still awaiting approval — hang tight')
+  }
+
+  const copyCode = () => {
+    if (!code) return
+    navigator.clipboard?.writeText(code).then(() => notify('Code copied'), () => {})
+  }
+
+  return (
+    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fcf3e3] flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e0962f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </div>
+      <div className="text-[20px] font-extrabold text-td-dark">You&apos;re on the list{stuPending?.name ? `, ${stuPending.name.split(' ')[0]}` : ''}!</div>
+      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your teacher{stuPending?.centre ? ` at ${stuPending.centre}` : ''} is reviewing your details. You&apos;ll get in the moment they approve you.</div>
+
+      {code && (
+        <button onClick={copyCode} className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-white cursor-pointer">
+          <div className="text-[11px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+          <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
+        </button>
+      )}
+
+      <button onClick={checkNow} disabled={busy} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
+      <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent mt-2">Use a different code</button>
     </div>
   )
 }
