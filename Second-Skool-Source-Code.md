@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-28 · commit `b053a38` · fix: stop head being logged out into student "invalid code" state on mobile
+Generated 2026-07-28 · commit `a8bbde3` · feat: add in-app email-code (OTP) sign-in for teachers on installed PWA
 
 
 ## .claude/launch.json
@@ -741,9 +741,12 @@ const CLASS_OPTIONS = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'C
 
 export function LoginScreen() {
   const { authLoading, notify, loadStudentByCode, stuSignup, setStuSignup, studentSignup } = useDashboard()
-  const [mode, setMode] = useState<'choose' | 'student' | 'register'>('choose')
+  const [mode, setMode] = useState<'choose' | 'student' | 'register' | 'email'>('choose')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -751,6 +754,38 @@ export function LoginScreen() {
       options: { redirectTo: `${window.location.origin}/` },
     })
     if (error) notify('Google sign-in failed')
+  }
+
+  // Email-code (OTP) sign-in: the reliable path for the installed (home-screen)
+  // app, where Google's redirect escapes to the phone browser and the session
+  // never lands back in the PWA. Typing a code stays fully in-app.
+  const sendEmailCode = async () => {
+    const e = email.trim().toLowerCase()
+    if (!e.includes('@') || e.length < 5) { notify('Enter your email'); return }
+    setBusy(true)
+    // shouldCreateUser:false — only existing teachers/heads can get a code, so a
+    // stranger can't mint a staff account just by entering any email.
+    const { error } = await supabase.auth.signInWithOtp({ email: e, options: { shouldCreateUser: false } })
+    setBusy(false)
+    if (error) {
+      const m = error.message.toLowerCase()
+      notify(m.includes('not allowed') || m.includes('signups') ? 'No teacher account uses that email' : 'Could not send code — try again')
+      return
+    }
+    setOtpSent(true)
+    notify('Code sent — check your email')
+  }
+
+  const verifyEmailCode = async () => {
+    const e = email.trim().toLowerCase()
+    const token = otp.trim()
+    if (token.length < 6) { notify('Enter the 6-digit code'); return }
+    setBusy(true)
+    // On success, SupabaseProvider's onAuthStateChange picks up the session and
+    // routes the head/teacher into the app — no redirect, no browser hand-off.
+    const { error } = await supabase.auth.verifyOtp({ email: e, token, type: 'email' })
+    setBusy(false)
+    if (error) notify('Wrong or expired code — try again')
   }
 
   const submitCode = async () => {
@@ -790,6 +825,12 @@ export function LoginScreen() {
             <span className="text-[14.5px] font-bold text-td-text">Teacher — continue with Google</span>
           </button>
 
+          <button onClick={() => setMode('email')} className="w-full border border-[#dfe3ea] bg-white rounded-[14px] p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with email code</span>
+          </button>
+          <div className="text-[11.5px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use the email code — it keeps you signed in.</div>
+
           <div className="flex items-center gap-3 mt-5">
             <div className="flex-1 h-px bg-[#e6eaf2]" />
             <span className="text-[11.5px] text-td-subtle font-semibold">or</span>
@@ -827,6 +868,40 @@ export function LoginScreen() {
           <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-white text-[13.5px] font-bold text-td-primary mt-3">New here? Register yourself</button>
           <button onClick={() => { setMode('choose'); setCode('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
           <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
+        </>
+      )}
+
+      {mode === 'email' && (
+        <>
+          {!otpSent ? (
+            <>
+              <div className="text-sm text-td-muted mt-2 leading-relaxed">Enter your teacher email. We&apos;ll send a 6-digit code — use the same email as your Google account.</div>
+              <input
+                autoFocus value={email} type="email" inputMode="email" autoComplete="email"
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !busy && sendEmailCode()}
+                placeholder="you@example.com"
+                className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-7"
+              />
+              <button onClick={sendEmailCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Sending…' : 'Send me a code'}</button>
+              <button onClick={() => { setMode('choose'); setEmail(''); setOtp('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
+            </>
+          ) : (
+            <>
+              <div className="text-sm text-td-muted mt-2 leading-relaxed">Enter the 6-digit code we sent to <span className="font-bold text-td-dark">{email.trim().toLowerCase()}</span>.</div>
+              <input
+                autoFocus value={otp} inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
+                onKeyDown={e => e.key === 'Enter' && !busy && verifyEmailCode()}
+                placeholder="123456"
+                className="w-full border border-td-border rounded-[14px] p-[15px] text-2xl text-td-dark outline-none focus:border-td-primary text-center tracking-[0.4em] font-extrabold mt-7"
+              />
+              <button onClick={verifyEmailCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Verifying…' : 'Sign in'}</button>
+              <button onClick={sendEmailCode} disabled={busy} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-white text-[13.5px] font-bold text-td-primary mt-3 disabled:opacity-60">Resend code</button>
+              <button onClick={() => { setOtpSent(false); setOtp('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Use a different email</button>
+            </>
+          )}
+          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Only emails that already have teacher access can sign in this way.</div>
         </>
       )}
 
