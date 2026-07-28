@@ -44,11 +44,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function Sidebar() {
-  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, loadMyCentre } = useDashboard()
+  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, pendingStudents, loadMyCentre } = useDashboard()
   const isAdmin = role === 'admin'
   useEffect(() => { if (!centreName) loadMyCentre() }, [centreName, loadMyCentre])
   const name = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
   const pending = staffList.filter(s => s.status === 'pending').length
+  const stuReq = pendingStudents.length
 
   const main: NavItem[] = [
     { icon: '🏠', label: 'Dashboard', screen: 'home', tab: 'home' },
@@ -65,6 +66,7 @@ function Sidebar() {
   ]
   const manage: NavItem[] = [
     { icon: '🛡️', label: 'Approvals', screen: 'staffApprovals', badge: pending },
+    { icon: '🙋', label: 'Student requests', screen: 'studentRequests', badge: stuReq },
     { icon: '📈', label: 'Reports', screen: 'reports' },
     { icon: '💳', label: 'Fees', screen: 'fees' },
     { icon: '🏆', label: 'Rankings', screen: 'rankings' },
