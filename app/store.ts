@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { supabase } from './lib/supabase'
-import { sendPush } from './lib/push'
+import { sendPush, enablePush, pushSupported } from './lib/push'
 
 const dbErr = (op: string, notify: (m: string) => void) =>
   ({ error }: { error: unknown }) => { if (error) notify(`Sync failed: ${op}`) }
@@ -322,7 +322,14 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       // clear whether any device actually got a lock-screen alert.
       const codes = targets.map(s => s.id).filter(Boolean)
       if (codes.length) sendPush({ studentCodes: codes, title: `${type} reminder`, body: message })
-        .then(r => get().notify(r.error ? `Push failed: ${r.error}` : `Push sent to ${r.sent} device(s)`))
+        .then(r => {
+          // The in-app reminder already lands for every student (notifications
+          // insert above). Only surface the push leg when it adds signal: a real
+          // error, or a positive device count. Stay silent on 0 so it never
+          // reads as a failure when no student has enabled phone push yet.
+          if (r.error) get().notify(`Push failed: ${r.error}`)
+          else if (r.sent) get().notify(`Also pushed to ${r.sent} device(s)`)
+        })
     }
 
     const now = new Date().toISOString()
@@ -540,6 +547,11 @@ export const useDashboard = create<State & Actions>((set, get) => ({
         role: 'student', staffStatus: 'none', screen: 'stuHome', tab: 'stuHome' as Tab,
         authLoading: false, stuRankSubject: Object.keys(patch.rankData ?? {})[0] ?? '',
       })
+      // Auto-prompt for push on login so students don't have to hunt for a
+      // button. enablePush is idempotent and stays silent once permission is
+      // decided (granted → re-subscribes, denied → no dialog); skip when denied
+      // and swallow failures so a blocked prompt never disrupts login.
+      if (pushSupported() && Notification.permission !== 'denied') enablePush('student', trimmed).catch(() => {})
     }
     set(patch)
     return true
