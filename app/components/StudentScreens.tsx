@@ -595,7 +595,7 @@ export function StuAssignmentsScreen() {
 }
 
 export function StuProfileScreen() {
-  const { go, signOut, students, currentStudentDbId, stuResults, googleEmail } = useDashboard()
+  const { signOut, students, currentStudentDbId, stuResults, googleEmail } = useDashboard()
   const me = students.find(s => s.dbId === currentStudentDbId)
   const displayName = me?.name ?? googleEmail?.split('@')[0] ?? 'Student'
   const ini = initials(displayName)
@@ -604,21 +604,20 @@ export function StuProfileScreen() {
   const avg = totalMax > 0 ? Math.round((totalMarks / totalMax) * 100) : 0
   const grade = stuGrade(avg)
 
+  // Every detail is centre-managed. A student can view but never change their
+  // own record — only the head teacher edits it (from Students → Edit Student).
   const fields = [
     { icon: '🏫', label: 'School', value: me?.school || '—', locked: true },
     { icon: '📚', label: 'Standard', value: me?.klass || '—', locked: true },
-    { icon: '📱', label: 'Parent contact', value: me?.parent || '—', locked: false },
-    { icon: '📍', label: 'Address', value: me?.address || '—', locked: false },
+    { icon: '📱', label: 'Parent contact', value: me?.parent || '—', locked: true },
+    { icon: '📍', label: 'Address', value: me?.address || '—', locked: true },
   ]
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
         <div className="text-2xl font-extrabold text-td-dark">My Profile</div>
-        <div className="flex gap-2">
-          <button onClick={() => go('stuEditProfile', 'stuProfile')} className="border border-td-border bg-white text-td-primary text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Edit</button>
-          <button onClick={signOut} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Sign out</button>
-        </div>
+        <button onClick={signOut} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Sign out</button>
       </div>
 
       <div className="rounded-[22px] p-5 text-white flex items-center gap-4 mb-5" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
@@ -645,58 +644,7 @@ export function StuProfileScreen() {
         ))}
       </div>
 
-      <div className="text-[11.5px] text-td-subtle text-center leading-relaxed">Fields marked with 🔒 are set by your tuition centre and cannot be changed.</div>
-    </div>
-  )
-}
-
-export function StuEditProfileScreen() {
-  const { stuEdit, go, set, students, currentStudentDbId, stuResults, googleEmail, saveStudentProfile } = useDashboard()
-  const me = students.find(s => s.dbId === currentStudentDbId)
-  const displayName = me?.name ?? googleEmail?.split('@')[0] ?? 'Student'
-  const ini = initials(displayName)
-  const totalMarks = stuResults.reduce((a, r) => a + r.marks, 0)
-  const totalMax = stuResults.reduce((a, r) => a + r.total, 0)
-  const avg = totalMax > 0 ? Math.round((totalMarks / totalMax) * 100) : 0
-  const grade = stuGrade(avg)
-
-  return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
-      <ScreenHeader title="Edit Profile" onBack={() => go('stuProfile', 'stuProfile')} />
-
-      <div className="flex flex-col items-center mb-5">
-        <div className="w-[80px] h-[80px] rounded-3xl flex items-center justify-center text-white font-extrabold text-[28px] mb-2 relative" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>
-          {ini}
-          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-td-primary flex items-center justify-center border-2 border-td-bg">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></svg>
-          </div>
-        </div>
-        <button className="text-[12px] text-td-primary font-bold mt-1 border-none bg-transparent cursor-pointer">Change photo</button>
-      </div>
-
-      <div className="flex flex-col gap-3.5 mb-5">
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Full name</label><input value={stuEdit.name || displayName} onChange={e => set({ stuEdit: { ...stuEdit, name: e.target.value } })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Parent contact</label><input value={stuEdit.parentNumber || me?.parent || ''} onChange={e => set({ stuEdit: { ...stuEdit, parentNumber: e.target.value } })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Address</label><input value={stuEdit.address || me?.address || ''} onChange={e => set({ stuEdit: { ...stuEdit, address: e.target.value } })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-      </div>
-
-      <div className="bg-[#f4f6fb] border border-td-border rounded-[18px] p-4 mb-5">
-        <div className="text-[12px] font-bold text-td-subtle mb-2.5">Locked by tuition centre</div>
-        <div className="flex flex-col gap-2">
-          {[
-            { l: 'School', v: me?.school || '—' },
-            { l: 'Standard', v: me?.klass || '—' },
-            { l: 'Performance', v: stuResults.length > 0 ? `${grade.g} · ${avg}%` : '—' },
-          ].map(f => (
-            <div key={f.l} className="flex items-center justify-between">
-              <span className="text-[12.5px] text-td-muted">{f.l}</span>
-              <span className="text-[12.5px] font-bold text-td-text">{f.v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <PrimaryButton onClick={saveStudentProfile}>Save changes</PrimaryButton>
+      <div className="text-[11.5px] text-td-subtle text-center leading-relaxed">Your details are managed by your tuition centre and can&apos;t be changed here. Ask your teacher if something needs updating.</div>
     </div>
   )
 }

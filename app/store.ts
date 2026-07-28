@@ -18,7 +18,7 @@ export type Screen =
   | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
   | 'stuSignup' | 'stuPending'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
-  | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuEditProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
+  | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
 
 export type Tab = 'home' | 'timetable' | 'students' | 'teachers' | 'more'
   | 'stuHome' | 'stuResults' | 'stuRanking' | 'stuTeachers' | 'stuProfile'
@@ -62,7 +62,6 @@ interface State {
   stuPending: { name: string; code: string; centre: string } | null
   pendingStudents: PendingStudent[]
   stuTeacherIndex: number; stuRankSubject: string
-  stuEdit: { name: string; parentNumber: string; address: string }
   supabaseUserId: string | null; authLoading: boolean; dataLoading: boolean
 
   teachers: Teacher[]; students: Student[]
@@ -111,7 +110,6 @@ interface Actions {
   saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => void
   saveReminder: (type: string, message: string, targetClass: string, filter?: string) => void
   notifyClass: (klass: string, title: string, detail: string, icon: string) => void
-  saveStudentProfile: () => void
   addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => void
   toggleFeeStatus: (idx: number) => void
   addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => void
@@ -163,7 +161,6 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   stuPending: null, pendingStudents: [],
   teachers: [], students: [],
   stuTeacherIndex: 0, stuRankSubject: '',
-  stuEdit: { name: '', parentNumber: '', address: '' },
   supabaseUserId: null, authLoading: true, dataLoading: false,
 
   branchesList: [], meetingsList: [], assignmentsList: [],
@@ -402,23 +399,6 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     const codes = targets.map(s => s.id).filter(Boolean)
     if (codes.length) sendPush({ studentCodes: codes, title, body: detail })
       .then(r => { if (!r.error) get().notify(`Notified ${targets.length} student(s) · push to ${r.sent} device(s)`) })
-  },
-
-  saveStudentProfile: async () => {
-    const { stuEdit, currentStudentDbId, students } = get()
-    const idx = students.findIndex(s => s.dbId === currentStudentDbId)
-    if (idx < 0) { get().notify('No student profile linked'); return }
-    const updated = { ...students[idx] }
-    if (stuEdit.name.trim()) updated.name = stuEdit.name.trim()
-    if (stuEdit.parentNumber.trim()) updated.parent = stuEdit.parentNumber.trim()
-    if (stuEdit.address.trim()) updated.address = stuEdit.address.trim()
-    const { error } = await supabase.rpc('update_student_self', {
-      p_code: updated.id, p_name: updated.name, p_parent: updated.parent, p_address: updated.address ?? '',
-    })
-    if (error) { get().notify('Could not update — try again'); return }
-    const arr = [...students]; arr[idx] = updated
-    set({ students: arr, stuEdit: { name: '', parentNumber: '', address: '' } })
-    get().notify('Profile updated'); get().go('stuProfile', 'stuProfile')
   },
 
   addFee: (studentDbId, amount, period, dueDate) => {

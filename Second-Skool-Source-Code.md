@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-28 · commit `801834d` · fix: add Student requests to desktop sidebar
+Generated 2026-07-28 · commit `86eb240` · feat: separate student join code from teacher join code
 
 
 ## .claude/launch.json
@@ -1854,7 +1854,7 @@ function StatusBar() {
 }
 
 function BottomTabBar() {
-  const { role, tab, go, currentStudentDbId, staffStatus, supabaseUserId } = useDashboard()
+  const { role, tab, go, currentStudentDbId, staffStatus, supabaseUserId, pendingStudents, staffList } = useDashboard()
   if (!role) return null
   // Unapproved Google staff (register/pending/denied) get no navigation.
   if (supabaseUserId && staffStatus !== 'approved') return null
@@ -1891,11 +1891,21 @@ function BottomTabBar() {
   ]
   const tabs = allTabs.filter(t => role === 'admin' || !t.headOnly)
 
+  // Red dot on "More": something in that section needs the head/teacher's action —
+  // a student self-registration waiting, or (head only) a staff access request.
+  const pendingStaff = role === 'admin' ? staffList.filter(s => s.status === 'pending').length : 0
+  const moreAlert = pendingStudents.length > 0 || pendingStaff > 0
+
   return (
     <div className="shrink-0 flex justify-around items-center pt-3 pb-[26px] px-2.5 bg-white border-t border-[#eef1f7]">
       {tabs.map(t => (
         <button key={t.key} onClick={() => go(t.key === 'timetable' ? 'timetable' : t.key as Screen, t.key)} className="border-none bg-transparent cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
-          {t.icon(color(t.key))}
+          <span className="relative">
+            {t.icon(color(t.key))}
+            {t.key === 'more' && moreAlert && (
+              <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-white" />
+            )}
+          </span>
           <span className="text-[10.5px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
         </button>
       ))}
@@ -2553,7 +2563,7 @@ export function StuAssignmentsScreen() {
 }
 
 export function StuProfileScreen() {
-  const { go, signOut, students, currentStudentDbId, stuResults, googleEmail } = useDashboard()
+  const { signOut, students, currentStudentDbId, stuResults, googleEmail } = useDashboard()
   const me = students.find(s => s.dbId === currentStudentDbId)
   const displayName = me?.name ?? googleEmail?.split('@')[0] ?? 'Student'
   const ini = initials(displayName)
@@ -2562,21 +2572,20 @@ export function StuProfileScreen() {
   const avg = totalMax > 0 ? Math.round((totalMarks / totalMax) * 100) : 0
   const grade = stuGrade(avg)
 
+  // Every detail is centre-managed. A student can view but never change their
+  // own record — only the head teacher edits it (from Students → Edit Student).
   const fields = [
     { icon: '🏫', label: 'School', value: me?.school || '—', locked: true },
     { icon: '📚', label: 'Standard', value: me?.klass || '—', locked: true },
-    { icon: '📱', label: 'Parent contact', value: me?.parent || '—', locked: false },
-    { icon: '📍', label: 'Address', value: me?.address || '—', locked: false },
+    { icon: '📱', label: 'Parent contact', value: me?.parent || '—', locked: true },
+    { icon: '📍', label: 'Address', value: me?.address || '—', locked: true },
   ]
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
         <div className="text-2xl font-extrabold text-td-dark">My Profile</div>
-        <div className="flex gap-2">
-          <button onClick={() => go('stuEditProfile', 'stuProfile')} className="border border-td-border bg-white text-td-primary text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Edit</button>
-          <button onClick={signOut} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Sign out</button>
-        </div>
+        <button onClick={signOut} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Sign out</button>
       </div>
 
       <div className="rounded-[22px] p-5 text-white flex items-center gap-4 mb-5" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
@@ -2603,58 +2612,7 @@ export function StuProfileScreen() {
         ))}
       </div>
 
-      <div className="text-[11.5px] text-td-subtle text-center leading-relaxed">Fields marked with 🔒 are set by your tuition centre and cannot be changed.</div>
-    </div>
-  )
-}
-
-export function StuEditProfileScreen() {
-  const { stuEdit, go, set, students, currentStudentDbId, stuResults, googleEmail, saveStudentProfile } = useDashboard()
-  const me = students.find(s => s.dbId === currentStudentDbId)
-  const displayName = me?.name ?? googleEmail?.split('@')[0] ?? 'Student'
-  const ini = initials(displayName)
-  const totalMarks = stuResults.reduce((a, r) => a + r.marks, 0)
-  const totalMax = stuResults.reduce((a, r) => a + r.total, 0)
-  const avg = totalMax > 0 ? Math.round((totalMarks / totalMax) * 100) : 0
-  const grade = stuGrade(avg)
-
-  return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
-      <ScreenHeader title="Edit Profile" onBack={() => go('stuProfile', 'stuProfile')} />
-
-      <div className="flex flex-col items-center mb-5">
-        <div className="w-[80px] h-[80px] rounded-3xl flex items-center justify-center text-white font-extrabold text-[28px] mb-2 relative" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>
-          {ini}
-          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-td-primary flex items-center justify-center border-2 border-td-bg">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></svg>
-          </div>
-        </div>
-        <button className="text-[12px] text-td-primary font-bold mt-1 border-none bg-transparent cursor-pointer">Change photo</button>
-      </div>
-
-      <div className="flex flex-col gap-3.5 mb-5">
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Full name</label><input value={stuEdit.name || displayName} onChange={e => set({ stuEdit: { ...stuEdit, name: e.target.value } })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Parent contact</label><input value={stuEdit.parentNumber || me?.parent || ''} onChange={e => set({ stuEdit: { ...stuEdit, parentNumber: e.target.value } })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Address</label><input value={stuEdit.address || me?.address || ''} onChange={e => set({ stuEdit: { ...stuEdit, address: e.target.value } })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-      </div>
-
-      <div className="bg-[#f4f6fb] border border-td-border rounded-[18px] p-4 mb-5">
-        <div className="text-[12px] font-bold text-td-subtle mb-2.5">Locked by tuition centre</div>
-        <div className="flex flex-col gap-2">
-          {[
-            { l: 'School', v: me?.school || '—' },
-            { l: 'Standard', v: me?.klass || '—' },
-            { l: 'Performance', v: stuResults.length > 0 ? `${grade.g} · ${avg}%` : '—' },
-          ].map(f => (
-            <div key={f.l} className="flex items-center justify-between">
-              <span className="text-[12.5px] text-td-muted">{f.l}</span>
-              <span className="text-[12.5px] font-bold text-td-text">{f.v}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <PrimaryButton onClick={saveStudentProfile}>Save changes</PrimaryButton>
+      <div className="text-[11.5px] text-td-subtle text-center leading-relaxed">Your details are managed by your tuition centre and can&apos;t be changed here. Ask your teacher if something needs updating.</div>
     </div>
   )
 }
@@ -4578,7 +4536,6 @@ const StuTeacherDetail = dyn(() => import('./components/StudentScreens'), 'StuTe
 const StuFeesScreen = dyn(() => import('./components/StudentScreens'), 'StuFeesScreen')
 const StuNotifScreen = dyn(() => import('./components/StudentScreens'), 'StuNotifScreen')
 const StuProfileScreen = dyn(() => import('./components/StudentScreens'), 'StuProfileScreen')
-const StuEditProfileScreen = dyn(() => import('./components/StudentScreens'), 'StuEditProfileScreen')
 const StuTimetableScreen = dyn(() => import('./components/StudentScreens'), 'StuTimetableScreen')
 const StuAssignmentsScreen = dyn(() => import('./components/StudentScreens'), 'StuAssignmentsScreen')
 const NotesScreen = dyn(() => import('./components/NotesScreens'), 'NotesScreen')
@@ -4663,7 +4620,6 @@ function ScreenRouter() {
     case 'stuFees': return <StuFeesScreen />
     case 'stuNotif': return <StuNotifScreen />
     case 'stuProfile': return <StuProfileScreen />
-    case 'stuEditProfile': return <StuEditProfileScreen />
     case 'stuTimetable': return <StuTimetableScreen />
     case 'stuAssignments': return <StuAssignmentsScreen />
     case 'stuNotes': return <StuNotesScreen />
@@ -4695,7 +4651,7 @@ export type Screen =
   | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
   | 'stuSignup' | 'stuPending'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
-  | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuEditProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
+  | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
 
 export type Tab = 'home' | 'timetable' | 'students' | 'teachers' | 'more'
   | 'stuHome' | 'stuResults' | 'stuRanking' | 'stuTeachers' | 'stuProfile'
@@ -4739,7 +4695,6 @@ interface State {
   stuPending: { name: string; code: string; centre: string } | null
   pendingStudents: PendingStudent[]
   stuTeacherIndex: number; stuRankSubject: string
-  stuEdit: { name: string; parentNumber: string; address: string }
   supabaseUserId: string | null; authLoading: boolean; dataLoading: boolean
 
   teachers: Teacher[]; students: Student[]
@@ -4788,7 +4743,6 @@ interface Actions {
   saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => void
   saveReminder: (type: string, message: string, targetClass: string, filter?: string) => void
   notifyClass: (klass: string, title: string, detail: string, icon: string) => void
-  saveStudentProfile: () => void
   addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => void
   toggleFeeStatus: (idx: number) => void
   addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => void
@@ -4840,7 +4794,6 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   stuPending: null, pendingStudents: [],
   teachers: [], students: [],
   stuTeacherIndex: 0, stuRankSubject: '',
-  stuEdit: { name: '', parentNumber: '', address: '' },
   supabaseUserId: null, authLoading: true, dataLoading: false,
 
   branchesList: [], meetingsList: [], assignmentsList: [],
@@ -5079,23 +5032,6 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     const codes = targets.map(s => s.id).filter(Boolean)
     if (codes.length) sendPush({ studentCodes: codes, title, body: detail })
       .then(r => { if (!r.error) get().notify(`Notified ${targets.length} student(s) · push to ${r.sent} device(s)`) })
-  },
-
-  saveStudentProfile: async () => {
-    const { stuEdit, currentStudentDbId, students } = get()
-    const idx = students.findIndex(s => s.dbId === currentStudentDbId)
-    if (idx < 0) { get().notify('No student profile linked'); return }
-    const updated = { ...students[idx] }
-    if (stuEdit.name.trim()) updated.name = stuEdit.name.trim()
-    if (stuEdit.parentNumber.trim()) updated.parent = stuEdit.parentNumber.trim()
-    if (stuEdit.address.trim()) updated.address = stuEdit.address.trim()
-    const { error } = await supabase.rpc('update_student_self', {
-      p_code: updated.id, p_name: updated.name, p_parent: updated.parent, p_address: updated.address ?? '',
-    })
-    if (error) { get().notify('Could not update — try again'); return }
-    const arr = [...students]; arr[idx] = updated
-    set({ students: arr, stuEdit: { name: '', parentNumber: '', address: '' } })
-    get().notify('Profile updated'); get().go('stuProfile', 'stuProfile')
   },
 
   addFee: (studentDbId, amount, period, dueDate) => {
@@ -5804,6 +5740,22 @@ self.addEventListener('notificationclick', (event) => {
     })
   )
 })
+```
+
+## supabase/lock-student-self-edit.sql
+
+```sql
+-- ============================================================================
+-- LOCK STUDENT SELF-EDIT — Second Skool
+-- Students may VIEW their profile but never change it. Only the head teacher
+-- edits a student record (Students → Edit Student, RLS-gated by is_staff()).
+-- This removes the anon/authenticated self-update RPC entirely so a code-only
+-- student can no longer patch their own name / parent / address.
+-- Idempotent.
+-- ============================================================================
+
+revoke all on function public.update_student_self(text, text, text, text) from anon, authenticated;
+drop function if exists public.update_student_self(text, text, text, text);
 ```
 
 ## supabase/multitenancy.sql

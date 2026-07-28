@@ -34,7 +34,7 @@ function StatusBar() {
 }
 
 function BottomTabBar() {
-  const { role, tab, go, currentStudentDbId, staffStatus, supabaseUserId } = useDashboard()
+  const { role, tab, go, currentStudentDbId, staffStatus, supabaseUserId, pendingStudents, staffList } = useDashboard()
   if (!role) return null
   // Unapproved Google staff (register/pending/denied) get no navigation.
   if (supabaseUserId && staffStatus !== 'approved') return null
@@ -71,11 +71,21 @@ function BottomTabBar() {
   ]
   const tabs = allTabs.filter(t => role === 'admin' || !t.headOnly)
 
+  // Red dot on "More": something in that section needs the head/teacher's action —
+  // a student self-registration waiting, or (head only) a staff access request.
+  const pendingStaff = role === 'admin' ? staffList.filter(s => s.status === 'pending').length : 0
+  const moreAlert = pendingStudents.length > 0 || pendingStaff > 0
+
   return (
     <div className="shrink-0 flex justify-around items-center pt-3 pb-[26px] px-2.5 bg-white border-t border-[#eef1f7]">
       {tabs.map(t => (
         <button key={t.key} onClick={() => go(t.key === 'timetable' ? 'timetable' : t.key as Screen, t.key)} className="border-none bg-transparent cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
-          {t.icon(color(t.key))}
+          <span className="relative">
+            {t.icon(color(t.key))}
+            {t.key === 'more' && moreAlert && (
+              <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-white" />
+            )}
+          </span>
           <span className="text-[10.5px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
         </button>
       ))}
