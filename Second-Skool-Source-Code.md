@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-28 · commit `f775156` · fix: show declined state to rejected students instead of false-hope pending screen
+Generated 2026-07-28 · commit `b053a38` · fix: stop head being logged out into student "invalid code" state on mobile
 
 
 ## .claude/launch.json
@@ -2737,6 +2737,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function handleAuth(userId: string, email: string) {
+    // A Google-authenticated user is staff, never a code-access student. Purge
+    // any student_code left over from testing so a session blip can't drop this
+    // device into the student "invalid code" path.
+    if (typeof window !== 'undefined') localStorage.removeItem('student_code')
     try {
       const { data: profile } = await supabase.from('profiles').select('role, staff_status, full_name, phone').eq('id', userId).single()
       const role = (profile?.role as Role) ?? 'student'
@@ -4470,6 +4474,25 @@ if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey))
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder',
+  {
+    auth: {
+      // Keep the head/teacher signed in across app launches. These are the
+      // supabase-js defaults, but we set them explicitly so a future default
+      // change can't silently start logging users out on mobile.
+      persistSession: true,
+      autoRefreshToken: true,
+      // Parse the token that Google returns in the redirect URL and store it.
+      detectSessionInUrl: true,
+      // Implicit flow returns the session directly in the redirect hash. PKCE
+      // needs the code-verifier to still be in storage at exchange time, which
+      // breaks when an installed PWA hands OAuth to an external browser — so
+      // implicit is the more reliable choice for this add-to-home-screen app.
+      flowType: 'implicit',
+      // Stable, app-specific key so the session isn't lost if the default
+      // storage key ever changes between SDK versions.
+      storageKey: 'second-skool-auth',
+    },
+  },
 )
 ```
 
@@ -5219,9 +5242,14 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (trimmed.length < 4) { if (navigate) get().notify('Enter your code'); return false }
     const { data, error } = await supabase.rpc('get_student_snapshot', { p_code: trimmed })
     if (error || !data) {
-      // Surface the rate-limit message; otherwise a generic invalid-code note.
-      const msg = error?.message?.includes('Too many') ? error.message : 'Invalid code — check with your teacher'
-      if (navigate) get().notify(msg)
+      // Distinguish a transient throttle from a genuinely dead code.
+      const throttled = error?.message?.includes('Too many')
+      // A code that resolves to nothing is dead (deleted/never valid). Drop it
+      // so it stops re-firing "Invalid code" on every launch — this is what
+      // hijacks a head's device when a stale test code is left in storage.
+      // Never clear on a rate-limit: the code may be perfectly valid.
+      if (!throttled && typeof window !== 'undefined') localStorage.removeItem('student_code')
+      if (navigate) get().notify(throttled ? error!.message : 'Invalid code — check with your teacher')
       return false
     }
     const snap = data as { status?: string; student?: { name?: string; code?: string } }
