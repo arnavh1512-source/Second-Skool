@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-28 · commit `a8bbde3` · feat: add in-app email-code (OTP) sign-in for teachers on installed PWA
+Generated 2026-07-28 · commit `c5ce47e` · feat: email+password sign-in for staff so the installed PWA stays logged in
 
 
 ## .claude/launch.json
@@ -745,8 +745,7 @@ export function LoginScreen() {
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
+  const [password, setPassword] = useState('')
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -756,36 +755,21 @@ export function LoginScreen() {
     if (error) notify('Google sign-in failed')
   }
 
-  // Email-code (OTP) sign-in: the reliable path for the installed (home-screen)
-  // app, where Google's redirect escapes to the phone browser and the session
-  // never lands back in the PWA. Typing a code stays fully in-app.
-  const sendEmailCode = async () => {
+  // Email+password sign-in: the reliable path for the installed (home-screen)
+  // app. Google's redirect escapes to the phone browser and the session never
+  // lands back in the PWA, so the head is logged out on every launch. A password
+  // login stays fully in-app, so the session persists. Staff set their password
+  // once from My Profile (Set password) after a Google sign-in.
+  const signInWithPassword = async () => {
     const e = email.trim().toLowerCase()
     if (!e.includes('@') || e.length < 5) { notify('Enter your email'); return }
-    setBusy(true)
-    // shouldCreateUser:false — only existing teachers/heads can get a code, so a
-    // stranger can't mint a staff account just by entering any email.
-    const { error } = await supabase.auth.signInWithOtp({ email: e, options: { shouldCreateUser: false } })
-    setBusy(false)
-    if (error) {
-      const m = error.message.toLowerCase()
-      notify(m.includes('not allowed') || m.includes('signups') ? 'No teacher account uses that email' : 'Could not send code — try again')
-      return
-    }
-    setOtpSent(true)
-    notify('Code sent — check your email')
-  }
-
-  const verifyEmailCode = async () => {
-    const e = email.trim().toLowerCase()
-    const token = otp.trim()
-    if (token.length < 6) { notify('Enter the 6-digit code'); return }
+    if (!password) { notify('Enter your password'); return }
     setBusy(true)
     // On success, SupabaseProvider's onAuthStateChange picks up the session and
-    // routes the head/teacher into the app — no redirect, no browser hand-off.
-    const { error } = await supabase.auth.verifyOtp({ email: e, token, type: 'email' })
+    // routes the head/teacher into the app.
+    const { error } = await supabase.auth.signInWithPassword({ email: e, password })
     setBusy(false)
-    if (error) notify('Wrong or expired code — try again')
+    if (error) notify('Wrong email or password')
   }
 
   const submitCode = async () => {
@@ -826,10 +810,10 @@ export function LoginScreen() {
           </button>
 
           <button onClick={() => setMode('email')} className="w-full border border-[#dfe3ea] bg-white rounded-[14px] p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
-            <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with email code</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with password</span>
           </button>
-          <div className="text-[11.5px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use the email code — it keeps you signed in.</div>
+          <div className="text-[11.5px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
 
           <div className="flex items-center gap-3 mt-5">
             <div className="flex-1 h-px bg-[#e6eaf2]" />
@@ -873,35 +857,23 @@ export function LoginScreen() {
 
       {mode === 'email' && (
         <>
-          {!otpSent ? (
-            <>
-              <div className="text-sm text-td-muted mt-2 leading-relaxed">Enter your teacher email. We&apos;ll send a 6-digit code — use the same email as your Google account.</div>
-              <input
-                autoFocus value={email} type="email" inputMode="email" autoComplete="email"
-                onChange={e => setEmail(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && !busy && sendEmailCode()}
-                placeholder="you@example.com"
-                className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-7"
-              />
-              <button onClick={sendEmailCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Sending…' : 'Send me a code'}</button>
-              <button onClick={() => { setMode('choose'); setEmail(''); setOtp('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
-            </>
-          ) : (
-            <>
-              <div className="text-sm text-td-muted mt-2 leading-relaxed">Enter the 6-digit code we sent to <span className="font-bold text-td-dark">{email.trim().toLowerCase()}</span>.</div>
-              <input
-                autoFocus value={otp} inputMode="numeric" autoComplete="one-time-code" maxLength={6}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                onKeyDown={e => e.key === 'Enter' && !busy && verifyEmailCode()}
-                placeholder="123456"
-                className="w-full border border-td-border rounded-[14px] p-[15px] text-2xl text-td-dark outline-none focus:border-td-primary text-center tracking-[0.4em] font-extrabold mt-7"
-              />
-              <button onClick={verifyEmailCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Verifying…' : 'Sign in'}</button>
-              <button onClick={sendEmailCode} disabled={busy} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-white text-[13.5px] font-bold text-td-primary mt-3 disabled:opacity-60">Resend code</button>
-              <button onClick={() => { setOtpSent(false); setOtp('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Use a different email</button>
-            </>
-          )}
-          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Only emails that already have teacher access can sign in this way.</div>
+          <div className="text-sm text-td-muted mt-2 leading-relaxed">Sign in with your teacher email and password. Use the same email as your Google account.</div>
+          <input
+            autoFocus value={email} type="email" inputMode="email" autoComplete="email"
+            onChange={e => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-7"
+          />
+          <input
+            value={password} type="password" autoComplete="current-password"
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && !busy && signInWithPassword()}
+            placeholder="Password"
+            className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-3"
+          />
+          <button onClick={signInWithPassword} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
+          <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
+          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
         </>
       )}
 
@@ -3965,7 +3937,7 @@ export function MoreScreen() {
 }
 
 export function StaffProfileScreen() {
-  const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify } = useDashboard()
+  const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'
   const logoInput = useRef<HTMLInputElement>(null)
   const [logoBusy, setLogoBusy] = useState(false)
@@ -4000,6 +3972,20 @@ export function StaffProfileScreen() {
     await saveStaffProfile(name, phone)
     if (isAdmin && centre.trim() && centre.trim() !== centreName) await renameCentre(centre)
     setBusy(false)
+  }
+
+  // Set an email+password login so this device (esp. the installed home-screen
+  // app) can sign in without Google's redirect, which drops the session.
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [pwOpen, setPwOpen] = useState(false)
+  const [pwBusy, setPwBusy] = useState(false)
+  const savePassword = async () => {
+    if (pw !== pw2) { notify('Passwords do not match'); return }
+    setPwBusy(true)
+    const ok = await setMyPassword(pw)
+    setPwBusy(false)
+    if (ok) { setPw(''); setPw2(''); setPwOpen(false) }
   }
 
   return (
@@ -4058,6 +4044,24 @@ export function StaffProfileScreen() {
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           {pushOn ? 'Notifications enabled' : 'Enable notifications'}
         </button>
+      )}
+
+      {!pwOpen ? (
+        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Set password for phone login
+        </button>
+      ) : (
+        <div className="border border-td-border rounded-2xl p-4 mt-3">
+          <div className="text-sm font-extrabold text-td-dark">Set a password</div>
+          <p className="text-[11.5px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
+          <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder="New password (min 8 chars)" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-3" />
+          <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-2.5" />
+          <div className="flex gap-2 mt-3">
+            <button onClick={savePassword} disabled={pwBusy} className="flex-1 border-none bg-td-primary text-white text-[13.5px] font-extrabold py-[12px] rounded-[12px] cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
+            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-white text-td-muted text-[13.5px] font-bold py-[12px] px-4 rounded-[12px] cursor-pointer">Cancel</button>
+          </div>
+        </div>
       )}
 
       <button onClick={signOut} className="w-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-[9px]">
@@ -4899,6 +4903,7 @@ interface Actions {
   refreshData: () => Promise<void>
   setAuth: (userId: string | null, role: Role, email: string, staffStatus: StaffStatus, headExists: boolean, name?: string, phone?: string) => void
   saveStaffProfile: (name: string, phone: string) => Promise<void>
+  setMyPassword: (password: string) => Promise<boolean>
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
@@ -5552,6 +5557,18 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (error) { get().notify('Could not save profile — check your connection'); return }
     set({ myName: trimmed, myPhone: phone.trim() })
     get().notify('Profile updated')
+  },
+
+  // Set (or change) an email+password sign-in for a staff member. Lets a
+  // Google-created head/teacher pick a password once, then sign in on the
+  // installed PWA with email+password — a fully in-app flow that survives
+  // relaunches (unlike Google's redirect, which escapes to the browser).
+  setMyPassword: async (password) => {
+    if (password.length < 8) { get().notify('Password must be at least 8 characters'); return false }
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) { get().notify(error.message || 'Could not set password'); return false }
+    get().notify('Password set — you can now sign in with your email')
+    return true
   },
 }))
 
