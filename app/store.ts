@@ -2,6 +2,12 @@ import { create } from 'zustand'
 import { supabase } from './lib/supabase'
 import { sendPush, enablePush, pushSupported } from './lib/push'
 
+// The full-dataset fetch lives in SupabaseProvider (it owns the row mappers).
+// It registers itself here so store actions can re-pull fresh data after a
+// mutation (e.g. marking attendance) instead of waiting for a focus/refresh.
+let _refresh: (() => Promise<void>) | null = null
+export const registerRefresh = (fn: () => Promise<void>) => { _refresh = fn }
+
 const dbErr = (op: string, notify: (m: string) => void) =>
   ({ error }: { error: unknown }) => { if (error) notify(`Sync failed: ${op}`) }
 
@@ -127,6 +133,7 @@ interface Actions {
   signOut: () => void
   loadTeachers: (t: Teacher[]) => void
   loadStudents: (s: Student[]) => void
+  refreshData: () => Promise<void>
   setAuth: (userId: string | null, role: Role, email: string, staffStatus: StaffStatus, headExists: boolean, name?: string, phone?: string) => void
   saveStaffProfile: (name: string, phone: string) => Promise<void>
 }
@@ -256,6 +263,9 @@ export const useDashboard = create<State & Actions>((set, get) => ({
         supabase.from('attendance').upsert(records, { onConflict: 'student_id,date' }).then((res) => {
           dbErr('save attendance', get().notify)(res)
           if (already && !res.error) get().notify('Note: today’s attendance was already marked — it has been updated')
+          // Re-pull so the Students list shows the new attendance % right away,
+          // instead of staying stale until the next focus/manual refresh.
+          if (!res.error) get().refreshData()
         })
       })
     }
@@ -681,6 +691,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   loadTeachers: (t) => set({ teachers: t }),
   loadStudents: (s) => set((prev) => ({ students: s, attClass: prev.attClass || (s.length ? s[0].klass : '') })),
+  refreshData: async () => { await _refresh?.() },
   setAuth: (userId, role, email, staffStatus, headExists, name = '', phone = '') => {
     // Decide the landing screen for a signed-in Google (staff) user.
     const approved = staffStatus === 'approved'

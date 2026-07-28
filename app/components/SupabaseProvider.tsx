@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { useDashboard, type Role, type StaffStatus, type Teacher, type Student, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type StuResultItem, type AttLogItem, type NotifItem, type FeeHistoryItem, type ScheduleItem } from '../store'
+import { useDashboard, registerRefresh, type Role, type StaffStatus, type Teacher, type Student, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type StuResultItem, type AttLogItem, type NotifItem, type FeeHistoryItem, type ScheduleItem } from '../store'
 
 // Minimal shape of the Supabase rows this provider reads — the DB schema is the
 // source of truth, and existing `??` fallbacks handle nullable columns.
@@ -28,6 +28,18 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // and can receive push notifications.
   useEffect(() => {
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {})
+  }, [])
+
+  // Let store mutations request a fresh full-dataset pull (e.g. after saving
+  // attendance) — but only for approved staff who actually load that dataset.
+  useEffect(() => {
+    registerRefresh(async () => {
+      const st = useDashboard.getState()
+      if (st.supabaseUserId && (st.role === 'admin' || st.role === 'teacher') && st.staffStatus === 'approved') {
+        await fetchAllData().catch(() => {})
+      }
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- register once; fetchAllData reads fresh state via store actions
   }, [])
 
   // Head only: keep the pending list warm and alert the instant a teacher
