@@ -169,12 +169,26 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const branchNameById: Record<string, string> = Object.fromEntries(
       (branches ?? []).map((b: Row) => [b.id as string, b.name as string]),
     )
+    // Per-student fee totals: collected = sum of Paid, due = sum of everything else.
+    const feeByStudent: Record<string, { collected: number; due: number }> = {}
+    for (const f of (fees ?? []) as Row[]) {
+      const k = f.student_id as string
+      if (!feeByStudent[k]) feeByStudent[k] = { collected: 0, due: 0 }
+      const amt = Number(f.amount) || 0
+      if (f.status === 'Paid') feeByStudent[k].collected += amt
+      else feeByStudent[k].due += amt
+    }
     const mappedStudents = approvedRows.map((row) => {
       const st = mapStudent(row)
       const branch = branchNameById[row.branch_id as string]
-      const base = branch ? { ...st, branch } : st
       const att = attByStudent[st.dbId ?? '']
-      return att && att.t > 0 ? { ...base, attendance: Math.round((att.p / att.t) * 100) } : base
+      const fee = feeByStudent[st.dbId ?? '']
+      return {
+        ...st,
+        ...(branch ? { branch } : {}),
+        ...(att && att.t > 0 ? { attendance: Math.round((att.p / att.t) * 100) } : {}),
+        ...(fee ? { feeCollected: fee.collected, feeDue: fee.due } : {}),
+      }
     })
     const pendingStudents: PendingStudent[] = pendingRows.map((s) => ({
       dbId: s.id as string, name: (s.name as string) ?? '', klass: (s.class as string) ?? '',

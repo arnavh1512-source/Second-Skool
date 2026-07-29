@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-29 · commit `7b8e712` · feat: head-managed batches, roster views, add-student fixes
+Generated 2026-07-29 · commit `c641f25` · fix: expand Add Student Standard dropdown to Class 1-12
 
 
 ## .claude/launch.json
@@ -2875,12 +2875,26 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const branchNameById: Record<string, string> = Object.fromEntries(
       (branches ?? []).map((b: Row) => [b.id as string, b.name as string]),
     )
+    // Per-student fee totals: collected = sum of Paid, due = sum of everything else.
+    const feeByStudent: Record<string, { collected: number; due: number }> = {}
+    for (const f of (fees ?? []) as Row[]) {
+      const k = f.student_id as string
+      if (!feeByStudent[k]) feeByStudent[k] = { collected: 0, due: 0 }
+      const amt = Number(f.amount) || 0
+      if (f.status === 'Paid') feeByStudent[k].collected += amt
+      else feeByStudent[k].due += amt
+    }
     const mappedStudents = approvedRows.map((row) => {
       const st = mapStudent(row)
       const branch = branchNameById[row.branch_id as string]
-      const base = branch ? { ...st, branch } : st
       const att = attByStudent[st.dbId ?? '']
-      return att && att.t > 0 ? { ...base, attendance: Math.round((att.p / att.t) * 100) } : base
+      const fee = feeByStudent[st.dbId ?? '']
+      return {
+        ...st,
+        ...(branch ? { branch } : {}),
+        ...(att && att.t > 0 ? { attendance: Math.round((att.p / att.t) * 100) } : {}),
+        ...(fee ? { feeCollected: fee.collected, feeDue: fee.due } : {}),
+      }
     })
     const pendingStudents: PendingStudent[] = pendingRows.map((s) => ({
       dbId: s.id as string, name: (s.name as string) ?? '', klass: (s.class as string) ?? '',
@@ -3609,6 +3623,9 @@ export function FeesScreen() {
   const [dueDate, setDueDate] = useState('')
   const paidCount = students.filter(s => s.feeStatus === 'Paid').length
   const pendingCount = students.filter(s => s.feeStatus !== 'Paid').length
+  const totalCollected = students.reduce((n, s) => n + (s.feeCollected ?? 0), 0)
+  const totalRemaining = students.reduce((n, s) => n + (s.feeDue ?? 0), 0)
+  const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
   const rows = [...students.filter(d => d.feeStatus !== 'Paid'), ...students.filter(d => d.feeStatus === 'Paid')]
 
   const handleAdd = () => {
@@ -3631,12 +3648,12 @@ export function FeesScreen() {
 
       <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
         <div className="flex-1 bg-[#e7f5ee] rounded-2xl p-3.5">
-          <div className="text-[22px] font-extrabold text-td-green">{paidCount}</div>
-          <div className="text-[11px] text-[#5a8a72] font-semibold mt-[3px]">Paid</div>
+          <div className="text-[21px] font-extrabold text-td-green leading-tight">{inr(totalCollected)}</div>
+          <div className="text-[11px] text-[#5a8a72] font-semibold mt-[3px]">Collected · {paidCount} paid</div>
         </div>
         <div className="flex-1 bg-[#fdecea] rounded-2xl p-3.5">
-          <div className="text-[22px] font-extrabold text-td-red">{pendingCount}</div>
-          <div className="text-[11px] text-[#a35545] font-semibold mt-[3px]">Pending</div>
+          <div className="text-[21px] font-extrabold text-td-red leading-tight">{inr(totalRemaining)}</div>
+          <div className="text-[11px] text-[#a35545] font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
         </div>
       </div>
 
@@ -3676,11 +3693,15 @@ export function FeesScreen() {
             return (
               <div key={d.id} className="bg-white border border-td-border rounded-2xl p-[13px] px-3.5 flex items-center gap-[13px]">
                 <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(realIdx) }}>{initials(d.name)}</div>
-                <div className="flex-1">
-                  <div className="text-[13.5px] font-bold text-td-dark">{d.name}</div>
-                  <div className="text-xs text-td-muted mt-0.5">{d.klass}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13.5px] font-bold text-td-dark truncate">{d.name}</div>
+                  <div className="text-xs text-td-muted mt-0.5">
+                    {d.klass}
+                    {(d.feeDue ?? 0) > 0 && <span className="text-td-red font-semibold"> · {inr(d.feeDue!)} due</span>}
+                    {(d.feeDue ?? 0) === 0 && (d.feeCollected ?? 0) > 0 && <span className="text-td-green font-semibold"> · {inr(d.feeCollected!)} paid</span>}
+                  </div>
                 </div>
-                <button onClick={() => toggleFeeStatus(realIdx)} className="text-[10.5px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
+                <button onClick={() => toggleFeeStatus(realIdx)} className="text-[10.5px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
               </div>
             )
           })}
@@ -4890,7 +4911,7 @@ export type FeeStatus = 'Paid' | 'Due' | 'Overdue'
 export interface StaffMember { id: string; name: string; email: string; role: string; status: StaffStatus; headRequested: boolean }
 
 export interface Teacher { name: string; subject: string; experience: number; qualification: string; rating?: string; about?: string; dbId?: string }
-export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
+export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; feeStatus: FeeStatus; feeCollected?: number; feeDue?: number; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
 // A self-registered student awaiting the head's approval (roster is separate).
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
@@ -5277,16 +5298,22 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   addFee: (studentDbId, amount, period, dueDate) => {
     const { students } = get()
-    if (studentDbId) {
-      supabase.from('fees').insert({ student_id: studentDbId, amount, period, due_date: dueDate, status: 'Due' }).then(dbErr('add fee', get().notify))
-      supabase.from('students').update({ fee_status: 'Due' }).eq('id', studentDbId).then(dbErr('update fee status', get().notify))
-    }
     const idx = students.findIndex(s => s.dbId === studentDbId)
     if (idx >= 0) {
-      const arr = [...students]; arr[idx] = { ...arr[idx], feeStatus: 'Due' }
+      const arr = [...students]
+      arr[idx] = { ...arr[idx], feeStatus: 'Due', feeDue: (arr[idx].feeDue ?? 0) + amount }
       set({ students: arr })
     }
     get().notify('Fee record added')
+    if (!studentDbId) return
+    void (async () => {
+      const notify = get().notify
+      const r1 = await supabase.from('fees').insert({ student_id: studentDbId, amount, period, due_date: dueDate, status: 'Due' })
+      dbErr('add fee', notify)(r1)
+      const r2 = await supabase.from('students').update({ fee_status: 'Due' }).eq('id', studentDbId)
+      dbErr('update fee status', notify)(r2)
+      await get().refreshData()
+    })()
   },
 
   toggleFeeStatus: (idx) => {
@@ -5294,24 +5321,36 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     const student = students[idx]
     if (!student) return
     const newStatus: FeeStatus = student.feeStatus === 'Paid' ? 'Due' : 'Paid'
-    const arr = [...students]; arr[idx] = { ...arr[idx], feeStatus: newStatus }
+    // Optimistic: flip the badge and, when marking Paid, move outstanding due
+    // into collected so the totals move instantly. refreshData() below then
+    // reconciles the amounts against the DB (source of truth for the reopen case).
+    const arr = [...students]
+    arr[idx] = newStatus === 'Paid'
+      ? { ...student, feeStatus: newStatus, feeCollected: (student.feeCollected ?? 0) + (student.feeDue ?? 0), feeDue: 0 }
+      : { ...student, feeStatus: newStatus }
     set({ students: arr })
-    if (student.dbId) {
-      supabase.from('students').update({ fee_status: newStatus }).eq('id', student.dbId).then(dbErr('toggle fee', get().notify))
+    get().notify(`${student.name}: ${newStatus}`)
+    const dbId = student.dbId
+    if (!dbId) return
+    void (async () => {
+      const notify = get().notify
+      const r1 = await supabase.from('students').update({ fee_status: newStatus }).eq('id', dbId)
+      dbErr('toggle fee', notify)(r1)
       if (newStatus === 'Paid') {
-        supabase.from('fees').update({ status: 'Paid', paid_date: new Date().toISOString().split('T')[0] })
-          .eq('student_id', student.dbId).eq('status', 'Due').then(dbErr('mark fees paid', get().notify))
+        const r2 = await supabase.from('fees').update({ status: 'Paid', paid_date: new Date().toISOString().split('T')[0] })
+          .eq('student_id', dbId).eq('status', 'Due')
+        dbErr('mark fees paid', notify)(r2)
       } else {
         // Reopen ONLY fees marked paid today (undo for a mis-tap). Historical
         // paid months must never flip back — that would corrupt fee history
         // and the fees-collected report.
         const today = new Date().toISOString().split('T')[0]
-        supabase.from('fees').update({ status: 'Due', paid_date: null })
-          .eq('student_id', student.dbId).eq('status', 'Paid').eq('paid_date', today)
-          .then(dbErr('reopen fees', get().notify))
+        const r2 = await supabase.from('fees').update({ status: 'Due', paid_date: null })
+          .eq('student_id', dbId).eq('status', 'Paid').eq('paid_date', today)
+        dbErr('reopen fees', notify)(r2)
       }
-    }
-    get().notify(`${student.name}: ${newStatus}`)
+      await get().refreshData()
+    })()
   },
 
   addTimetableEntry: (day, startTime, endTime, subject, klass, room) => {

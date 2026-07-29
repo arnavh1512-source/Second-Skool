@@ -29,7 +29,7 @@ export type FeeStatus = 'Paid' | 'Due' | 'Overdue'
 export interface StaffMember { id: string; name: string; email: string; role: string; status: StaffStatus; headRequested: boolean }
 
 export interface Teacher { name: string; subject: string; experience: number; qualification: string; rating?: string; about?: string; dbId?: string }
-export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
+export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; feeStatus: FeeStatus; feeCollected?: number; feeDue?: number; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
 // A self-registered student awaiting the head's approval (roster is separate).
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
@@ -416,16 +416,22 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   addFee: (studentDbId, amount, period, dueDate) => {
     const { students } = get()
-    if (studentDbId) {
-      supabase.from('fees').insert({ student_id: studentDbId, amount, period, due_date: dueDate, status: 'Due' }).then(dbErr('add fee', get().notify))
-      supabase.from('students').update({ fee_status: 'Due' }).eq('id', studentDbId).then(dbErr('update fee status', get().notify))
-    }
     const idx = students.findIndex(s => s.dbId === studentDbId)
     if (idx >= 0) {
-      const arr = [...students]; arr[idx] = { ...arr[idx], feeStatus: 'Due' }
+      const arr = [...students]
+      arr[idx] = { ...arr[idx], feeStatus: 'Due', feeDue: (arr[idx].feeDue ?? 0) + amount }
       set({ students: arr })
     }
     get().notify('Fee record added')
+    if (!studentDbId) return
+    void (async () => {
+      const notify = get().notify
+      const r1 = await supabase.from('fees').insert({ student_id: studentDbId, amount, period, due_date: dueDate, status: 'Due' })
+      dbErr('add fee', notify)(r1)
+      const r2 = await supabase.from('students').update({ fee_status: 'Due' }).eq('id', studentDbId)
+      dbErr('update fee status', notify)(r2)
+      await get().refreshData()
+    })()
   },
 
   toggleFeeStatus: (idx) => {
@@ -433,24 +439,36 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     const student = students[idx]
     if (!student) return
     const newStatus: FeeStatus = student.feeStatus === 'Paid' ? 'Due' : 'Paid'
-    const arr = [...students]; arr[idx] = { ...arr[idx], feeStatus: newStatus }
+    // Optimistic: flip the badge and, when marking Paid, move outstanding due
+    // into collected so the totals move instantly. refreshData() below then
+    // reconciles the amounts against the DB (source of truth for the reopen case).
+    const arr = [...students]
+    arr[idx] = newStatus === 'Paid'
+      ? { ...student, feeStatus: newStatus, feeCollected: (student.feeCollected ?? 0) + (student.feeDue ?? 0), feeDue: 0 }
+      : { ...student, feeStatus: newStatus }
     set({ students: arr })
-    if (student.dbId) {
-      supabase.from('students').update({ fee_status: newStatus }).eq('id', student.dbId).then(dbErr('toggle fee', get().notify))
+    get().notify(`${student.name}: ${newStatus}`)
+    const dbId = student.dbId
+    if (!dbId) return
+    void (async () => {
+      const notify = get().notify
+      const r1 = await supabase.from('students').update({ fee_status: newStatus }).eq('id', dbId)
+      dbErr('toggle fee', notify)(r1)
       if (newStatus === 'Paid') {
-        supabase.from('fees').update({ status: 'Paid', paid_date: new Date().toISOString().split('T')[0] })
-          .eq('student_id', student.dbId).eq('status', 'Due').then(dbErr('mark fees paid', get().notify))
+        const r2 = await supabase.from('fees').update({ status: 'Paid', paid_date: new Date().toISOString().split('T')[0] })
+          .eq('student_id', dbId).eq('status', 'Due')
+        dbErr('mark fees paid', notify)(r2)
       } else {
         // Reopen ONLY fees marked paid today (undo for a mis-tap). Historical
         // paid months must never flip back — that would corrupt fee history
         // and the fees-collected report.
         const today = new Date().toISOString().split('T')[0]
-        supabase.from('fees').update({ status: 'Due', paid_date: null })
-          .eq('student_id', student.dbId).eq('status', 'Paid').eq('paid_date', today)
-          .then(dbErr('reopen fees', get().notify))
+        const r2 = await supabase.from('fees').update({ status: 'Due', paid_date: null })
+          .eq('student_id', dbId).eq('status', 'Paid').eq('paid_date', today)
+        dbErr('reopen fees', notify)(r2)
       }
-    }
-    get().notify(`${student.name}: ${newStatus}`)
+      await get().refreshData()
+    })()
   },
 
   addTimetableEntry: (day, startTime, endTime, subject, klass, room) => {
