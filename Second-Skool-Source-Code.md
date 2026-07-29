@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-29 · commit `21594c4` · docs: regenerate source dump after password sign-in
+Generated 2026-07-29 · commit `7b8e712` · feat: head-managed batches, roster views, add-student fixes
 
 
 ## .claude/launch.json
@@ -1634,6 +1634,9 @@ import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
 import { ScreenHeader, PrimaryButton, BackButton, ChevronRight } from './Shell'
 import { whatsappShareUrl, studentCodeMessage } from '../lib/share'
 
+// Full school range so any tuition centre can pick the right standard.
+const STANDARDS = ['Class 12', 'Class 11', 'Class 10', 'Class 9', 'Class 8', 'Class 7', 'Class 6', 'Class 5', 'Class 4', 'Class 3', 'Class 2', 'Class 1']
+
 export function StudentsScreen() {
   const { students, role, origin, back, go, goFrom, set, searchQuery } = useDashboard()
   const isAdmin = role === 'admin'
@@ -1788,7 +1791,7 @@ export function AddStudentScreen() {
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">School</label><input value={newStudent.school} onChange={e => setNewStudent({ school: e.target.value })} placeholder="School" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Standard</label>
             <select value={newStudent.klass} onChange={e => setNewStudent({ klass: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
-              <option>Class 10</option><option>Class 9</option><option>Class 8</option>
+              {STANDARDS.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
         </div>
