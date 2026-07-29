@@ -393,10 +393,11 @@ export function RemindersScreen() {
   const [message, setMessage] = useState(REMINDER_TEMPLATES[reminderType] ?? '')
   const [filter, setFilter] = useState('all')
   const types = [
+    { key: 'Notice', label: 'Notice', icon: '📢' },
+    { key: 'Fee', label: 'Fees', icon: '💳' },
+    { key: 'Homework', label: 'Homework', icon: '📚' },
     { key: 'Test', label: 'Test', icon: '📝' },
     { key: 'Absence', label: 'Absence', icon: '🟡' },
-    { key: 'Fee', label: 'Fee', icon: '💳' },
-    { key: 'Homework', label: 'Homework', icon: '📚' },
   ]
 
   return (

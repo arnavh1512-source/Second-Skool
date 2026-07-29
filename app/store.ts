@@ -366,8 +366,9 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   saveReminder: (type, message, targetClass, filter) => {
     const { students } = get()
-    const icons: Record<string, string> = { Test: '📝', Absence: '🟡', Fee: '💳', Homework: '📚' }
+    const icons: Record<string, string> = { Notice: '📢', Test: '📝', Absence: '🟡', Fee: '💳', Homework: '📚' }
     const icon = icons[type] ?? '🔔'
+    const title = type === 'Notice' ? 'Notice' : `${type} Reminder`
 
     let targets = students.filter(s => s.dbId)
     if (filter === 'absentees') targets = targets.filter(s => s.attendance === 0)
@@ -376,12 +377,12 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
     supabase.from('reminders').insert({ type, message, target_class: targetClass }).then(dbErr('send reminder', get().notify))
     if (targets.length) {
-      const rows = targets.map(s => ({ student_id: s.dbId, title: `${type} Reminder`, detail: message, icon }))
+      const rows = targets.map(s => ({ student_id: s.dbId, title, detail: message, icon }))
       supabase.from('notifications').insert(rows).then(dbErr('send notifications', get().notify))
       // Push to students who enabled notifications; report the result so it's
       // clear whether any device actually got a lock-screen alert.
       const codes = targets.map(s => s.id).filter(Boolean)
-      if (codes.length) sendPush({ studentCodes: codes, title: `${type} reminder`, body: message })
+      if (codes.length) sendPush({ studentCodes: codes, title, body: message })
         .then(r => {
           // The in-app reminder already lands for every student (notifications
           // insert above). Only surface the push leg when it adds signal: a real
@@ -394,10 +395,10 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
     const now = new Date().toISOString()
     const newNotifs = targets.map(() => ({
-      icon, tint: '#eaf1fc', title: `${type} Reminder`, detail: message, when: 'Just now', dbId: now,
+      icon, tint: '#eaf1fc', title, detail: message, when: 'Just now', dbId: now,
     }))
     set((s) => ({ stuNotifications: [...newNotifs, ...s.stuNotifications] }))
-    get().notify(`${type} reminder sent to ${targets.length} students`)
+    get().notify(`${type === 'Notice' ? 'Notice' : `${type} reminder`} sent to ${targets.length} students`)
   },
 
   // Auto-notify students when staff adds content (homework, results, notes,
@@ -903,10 +904,11 @@ export const PLAN_META: Record<string, { name: string; price: string; permonth: 
 export const PLAN_PERKS = ['Unlimited students & classes', 'Attendance, results & assignments', 'Reminders to parents & students', 'Multi-branch management']
 
 export const REMINDER_TEMPLATES: Record<string, string> = {
-  Test: 'Reminder: a unit test is scheduled for tomorrow. Please ensure your child revises the relevant chapters.',
-  Absence: 'Your child was marked absent today. Kindly inform us of the reason or share any concerns.',
+  Notice: 'Dear parents, please note the following update from the centre: ',
   Fee: 'Gentle reminder: the tuition fee is due. Please clear it at the earliest.',
   Homework: 'Reminder: Please submit the pending homework before the next class.',
+  Test: 'Reminder: a unit test is scheduled for tomorrow. Please ensure your child revises the relevant chapters.',
+  Absence: 'Your child was marked absent today. Kindly inform us of the reason or share any concerns.',
 }
 
 // --- Student snapshot mapping (from get_student_snapshot RPC) ---
