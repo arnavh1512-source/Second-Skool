@@ -133,11 +133,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       { data: notifications },
       { data: subjects },
       { data: attendance },
+      { data: batches },
     ] = await Promise.all([
       // Defensive caps: orderings put the newest rows first, so a centre that
       // outgrows a cap loses only the oldest tail, never current data.
       supabase.from('teachers').select('*').order('created_at', { ascending: false }).limit(300),
-      supabase.from('students').select('id,name,class,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at').order('created_at', { ascending: false }).limit(2000),
+      supabase.from('students').select('id,name,class,batch,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at').order('created_at', { ascending: false }).limit(2000),
       supabase.from('branches').select('*').order('is_main', { ascending: false }).limit(50),
       supabase.from('meetings').select('*').order('date', { ascending: false }).limit(200),
       supabase.from('assignments').select('*').order('due_date', { ascending: false }).limit(500),
@@ -148,6 +149,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('subjects').select('*').limit(100),
       supabase.from('attendance').select('*').order('date', { ascending: false }).limit(20000),
+      supabase.from('batches').select('*').order('created_at', { ascending: true }).limit(200),
     ])
 
     const mappedTeachers = (teachers ?? []).map(mapTeacher)
@@ -164,10 +166,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // every count/ranking derived from it) until the head approves them.
     const approvedRows = (students ?? []).filter((s) => ((s.status as string) ?? 'approved') === 'approved')
     const pendingRows = (students ?? []).filter((s) => (s.status as string) === 'pending')
+    const branchNameById: Record<string, string> = Object.fromEntries(
+      (branches ?? []).map((b: Row) => [b.id as string, b.name as string]),
+    )
     const mappedStudents = approvedRows.map((row) => {
       const st = mapStudent(row)
+      const branch = branchNameById[row.branch_id as string]
+      const base = branch ? { ...st, branch } : st
       const att = attByStudent[st.dbId ?? '']
-      return att && att.t > 0 ? { ...st, attendance: Math.round((att.p / att.t) * 100) } : st
+      return att && att.t > 0 ? { ...base, attendance: Math.round((att.p / att.t) * 100) } : base
     })
     const pendingStudents: PendingStudent[] = pendingRows.map((s) => ({
       dbId: s.id as string, name: (s.name as string) ?? '', klass: (s.class as string) ?? '',
@@ -175,6 +182,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       address: (s.address as string) ?? '', code: (s.student_code as string) ?? '',
       when: timeAgo(s.created_at as string),
     }))
+    const batchList = (batches ?? []).map((b: Row) => ({ name: b.name as string, dbId: b.id as string }))
     const subjectList = (subjects ?? []).map((s: Row) => ({ name: s.name as string, dbId: s.id as string }))
     const subjectMap = Object.fromEntries(subjectList.map(s => [s.dbId, s.name]))
     const studentMap = Object.fromEntries(mappedStudents.map(s => [s.dbId, s]))
@@ -313,7 +321,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     set({
       branchesList, meetingsList, assignmentsList, timetableData, schedule,
-      rankData, subjects: subjectItems, stuResults, stuAttendanceLog,
+      rankData, subjects: subjectItems, batches: batchList, stuResults, stuAttendanceLog,
       stuFeeHistory, stuPendingFee, stuNotifications, stuReminders, pendingStudents,
     })
   }
@@ -422,6 +430,7 @@ function mapStudent(s: Record<string, unknown>): Student {
     school: (s.school as string) ?? '', parent: (s.parent_contact as string) ?? '',
     id: (s.student_code as string) ?? '', address: (s.address as string) ?? '',
     dbId: s.id as string, status: (s.status as string) ?? 'approved',
+    batch: (s.batch as string) ?? undefined,
   }
 }
 

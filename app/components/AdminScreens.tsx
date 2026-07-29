@@ -106,7 +106,7 @@ export function StaffApprovalsScreen() {
 // Head/teacher review of self-registered students. Approve (optionally setting
 // batch/branch + a first fee) turns their code live; reject declines it.
 export function StudentRequestsScreen() {
-  const { back, pendingStudents, branchesList, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
+  const { back, pendingStudents, branchesList, batches, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
 
   useEffect(() => { refreshData(); loadMyCentre() }, [refreshData, loadMyCentre])
 
@@ -145,7 +145,7 @@ export function StudentRequestsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {pendingStudents.map((s, i) => (
-            <StudentRequestCard key={s.dbId} s={s} idx={i} branches={branchesList} onApprove={approveStudent} onReject={rejectStudent} />
+            <StudentRequestCard key={s.dbId} s={s} idx={i} branches={branchesList} batchList={batches} onApprove={approveStudent} onReject={rejectStudent} />
           ))}
         </div>
       )}
@@ -153,17 +153,19 @@ export function StudentRequestsScreen() {
   )
 }
 
-function StudentRequestCard({ s, idx, branches, onApprove, onReject }: {
+function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }: {
   s: import('../store').PendingStudent
   idx: number
   branches: import('../store').BranchItem[]
-  onApprove: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string) => Promise<void>
+  batchList: import('../store').BatchItem[]
+  onApprove: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string, batch?: string) => Promise<void>
   onReject: (dbId: string) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [klass, setKlass] = useState(s.klass)
   const [branch, setBranch] = useState('')
+  const [batch, setBatch] = useState('')
   const [fee, setFee] = useState('')
   const [feeDue, setFeeDue] = useState('')
 
@@ -171,7 +173,7 @@ function StudentRequestCard({ s, idx, branches, onApprove, onReject }: {
     if (busy) return
     setBusy(true)
     const branchId = branch ? branches.find(b => b.name === branch)?.dbId ?? null : null
-    await onApprove(s.dbId, klass, branchId, fee, feeDue)
+    await onApprove(s.dbId, klass, branchId, fee, feeDue, batch || undefined)
     setBusy(false)
   }
 
@@ -213,6 +215,15 @@ function StudentRequestCard({ s, idx, branches, onApprove, onReject }: {
               </div>
             )}
           </div>
+          {batchList.length > 0 && (
+            <div>
+              <label className="text-[11px] font-bold text-td-muted">Batch</label>
+              <select value={batch} onChange={e => setBatch(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1 bg-white">
+                <option value="">No batch</option>
+                {batchList.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
+              </select>
+            </div>
+          )}
           <div className="flex gap-2.5">
             <div className="flex-1">
               <label className="text-[11px] font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>

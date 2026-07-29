@@ -120,7 +120,7 @@ export function EditStudentScreen() {
 }
 
 export function AddStudentScreen() {
-  const { go, goFrom, origin, newStudent, setNewStudent, addStudent, branchesList, lastAdded, set, notify } = useDashboard()
+  const { go, goFrom, origin, newStudent, setNewStudent, addStudent, branchesList, batches, lastAdded, set, notify } = useDashboard()
   const backToList = () => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')
 
   if (lastAdded) {
@@ -165,7 +165,8 @@ export function AddStudentScreen() {
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Batch</label>
             <select value={newStudent.batch} onChange={e => setNewStudent({ batch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
-              <option>10-B</option><option>10-A</option><option>9-A</option><option>9-B</option>
+              <option value="">No batch</option>
+              {batches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Branch</label>

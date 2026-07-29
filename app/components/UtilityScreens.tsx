@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { enablePush, pushSupported } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
@@ -189,12 +189,33 @@ export function RankingsScreen() {
   )
 }
 
+// Shared roster: shows the students belonging to a batch or branch with full details.
+function StudentRoster({ list }: { list: Student[] }) {
+  if (list.length === 0) return <div className="text-[12.5px] text-td-muted py-2.5 px-1">No students here yet</div>
+  return (
+    <div className="flex flex-col gap-2 mt-1">
+      {list.map((s, i) => (
+        <div key={s.dbId ?? s.id} className="bg-td-bg border border-td-border rounded-[14px] p-[11px] px-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13.5px] font-bold text-td-dark truncate">{s.name}</div>
+            <div className="text-[11.5px] text-td-muted truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
+            <div className="text-[11px] text-td-subtle truncate">{s.id}{s.parent ? ` · ${s.parent}` : ''}</div>
+          </div>
+          <span className="text-[10.5px] font-bold py-1 px-2.5 rounded-[20px] shrink-0" style={{ color: feeColor(s.feeStatus).c, background: feeColor(s.feeStatus).b }}>{s.feeStatus}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function BranchesScreen() {
-  const { back, branchesList, addBranch, deleteBranch } = useDashboard()
+  const { back, branchesList, students, addBranch, deleteBranch } = useDashboard()
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
   const [isMain, setIsMain] = useState(false)
+  const [openBranch, setOpenBranch] = useState<string | null>(null)
 
   const handleAdd = () => {
     if (!name.trim()) { useDashboard.getState().notify('Enter branch name'); return }
@@ -231,7 +252,10 @@ export function BranchesScreen() {
         <div className="text-center text-td-muted text-sm py-8">No branches configured</div>
       ) : (
         <div className="flex flex-col gap-3">
-          {branchesList.map(b => (
+          {branchesList.map(b => {
+            const roster = students.filter(s => s.branch === b.name)
+            const open = openBranch === b.name
+            return (
             <div key={b.name} className="bg-white border border-td-border rounded-[18px] p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="text-[15px] font-extrabold text-td-dark">{b.name}</div>
@@ -239,14 +263,16 @@ export function BranchesScreen() {
               </div>
               <div className="text-[12.5px] text-td-muted mb-3">{b.address}</div>
               <div className="flex items-center justify-between">
-                <div className="flex gap-[18px]">
-                  <div><div className="text-base font-extrabold text-td-dark">{b.students}</div><div className="text-[11px] text-td-subtle font-semibold">Students</div></div>
+                <button onClick={() => setOpenBranch(open ? null : b.name)} className="flex gap-[18px] bg-transparent border-none p-0 cursor-pointer text-left">
+                  <div><div className="text-base font-extrabold text-td-dark">{roster.length}</div><div className="text-[11px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
                   <div><div className="text-base font-extrabold text-td-dark">{b.staff}</div><div className="text-[11px] text-td-subtle font-semibold">Staff</div></div>
-                </div>
+                </button>
                 {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-2 px-3.5 rounded-[12px] cursor-pointer">Remove</button>}
               </div>
+              {open && <StudentRoster list={roster} />}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -293,10 +319,61 @@ export function SubjectsScreen() {
   )
 }
 
+export function BatchesScreen() {
+  const { batches, students, back, addBatch, deleteBatch } = useDashboard()
+  const [name, setName] = useState('')
+  const [openBatch, setOpenBatch] = useState<string | null>(null)
+
+  const handleAdd = () => {
+    if (!name.trim()) { useDashboard.getState().notify('Enter batch name'); return }
+    addBatch(name.trim())
+    setName('')
+  }
+
+  return (
+    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ScreenHeader title="Batches" onBack={back} />
+
+      <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="text-sm font-extrabold text-td-dark">Add batch</div>
+        <div className="flex gap-[11px]">
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Morning 10-A" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
+        </div>
+      </div>
+
+      <div className="text-[15px] font-extrabold text-td-dark mb-3">All batches ({batches.length})</div>
+      {batches.length === 0 ? (
+        <div className="text-center text-td-muted text-sm py-8">No batches added yet</div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {batches.map((b, i) => {
+            const roster = students.filter(s => s.batch === b.name)
+            const open = openBatch === b.name
+            return (
+            <div key={b.name} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px]">
+              <div className="flex items-center gap-[13px]">
+                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{b.name[0]}</div>
+                <button onClick={() => setOpenBatch(open ? null : b.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
+                  <div className="text-[14px] font-bold text-td-dark truncate">{b.name}</div>
+                  <div className="text-[11.5px] text-td-muted font-semibold">{roster.length} student{roster.length === 1 ? '' : 's'} {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
+                </button>
+                {b.dbId && <button onClick={() => { if (window.confirm(`Remove batch "${b.name}"? Students keep their records; only the batch label is deleted.`)) deleteBatch(b.dbId) }} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
+              </div>
+              {open && <StudentRoster list={roster} />}
+            </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 type MoreItem = { icon: string; label: string; tint: string; screen: Screen; badge?: number }
 
 export function MoreScreen() {
-  const { go, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents } = useDashboard()
+  const { goFrom, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents } = useDashboard()
   const isAdmin = role === 'admin'
   const profileName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
 
@@ -321,12 +398,13 @@ export function MoreScreen() {
     { icon: '📅', label: 'Meetings', tint: '#eaf1fc', screen: 'meetings' },
     { icon: '🏢', label: 'Branches', tint: '#eef0fc', screen: 'branches' },
     { icon: '📖', label: 'Subjects', tint: '#eaf1fc', screen: 'subjects' },
+    { icon: '👥', label: 'Batches', tint: '#e7f5ee', screen: 'batches' },
   ]
 
   const card = (list: MoreItem[]) => (
     <div className="bg-white border border-td-border rounded-[20px] overflow-hidden">
       {list.map(m => (
-        <button key={m.label} onClick={() => go(m.screen, 'more')} className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
+        <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-lg" style={{ background: m.tint }}>{m.icon}</div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
           {!!m.badge && m.badge > 0 && <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
@@ -340,7 +418,7 @@ export function MoreScreen() {
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-[18px]">More tools</div>
 
-      <button onClick={() => go('staffProfile', 'more')} className="w-full text-left bg-white border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
+      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left bg-white border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
         <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(0) }}>{initials(profileName)}</div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-extrabold text-td-dark truncate">{profileName}</div>

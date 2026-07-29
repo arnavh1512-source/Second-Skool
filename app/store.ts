@@ -14,7 +14,7 @@ const dbErr = (op: string, notify: (m: string) => void) =>
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
   | 'students' | 'editStudent' | 'addStudent' | 'teachers' | 'addTeacher'
-  | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'notes' | 'more'
+  | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'batches' | 'notes' | 'more'
   | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
   | 'stuSignup' | 'stuPending' | 'stuDenied'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
@@ -29,7 +29,7 @@ export type FeeStatus = 'Paid' | 'Due' | 'Overdue'
 export interface StaffMember { id: string; name: string; email: string; role: string; status: StaffStatus; headRequested: boolean }
 
 export interface Teacher { name: string; subject: string; experience: number; qualification: string; rating?: string; about?: string; dbId?: string }
-export interface Student { name: string; klass: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
+export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
 // A self-registered student awaiting the head's approval (roster is separate).
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
@@ -45,6 +45,7 @@ export interface StuNoteItem { title: string; subject: string; body: string; fil
 export interface FeeHistoryItem { period: string; date: string; amount: string }
 export interface NotifItem { icon: string; tint: string; title: string; detail: string; when: string; dbId?: string }
 export interface SubjectItem { name: string; dbId: string }
+export interface BatchItem { name: string; dbId: string }
 export interface BranchReport { name: string; students: number; new_students: number; staff: number; att_pct: number; fees_collected: number; fees_pending: number }
 export interface WeeklyReport { generated_at: string; branches: BranchReport[]; unassigned_students: number; tests_this_week: number }
 export interface StudentReport { name: string; klass: string; parent: string; fee_status: string; att_present: number; att_total: number; tests: number; avg_pct: number }
@@ -73,6 +74,7 @@ interface State {
   schedule: ScheduleItem[]
   rankData: Record<string, [string, number][]>
   subjects: SubjectItem[]
+  batches: BatchItem[]
   stuReminders: NotifItem[]
   stuNotifications: NotifItem[]
   stuAttendanceLog: AttLogItem[]
@@ -101,7 +103,7 @@ interface Actions {
   setNewStudent: (patch: Partial<State['newStudent']>) => void
   setStuSignup: (patch: Partial<State['stuSignup']>) => void
   studentSignup: () => Promise<void>
-  approveStudent: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string) => Promise<void>
+  approveStudent: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string, batch?: string) => Promise<void>
   rejectStudent: (dbId: string) => Promise<void>
   deleteStudent: () => void
   saveTeacher: () => void
@@ -120,6 +122,8 @@ interface Actions {
   deleteBranch: (dbId: string) => void
   addSubject: (name: string) => void
   deleteSubject: (dbId: string) => void
+  addBatch: (name: string) => void
+  deleteBatch: (dbId: string) => void
   loadNotes: () => Promise<void>
   addNote: (n: { title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }) => Promise<void>
   deleteNote: (dbId: string) => Promise<void>
@@ -158,7 +162,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
   googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', studentJoinCode: '', reminderType: 'Test', plan: 'Monthly',
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
-  newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' },
+  newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
   stuPending: null, stuDenied: null, pendingStudents: [],
   teachers: [], students: [],
@@ -166,7 +170,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   supabaseUserId: null, authLoading: true, dataLoading: false,
 
   branchesList: [], meetingsList: [], assignmentsList: [],
-  timetableData: {}, schedule: [], rankData: {}, subjects: [],
+  timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
   stuReminders: [], stuNotifications: [], stuAttendanceLog: [],
   stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null,
   notesList: [], stuNotes: [],
@@ -174,7 +178,14 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   go: (screen, tab) => set({ screen, tab: (tab ?? screen) as Tab, origin: null }),
   goFrom: (screen, tab, origin) => set({ screen, tab, origin }),
-  back: () => { const { origin } = get(); set({ origin: null, screen: origin === 'admin' ? 'admin' : 'home' }) },
+  // Return to where the screen was opened from. More sub-screens are entered
+  // with origin='more' so Back lands on More (not Home); admin keeps its own
+  // origin; everything else falls back to Home.
+  back: () => {
+    const { origin } = get()
+    const dest: Screen = origin === 'admin' ? 'admin' : origin === 'more' ? 'more' : 'home'
+    set({ origin: null, screen: dest })
+  },
 
   notify: (msg) => {
     if (toastTimer) clearTimeout(toastTimer)
@@ -262,12 +273,12 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     let code = genStudentCode()
     while (students.some(s => s.id === code)) code = genStudentCode()
     const student: Student = {
-      name: ns.name, klass: `Class ${ns.batch}`, attendance: 0,
+      name: ns.name, klass: ns.klass, batch: ns.batch || undefined, attendance: 0,
       feeStatus: 'Due', school: ns.school, parent: ns.parent, id: code,
     }
     const branchId = ns.branch ? branchesList.find(b => b.name.includes(ns.branch))?.dbId : null
     supabase.from('students').insert({
-      name: ns.name, class: student.klass, school: ns.school,
+      name: ns.name, class: student.klass, batch: ns.batch || null, school: ns.school,
       parent_contact: ns.parent, student_code: code, fee_status: 'Due',
       address: ns.address, branch_id: branchId ?? null,
     }).select().single().then(({ data, error }) => {
@@ -283,7 +294,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
         }
       }
     })
-    set({ students: [student, ...students], newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
+    set({ students: [student, ...students], newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
   },
 
   saveAttendance: (studentNames) => {
@@ -502,6 +513,26 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       })
     set({ subjects: [...list, item] })
     get().notify(`Subject "${name}" added`)
+  },
+
+  addBatch: (name) => {
+    const { batches: list } = get()
+    if (list.some(b => b.name.toLowerCase() === name.toLowerCase())) { get().notify('Batch already exists'); return }
+    const item: BatchItem = { name, dbId: '' }
+    supabase.from('batches').insert({ name }).select().single()
+      .then(({ data }) => {
+        if (data) set((s) => ({ batches: s.batches.map(x => x.name === name && !x.dbId ? { ...x, dbId: data.id } : x) }))
+      })
+    set({ batches: [...list, item] })
+    get().notify(`Batch "${name}" added`)
+  },
+
+  deleteBatch: (dbId) => {
+    // Remove the batch row only. Students already assigned keep their batch
+    // label (historical); the head can reassign them from the roster if needed.
+    set((s) => ({ batches: s.batches.filter(x => x.dbId !== dbId) }))
+    supabase.from('batches').delete().eq('id', dbId).then(dbErr('delete batch', get().notify))
+    get().notify('Batch removed')
   },
 
   deleteSubject: (dbId) => {
@@ -723,7 +754,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     get().notify('Teacher rejected'); await get().loadStaff()
   },
 
-  approveStudent: async (dbId, klass, branchId, fee, feeDue) => {
+  approveStudent: async (dbId, klass, branchId, fee, feeDue, batch) => {
     const amt = Number(fee)
     const { error } = await supabase.rpc('approve_student', {
       p_id: dbId,
@@ -733,6 +764,11 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       p_fee_due: feeDue || null,
     })
     if (error) { get().notify(error.message || 'Could not approve'); return }
+    // Batch isn't part of the approve RPC — persist it directly (RLS scopes the
+    // update to the head's own centre). Non-blocking; roster refresh follows.
+    if (batch && batch.trim()) {
+      await supabase.from('students').update({ batch: batch.trim() }).eq('id', dbId)
+    }
     set((s) => ({ pendingStudents: s.pendingStudents.filter(p => p.dbId !== dbId) }))
     get().notify('Student approved')
     await get().refreshData()
@@ -766,7 +802,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       role: null, googleEmail: '', screen: 'home' as Screen, tab: 'home' as Tab,
       supabaseUserId: null, staffStatus: 'none', headExists: false, staffList: [],
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
-      timetableData: {}, schedule: [], rankData: {}, subjects: [],
+      timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
       currentStudentDbId: null, stuPendingFee: null, stuPending: null, stuDenied: null, pendingStudents: [], studentJoinCode: '',
     })

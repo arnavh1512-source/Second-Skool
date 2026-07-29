@@ -1,6 +1,6 @@
 # Second Skool — Full Source Code
 
-Generated 2026-07-28 · commit `c5ce47e` · feat: email+password sign-in for staff so the installed PWA stays logged in
+Generated 2026-07-29 · commit `21594c4` · docs: regenerate source dump after password sign-in
 
 
 ## .claude/launch.json
@@ -460,7 +460,7 @@ export function StaffApprovalsScreen() {
 // Head/teacher review of self-registered students. Approve (optionally setting
 // batch/branch + a first fee) turns their code live; reject declines it.
 export function StudentRequestsScreen() {
-  const { back, pendingStudents, branchesList, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
+  const { back, pendingStudents, branchesList, batches, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
 
   useEffect(() => { refreshData(); loadMyCentre() }, [refreshData, loadMyCentre])
 
@@ -499,7 +499,7 @@ export function StudentRequestsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {pendingStudents.map((s, i) => (
-            <StudentRequestCard key={s.dbId} s={s} idx={i} branches={branchesList} onApprove={approveStudent} onReject={rejectStudent} />
+            <StudentRequestCard key={s.dbId} s={s} idx={i} branches={branchesList} batchList={batches} onApprove={approveStudent} onReject={rejectStudent} />
           ))}
         </div>
       )}
@@ -507,17 +507,19 @@ export function StudentRequestsScreen() {
   )
 }
 
-function StudentRequestCard({ s, idx, branches, onApprove, onReject }: {
+function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }: {
   s: import('../store').PendingStudent
   idx: number
   branches: import('../store').BranchItem[]
-  onApprove: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string) => Promise<void>
+  batchList: import('../store').BatchItem[]
+  onApprove: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string, batch?: string) => Promise<void>
   onReject: (dbId: string) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [klass, setKlass] = useState(s.klass)
   const [branch, setBranch] = useState('')
+  const [batch, setBatch] = useState('')
   const [fee, setFee] = useState('')
   const [feeDue, setFeeDue] = useState('')
 
@@ -525,7 +527,7 @@ function StudentRequestCard({ s, idx, branches, onApprove, onReject }: {
     if (busy) return
     setBusy(true)
     const branchId = branch ? branches.find(b => b.name === branch)?.dbId ?? null : null
-    await onApprove(s.dbId, klass, branchId, fee, feeDue)
+    await onApprove(s.dbId, klass, branchId, fee, feeDue, batch || undefined)
     setBusy(false)
   }
 
@@ -567,6 +569,15 @@ function StudentRequestCard({ s, idx, branches, onApprove, onReject }: {
               </div>
             )}
           </div>
+          {batchList.length > 0 && (
+            <div>
+              <label className="text-[11px] font-bold text-td-muted">Batch</label>
+              <select value={batch} onChange={e => setBatch(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1 bg-white">
+                <option value="">No batch</option>
+                {batchList.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
+              </select>
+            </div>
+          )}
           <div className="flex gap-2.5">
             <div className="flex-1">
               <label className="text-[11px] font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
@@ -1739,7 +1750,7 @@ export function EditStudentScreen() {
 }
 
 export function AddStudentScreen() {
-  const { go, goFrom, origin, newStudent, setNewStudent, addStudent, branchesList, lastAdded, set, notify } = useDashboard()
+  const { go, goFrom, origin, newStudent, setNewStudent, addStudent, branchesList, batches, lastAdded, set, notify } = useDashboard()
   const backToList = () => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')
 
   if (lastAdded) {
@@ -1784,7 +1795,8 @@ export function AddStudentScreen() {
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Batch</label>
             <select value={newStudent.batch} onChange={e => setNewStudent({ batch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
-              <option>10-B</option><option>10-A</option><option>9-A</option><option>9-B</option>
+              <option value="">No batch</option>
+              {batches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Branch</label>
@@ -2824,11 +2836,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       { data: notifications },
       { data: subjects },
       { data: attendance },
+      { data: batches },
     ] = await Promise.all([
       // Defensive caps: orderings put the newest rows first, so a centre that
       // outgrows a cap loses only the oldest tail, never current data.
       supabase.from('teachers').select('*').order('created_at', { ascending: false }).limit(300),
-      supabase.from('students').select('id,name,class,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at').order('created_at', { ascending: false }).limit(2000),
+      supabase.from('students').select('id,name,class,batch,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at').order('created_at', { ascending: false }).limit(2000),
       supabase.from('branches').select('*').order('is_main', { ascending: false }).limit(50),
       supabase.from('meetings').select('*').order('date', { ascending: false }).limit(200),
       supabase.from('assignments').select('*').order('due_date', { ascending: false }).limit(500),
@@ -2839,6 +2852,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('subjects').select('*').limit(100),
       supabase.from('attendance').select('*').order('date', { ascending: false }).limit(20000),
+      supabase.from('batches').select('*').order('created_at', { ascending: true }).limit(200),
     ])
 
     const mappedTeachers = (teachers ?? []).map(mapTeacher)
@@ -2855,10 +2869,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // every count/ranking derived from it) until the head approves them.
     const approvedRows = (students ?? []).filter((s) => ((s.status as string) ?? 'approved') === 'approved')
     const pendingRows = (students ?? []).filter((s) => (s.status as string) === 'pending')
+    const branchNameById: Record<string, string> = Object.fromEntries(
+      (branches ?? []).map((b: Row) => [b.id as string, b.name as string]),
+    )
     const mappedStudents = approvedRows.map((row) => {
       const st = mapStudent(row)
+      const branch = branchNameById[row.branch_id as string]
+      const base = branch ? { ...st, branch } : st
       const att = attByStudent[st.dbId ?? '']
-      return att && att.t > 0 ? { ...st, attendance: Math.round((att.p / att.t) * 100) } : st
+      return att && att.t > 0 ? { ...base, attendance: Math.round((att.p / att.t) * 100) } : base
     })
     const pendingStudents: PendingStudent[] = pendingRows.map((s) => ({
       dbId: s.id as string, name: (s.name as string) ?? '', klass: (s.class as string) ?? '',
@@ -2866,6 +2885,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       address: (s.address as string) ?? '', code: (s.student_code as string) ?? '',
       when: timeAgo(s.created_at as string),
     }))
+    const batchList = (batches ?? []).map((b: Row) => ({ name: b.name as string, dbId: b.id as string }))
     const subjectList = (subjects ?? []).map((s: Row) => ({ name: s.name as string, dbId: s.id as string }))
     const subjectMap = Object.fromEntries(subjectList.map(s => [s.dbId, s.name]))
     const studentMap = Object.fromEntries(mappedStudents.map(s => [s.dbId, s]))
@@ -3004,7 +3024,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     set({
       branchesList, meetingsList, assignmentsList, timetableData, schedule,
-      rankData, subjects: subjectItems, stuResults, stuAttendanceLog,
+      rankData, subjects: subjectItems, batches: batchList, stuResults, stuAttendanceLog,
       stuFeeHistory, stuPendingFee, stuNotifications, stuReminders, pendingStudents,
     })
   }
@@ -3113,6 +3133,7 @@ function mapStudent(s: Record<string, unknown>): Student {
     school: (s.school as string) ?? '', parent: (s.parent_contact as string) ?? '',
     id: (s.student_code as string) ?? '', address: (s.address as string) ?? '',
     dbId: s.id as string, status: (s.status as string) ?? 'approved',
+    batch: (s.batch as string) ?? undefined,
   }
 }
 
@@ -3571,7 +3592,7 @@ export function RemindersScreen() {
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { enablePush, pushSupported } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
@@ -3759,12 +3780,33 @@ export function RankingsScreen() {
   )
 }
 
+// Shared roster: shows the students belonging to a batch or branch with full details.
+function StudentRoster({ list }: { list: Student[] }) {
+  if (list.length === 0) return <div className="text-[12.5px] text-td-muted py-2.5 px-1">No students here yet</div>
+  return (
+    <div className="flex flex-col gap-2 mt-1">
+      {list.map((s, i) => (
+        <div key={s.dbId ?? s.id} className="bg-td-bg border border-td-border rounded-[14px] p-[11px] px-3 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13.5px] font-bold text-td-dark truncate">{s.name}</div>
+            <div className="text-[11.5px] text-td-muted truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
+            <div className="text-[11px] text-td-subtle truncate">{s.id}{s.parent ? ` · ${s.parent}` : ''}</div>
+          </div>
+          <span className="text-[10.5px] font-bold py-1 px-2.5 rounded-[20px] shrink-0" style={{ color: feeColor(s.feeStatus).c, background: feeColor(s.feeStatus).b }}>{s.feeStatus}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function BranchesScreen() {
-  const { back, branchesList, addBranch, deleteBranch } = useDashboard()
+  const { back, branchesList, students, addBranch, deleteBranch } = useDashboard()
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
   const [isMain, setIsMain] = useState(false)
+  const [openBranch, setOpenBranch] = useState<string | null>(null)
 
   const handleAdd = () => {
     if (!name.trim()) { useDashboard.getState().notify('Enter branch name'); return }
@@ -3801,7 +3843,10 @@ export function BranchesScreen() {
         <div className="text-center text-td-muted text-sm py-8">No branches configured</div>
       ) : (
         <div className="flex flex-col gap-3">
-          {branchesList.map(b => (
+          {branchesList.map(b => {
+            const roster = students.filter(s => s.branch === b.name)
+            const open = openBranch === b.name
+            return (
             <div key={b.name} className="bg-white border border-td-border rounded-[18px] p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="text-[15px] font-extrabold text-td-dark">{b.name}</div>
@@ -3809,14 +3854,16 @@ export function BranchesScreen() {
               </div>
               <div className="text-[12.5px] text-td-muted mb-3">{b.address}</div>
               <div className="flex items-center justify-between">
-                <div className="flex gap-[18px]">
-                  <div><div className="text-base font-extrabold text-td-dark">{b.students}</div><div className="text-[11px] text-td-subtle font-semibold">Students</div></div>
+                <button onClick={() => setOpenBranch(open ? null : b.name)} className="flex gap-[18px] bg-transparent border-none p-0 cursor-pointer text-left">
+                  <div><div className="text-base font-extrabold text-td-dark">{roster.length}</div><div className="text-[11px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
                   <div><div className="text-base font-extrabold text-td-dark">{b.staff}</div><div className="text-[11px] text-td-subtle font-semibold">Staff</div></div>
-                </div>
+                </button>
                 {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-2 px-3.5 rounded-[12px] cursor-pointer">Remove</button>}
               </div>
+              {open && <StudentRoster list={roster} />}
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>
@@ -3863,10 +3910,61 @@ export function SubjectsScreen() {
   )
 }
 
+export function BatchesScreen() {
+  const { batches, students, back, addBatch, deleteBatch } = useDashboard()
+  const [name, setName] = useState('')
+  const [openBatch, setOpenBatch] = useState<string | null>(null)
+
+  const handleAdd = () => {
+    if (!name.trim()) { useDashboard.getState().notify('Enter batch name'); return }
+    addBatch(name.trim())
+    setName('')
+  }
+
+  return (
+    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ScreenHeader title="Batches" onBack={back} />
+
+      <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="text-sm font-extrabold text-td-dark">Add batch</div>
+        <div className="flex gap-[11px]">
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Morning 10-A" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
+        </div>
+      </div>
+
+      <div className="text-[15px] font-extrabold text-td-dark mb-3">All batches ({batches.length})</div>
+      {batches.length === 0 ? (
+        <div className="text-center text-td-muted text-sm py-8">No batches added yet</div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {batches.map((b, i) => {
+            const roster = students.filter(s => s.batch === b.name)
+            const open = openBatch === b.name
+            return (
+            <div key={b.name} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px]">
+              <div className="flex items-center gap-[13px]">
+                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{b.name[0]}</div>
+                <button onClick={() => setOpenBatch(open ? null : b.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
+                  <div className="text-[14px] font-bold text-td-dark truncate">{b.name}</div>
+                  <div className="text-[11.5px] text-td-muted font-semibold">{roster.length} student{roster.length === 1 ? '' : 's'} {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
+                </button>
+                {b.dbId && <button onClick={() => { if (window.confirm(`Remove batch "${b.name}"? Students keep their records; only the batch label is deleted.`)) deleteBatch(b.dbId) }} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
+              </div>
+              {open && <StudentRoster list={roster} />}
+            </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 type MoreItem = { icon: string; label: string; tint: string; screen: Screen; badge?: number }
 
 export function MoreScreen() {
-  const { go, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents } = useDashboard()
+  const { goFrom, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents } = useDashboard()
   const isAdmin = role === 'admin'
   const profileName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
 
@@ -3891,12 +3989,13 @@ export function MoreScreen() {
     { icon: '📅', label: 'Meetings', tint: '#eaf1fc', screen: 'meetings' },
     { icon: '🏢', label: 'Branches', tint: '#eef0fc', screen: 'branches' },
     { icon: '📖', label: 'Subjects', tint: '#eaf1fc', screen: 'subjects' },
+    { icon: '👥', label: 'Batches', tint: '#e7f5ee', screen: 'batches' },
   ]
 
   const card = (list: MoreItem[]) => (
     <div className="bg-white border border-td-border rounded-[20px] overflow-hidden">
       {list.map(m => (
-        <button key={m.label} onClick={() => go(m.screen, 'more')} className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
+        <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-lg" style={{ background: m.tint }}>{m.icon}</div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
           {!!m.badge && m.badge > 0 && <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
@@ -3910,7 +4009,7 @@ export function MoreScreen() {
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-[18px]">More tools</div>
 
-      <button onClick={() => go('staffProfile', 'more')} className="w-full text-left bg-white border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
+      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left bg-white border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
         <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(0) }}>{initials(profileName)}</div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-extrabold text-td-dark truncate">{profileName}</div>
@@ -4647,6 +4746,7 @@ const MeetingsScreen = dyn(() => import('./components/UtilityScreens'), 'Meeting
 const RankingsScreen = dyn(() => import('./components/UtilityScreens'), 'RankingsScreen')
 const BranchesScreen = dyn(() => import('./components/UtilityScreens'), 'BranchesScreen')
 const SubjectsScreen = dyn(() => import('./components/UtilityScreens'), 'SubjectsScreen')
+const BatchesScreen = dyn(() => import('./components/UtilityScreens'), 'BatchesScreen')
 const MoreScreen = dyn(() => import('./components/UtilityScreens'), 'MoreScreen')
 const StaffProfileScreen = dyn(() => import('./components/UtilityScreens'), 'StaffProfileScreen')
 
@@ -4724,6 +4824,7 @@ function ScreenRouter() {
     case 'rankings': return <RankingsScreen />
     case 'branches': return <BranchesScreen />
     case 'subjects': return <SubjectsScreen />
+    case 'batches': return <BatchesScreen />
     case 'notes': return <NotesScreen />
     case 'more': return <MoreScreen />
     case 'staffProfile': return <StaffProfileScreen />
@@ -4771,7 +4872,7 @@ const dbErr = (op: string, notify: (m: string) => void) =>
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
   | 'students' | 'editStudent' | 'addStudent' | 'teachers' | 'addTeacher'
-  | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'notes' | 'more'
+  | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'batches' | 'notes' | 'more'
   | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
   | 'stuSignup' | 'stuPending' | 'stuDenied'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
@@ -4786,7 +4887,7 @@ export type FeeStatus = 'Paid' | 'Due' | 'Overdue'
 export interface StaffMember { id: string; name: string; email: string; role: string; status: StaffStatus; headRequested: boolean }
 
 export interface Teacher { name: string; subject: string; experience: number; qualification: string; rating?: string; about?: string; dbId?: string }
-export interface Student { name: string; klass: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
+export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; feeStatus: FeeStatus; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
 // A self-registered student awaiting the head's approval (roster is separate).
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
@@ -4802,6 +4903,7 @@ export interface StuNoteItem { title: string; subject: string; body: string; fil
 export interface FeeHistoryItem { period: string; date: string; amount: string }
 export interface NotifItem { icon: string; tint: string; title: string; detail: string; when: string; dbId?: string }
 export interface SubjectItem { name: string; dbId: string }
+export interface BatchItem { name: string; dbId: string }
 export interface BranchReport { name: string; students: number; new_students: number; staff: number; att_pct: number; fees_collected: number; fees_pending: number }
 export interface WeeklyReport { generated_at: string; branches: BranchReport[]; unassigned_students: number; tests_this_week: number }
 export interface StudentReport { name: string; klass: string; parent: string; fee_status: string; att_present: number; att_total: number; tests: number; avg_pct: number }
@@ -4830,6 +4932,7 @@ interface State {
   schedule: ScheduleItem[]
   rankData: Record<string, [string, number][]>
   subjects: SubjectItem[]
+  batches: BatchItem[]
   stuReminders: NotifItem[]
   stuNotifications: NotifItem[]
   stuAttendanceLog: AttLogItem[]
@@ -4858,7 +4961,7 @@ interface Actions {
   setNewStudent: (patch: Partial<State['newStudent']>) => void
   setStuSignup: (patch: Partial<State['stuSignup']>) => void
   studentSignup: () => Promise<void>
-  approveStudent: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string) => Promise<void>
+  approveStudent: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string, batch?: string) => Promise<void>
   rejectStudent: (dbId: string) => Promise<void>
   deleteStudent: () => void
   saveTeacher: () => void
@@ -4877,6 +4980,8 @@ interface Actions {
   deleteBranch: (dbId: string) => void
   addSubject: (name: string) => void
   deleteSubject: (dbId: string) => void
+  addBatch: (name: string) => void
+  deleteBatch: (dbId: string) => void
   loadNotes: () => Promise<void>
   addNote: (n: { title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }) => Promise<void>
   deleteNote: (dbId: string) => Promise<void>
@@ -4915,7 +5020,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
   googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', studentJoinCode: '', reminderType: 'Test', plan: 'Monthly',
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
-  newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' },
+  newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
   stuPending: null, stuDenied: null, pendingStudents: [],
   teachers: [], students: [],
@@ -4923,7 +5028,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   supabaseUserId: null, authLoading: true, dataLoading: false,
 
   branchesList: [], meetingsList: [], assignmentsList: [],
-  timetableData: {}, schedule: [], rankData: {}, subjects: [],
+  timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
   stuReminders: [], stuNotifications: [], stuAttendanceLog: [],
   stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null,
   notesList: [], stuNotes: [],
@@ -4931,7 +5036,14 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 
   go: (screen, tab) => set({ screen, tab: (tab ?? screen) as Tab, origin: null }),
   goFrom: (screen, tab, origin) => set({ screen, tab, origin }),
-  back: () => { const { origin } = get(); set({ origin: null, screen: origin === 'admin' ? 'admin' : 'home' }) },
+  // Return to where the screen was opened from. More sub-screens are entered
+  // with origin='more' so Back lands on More (not Home); admin keeps its own
+  // origin; everything else falls back to Home.
+  back: () => {
+    const { origin } = get()
+    const dest: Screen = origin === 'admin' ? 'admin' : origin === 'more' ? 'more' : 'home'
+    set({ origin: null, screen: dest })
+  },
 
   notify: (msg) => {
     if (toastTimer) clearTimeout(toastTimer)
@@ -5019,12 +5131,12 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     let code = genStudentCode()
     while (students.some(s => s.id === code)) code = genStudentCode()
     const student: Student = {
-      name: ns.name, klass: `Class ${ns.batch}`, attendance: 0,
+      name: ns.name, klass: ns.klass, batch: ns.batch || undefined, attendance: 0,
       feeStatus: 'Due', school: ns.school, parent: ns.parent, id: code,
     }
     const branchId = ns.branch ? branchesList.find(b => b.name.includes(ns.branch))?.dbId : null
     supabase.from('students').insert({
-      name: ns.name, class: student.klass, school: ns.school,
+      name: ns.name, class: student.klass, batch: ns.batch || null, school: ns.school,
       parent_contact: ns.parent, student_code: code, fee_status: 'Due',
       address: ns.address, branch_id: branchId ?? null,
     }).select().single().then(({ data, error }) => {
@@ -5040,7 +5152,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
         }
       }
     })
-    set({ students: [student, ...students], newStudent: { name: '', school: '', klass: 'Class 10', batch: '10-B', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
+    set({ students: [student, ...students], newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
   },
 
   saveAttendance: (studentNames) => {
@@ -5259,6 +5371,26 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       })
     set({ subjects: [...list, item] })
     get().notify(`Subject "${name}" added`)
+  },
+
+  addBatch: (name) => {
+    const { batches: list } = get()
+    if (list.some(b => b.name.toLowerCase() === name.toLowerCase())) { get().notify('Batch already exists'); return }
+    const item: BatchItem = { name, dbId: '' }
+    supabase.from('batches').insert({ name }).select().single()
+      .then(({ data }) => {
+        if (data) set((s) => ({ batches: s.batches.map(x => x.name === name && !x.dbId ? { ...x, dbId: data.id } : x) }))
+      })
+    set({ batches: [...list, item] })
+    get().notify(`Batch "${name}" added`)
+  },
+
+  deleteBatch: (dbId) => {
+    // Remove the batch row only. Students already assigned keep their batch
+    // label (historical); the head can reassign them from the roster if needed.
+    set((s) => ({ batches: s.batches.filter(x => x.dbId !== dbId) }))
+    supabase.from('batches').delete().eq('id', dbId).then(dbErr('delete batch', get().notify))
+    get().notify('Batch removed')
   },
 
   deleteSubject: (dbId) => {
@@ -5480,7 +5612,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     get().notify('Teacher rejected'); await get().loadStaff()
   },
 
-  approveStudent: async (dbId, klass, branchId, fee, feeDue) => {
+  approveStudent: async (dbId, klass, branchId, fee, feeDue, batch) => {
     const amt = Number(fee)
     const { error } = await supabase.rpc('approve_student', {
       p_id: dbId,
@@ -5490,6 +5622,11 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       p_fee_due: feeDue || null,
     })
     if (error) { get().notify(error.message || 'Could not approve'); return }
+    // Batch isn't part of the approve RPC — persist it directly (RLS scopes the
+    // update to the head's own centre). Non-blocking; roster refresh follows.
+    if (batch && batch.trim()) {
+      await supabase.from('students').update({ batch: batch.trim() }).eq('id', dbId)
+    }
     set((s) => ({ pendingStudents: s.pendingStudents.filter(p => p.dbId !== dbId) }))
     get().notify('Student approved')
     await get().refreshData()
@@ -5523,7 +5660,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       role: null, googleEmail: '', screen: 'home' as Screen, tab: 'home' as Tab,
       supabaseUserId: null, staffStatus: 'none', headExists: false, staffList: [],
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
-      timetableData: {}, schedule: [], rankData: {}, subjects: [],
+      timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
       currentStudentDbId: null, stuPendingFee: null, stuPending: null, stuDenied: null, pendingStudents: [], studentJoinCode: '',
     })
@@ -5891,6 +6028,46 @@ self.addEventListener('notificationclick', (event) => {
     })
   )
 })
+```
+
+## supabase/batches.sql
+
+```sql
+-- ============================================================
+-- Batches: head-only, centre-scoped reference list (mirrors subjects)
+-- + a free-text `batch` label on students.
+-- Safe to run more than once (idempotent).
+-- ============================================================
+
+-- 1) Reference table. centre_id auto-stamps to the head's centre on insert.
+create table if not exists public.batches (
+  id uuid primary key default uuid_generate_v4(),
+  name text not null,
+  centre_id uuid references public.centres(id) default public.current_centre(),
+  created_at timestamptz default now()
+);
+
+-- One batch name per centre (case-sensitive; the app also guards duplicates).
+create unique index if not exists batches_centre_name_idx
+  on public.batches (centre_id, name);
+
+alter table public.batches enable row level security;
+
+-- Head can create/update/delete batches in their own centre.
+drop policy if exists batches_head on public.batches;
+create policy batches_head on public.batches for all to authenticated
+  using (public.is_head() and centre_id = public.current_centre())
+  with check (public.is_head() and centre_id = public.current_centre());
+
+-- Any approved staff in the centre can read the batch list.
+drop policy if exists batches_read on public.batches;
+create policy batches_read on public.batches for select to authenticated
+  using (public.is_staff() and centre_id = public.current_centre());
+
+-- 2) Students carry a batch label (the batch NAME, not an FK — keeps the
+--    approve_student RPC signature unchanged; RLS on students still applies).
+alter table public.students
+  add column if not exists batch text;
 ```
 
 ## supabase/lock-student-self-edit.sql
