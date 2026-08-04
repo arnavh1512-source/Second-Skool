@@ -19,8 +19,14 @@ create extension if not exists pgcrypto;
 -- Unbiased crypto-random code from the confusable-free alphabet ---------------
 -- Draws random bytes and rejects any byte >= floor(256/len)*len before taking
 -- the modulo, so every character is equally likely (no bias toward the start).
+--
+-- search_path MUST include `extensions`: on Supabase, pgcrypto (and therefore
+-- gen_random_bytes) lives in the `extensions` schema, not `public`. The callers
+-- below run with `set search_path = public`, so without this line gen_random_bytes
+-- fails to resolve ("function gen_random_bytes(integer) does not exist").
 create or replace function public.secure_code(p_len int)
-returns text language plpgsql as $$
+returns text language plpgsql
+set search_path = public, extensions, pg_temp as $$
 declare
   v_alpha constant text := 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; -- 31 chars, no O/0/I/1/L
   v_n     constant int  := 31;
