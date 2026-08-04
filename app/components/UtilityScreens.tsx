@@ -451,6 +451,72 @@ export function MoreScreen() {
   )
 }
 
+// Head/teacher notifications: the actionable items that need attention —
+// student self-registration requests, and (head only) staff access requests —
+// plus a device push toggle. Mirrors the student notifications bell.
+export function NotificationsScreen() {
+  const { go, role, pendingStudents, staffList, loadStaff, refreshData, supabaseUserId, notify } = useDashboard()
+  const isAdmin = role === 'admin'
+
+  // Pull fresh counts on open so the list reflects reality, not stale state.
+  useEffect(() => { refreshData(); if (isAdmin) loadStaff() }, [refreshData, loadStaff, isAdmin])
+
+  const studentCount = pendingStudents.length
+  const staffCount = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
+  const empty = studentCount === 0 && staffCount === 0
+
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushOn, setPushOn] = useState(false)
+  const enableNotifs = async () => {
+    if (!supabaseUserId || pushBusy) return
+    setPushBusy(true)
+    const res = await enablePush('profile', supabaseUserId)
+    setPushBusy(false)
+    if (res.ok) { setPushOn(true); notify('Notifications on for this device') }
+    else notify(res.error || 'Could not enable')
+  }
+
+  const row = (icon: string, tint: string, label: string, count: number, screen: Screen) => (
+    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none bg-white border border-td-border rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
+      <div className="w-11 h-11 rounded-[13px] shrink-0 flex items-center justify-center text-xl" style={{ background: tint }}>{icon}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-extrabold text-td-dark">{label}</div>
+        <div className="text-[12px] text-td-muted mt-0.5">{count} waiting for your review</div>
+      </div>
+      <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{count}</span>
+      <ChevronRight />
+    </button>
+  )
+
+  return (
+    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ScreenHeader title="Notifications" onBack={() => go('home', 'home')} />
+
+      {empty ? (
+        <div className="flex flex-col items-center text-center py-14">
+          <div className="w-16 h-16 rounded-[20px] bg-[#e7f5ee] flex items-center justify-center mb-4">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2fa36b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          </div>
+          <div className="text-[16px] font-extrabold text-td-dark">You&apos;re all caught up</div>
+          <div className="text-[13px] text-td-muted mt-1 max-w-[240px]">New student and staff requests will show up here.</div>
+        </div>
+      ) : (
+        <>
+          {studentCount > 0 && row('🙋', '#e7f5ee', 'Student join requests', studentCount, 'studentRequests')}
+          {staffCount > 0 && row('🛡️', '#eef0fc', 'Staff access requests', staffCount, 'staffApprovals')}
+        </>
+      )}
+
+      {pushSupported() && (
+        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          {pushOn ? 'Notifications enabled' : pushBusy ? 'Enabling…' : 'Enable notifications on this device'}
+        </button>
+      )}
+    </div>
+  )
+}
+
 export function StaffProfileScreen() {
   const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'

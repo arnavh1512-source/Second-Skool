@@ -3,8 +3,10 @@
 import { useDashboard, initials, type Screen } from '../store'
 
 export function HomeScreen() {
-  const { role, go, schedule, students, branchesList, googleEmail, myName } = useDashboard()
+  const { role, go, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
   const isAdmin = role === 'admin'
+  const pendingStaff = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
+  const hasAlerts = pendingStudents.length > 0 || pendingStaff > 0
   const mainBranch = branchesList.find(b => b.main) ?? branchesList[0]
   const displayName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Admin' : 'Teacher')
   const ini = initials(displayName)
@@ -29,9 +31,10 @@ export function HomeScreen() {
             <div className="text-[17px] font-extrabold text-td-dark">{displayName}</div>
           </div>
         </button>
-        <div className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center">
+        <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center cursor-pointer">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a2332" strokeWidth="2" strokeLinecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-        </div>
+          {hasAlerts && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-white" />}
+        </button>
       </div>
 
       {isAdmin ? (

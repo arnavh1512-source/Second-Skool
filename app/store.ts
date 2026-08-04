@@ -15,7 +15,7 @@ export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
   | 'students' | 'editStudent' | 'addStudent' | 'teachers' | 'addTeacher'
   | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'batches' | 'notes' | 'more'
-  | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'reports' | 'register' | 'pending' | 'denied'
+  | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'notifications' | 'reports' | 'register' | 'pending' | 'denied'
   | 'stuSignup' | 'stuPending' | 'stuDenied'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
   | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
