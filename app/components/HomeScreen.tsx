@@ -22,13 +22,13 @@ export function HomeScreen() {
   return (
     <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-3">
+        <button onClick={() => go('staffProfile')} aria-label="Open my profile" className="flex items-center gap-3 border-none bg-transparent p-0 cursor-pointer text-left">
           <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
           <div>
             <div className="text-xs text-td-muted font-semibold">{isAdmin ? 'Head Teacher' : 'Teacher'}</div>
             <div className="text-[17px] font-extrabold text-td-dark">{displayName}</div>
           </div>
-        </div>
+        </button>
         <div className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a2332" strokeWidth="2" strokeLinecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
         </div>
