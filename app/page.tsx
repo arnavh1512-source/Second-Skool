@@ -1,8 +1,9 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { useEffect } from 'react'
 import type { ComponentType } from 'react'
-import { useDashboard } from './store'
+import { useDashboard, type Screen } from './store'
 import { PhoneFrame } from './components/Shell'
 import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
@@ -88,8 +89,34 @@ function AppShell({ children }: { children: React.ReactNode }) {
   return <PhoneFrame>{children}</PhoneFrame>
 }
 
+// Human labels for each client-routed screen — used to keep the browser tab /
+// history title in sync with what's actually on screen (this is a single Next
+// route, so per-page metadata can't do it).
+const SCREEN_TITLES: Partial<Record<Screen, string>> = {
+  home: 'Home', timetable: 'Timetable', attendance: 'Attendance', results: 'Results',
+  assign: 'Assignments', reminder: 'Reminders', students: 'Students', editStudent: 'Edit student',
+  addStudent: 'Add student', teachers: 'Staff', addTeacher: 'Add teacher', fees: 'Fees',
+  meetings: 'Meetings', rankings: 'Rankings', branches: 'Branches', subjects: 'Subjects',
+  batches: 'Batches', notes: 'Study material', more: 'More', staffApprovals: 'Staff approvals',
+  studentRequests: 'Student requests', staffProfile: 'Profile', notifications: 'Notifications',
+  reports: 'Reports', stuHome: 'Home', stuAttendance: 'Attendance', stuResults: 'Results',
+  stuRanking: 'Ranking', stuTeachers: 'Teachers', stuTeacher: 'Teacher', stuFees: 'Fees',
+  stuNotif: 'Notifications', stuProfile: 'Profile', stuTimetable: 'Timetable',
+  stuAssignments: 'Assignments', stuNotes: 'Study material',
+}
+
 function ScreenRouter() {
   const { screen, role, dataLoading, staffStatus, supabaseUserId } = useDashboard()
+
+  useEffect(() => {
+    let label: string | undefined
+    if (!role) label = 'Sign in'
+    else if (supabaseUserId && staffStatus !== 'approved')
+      label = staffStatus === 'pending' ? 'Pending approval'
+        : staffStatus === 'rejected' ? 'Access denied' : 'Complete setup'
+    else label = SCREEN_TITLES[screen]
+    document.title = label ? `${label} · Second Skool` : 'Second Skool'
+  }, [screen, role, staffStatus, supabaseUserId])
 
   if (!role) return <LoginScreen />
 
