@@ -875,10 +875,12 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     const tel = phone.trim()
     if (!/^\+?\d[\d\s-]{6,}$/.test(tel)) { get().notify('Enter a valid phone number'); return false }
     const sub = subject.trim(), qual = qualification.trim()
+    if (sub.length < 2) { get().notify('Enter the subject you teach'); return false }
+    if (qual.length < 2) { get().notify('Enter your qualification'); return false }
 
     const { error } = await supabase.from('profiles').update({
       full_name: trimmed.slice(0, 120), phone: tel,
-      subject: sub.slice(0, 120) || null, qualification: qual.slice(0, 120) || null,
+      subject: sub.slice(0, 120), qualification: qual.slice(0, 120),
       // Stamped on every save, not only the first. Re-stamping a complete
       // profile costs nothing, and it means a row that somehow missed the
       // marker heals on the next edit instead of trapping someone in setup.

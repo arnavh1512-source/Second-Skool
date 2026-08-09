@@ -310,7 +310,7 @@ export function ProfileSetupScreen() {
         {field('Phone', phone, setPhone, '+91 98765 43210', 'Your head teacher uses this to reach you.')}
         {field('Subject you teach', subject, setSubject, 'e.g. Mathematics, Physics')}
         {field('Qualification', qualification, setQualification, 'e.g. M.Sc. Mathematics')}
-        <div className="text-[11.5px] text-td-subtle">Subject and qualification are optional — you can add them later.</div>
+        <div className="text-[11.5px] text-td-subtle">All four are required — your students see them on your teacher profile.</div>
         <PrimaryButton onClick={submit}>{busy ? 'Saving…' : 'Continue'}</PrimaryButton>
       </div>
 

@@ -28,13 +28,20 @@ begin
   end if;
 end $$;
 
--- Anyone already approved and working has effectively completed onboarding.
--- Marking them done keeps this migration invisible to existing staff instead
--- of throwing a setup form at people mid-term.
+-- Mark as done only the approved staff who already have every required field
+-- on file. All four (name, phone, subject, qualification) are mandatory, and
+-- the columns above were just created, so in practice this marks nobody today
+-- — existing staff pass the setup form once on their next sign-in. That is the
+-- intended outcome: a half-filled row that skips the gate can never be
+-- completed afterwards, because nothing would ever ask for it again.
 update public.profiles
    set profile_completed_at = now()
  where profile_completed_at is null
-   and staff_status = 'approved';
+   and staff_status = 'approved'
+   and coalesce(char_length(trim(full_name)), 0) >= 2
+   and coalesce(char_length(trim(phone)), 0) >= 7
+   and coalesce(char_length(trim(subject)), 0) >= 2
+   and coalesce(char_length(trim(qualification)), 0) >= 2;
 
 -- Column-level grants, matching security-hardening.sql: a user may edit these
 -- fields on their own row (enforced by the profiles_update_self policy) and
