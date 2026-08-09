@@ -15,6 +15,14 @@ self.addEventListener('push', (event) => {
     icon: '/icon-512.png',
     badge: '/icon-512.png',
     tag: data.tag || undefined,
+    // Android decides heads-up vs. silent-to-the-shade from the Chrome "Sites"
+    // channel importance, which the web can't set. What it does read: a vibrate
+    // pattern and an explicit silent:false mark this as alerting rather than
+    // ambient, which is the difference on some OEM skins. It cannot override a
+    // channel the user has muted — that stays a device setting.
+    vibrate: [200, 100, 200],
+    silent: false,
+    timestamp: Date.now(),
     data: { url: data.url || '/' },
   }
   event.waitUntil((async () => {

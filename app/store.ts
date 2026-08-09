@@ -405,6 +405,11 @@ export const useDashboard = create<State & Actions>((set, get) => ({
           // the feature failed or simply nobody has turned notifications on.
           if (r.error) get().notify(`Push failed: ${r.error}`)
           else if (r.sent) get().notify(`Also pushed to ${r.sent} device(s)`)
+          // Subscriptions the push service refused. Distinct from "nobody
+          // subscribed": the student thinks notifications are on, so telling
+          // them to check their phone settings would send them hunting for a
+          // fault that isn't there. Name the real remedy instead.
+          else if (r.undelivered) get().notify(`${r.undelivered} device(s) need notifications re-enabled`)
           else get().notify('Sent in-app — no student has phone notifications on yet')
         })
     }

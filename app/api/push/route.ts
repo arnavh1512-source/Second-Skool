@@ -97,6 +97,7 @@ export async function POST(req: NextRequest) {
   // any other failure is logged (id + status only, no PII) so it's visible in
   // Vercel logs instead of vanishing silently.
   const stale: string[] = []
+  let failed = 0
   const BATCH = 100
   for (let i = 0; i < subs.length; i += BATCH) {
     await Promise.all(subs.slice(i, i + BATCH).map(async (s) => {
@@ -104,12 +105,24 @@ export async function POST(req: NextRequest) {
         await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload)
       } catch (e: unknown) {
         const code = (e as { statusCode?: number })?.statusCode
-        if (code === 404 || code === 410) stale.push(s.endpoint)
-        else logError('push.send_failed', { centre, statusCode: code ?? null })
+        // 404/410 = subscription retired by the push service.
+        // 403 = the VAPID key that signed this send isn't the one the
+        // subscription was created with (i.e. the server keypair was rotated).
+        // Either way it can never be delivered to again, so prune it — leaving
+        // it behind means every future send reports a device that cannot
+        // receive anything.
+        if (code === 404 || code === 410 || code === 403) stale.push(s.endpoint)
+        else failed++
+        if (code !== 404 && code !== 410) logError('push.send_failed', { centre, statusCode: code ?? null })
       }
     }))
   }
   if (stale.length) await admin.from('push_subscriptions').delete().in('endpoint', stale)
 
-  return NextResponse.json({ sent: subs.length - stale.length })
+  // Count deliveries, not attempts. Reporting subs.length here meant a send
+  // that was rejected by every push service still told the teacher "pushed to
+  // 1 device" — the most misleading possible answer, because it points the
+  // investigation at the phone instead of at the server.
+  const sent = subs.length - stale.length - failed
+  return NextResponse.json({ sent, ...(stale.length || failed ? { undelivered: stale.length + failed } : {}) })
 }

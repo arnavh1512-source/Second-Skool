@@ -13,6 +13,13 @@ function urlB64ToUint8Array(base64: string): Uint8Array {
   return Uint8Array.from(Array.from(raw).map(c => c.charCodeAt(0)))
 }
 
+// Byte-compare a live subscription's server key against the one we'd use now.
+function sameKey(existing: ArrayBuffer | null | undefined, current: Uint8Array): boolean {
+  if (!existing) return false
+  const a = new Uint8Array(existing)
+  return a.length === current.length && a.every((b, i) => b === current[i])
+}
+
 // Ask permission, register the service worker, subscribe, and store it.
 // kind='profile' → ref is the profile id (staff); kind='student' → ref is the code.
 export async function enablePush(kind: 'profile' | 'student', ref: string): Promise<{ ok: boolean; error?: string }> {
@@ -22,8 +29,20 @@ export async function enablePush(kind: 'profile' | 'student', ref: string): Prom
     if (perm !== 'granted') return { ok: false, error: 'Notification permission was blocked' }
     const reg = await navigator.serviceWorker.register('/sw.js')
     await navigator.serviceWorker.ready
-    const existing = await reg.pushManager.getSubscription()
-    const sub = existing ?? await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(VAPID) as unknown as BufferSource })
+    const key = urlB64ToUint8Array(VAPID)
+
+    // A subscription is permanently bound to the VAPID key it was created with.
+    // Once the server keypair is rotated the old one still looks perfectly
+    // healthy from here — getSubscription() returns it, the UI says
+    // notifications are on — but every send is rejected 403 by the push
+    // service. Reusing it blindly is how a device ends up silently
+    // undeliverable, so drop any subscription signed by a different key.
+    let sub = await reg.pushManager.getSubscription()
+    if (sub && !sameKey(sub.options.applicationServerKey, key)) {
+      try { await sub.unsubscribe() } catch { /* stale either way — resubscribe below */ }
+      sub = null
+    }
+    sub ??= await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key as unknown as BufferSource })
     const json = sub.toJSON()
     const { error } = await supabase.rpc('save_push_subscription', {
       p_endpoint: sub.endpoint, p_p256dh: json.keys?.p256dh, p_auth: json.keys?.auth, p_kind: kind, p_ref: ref,
@@ -37,7 +56,7 @@ export async function enablePush(kind: 'profile' | 'student', ref: string): Prom
 
 // Fire a push send request to our API route. Returns how many devices were
 // pushed (or a short error string) so the caller can surface a diagnostic.
-export async function sendPush(payload: { studentCodes?: string[]; notifyHead?: boolean; title: string; body: string; url?: string }): Promise<{ sent?: number; error?: string }> {
+export async function sendPush(payload: { studentCodes?: string[]; notifyHead?: boolean; title: string; body: string; url?: string }): Promise<{ sent?: number; undelivered?: number; error?: string }> {
   const post = (accessToken: string) => fetch('/api/push', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
@@ -63,7 +82,7 @@ export async function sendPush(payload: { studentCodes?: string[]; notifyHead?: 
     }
     const json = await res.json().catch(() => ({}))
     if (!res.ok) return { error: json.error || `http ${res.status}` }
-    return { sent: json.sent ?? 0 }
+    return { sent: json.sent ?? 0, undelivered: json.undelivered ?? 0 }
   } catch {
     return { error: 'request failed' }
   }
