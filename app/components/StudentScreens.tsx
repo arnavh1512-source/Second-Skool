@@ -595,7 +595,7 @@ export function StuAssignmentsScreen() {
 }
 
 export function StuProfileScreen() {
-  const { signOut, students, currentStudentDbId, stuResults, googleEmail } = useDashboard()
+  const { signOut, students, currentStudentDbId, stuResults, googleEmail, notify } = useDashboard()
   const me = students.find(s => s.dbId === currentStudentDbId)
   const displayName = me?.name ?? googleEmail?.split('@')[0] ?? 'Student'
   const ini = initials(displayName)
@@ -630,6 +630,27 @@ export function StuProfileScreen() {
           )}
         </div>
       </div>
+
+      {/* The code is how a student signs back in — on a new phone, after
+          clearing the browser, after a reinstall. It's issued once at
+          registration and then only ever lived in a toast, so anyone who
+          didn't write it down was locked out. It belongs here permanently. */}
+      {me?.id && (
+        <button
+          onClick={() => { navigator.clipboard.writeText(me.id); notify('Code copied!') }}
+          className="w-full text-left border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[18px] p-3.5 mb-5 cursor-pointer flex items-center justify-between gap-3"
+        >
+          <div className="min-w-0">
+            <div className="text-[11px] font-bold text-td-muted">YOUR STUDENT CODE</div>
+            <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em] truncate">{me.id}</div>
+            <div className="text-[11px] text-td-muted mt-0.5">Use this to sign in on any device. Keep it private.</div>
+          </div>
+          <div className="text-[11px] font-bold text-td-primary flex items-center gap-1 shrink-0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </div>
+        </button>
+      )}
 
       <div className="flex flex-col gap-2.5 mb-5">
         {fields.map(f => (

@@ -59,6 +59,31 @@ export function StaffApprovalsScreen() {
                   <div className="text-[11.5px] text-td-muted truncate">{s.email}</div>
                 </div>
               </div>
+              {/* What this person said about themselves. The phone is a link
+                  because verifying an applicant by calling them is the whole
+                  reason it's collected. */}
+              {(s.phone || s.subject || s.qualification) && (
+                <div className="bg-[#f7f9fc] border border-td-border rounded-[12px] p-2.5 mb-3 flex flex-col gap-1.5">
+                  {s.phone && (
+                    <div className="flex items-center gap-2 text-[12px]">
+                      <span className="text-td-subtle w-[68px] shrink-0">Phone</span>
+                      <a href={`tel:${s.phone.replace(/\s/g, '')}`} className="font-bold text-td-primary truncate">{s.phone}</a>
+                    </div>
+                  )}
+                  {s.subject && (
+                    <div className="flex items-center gap-2 text-[12px]">
+                      <span className="text-td-subtle w-[68px] shrink-0">Teaches</span>
+                      <span className="font-bold text-td-dark truncate">{s.subject}</span>
+                    </div>
+                  )}
+                  {s.qualification && (
+                    <div className="flex items-center gap-2 text-[12px]">
+                      <span className="text-td-subtle w-[68px] shrink-0">Qualified</span>
+                      <span className="font-bold text-td-dark truncate">{s.qualification}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2.5">
                 <button onClick={() => approveTeacher(s.id)} className="flex-1 border-none bg-td-green text-white text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer">Approve</button>
                 <button onClick={() => rejectTeacher(s.id)} className="flex-1 border border-td-border bg-white text-td-muted text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer">Reject</button>
