@@ -38,14 +38,29 @@ export async function enablePush(kind: 'profile' | 'student', ref: string): Prom
 // Fire a push send request to our API route. Returns how many devices were
 // pushed (or a short error string) so the caller can surface a diagnostic.
 export async function sendPush(payload: { studentCodes?: string[]; notifyHead?: boolean; title: string; body: string; url?: string }): Promise<{ sent?: number; error?: string }> {
+  const post = (accessToken: string) => fetch('/api/push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(payload),
+  })
+
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return { error: 'not signed in' }
-    const res = await fetch('/api/push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify(payload),
-    })
+
+    // A token whose session row is gone still passes every RLS check —
+    // PostgREST only verifies the signature — but GoTrue's /auth/v1/user,
+    // which /api/push authenticates against, rejects it as session_not_found.
+    // The app then works everywhere except push, indefinitely: getSession()
+    // hands back the cached token without a network round trip, so nothing
+    // ever notices. On a 401, refresh once (that mints a token bound to a
+    // live session) and retry before blaming the user.
+    let res = await post(session.access_token)
+    if (res.status === 401) {
+      const { data, error } = await supabase.auth.refreshSession()
+      if (error || !data.session) return { error: 'session expired — sign out and sign in again' }
+      res = await post(data.session.access_token)
+    }
     const json = await res.json().catch(() => ({}))
     if (!res.ok) return { error: json.error || `http ${res.status}` }
     return { sent: json.sent ?? 0 }
