@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { safeLink, validatePushBody, createRateLimiter } from '../app/lib/push-guard'
+import { safeLink, validatePushBody, createRateLimiter, rateLimit } from '../app/lib/push-guard'
 
 describe('safeLink', () => {
   it('keeps a same-app relative path', () => {
@@ -96,5 +96,24 @@ describe('createRateLimiter', () => {
     expect(rl.limited('u1')).toBe(true)
     t = 1001 // window passed
     expect(rl.limited('u1')).toBe(false)
+  })
+})
+
+// No Upstash env is set under test, so this exercises the in-memory fallback
+// path of the distributed limiter. Keys are randomised so the module-level
+// fallback limiter (shared per limit/window) can't leak counts between tests.
+describe('rateLimit (in-memory fallback)', () => {
+  it('allows up to the limit, then blocks', async () => {
+    const key = `k-${Math.random()}`
+    expect(await rateLimit(key, 2, 60_000)).toBe(false)
+    expect(await rateLimit(key, 2, 60_000)).toBe(false)
+    expect(await rateLimit(key, 2, 60_000)).toBe(true) // 3rd within window → blocked
+  })
+
+  it('isolates callers by key', async () => {
+    const a = `a-${Math.random()}`, b = `b-${Math.random()}`
+    expect(await rateLimit(a, 1, 30_000)).toBe(false)
+    expect(await rateLimit(a, 1, 30_000)).toBe(true)
+    expect(await rateLimit(b, 1, 30_000)).toBe(false) // b has its own budget
   })
 })

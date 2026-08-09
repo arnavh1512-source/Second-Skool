@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
-import { safeLink, validatePushBody, createRateLimiter } from '@/app/lib/push-guard'
+import { safeLink, validatePushBody, rateLimit } from '@/app/lib/push-guard'
 import { logError } from '@/app/lib/log'
 
 export const runtime = 'nodejs'
@@ -16,8 +16,9 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) webpush.setVapidDetails(VAPID_SUBJECT, VAPID_
 
 type Row = { endpoint: string; p256dh: string; auth: string }
 
-// Best-effort per-caller rate limit (per serverless instance): 30 sends/min.
-const limiter = createRateLimiter(30, 60_000)
+// Per-caller rate limit: 30 sends/min. Shared across serverless instances when
+// Upstash is configured; falls back to per-instance in-memory otherwise.
+const RATE = { limit: 30, windowMs: 60_000 }
 
 export async function POST(req: NextRequest) {
   if (!url || !serviceKey || !VAPID_PRIVATE) return NextResponse.json({ error: 'not configured' }, { status: 500 })
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
   const { data: userData } = await admin.auth.getUser(token)
   const uid = userData.user?.id
   if (!uid) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-  if (limiter.limited(uid)) return NextResponse.json({ error: 'too many requests — slow down' }, { status: 429 })
+  if (await rateLimit(uid, RATE.limit, RATE.windowMs)) return NextResponse.json({ error: 'too many requests — slow down' }, { status: 429 })
   const { data: me } = await admin.from('profiles').select('centre_id, staff_status').eq('id', uid).single()
   const centre = me?.centre_id
   if (!centre) return NextResponse.json({ error: 'no centre' }, { status: 403 })

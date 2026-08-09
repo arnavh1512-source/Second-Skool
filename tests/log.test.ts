@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { logInfo, logWarn, logError } from '../app/lib/log'
+import { logInfo, logWarn, logError, parseSentryDsn } from '../app/lib/log'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -31,5 +31,22 @@ describe('structured logger', () => {
     const raw = spy.mock.calls.at(-1)?.[0] as string
     expect(raw).not.toContain('\n')
     expect(() => JSON.parse(raw)).not.toThrow()
+  })
+})
+
+describe('parseSentryDsn', () => {
+  it('parses a valid DSN into an envelope endpoint + public key', () => {
+    expect(parseSentryDsn('https://abc123@o1.ingest.sentry.io/456')).toEqual({
+      endpoint: 'https://o1.ingest.sentry.io/api/456/envelope/',
+      key: 'abc123',
+    })
+  })
+
+  it('returns null for missing, empty, or malformed DSNs', () => {
+    expect(parseSentryDsn(undefined)).toBeNull()
+    expect(parseSentryDsn('')).toBeNull()
+    expect(parseSentryDsn('not a url')).toBeNull()
+    expect(parseSentryDsn('https://o1.ingest.sentry.io/456')).toBeNull() // no public key
+    expect(parseSentryDsn('https://abc@o1.ingest.sentry.io/')).toBeNull() // no project id
   })
 })
