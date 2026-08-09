@@ -25,11 +25,27 @@ export async function POST(req: NextRequest) {
 
   // Authenticate the caller (any signed-in user) and read their centre.
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!token) {
+    logError('push.unauthorized', { reason: 'no_token' })
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
   const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
-  const { data: userData } = await admin.auth.getUser(token)
+  const { data: userData, error: authErr } = await admin.auth.getUser(token)
   const uid = userData.user?.id
-  if (!uid) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!uid) {
+    // A token was sent but Supabase refused it. Log why — an expired session
+    // and a service key pointing at the wrong project both surface as a bare
+    // 401 otherwise, and they need completely different fixes.
+    logError('push.unauthorized', {
+      reason: 'token_rejected',
+      authError: authErr?.message ?? null,
+      status: authErr?.status ?? null,
+      // Which project the server thinks it's talking to — a mismatch against
+      // the client's project is the usual cause. Host only, never the key.
+      supabaseHost: (() => { try { return new global.URL(url).host } catch { return null } })(),
+    })
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
   if (await rateLimit(uid, RATE.limit, RATE.windowMs)) return NextResponse.json({ error: 'too many requests — slow down' }, { status: 429 })
   const { data: me } = await admin.from('profiles').select('centre_id, staff_status').eq('id', uid).single()
   const centre = me?.centre_id
