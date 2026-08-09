@@ -398,12 +398,14 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       const codes = targets.map(s => s.id).filter(Boolean)
       if (codes.length) sendPush({ studentCodes: codes, title, body: message })
         .then(r => {
-          // The in-app reminder already lands for every student (notifications
-          // insert above). Only surface the push leg when it adds signal: a real
-          // error, or a positive device count. Stay silent on 0 so it never
-          // reads as a failure when no student has enabled phone push yet.
+          // Always say what happened. The in-app reminder lands for everyone
+          // regardless (notifications insert above), but staying silent on 0
+          // devices is indistinguishable from "push is broken" — the teacher
+          // presses send, nothing buzzes, and there's no way to tell whether
+          // the feature failed or simply nobody has turned notifications on.
           if (r.error) get().notify(`Push failed: ${r.error}`)
           else if (r.sent) get().notify(`Also pushed to ${r.sent} device(s)`)
+          else get().notify('Sent in-app — no student has phone notifications on yet')
         })
     }
 
