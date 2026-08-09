@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDashboard } from '../store'
 import { supabase } from '../lib/supabase'
 import { PrimaryButton } from './Shell'
+import { enablePush, pushSupported, testNotification } from '../lib/push'
 
 const LOGO = (
   // eslint-disable-next-line @next/next/no-img-element
@@ -195,6 +196,108 @@ export function LoginScreen() {
 // Shown after a student self-registers (or when a returning pending student
 // opens the app). Polls their snapshot; the moment the head approves, the
 // snapshot flips to 'approved' and routes them straight into the dashboard.
+// Reminders are a condition of using the app, not an upsell. The product's
+// entire premise is that a student hears about tomorrow's test tonight; a
+// roster of students who never enabled alerts is a centre paying for a
+// reminder app that reminds nobody.
+//
+// The browser won't enforce this — a student can tap Block, and Chrome then
+// refuses to prompt again forever — so the app enforces it instead: no student
+// screen renders until permission is actually granted. When it's blocked there
+// is no button that can help (calling requestPermission() again is a silent
+// no-op), so the only honest thing to show is where the switch really lives.
+// Permission changes arrive from three places: the in-page prompt, the browser
+// settings sheet (which only shows up as a focus/visibility change on return),
+// and our own grant below. Watch all three, or the gate outlives the fix.
+const PERM_EVENT = 'ss-notification-permission'
+function watchPermission(read: () => void): () => void {
+  read()
+  document.addEventListener('visibilitychange', read)
+  window.addEventListener('focus', read)
+  window.addEventListener(PERM_EVENT, read)
+  return () => {
+    document.removeEventListener('visibilitychange', read)
+    window.removeEventListener('focus', read)
+    window.removeEventListener(PERM_EVENT, read)
+  }
+}
+
+// True once we know a student has not granted notification permission.
+// Deliberately starts false: gating on the very first paint, before the effect
+// has read the real value, would flash the gate at students who already
+// allowed. Browsers without push at all are never gated — there is no
+// permission to grant, so holding them would lock them out permanently.
+export function useNotificationGate(): boolean {
+  const [gated, setGated] = useState(false)
+  useEffect(() => watchPermission(() => setGated(pushSupported() && Notification.permission !== 'granted')), [])
+  return gated
+}
+
+export function NotificationGateScreen() {
+  const { stuPending, students, currentStudentDbId, signOut, notify } = useDashboard()
+  const code = stuPending?.code
+    || students.find(s => s.dbId === currentStudentDbId)?.id
+    || (typeof window !== 'undefined' ? localStorage.getItem('student_code') ?? '' : '')
+
+  const [perm, setPerm] = useState<NotificationPermission>('default')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => watchPermission(() => setPerm(Notification.permission)), [])
+
+  const turnOn = async () => {
+    if (busy || !code) return
+    setBusy(true)
+    const r = await enablePush('student', code)
+    setPerm(Notification.permission)
+    // Tell the router's copy of this state too, so a grant clears the gate
+    // straight away instead of waiting for the next focus change.
+    window.dispatchEvent(new Event(PERM_EVENT))
+    setBusy(false)
+    if (!r.ok) { notify(r.error || 'Could not turn on reminders'); return }
+    const t = await testNotification()
+    notify(t.ok ? 'Reminders on — check for the test alert' : 'Reminders on')
+  }
+
+  const blocked = perm === 'denied'
+  return (
+    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#eaf1fc] flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      </div>
+      <div className="text-[20px] font-extrabold text-td-dark">{blocked ? 'Reminders are blocked' : 'Turn on reminders'}</div>
+      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">
+        {blocked
+          ? 'Your browser is blocking reminders for Second Skool, so we can’t tell you about tests, homework or fees. Allow them to continue.'
+          : 'Second Skool needs to send you reminders about tests, homework and fees. Turn them on to continue.'}
+      </div>
+
+      {blocked ? (
+        <div className="mt-6 w-full max-w-[320px] bg-white border border-td-border rounded-[16px] p-4 text-left">
+          <div className="text-[12px] font-extrabold text-td-dark mb-2">How to allow them</div>
+          <ol className="text-[12.5px] text-td-muted leading-relaxed list-decimal pl-4 flex flex-col gap-1">
+            <li>Tap the lock or ⓘ icon next to the web address</li>
+            <li>Open <span className="font-bold text-td-text">Permissions</span> → <span className="font-bold text-td-text">Notifications</span></li>
+            <li>Switch it to <span className="font-bold text-td-text">Allow</span></li>
+            <li>Come back here — this screen clears on its own</li>
+          </ol>
+        </div>
+      ) : (
+        <div className="mt-7 w-full max-w-[320px]">
+          <PrimaryButton onClick={turnOn}>{busy ? 'Turning on…' : 'Turn on reminders'}</PrimaryButton>
+        </div>
+      )}
+
+      {code && (
+        <div className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-white">
+          <div className="text-[11px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+          <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
+        </div>
+      )}
+      <button onClick={signOut} className="mt-auto text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent">Sign out</button>
+    </div>
+  )
+}
+
 export function StuPendingScreen() {
   const { stuPending, signOut, loadStudentByCode, notify } = useDashboard()
   const [busy, setBusy] = useState(false)

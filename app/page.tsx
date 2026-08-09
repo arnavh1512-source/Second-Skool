@@ -8,7 +8,7 @@ import { PhoneFrame } from './components/Shell'
 import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { LoginScreen, ProfileSetupScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen } from './components/AuthScreens'
+import { LoginScreen, ProfileSetupScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen, NotificationGateScreen, useNotificationGate } from './components/AuthScreens'
 import { HomeScreen } from './components/HomeScreen'
 
 function ScreenLoading() {
@@ -110,6 +110,7 @@ const SCREEN_TITLES: Partial<Record<Screen, string>> = {
 
 function ScreenRouter() {
   const { screen, role, dataLoading, staffStatus, supabaseUserId, profileDone } = useDashboard()
+  const notifGated = useNotificationGate()
 
   useEffect(() => {
     let label: string | undefined
@@ -118,9 +119,10 @@ function ScreenRouter() {
     else if (supabaseUserId && !profileDone) label = 'Your details'
     else if (supabaseUserId && staffStatus !== 'approved')
       label = staffStatus === 'pending' ? 'Pending approval' : 'Complete setup'
+    else if (role === 'student' && notifGated && screen !== 'stuDenied') label = 'Turn on reminders'
     else label = SCREEN_TITLES[screen]
     document.title = label ? `${label} · Second Skool` : 'Second Skool'
-  }, [screen, role, staffStatus, supabaseUserId, profileDone])
+  }, [screen, role, staffStatus, supabaseUserId, profileDone, notifGated])
 
   if (!role) return <LoginScreen />
 
@@ -137,6 +139,11 @@ function ScreenRouter() {
     if (staffStatus === 'rejected') return <DeniedScreen />
     return <RegisterScreen />
   }
+
+  // Students must have reminders on, full stop — the browser won't make that
+  // mandatory, so the app does. Not applied to the declined screen: someone the
+  // centre already turned away has nothing to be reminded about.
+  if (role === 'student' && notifGated && screen !== 'stuDenied') return <NotificationGateScreen />
 
   if (dataLoading && (role === 'admin' || role === 'teacher')) return <ScreenLoading />
 
