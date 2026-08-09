@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       status: authErr?.status ?? null,
       // Which project the server thinks it's talking to — a mismatch against
       // the client's project is the usual cause. Host only, never the key.
-      supabaseHost: (() => { try { return new global.URL(url).host } catch { return null } })(),
+      supabaseHost: (() => { try { return new URL(url).host } catch { return null } })(),
       // Shape checks for the two env vars involved. Lengths and prefixes only —
       // never the values. A quoted or newline-padded paste in the Vercel UI is
       // the usual culprit and is invisible in every other symptom.
