@@ -10,7 +10,10 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY ?? ''
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? ''
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT ?? 'mailto:admin@secondskool.app'
+// `||` not `??` on purpose: an env var set to an empty string in the Vercel UI
+// is '' rather than undefined, and setVapidDetails throws on a blank subject —
+// which would take the whole route down at module load with an opaque 500.
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@secondskool.app'
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE)
 
