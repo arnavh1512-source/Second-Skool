@@ -518,7 +518,7 @@ export function NotificationsScreen() {
 }
 
 export function StaffProfileScreen() {
-  const { go, role, myName, myPhone, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify, setMyPassword } = useDashboard()
+  const { go, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'
   const logoInput = useRef<HTMLInputElement>(null)
   const [logoBusy, setLogoBusy] = useState(false)
@@ -538,6 +538,8 @@ export function StaffProfileScreen() {
   }
   const [name, setName] = useState(myName)
   const [phone, setPhone] = useState(myPhone)
+  const [subject, setSubject] = useState(mySubject)
+  const [qualification, setQualification] = useState(myQualification)
   const [centre, setCentre] = useState(centreName)
   const [busy, setBusy] = useState(false)
   const displayName = name || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
@@ -550,8 +552,11 @@ export function StaffProfileScreen() {
 
   const save = async () => {
     setBusy(true)
-    await saveStaffProfile(name, phone)
-    if (isAdmin && centre.trim() && centre.trim() !== centreName) await renameCentre(centre)
+    // Only touch the centre name if the profile itself saved — otherwise a
+    // rejected phone number would still rename the centre, which looks like a
+    // partial success and is hard to reason about.
+    if (await saveStaffProfile({ name, phone, subject, qualification })
+      && isAdmin && centre.trim() && centre.trim() !== centreName) await renameCentre(centre)
     setBusy(false)
   }
 
@@ -586,6 +591,8 @@ export function StaffProfileScreen() {
       <div className="flex flex-col gap-3.5 mb-[18px]">
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Full name</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject you teach</label><input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Mathematics, Physics" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Qualification</label><input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="e.g. M.Sc. Mathematics" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         {isAdmin && (
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Centre name</label><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         )}

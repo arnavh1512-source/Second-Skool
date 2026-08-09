@@ -57,7 +57,7 @@ describe('mapSnapshot', () => {
     ],
     notifications: [{ title: 'Test Reminder', detail: 'Tomorrow', icon: '📝', createdAt: new Date().toISOString() }],
     teachers: [{ name: 'Ravi', subject: 'Mathematics', experience: 5, qualification: 'M.Sc', rating: 4.5, about: 'x' }],
-    rankings: { Mathematics: [['Arjun', 90], ['Neha', 80]] },
+    rankings: { Mathematics: [['Arjun', 90] as [string, number], ['Neha', 80] as [string, number]] },
   }
   const r = mapSnapshot(snap)
 

@@ -8,7 +8,7 @@ import { PhoneFrame } from './components/Shell'
 import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { LoginScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen } from './components/AuthScreens'
+import { LoginScreen, ProfileSetupScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen } from './components/AuthScreens'
 import { HomeScreen } from './components/HomeScreen'
 
 function ScreenLoading() {
@@ -78,10 +78,13 @@ export default function Page() {
 // screens (login, and staff setup/pending/denied) get the split-screen auth
 // shell. Students and every mobile viewport keep the phone layout.
 function AppShell({ children }: { children: React.ReactNode }) {
-  const { role, staffStatus, supabaseUserId } = useDashboard()
+  const { role, staffStatus, supabaseUserId, profileDone } = useDashboard()
   const desktop = useIsDesktop()
   const isStaff = role === 'admin' || role === 'teacher'
-  const approvedStaff = isStaff && !(supabaseUserId && staffStatus !== 'approved')
+  // An approved head with an unfinished profile is still on a pre-app screen —
+  // wrapping the details form in the console sidebar would offer navigation
+  // out of a gate that exists to be answered.
+  const approvedStaff = isStaff && !(supabaseUserId && (staffStatus !== 'approved' || !profileDone))
   if (desktop) {
     if (approvedStaff) return <DesktopShell>{children}</DesktopShell>
     if (role !== 'student') return <DesktopAuthShell>{children}</DesktopAuthShell>
@@ -106,19 +109,25 @@ const SCREEN_TITLES: Partial<Record<Screen, string>> = {
 }
 
 function ScreenRouter() {
-  const { screen, role, dataLoading, staffStatus, supabaseUserId } = useDashboard()
+  const { screen, role, dataLoading, staffStatus, supabaseUserId, profileDone } = useDashboard()
 
   useEffect(() => {
     let label: string | undefined
     if (!role) label = 'Sign in'
+    else if (supabaseUserId && staffStatus === 'rejected') label = 'Access denied'
+    else if (supabaseUserId && !profileDone) label = 'Your details'
     else if (supabaseUserId && staffStatus !== 'approved')
-      label = staffStatus === 'pending' ? 'Pending approval'
-        : staffStatus === 'rejected' ? 'Access denied' : 'Complete setup'
+      label = staffStatus === 'pending' ? 'Pending approval' : 'Complete setup'
     else label = SCREEN_TITLES[screen]
     document.title = label ? `${label} · Second Skool` : 'Second Skool'
-  }, [screen, role, staffStatus, supabaseUserId])
+  }, [screen, role, staffStatus, supabaseUserId, profileDone])
 
   if (!role) return <LoginScreen />
+
+  // Details gate, ahead of the status lock below — which would otherwise send
+  // an unregistered or pending user straight past it. Rejected users are
+  // exempt: there's nothing for them to complete.
+  if (supabaseUserId && !profileDone && staffStatus !== 'rejected') return <ProfileSetupScreen />
 
   // A signed-in Google user who is not an approved staff member is locked to
   // their setup/status screen — no access to any feature screen, regardless of
@@ -156,6 +165,7 @@ function ScreenRouter() {
     case 'staffApprovals': return <StaffApprovalsScreen />
     case 'studentRequests': return <StudentRequestsScreen />
     case 'reports': return <ReportsScreen />
+    case 'profileSetup': return <ProfileSetupScreen />
     case 'register': return <RegisterScreen />
     case 'pending': return <PendingScreen />
     case 'denied': return <DeniedScreen />

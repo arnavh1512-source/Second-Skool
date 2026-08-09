@@ -263,6 +263,62 @@ export function StuDeniedScreen() {
   )
 }
 
+// One-time details gate for staff. Shown straight after sign-in and before
+// registering, because the head teacher approves a join request on the
+// strength of these details — a Google display name alone tells them nothing.
+export function ProfileSetupScreen() {
+  const { googleEmail, saveStaffProfile, signOut } = useDashboard()
+  // Intentionally blank rather than seeded from the Google account: the whole
+  // point is that the teacher enters their own details.
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [subject, setSubject] = useState('')
+  const [qualification, setQualification] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  // No disabled state: saveStaffProfile validates and says exactly what's
+  // wrong. A dead button that never explains itself is the worse failure.
+  const submit = async () => {
+    if (busy) return
+    setBusy(true)
+    await saveStaffProfile({ name, phone, subject, qualification })
+    setBusy(false)
+  }
+
+  const field = (label: string, value: string, onChange: (v: string) => void, placeholder: string, hint?: string) => (
+    <div>
+      <label className="text-xs font-bold text-td-muted mb-[7px] block">{label}</label>
+      <input
+        value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        onKeyDown={e => e.key === 'Enter' && submit()}
+        className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary"
+      />
+      {hint && <div className="text-[11.5px] text-td-subtle mt-1.5">{hint}</div>}
+    </div>
+  )
+
+  return (
+    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col">
+      {LOGO}
+      <div className="text-[24px] font-extrabold text-td-dark tracking-tight mt-[22px]">Tell us about you</div>
+      <div className="text-sm text-td-muted mt-2 leading-relaxed">
+        Signed in as <span className="font-bold text-td-text">{googleEmail}</span>. These details are what your centre and its students will see.
+      </div>
+
+      <div className="flex flex-col gap-3.5 mt-7">
+        {field('Full name', name, setName, 'e.g. Priya Sharma')}
+        {field('Phone', phone, setPhone, '+91 98765 43210', 'Your head teacher uses this to reach you.')}
+        {field('Subject you teach', subject, setSubject, 'e.g. Mathematics, Physics')}
+        {field('Qualification', qualification, setQualification, 'e.g. M.Sc. Mathematics')}
+        <div className="text-[11.5px] text-td-subtle">Subject and qualification are optional — you can add them later.</div>
+        <PrimaryButton onClick={submit}>{busy ? 'Saving…' : 'Continue'}</PrimaryButton>
+      </div>
+
+      <button onClick={signOut} className="mt-auto text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent">Sign out</button>
+    </div>
+  )
+}
+
 export function RegisterScreen() {
   const { googleEmail, createCentre, joinCentre, signOut } = useDashboard()
   const [busy, setBusy] = useState(false)

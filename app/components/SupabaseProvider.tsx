@@ -98,11 +98,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // device into the student "invalid code" path.
     if (typeof window !== 'undefined') localStorage.removeItem('student_code')
     try {
-      const { data: profile } = await supabase.from('profiles').select('role, staff_status, full_name, phone').eq('id', userId).single()
+      const { data: profile } = await supabase.from('profiles').select('role, staff_status, full_name, phone, subject, qualification, profile_completed_at').eq('id', userId).single()
       const role = (profile?.role as Role) ?? 'student'
       const staffStatus = (profile?.staff_status as StaffStatus) ?? 'none'
       const { data: headExists } = await supabase.rpc('head_exists')
-      setAuth(userId, role, email, staffStatus, !!headExists, (profile?.full_name as string) ?? '', (profile?.phone as string) ?? '')
+      setAuth(userId, role, email, staffStatus, !!headExists, {
+        // Name deliberately starts blank in the setup form even though a
+        // Google-derived value exists — the point of the gate is that the
+        // teacher states their own details. Carry it anyway so an already
+        // completed profile renders correctly everywhere else.
+        name: (profile?.full_name as string) ?? '',
+        phone: (profile?.phone as string) ?? '',
+        subject: (profile?.subject as string) ?? '',
+        qualification: (profile?.qualification as string) ?? '',
+        done: !!profile?.profile_completed_at,
+      })
       // Only approved staff load the centre's full dataset. dataLoading gates the
       // UI so Home never flashes zeros before the first fetch completes.
       if ((role === 'admin' || role === 'teacher') && staffStatus === 'approved') {

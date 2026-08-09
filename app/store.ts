@@ -29,7 +29,7 @@ export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
   | 'students' | 'editStudent' | 'addStudent' | 'teachers' | 'addTeacher'
   | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'batches' | 'notes' | 'more'
-  | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'notifications' | 'reports' | 'register' | 'pending' | 'denied'
+  | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'notifications' | 'reports' | 'profileSetup' | 'register' | 'pending' | 'denied'
   | 'stuSignup' | 'stuPending' | 'stuDenied'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
   | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
@@ -70,7 +70,8 @@ interface State {
   attClass: string; att: Record<number, string>; rankSubject: string; ttDay: string
   toast: string; editIndex: number
   staffStatus: StaffStatus; headExists: boolean; staffList: StaffMember[]; weeklyReport: WeeklyReport | null; studentReports: StudentReport[] | null; teacherActivity: TeacherActivity[] | null
-  googleEmail: string; myName: string; myPhone: string; centreName: string; centreLogo: string; joinCode: string; studentJoinCode: string; reminderType: string; plan: string
+  googleEmail: string; myName: string; myPhone: string; mySubject: string; myQualification: string; profileDone: boolean
+  centreName: string; centreLogo: string; joinCode: string; studentJoinCode: string; reminderType: string; plan: string
   newTeacher: { name: string; subject: string; qualification: string; experience: string; branch: string }
   newStudent: { name: string; school: string; klass: string; batch: string; branch: string; parent: string; address: string; fee: string; feeDue: string }
   stuSignup: { joinCode: string; name: string; parent: string; klass: string; school: string; address: string }
@@ -162,8 +163,8 @@ interface Actions {
   loadTeachers: (t: Teacher[]) => void
   loadStudents: (s: Student[]) => void
   refreshData: () => Promise<void>
-  setAuth: (userId: string | null, role: Role, email: string, staffStatus: StaffStatus, headExists: boolean, name?: string, phone?: string) => void
-  saveStaffProfile: (name: string, phone: string) => Promise<void>
+  setAuth: (userId: string | null, role: Role, email: string, staffStatus: StaffStatus, headExists: boolean, profile?: Partial<StaffProfile & { done: boolean }>) => void
+  saveStaffProfile: (p: StaffProfile) => Promise<boolean>
   setMyPassword: (password: string) => Promise<boolean>
 }
 
@@ -174,7 +175,8 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
   toast: '', editIndex: 0,
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
-  googleEmail: '', myName: '', myPhone: '', centreName: '', centreLogo: '', joinCode: '', studentJoinCode: '', reminderType: 'Test', plan: 'Monthly',
+  googleEmail: '', myName: '', myPhone: '', mySubject: '', myQualification: '', profileDone: true,
+  centreName: '', centreLogo: '', joinCode: '', studentJoinCode: '', reminderType: 'Test', plan: 'Monthly',
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
   newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
@@ -852,30 +854,41 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   loadTeachers: (t) => set({ teachers: t }),
   loadStudents: (s) => set((prev) => ({ students: s, attClass: prev.attClass || (s.length ? s[0].klass : '') })),
   refreshData: async () => { await _refresh?.() },
-  setAuth: (userId, role, email, staffStatus, headExists, name = '', phone = '') => {
-    // Decide the landing screen for a signed-in Google (staff) user.
-    const approved = staffStatus === 'approved'
-    let screen: Screen
-    if ((role === 'admin' || role === 'teacher') && approved) screen = 'home'
-    else if (role === 'teacher' && staffStatus === 'pending') screen = 'pending'
-    else if (staffStatus === 'rejected') screen = 'denied'
-    else screen = 'register' // unregistered staff (role 'student'/none)
+  setAuth: (userId, role, email, staffStatus, headExists, profile = {}) => {
+    const { name = '', phone = '', subject = '', qualification = '', done = false } = profile
     set({
       supabaseUserId: userId, role, staffStatus, headExists, authLoading: false,
-      googleEmail: email ?? '', myName: name ?? '', myPhone: phone ?? '', screen, tab: 'home',
+      googleEmail: email ?? '', myName: name, myPhone: phone, mySubject: subject, myQualification: qualification,
+      profileDone: done, screen: landingScreen(role, staffStatus, done), tab: 'home',
     })
   },
 
-  saveStaffProfile: async (name, phone) => {
+  saveStaffProfile: async ({ name, phone, subject, qualification }) => {
     const id = get().supabaseUserId
-    if (!id) return
+    if (!id) return false
     const trimmed = name.trim()
-    if (!trimmed) { get().notify('Name is required'); return }
-    if (phone.trim() && !/^\+?\d[\d\s-]{6,}$/.test(phone.trim())) { get().notify('Invalid phone number'); return }
-    const { error } = await supabase.from('profiles').update({ full_name: trimmed, phone: phone.trim() || null }).eq('id', id)
-    if (error) { get().notify('Could not save profile — check your connection'); return }
-    set({ myName: trimmed, myPhone: phone.trim() })
-    get().notify('Profile updated')
+    if (trimmed.length < 2) { get().notify('Please enter your full name'); return false }
+    const tel = phone.trim()
+    if (!/^\+?\d[\d\s-]{6,}$/.test(tel)) { get().notify('Enter a valid phone number'); return false }
+    const sub = subject.trim(), qual = qualification.trim()
+
+    const { error } = await supabase.from('profiles').update({
+      full_name: trimmed.slice(0, 120), phone: tel,
+      subject: sub.slice(0, 120) || null, qualification: qual.slice(0, 120) || null,
+      // Stamped on every save, not only the first. Re-stamping a complete
+      // profile costs nothing, and it means a row that somehow missed the
+      // marker heals on the next edit instead of trapping someone in setup.
+      profile_completed_at: new Date().toISOString(),
+    }).eq('id', id)
+    if (error) { get().notify('Could not save profile — check your connection'); return false }
+
+    const wasSetup = !get().profileDone
+    set({ myName: trimmed, myPhone: tel, mySubject: sub, myQualification: qual, profileDone: true })
+    get().notify(wasSetup ? 'Profile saved' : 'Profile updated')
+    // Finishing setup has to resume the journey the gate interrupted —
+    // registering, waiting for approval, or straight to home.
+    if (wasSetup) set({ screen: landingScreen(get().role, get().staffStatus, true), tab: 'home' })
+    return true
   },
 
   // Set (or change) an email+password sign-in for a staff member. Lets a
@@ -892,6 +905,22 @@ export const useDashboard = create<State & Actions>((set, get) => ({
 }))
 
 // --- Helpers ---
+
+export interface StaffProfile { name: string; phone: string; subject: string; qualification: string }
+
+// Landing screen for a signed-in staff user. Pure, because finishing the
+// profile setup has to re-run exactly this decision to know where to go next.
+function landingScreen(role: Role, staffStatus: StaffStatus, profileDone: boolean): Screen {
+  if (staffStatus === 'rejected') return 'denied'
+  // Details before anything else. A join request reaches the head carrying
+  // this person's name and number; whatever Google had on file — an alias, a
+  // first name, an email prefix — is not something the head can act on.
+  if (!profileDone) return 'profileSetup'
+  if ((role === 'admin' || role === 'teacher') && staffStatus === 'approved') return 'home'
+  if (role === 'teacher' && staffStatus === 'pending') return 'pending'
+  return 'register' // unregistered staff (role 'student' / status 'none')
+}
+
 // Strong, human-readable student codes. Alphabet excludes confusable
 // characters (0/O, 1/I/L) so codes are easy to read aloud and hard to guess.
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -953,13 +982,19 @@ const rupee = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`
 
 // Shape of the get_student_snapshot RPC payload — keys mirror the SQL
 // json_build_object; nullable columns are handled by the `??` fallbacks below.
+// Every key is optional because this one type covers seven different arrays: an
+// attendance row carries `date`/`status` and nothing else. Declaring them
+// required typechecked a payload the RPC never actually sends.
 type SnapRow = {
   [key: string]: unknown
-  status: string; date: string; subject: string; test: string; marks: number; total: number
-  period: string; paidDate: string; amount: number; dueDate: string
-  icon: string; title: string; detail: string; createdAt: string
-  name: string; experience: number; qualification: string; rating: number | null; about: string
-  day: string; start: string; end: string; room: string; due: string; instructions: string
+  status?: string | null; date?: string | null; subject?: string | null; test?: string | null
+  marks?: number | null; total?: number | null
+  period?: string | null; paidDate?: string | null; amount?: number | null; dueDate?: string | null
+  icon?: string | null; title?: string | null; detail?: string | null; createdAt?: string | null
+  name?: string | null; experience?: number | null; qualification?: string | null
+  rating?: number | null; about?: string | null
+  day?: string | null; start?: string | null; end?: string | null; room?: string | null
+  due?: string | null; instructions?: string | null
 }
 type Snapshot = {
   student?: { [key: string]: string | undefined }
@@ -982,11 +1017,12 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   }
 
   const stuAttendanceLog: AttLogItem[] = attendance.slice(0, 15).map((a: SnapRow) => {
-    const d = new Date(a.date)
-    const si = STATUS_ICONS[a.status] ?? STATUS_ICONS.Present
+    const status = a.status ?? 'Present'
+    const d = new Date(a.date ?? '')
+    const si = STATUS_ICONS[status] ?? STATUS_ICONS.Present
     return {
-      day: d.toLocaleString('en', { weekday: 'long' }),
-      date: fmtDate(a.date), status: a.status, ...si,
+      day: isNaN(d.getTime()) ? '' : d.toLocaleString('en', { weekday: 'long' }),
+      date: fmtDate(a.date ?? ''), status, ...si,
     }
   })
 
@@ -997,14 +1033,14 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
 
   const fees: SnapRow[] = snap.fees ?? []
   const stuFeeHistory: FeeHistoryItem[] = fees.filter(f => f.status === 'Paid').map((f: SnapRow) => ({
-    period: f.period ?? '', date: fmtDate(f.paidDate), amount: rupee(f.amount),
+    period: f.period ?? '', date: fmtDate(f.paidDate ?? ''), amount: rupee(f.amount ?? 0),
   }))
   const pending = fees.find(f => f.status !== 'Paid')
-  const stuPendingFee = pending ? { amount: rupee(pending.amount), period: pending.period ?? '', dueDate: fmtDate(pending.dueDate) } : null
+  const stuPendingFee = pending ? { amount: rupee(pending.amount ?? 0), period: pending.period ?? '', dueDate: fmtDate(pending.dueDate ?? '') } : null
 
   const stuNotifications: NotifItem[] = (snap.notifications ?? []).map((n: SnapRow) => ({
     icon: n.icon ?? '📢', tint: '#eaf1fc', title: n.title ?? '', detail: n.detail ?? '',
-    when: timeAgo(n.createdAt), dbId: n.createdAt,
+    when: timeAgo(n.createdAt ?? ''), dbId: n.createdAt ?? '',
   }))
   // Home surfaces only the last 2 days of notifications so the feed stays short;
   // older ones drop off the home but remain in the bell (stuNotif) history.
@@ -1014,7 +1050,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
     .slice(0, 4)
 
   const teachers: Teacher[] = (snap.teachers ?? []).map((t: SnapRow) => ({
-    name: t.name, subject: t.subject, experience: t.experience ?? 0,
+    name: t.name ?? '', subject: t.subject ?? '', experience: t.experience ?? 0,
     qualification: t.qualification ?? '—',
     rating: t.rating != null ? String(t.rating) : undefined, about: t.about ?? undefined,
   }))
@@ -1030,7 +1066,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   }
 
   const stuAssignments: StuAssignmentItem[] = (snap.assignments ?? []).map((a: SnapRow) => ({
-    title: a.title ?? '', subject: a.subject ?? '', due: fmtDate(a.due), instructions: a.instructions ?? '',
+    title: a.title ?? '', subject: a.subject ?? '', due: fmtDate(a.due ?? ''), instructions: a.instructions ?? '',
   }))
 
   // Monthly summary (last 30 days) — computed from raw ISO dates before any
