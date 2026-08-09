@@ -64,12 +64,6 @@ Enters the private code their teacher gave them and instantly sees their attenda
 
 <div align="center">
 
-<img src="docs/screenshots/demo.gif" width="300" alt="Signing in as a student — pick the student option, enter the code from your teacher" />
-
-<sub>**A student signing in.** No account, no password — just the code their teacher gave them.</sub>
-
-<br /><br />
-
 <img src="docs/screenshots/login.png" width="30%" alt="Sign in — teachers use Google, students use a code" />
 &nbsp;
 <img src="docs/screenshots/student-code.png" width="30%" alt="Student code entry" />
