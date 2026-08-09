@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
-import { enablePush, pushSupported } from '../lib/push'
+import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
 
 export function FeesScreen() {
@@ -472,7 +472,7 @@ export function NotificationsScreen() {
     setPushBusy(true)
     const res = await enablePush('profile', supabaseUserId)
     setPushBusy(false)
-    if (res.ok) { setPushOn(true); notify('Notifications on for this device') }
+    if (res.ok) { setPushOn(true); const t = await testNotification(); notify(t.ok ? 'Notifications on — check for a test alert' : (t.error || 'Notifications on for this device')) }
     else notify(res.error || 'Could not enable')
   }
 
@@ -533,7 +533,7 @@ export function StaffProfileScreen() {
   const enableNotifs = async () => {
     if (!supabaseUserId) return
     const res = await enablePush('profile', supabaseUserId)
-    if (res.ok) { setPushOn(true); notify('Notifications on for this device') }
+    if (res.ok) { setPushOn(true); const t = await testNotification(); notify(t.ok ? 'Notifications on — check for a test alert' : (t.error || 'Notifications on for this device')) }
     else notify(res.error || 'Could not enable')
   }
   const [name, setName] = useState(myName)

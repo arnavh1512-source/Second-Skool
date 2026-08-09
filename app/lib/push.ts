@@ -54,6 +54,32 @@ export async function enablePush(kind: 'profile' | 'student', ref: string): Prom
   }
 }
 
+// Show a notification locally, through the service worker, with no server and
+// no push service involved. This bisects the only two ways a reminder can fail:
+// if the test pops up but a real reminder never does, delivery is broken; if
+// neither pops up, it's the device's own notification settings and no amount of
+// server work will fix it.
+export async function testNotification(): Promise<{ ok: boolean; error?: string }> {
+  if (!pushSupported()) return { ok: false, error: 'Notifications aren’t supported on this device/browser' }
+  if (Notification.permission !== 'granted') return { ok: false, error: 'Turn on Alerts first' }
+  try {
+    const reg = await navigator.serviceWorker.ready
+    await reg.showNotification('Second Skool', {
+      body: 'Test alert — reminders will look like this.',
+      icon: '/icon-512.png',
+      badge: '/icon-512.png',
+      // Same options a real push uses, so the test proves the real thing.
+      vibrate: [200, 100, 200],
+      silent: false,
+      timestamp: Date.now(),
+      data: { url: '/' },
+    } as NotificationOptions)
+    return { ok: true }
+  } catch {
+    return { ok: false, error: 'Could not show a notification' }
+  }
+}
+
 // Fire a push send request to our API route. Returns how many devices were
 // pushed (or a short error string) so the caller can surface a diagnostic.
 export async function sendPush(payload: { studentCodes?: string[]; notifyHead?: boolean; title: string; body: string; url?: string }): Promise<{ sent?: number; undelivered?: number; error?: string }> {

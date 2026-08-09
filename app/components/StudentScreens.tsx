@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useDashboard, GRADIENTS, initials, av, stuGrade } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
-import { enablePush, pushSupported } from '../lib/push'
+import { enablePush, pushSupported, testNotification } from '../lib/push'
 
 export function StuHomeScreen() {
   const { go, students, stuReminders, stuResults, stuAttendanceLog, stuPendingFee, currentStudentDbId, googleEmail, rankData, loadStudentByCode, stuMonthly, stuNotes, loadStudentNotes, centreName, centreLogo } = useDashboard()
@@ -73,7 +73,15 @@ export function StuHomeScreen() {
           <span className="text-[12.5px] font-semibold text-td-text">{me?.school || 'Your branch'}</span>
         </div>
         {pushSupported() && me?.id && (
-          <button onClick={async () => { const r = await enablePush('student', me.id); useDashboard.getState().notify(r.ok ? 'Alerts turned on' : (r.error || 'Could not enable')) }} className="inline-flex items-center gap-1.5 bg-[#eaf1fc] text-td-primary text-[12px] font-bold py-[7px] px-3 rounded-[20px] cursor-pointer border-none shrink-0">
+          <button onClick={async () => {
+            const r = await enablePush('student', me.id)
+            if (!r.ok) { useDashboard.getState().notify(r.error || 'Could not enable'); return }
+            // Immediately prove the device can actually display one. Turning
+            // alerts "on" and seeing nothing for days is how a student ends up
+            // believing the app is broken when it's a phone setting.
+            const t = await testNotification()
+            useDashboard.getState().notify(t.ok ? 'Alerts on — check your notifications for a test' : (t.error || 'Alerts on'))
+          }} className="inline-flex items-center gap-1.5 bg-[#eaf1fc] text-td-primary text-[12px] font-bold py-[7px] px-3 rounded-[20px] cursor-pointer border-none shrink-0">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
             Alerts
           </button>
