@@ -49,14 +49,22 @@ function forwardToSentry(event: string, fields: Fields): void {
   try {
     const eventId = crypto.randomUUID().replace(/-/g, '')
     const header = JSON.stringify({ event_id: eventId, sent_at: new Date().toISOString() })
+    // Sentry expects a LogEntry object here, not a bare string — a plain
+    // `message` renders as "(No error message)" in the issue feed. `formatted`
+    // is what's shown, so fold the fields in to make the issue readable at a
+    // glance without opening it; `extra` keeps them queryable.
+    const detail = Object.entries(fields).map(([k, v]) => `${k}=${v}`).join(' ')
     const envelope = JSON.stringify({
       event_id: eventId,
       level: 'error',
-      message: event,
+      message: { formatted: detail ? `${event} — ${detail}` : event },
       logger: 'app',
       platform: 'javascript',
       timestamp: Date.now() / 1000,
       environment: process.env.VERCEL_ENV ?? 'development',
+      // Group by event name so repeats of the same failure collapse into one
+      // issue instead of flooding the feed with N identical entries.
+      fingerprint: [event],
       tags: { event },
       extra: fields,
     })
