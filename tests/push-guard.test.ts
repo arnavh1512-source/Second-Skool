@@ -73,7 +73,7 @@ describe('validatePushBody', () => {
 
 describe('createRateLimiter', () => {
   it('allows up to the limit, then blocks', () => {
-    let t = 0
+    const t = 0
     const rl = createRateLimiter(3, 1000, () => t)
     expect(rl.limited('u1')).toBe(false) // 1
     expect(rl.limited('u1')).toBe(false) // 2
@@ -82,7 +82,7 @@ describe('createRateLimiter', () => {
   })
 
   it('isolates callers by key', () => {
-    let t = 0
+    const t = 0
     const rl = createRateLimiter(1, 1000, () => t)
     expect(rl.limited('a')).toBe(false)
     expect(rl.limited('a')).toBe(true)
