@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from './lib/supabase'
 import { sendPush, enablePush, pushSupported } from './lib/push'
+import { logError } from './lib/log'
 
 // The full-dataset fetch lives in SupabaseProvider (it owns the row mappers).
 // It registers itself here so store actions can re-pull fresh data after a
@@ -8,8 +9,21 @@ import { sendPush, enablePush, pushSupported } from './lib/push'
 let _refresh: (() => Promise<void>) | null = null
 export const registerRefresh = (fn: () => Promise<void>) => { _refresh = fn }
 
+// Surfaces a toast AND records why. Postgres tells us exactly what it rejected
+// (constraint violation, RLS denial, missing column); throwing that away turned
+// a one-line schema bug into a debugging session, so keep the code + message.
 const dbErr = (op: string, notify: (m: string) => void) =>
-  ({ error }: { error: unknown }) => { if (error) notify(`Sync failed: ${op}`) }
+  ({ error }: { error: unknown }) => {
+    if (!error) return
+    const e = error as { code?: string; message?: string; details?: string }
+    logError('db.sync_failed', {
+      op,
+      code: e.code ?? null,
+      message: e.message ?? String(error),
+      details: e.details ?? null,
+    })
+    notify(`Sync failed: ${op}`)
+  }
 
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
