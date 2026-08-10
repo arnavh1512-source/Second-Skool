@@ -10,14 +10,12 @@ export const dynamic = 'force-dynamic'
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 
-// Server-only allowlist of operator emails, comma-separated. Deliberately NOT
-// NEXT_PUBLIC_ — the browser must never learn who is allowed in. Unset means
-// nobody is: the route fails closed, which is the right default for a console
-// that can read every centre in the system.
-const ALLOWED = (process.env.DEV_ADMIN_EMAILS ?? '')
-  .split(',')
-  .map(e => e.trim().toLowerCase())
-  .filter(Boolean)
+// The operator. Baked in rather than configured: there is exactly one person
+// who runs this system, and an env var that can be forgotten in a new Vercel
+// project is one more way to lock yourself out. This module is server-only, so
+// the address never reaches the browser — the probe below is what the client
+// gets to know.
+const ALLOWED = ['arnavh1512@gmail.com']
 
 // PostgREST caps rows per request; ask for a generous page and report honestly
 // when a table hits the ceiling rather than quietly under-counting.
@@ -78,10 +76,10 @@ async function fetchRows<T>(
 
 export async function GET(req: NextRequest) {
   if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
-  if (!ALLOWED.length) {
-    logWarn('dev.not_configured', { reason: 'DEV_ADMIN_EMAILS unset' })
-    return NextResponse.json({ error: 'developer console is not enabled' }, { status: 403 })
-  }
+  // `?probe=1` answers only "may I see this?" — it's what decides whether the
+  // console entry appears in More. Keeping it a server round-trip means the
+  // allowlist itself never reaches the browser.
+  const probe = req.nextUrl.searchParams.get('probe') === '1'
 
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
@@ -97,7 +95,9 @@ export async function GET(req: NextRequest) {
   // probing /api/dev is worth seeing in the logs.
   if (await rateLimit(`dev:${uid}`, 20, 60_000))
     return NextResponse.json({ error: 'too many requests' }, { status: 429 })
-  if (!ALLOWED.includes(email)) {
+  const allowed = ALLOWED.includes(email)
+  if (probe) return NextResponse.json({ allowed }, { headers: { 'cache-control': 'no-store' } })
+  if (!allowed) {
     logWarn('dev.forbidden', { uid })
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }

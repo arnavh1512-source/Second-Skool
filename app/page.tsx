@@ -25,6 +25,7 @@ const dyn = (importFn: () => Promise<Record<string, ComponentType>>, name: strin
 const StaffApprovalsScreen = dyn(() => import('./components/AdminScreens'), 'StaffApprovalsScreen')
 const StudentRequestsScreen = dyn(() => import('./components/AdminScreens'), 'StudentRequestsScreen')
 const ReportsScreen = dyn(() => import('./components/AdminScreens'), 'ReportsScreen')
+const DevConsoleScreen = dyn(() => import('./components/DevConsole'), 'DevConsoleScreen')
 
 const TimetableScreen = dyn(() => import('./components/TeachingScreens'), 'TimetableScreen')
 const AttendanceScreen = dyn(() => import('./components/TeachingScreens'), 'AttendanceScreen')
@@ -69,8 +70,44 @@ export default function Page() {
         <AppShell>
           <ScreenRouter />
         </AppShell>
+        <OperatorEntry />
       </SupabaseProvider>
     </ErrorBoundary>
+  )
+}
+
+// The one way into the developer console. It is not a screen in the router:
+// the operator owns no centre, so every gate in ScreenRouter would turn them
+// away before any screen rendered. A floating pill sidesteps that and needs no
+// place in the staff navigation, which the operator never sees either.
+// Visibility comes from a server probe — the allowlist never reaches the
+// browser, and /api/dev re-checks it on the request that actually returns data.
+function OperatorEntry() {
+  const { supabaseUserId, devAllowed, devConsoleOpen, checkDevAccess, openDevConsole } = useDashboard()
+
+  useEffect(() => { if (supabaseUserId) void checkDevAccess() }, [supabaseUserId, checkDevAccess])
+
+  if (!devAllowed) return null
+  // Full-page overlay rather than a screen inside the phone frame: this is a
+  // wide data view, and it scrolls itself so the app's mobile scroll-lock on
+  // <body> doesn't apply.
+  if (devConsoleOpen) {
+    return (
+      <div className="fixed inset-0 z-[60] overflow-y-auto bg-td-bg">
+        <div className="mx-auto max-w-5xl">
+          <DevConsoleScreen />
+        </div>
+      </div>
+    )
+  }
+  return (
+    <button
+      onClick={openDevConsole}
+      aria-label="Open developer console"
+      className="fixed right-3 bottom-24 z-50 md:bottom-6 flex items-center gap-1.5 rounded-full bg-td-dark text-white text-[12px] font-extrabold py-2.5 px-4 border-none cursor-pointer shadow-[0_6px_20px_rgba(20,30,60,.28)]"
+    >
+      🛠️ Console
+    </button>
   )
 }
 

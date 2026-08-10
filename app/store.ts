@@ -80,6 +80,13 @@ interface State {
   pendingStudents: PendingStudent[]
   stuTeacherIndex: number; stuRankSubject: string
   supabaseUserId: string | null; authLoading: boolean; dataLoading: boolean
+  // null = not asked yet. Only the server knows who the operator is; this is
+  // the answer to a probe, never a client-side comparison.
+  devAllowed: boolean | null
+  // Deliberately not a `screen`: the operator belongs to no centre, so they
+  // never get past the approval gates that every screen sits behind. The
+  // console is an overlay on top of the whole router instead.
+  devConsoleOpen: boolean
 
   teachers: Teacher[]; students: Student[]
   branchesList: BranchItem[]
@@ -150,6 +157,9 @@ interface Actions {
   regenerateStudentCode: () => Promise<void>
   renameCentre: (name: string) => Promise<void>
   saveCentreLogo: (dataUrl: string) => Promise<void>
+  checkDevAccess: () => Promise<void>
+  openDevConsole: () => void
+  exitDevConsole: () => void
   loadStaff: () => Promise<void>
   loadWeeklyReport: (days?: number) => Promise<void>
   loadStudentReports: (days?: number) => Promise<void>
@@ -183,7 +193,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   stuPending: null, stuDenied: null, pendingStudents: [],
   teachers: [], students: [],
   stuTeacherIndex: 0, stuRankSubject: '',
-  supabaseUserId: null, authLoading: true, dataLoading: false,
+  supabaseUserId: null, authLoading: true, dataLoading: false, devAllowed: null, devConsoleOpen: false,
 
   branchesList: [], meetingsList: [], assignmentsList: [],
   timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
@@ -749,6 +759,24 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     get().notify('Centre renamed')
   },
 
+  // Ask the server whether this account is the operator. The answer is a plain
+  // boolean — the allowlist stays on the server, and a failed probe leaves the
+  // console hidden rather than guessing.
+  checkDevAccess: async () => {
+    if (get().devAllowed !== null) return
+    try {
+      const { data: s } = await supabase.auth.getSession()
+      const token = s.session?.access_token
+      if (!token) { set({ devAllowed: false }); return }
+      const res = await fetch('/api/dev?probe=1', { headers: { authorization: `Bearer ${token}` }, cache: 'no-store' })
+      const json = await res.json().catch(() => ({}))
+      set({ devAllowed: res.ok && json?.allowed === true })
+    } catch { set({ devAllowed: false }) }
+  },
+
+  openDevConsole: () => set({ devConsoleOpen: true }),
+  exitDevConsole: () => set({ devConsoleOpen: false }),
+
   loadStaff: async () => {
     // Read profiles directly — RLS already lets an authenticated head view all
     // profiles, and this avoids any dependency on the list_staff RPC being
@@ -846,7 +874,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (typeof window !== 'undefined') localStorage.removeItem('student_code')
     set({
       role: null, googleEmail: '', screen: 'home' as Screen, tab: 'home' as Tab,
-      supabaseUserId: null, staffStatus: 'none', headExists: false, staffList: [],
+      supabaseUserId: null, staffStatus: 'none', headExists: false, staffList: [], devAllowed: null, devConsoleOpen: false,
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
       timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
