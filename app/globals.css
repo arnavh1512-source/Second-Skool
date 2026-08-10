@@ -27,6 +27,11 @@ body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; 
    the bottom nav and action buttons below the fold after a refresh. */
 @media (max-width: 767px) {
   body { overflow: hidden; overscroll-behavior: none; }
+  /* …except on routes outside the app shell (the developer console), which are
+     ordinary long documents and must scroll. Opt-in rather than opt-out on
+     purpose: if :has() is unsupported the app keeps its lock, and only this
+     one page degrades. */
+  body:has(.td-scrollable) { overflow: auto; overscroll-behavior: auto; }
 }
 /* Phone shell height tracks the real visible viewport on mobile; the desktop
    mockup uses its fixed aspect ratio instead. */
