@@ -87,6 +87,10 @@ interface State {
   // never get past the approval gates that every screen sits behind. The
   // console is an overlay on top of the whole router instead.
   devConsoleOpen: boolean
+  // The centre the operator is currently sitting inside as head, if any. The
+  // server derives this from the profile row, so it survives a reload and can
+  // never disagree with what the database actually allows.
+  devSeat: { centreId: string; centreName: string } | null
 
   teachers: Teacher[]; students: Student[]
   branchesList: BranchItem[]
@@ -160,6 +164,8 @@ interface Actions {
   checkDevAccess: () => Promise<void>
   openDevConsole: () => void
   exitDevConsole: () => void
+  devEnterCentre: (centreId: string) => Promise<void>
+  devLeaveCentre: () => Promise<void>
   loadStaff: () => Promise<void>
   loadWeeklyReport: (days?: number) => Promise<void>
   loadStudentReports: (days?: number) => Promise<void>
@@ -180,6 +186,21 @@ interface Actions {
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
+// Operator-only writes. Throws with the server's own message so the console can
+// show why something was refused instead of a generic failure.
+async function devPost(body: Record<string, string>): Promise<void> {
+  const { data: s } = await supabase.auth.getSession()
+  const token = s.session?.access_token
+  if (!token) throw new Error('Session expired — sign in again')
+  const res = await fetch('/api/dev', {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(json?.error ?? `Request failed (${res.status})`)
+}
+
 export const useDashboard = create<State & Actions>((set, get) => ({
   screen: 'home', tab: 'home', role: null, origin: null,
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
@@ -193,7 +214,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   stuPending: null, stuDenied: null, pendingStudents: [],
   teachers: [], students: [],
   stuTeacherIndex: 0, stuRankSubject: '',
-  supabaseUserId: null, authLoading: true, dataLoading: false, devAllowed: null, devConsoleOpen: false,
+  supabaseUserId: null, authLoading: true, dataLoading: false, devAllowed: null, devConsoleOpen: false, devSeat: null,
 
   branchesList: [], meetingsList: [], assignmentsList: [],
   timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
@@ -770,12 +791,27 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       if (!token) { set({ devAllowed: false }); return }
       const res = await fetch('/api/dev?probe=1', { headers: { authorization: `Bearer ${token}` }, cache: 'no-store' })
       const json = await res.json().catch(() => ({}))
-      set({ devAllowed: res.ok && json?.allowed === true })
-    } catch { set({ devAllowed: false }) }
+      const allowed = res.ok && json?.allowed === true
+      set({ devAllowed: allowed, devSeat: allowed ? (json?.seat ?? null) : null })
+    } catch { set({ devAllowed: false, devSeat: null }) }
   },
 
   openDevConsole: () => set({ devConsoleOpen: true }),
   exitDevConsole: () => set({ devConsoleOpen: false }),
+
+  // Entering or leaving a centre rewrites the operator's role, centre and
+  // approval status — the three things every screen, query and RLS policy is
+  // keyed on. A full reload is the only way to guarantee no slice of state is
+  // left describing the previous seat.
+  devEnterCentre: async (centreId: string) => {
+    await devPost({ action: 'enter', centreId })
+    window.location.reload()
+  },
+
+  devLeaveCentre: async () => {
+    await devPost({ action: 'leave' })
+    window.location.reload()
+  },
 
   loadStaff: async () => {
     // Read profiles directly — RLS already lets an authenticated head view all
@@ -874,7 +910,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     if (typeof window !== 'undefined') localStorage.removeItem('student_code')
     set({
       role: null, googleEmail: '', screen: 'home' as Screen, tab: 'home' as Tab,
-      supabaseUserId: null, staffStatus: 'none', headExists: false, staffList: [], devAllowed: null, devConsoleOpen: false,
+      supabaseUserId: null, staffStatus: 'none', headExists: false, staffList: [], devAllowed: null, devConsoleOpen: false, devSeat: null,
       teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
       timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
       stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],

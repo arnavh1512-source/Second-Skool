@@ -83,7 +83,7 @@ export default function Page() {
 // Visibility comes from a server probe — the allowlist never reaches the
 // browser, and /api/dev re-checks it on the request that actually returns data.
 function OperatorEntry() {
-  const { supabaseUserId, devAllowed, devConsoleOpen, checkDevAccess, openDevConsole } = useDashboard()
+  const { supabaseUserId, devAllowed, devConsoleOpen, devSeat, checkDevAccess, openDevConsole } = useDashboard()
 
   useEffect(() => { if (supabaseUserId) void checkDevAccess() }, [supabaseUserId, checkDevAccess])
 
@@ -100,13 +100,19 @@ function OperatorEntry() {
       </div>
     )
   }
+  // While seated inside a centre the app looks exactly like a head's app, which
+  // is the point — and the risk. The pill names the centre so an edit is never
+  // made in the belief that it is a test account.
   return (
     <button
       onClick={openDevConsole}
-      aria-label="Open developer console"
-      className="fixed right-3 bottom-24 z-50 md:bottom-6 flex items-center gap-1.5 rounded-full bg-td-dark text-white text-[12px] font-extrabold py-2.5 px-4 border-none cursor-pointer shadow-[0_6px_20px_rgba(20,30,60,.28)]"
+      aria-label={devSeat ? `Inside ${devSeat.centreName} — open developer console` : 'Open developer console'}
+      className="fixed right-3 bottom-24 z-50 md:bottom-6 flex items-center gap-1.5 rounded-full bg-td-dark text-white text-[12px] font-extrabold py-2.5 px-4 border-none cursor-pointer shadow-[0_6px_20px_rgba(20,30,60,.28)] max-w-[70vw]"
+      style={{ background: devSeat ? '#e8553c' : undefined }}
     >
-      🛠️ Console
+      {devSeat
+        ? <><span>⚠️</span><span className="truncate">{devSeat.centreName}</span></>
+        : <>🛠️ Console</>}
     </button>
   )
 }

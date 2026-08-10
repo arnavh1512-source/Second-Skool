@@ -24,6 +24,8 @@ const CAP = 10000
 // one query per table instead of two.
 const WINDOW_DAYS = 30
 
+type Seat = { centreId: string; centreName: string }
+
 type Ident = { id: string; centre_id: string | null }
 type Dated = { centre_id: string | null; created_at: string }
 
@@ -74,29 +76,57 @@ async function fetchRows<T>(
   return rows
 }
 
-export async function GET(req: NextRequest) {
-  if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
-  // `?probe=1` answers only "may I see this?" — it's what decides whether the
-  // console entry appears in More. Keeping it a server round-trip means the
-  // allowlist itself never reaches the browser.
-  const probe = req.nextUrl.searchParams.get('probe') === '1'
+// The service-role client below bypasses RLS entirely, so this function is the
+// only authorization boundary the route has. Every handler starts here.
+type Auth = { admin: SupabaseClient; uid: string; allowed: boolean }
 
+async function authorize(req: NextRequest): Promise<Auth | NextResponse> {
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const admin: SupabaseClient = createClient(url, serviceKey, { auth: { persistSession: false } })
   const { data: userData } = await admin.auth.getUser(token)
   const uid = userData.user?.id
-  const email = userData.user?.email?.toLowerCase() ?? ''
   if (!uid) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
+  return { admin, uid, allowed: ALLOWED.includes(userData.user?.email?.toLowerCase() ?? '') }
+}
+
+// Which centre the operator is currently sitting inside, if any. Derived rather
+// than stored: the operator owns no centre, so a `centre_id` on their profile
+// that points at someone else's centre *is* an active session. Owning the
+// centre would make them a real head, which is not impersonation.
+async function currentSeat(admin: SupabaseClient, uid: string): Promise<Seat | null> {
+  const { data: prof } = await admin.from('profiles').select('centre_id').eq('id', uid).maybeSingle()
+  const centreId = (prof as { centre_id: string | null } | null)?.centre_id
+  if (!centreId) return null
+  const { data } = await admin.from('centres').select('id,name,owner_id').eq('id', centreId).maybeSingle()
+  const centre = data as { id: string; name: string; owner_id: string | null } | null
+  if (!centre || centre.owner_id === uid) return null
+  return { centreId: centre.id, centreName: centre.name }
+}
+
+export async function GET(req: NextRequest) {
+  if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
+  // `?probe=1` answers only "may I see this?" — it's what decides whether the
+  // console entry appears at all. Keeping it a server round-trip means the
+  // allowlist itself never reaches the browser.
+  const probe = req.nextUrl.searchParams.get('probe') === '1'
+
+  const auth = await authorize(req)
+  if (auth instanceof NextResponse) return auth
+  const { admin, uid, allowed } = auth
 
   // Rate-limit before the allowlist check so a valid session can't be used to
   // grind through the route, and log every rejection — an authenticated user
   // probing /api/dev is worth seeing in the logs.
   if (await rateLimit(`dev:${uid}`, 20, 60_000))
     return NextResponse.json({ error: 'too many requests' }, { status: 429 })
-  const allowed = ALLOWED.includes(email)
-  if (probe) return NextResponse.json({ allowed }, { headers: { 'cache-control': 'no-store' } })
+  if (probe)
+    return NextResponse.json(
+      { allowed, seat: allowed ? await currentSeat(admin, uid) : null },
+      { headers: { 'cache-control': 'no-store' } },
+    )
   if (!allowed) {
     logWarn('dev.forbidden', { uid })
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
@@ -283,4 +313,95 @@ export async function GET(req: NextRequest) {
     { generatedAt: new Date(now).toISOString(), windowDays: WINDOW_DAYS, totals, centres: centreRows, staff: staffRows, alerts, errors },
     { headers: { 'cache-control': 'no-store' } },
   )
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+const nostore = (body: object, status = 200) =>
+  NextResponse.json(body, { status, headers: { 'cache-control': 'no-store' } })
+
+// Taking a seat inside a centre, rather than rebuilding CRUD for fourteen
+// tables in the console. The operator's own profile is pointed at the target
+// centre as an approved head, so every existing screen — students, fees,
+// attendance, timetable, results — becomes editable with the app's own
+// validation, its own RLS, and its own audit columns. Nothing here writes to
+// customer data; the only row touched is the operator's.
+//
+// These three columns are revoked from `authenticated` at the grant level, so
+// this can only happen through the service-role client behind the allowlist.
+export async function POST(req: NextRequest) {
+  if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
+
+  const auth = await authorize(req)
+  if (auth instanceof NextResponse) return auth
+  const { admin, uid, allowed } = auth
+
+  if (await rateLimit(`dev-write:${uid}`, 10, 60_000))
+    return NextResponse.json({ error: 'too many requests' }, { status: 429 })
+  if (!allowed) {
+    logWarn('dev.forbidden_write', { uid })
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
+
+  const body: unknown = await req.json().catch(() => null)
+  const action = (body as { action?: unknown } | null)?.action
+
+  // Back to an unattached account: exactly the state a fresh Google sign-in
+  // lands in, so the operator stops being a member of anyone's centre.
+  if (action === 'leave') {
+    const { error } = await admin
+      .from('profiles')
+      .update({ centre_id: null, role: 'student', staff_status: 'none', head_requested: false })
+      .eq('id', uid)
+    if (error) {
+      logError('dev.leave_failed', { uid, message: error.message })
+      return nostore({ error: 'could not leave the centre' }, 500)
+    }
+    logWarn('dev.seat_released', { uid })
+    return nostore({ ok: true, seat: null })
+  }
+
+  if (action === 'enter') {
+    const centreId = (body as { centreId?: unknown }).centreId
+    if (typeof centreId !== 'string' || !UUID.test(centreId))
+      return nostore({ error: 'invalid centre' }, 400)
+
+    const { data, error: centreErr } = await admin
+      .from('centres').select('id,name,owner_id').eq('id', centreId).maybeSingle()
+    if (centreErr) {
+      logError('dev.centre_lookup_failed', { uid, message: centreErr.message })
+      return nostore({ error: 'could not read that centre' }, 500)
+    }
+    const centre = data as { id: string; name: string; owner_id: string | null } | null
+    if (!centre) return nostore({ error: 'centre not found' }, 404)
+    if (centre.owner_id === uid) return nostore({ error: 'you already own this centre' }, 400)
+
+    // The profile-setup gate blocks every screen until a profile is complete.
+    // Stamp it once so the operator isn't bounced into a form meant for staff,
+    // but never overwrite details they have already filled in.
+    const { data: existing } = await admin
+      .from('profiles').select('full_name,profile_completed_at').eq('id', uid).maybeSingle()
+    const prof = existing as { full_name: string | null; profile_completed_at: string | null } | null
+
+    const { error } = await admin
+      .from('profiles')
+      .update({
+        centre_id: centreId,
+        role: 'admin',
+        staff_status: 'approved',
+        head_requested: false,
+        ...(prof?.profile_completed_at ? {} : { profile_completed_at: new Date().toISOString() }),
+        ...(prof?.full_name ? {} : { full_name: 'Second Skool support' }),
+      })
+      .eq('id', uid)
+    if (error) {
+      logError('dev.enter_failed', { uid, centre: centreId, message: error.message })
+      return nostore({ error: 'could not enter that centre' }, 500)
+    }
+
+    logWarn('dev.seat_taken', { uid, centre: centreId })
+    return nostore({ ok: true, seat: { centreId, centreName: centre.name } })
+  }
+
+  return nostore({ error: 'unknown action' }, 400)
 }
