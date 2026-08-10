@@ -166,6 +166,7 @@ interface Actions {
   exitDevConsole: () => void
   devEnterCentre: (centreId: string) => Promise<void>
   devLeaveCentre: () => Promise<void>
+  devDeleteCentre: (centreId: string, confirm: string) => Promise<void>
   loadStaff: () => Promise<void>
   loadWeeklyReport: (days?: number) => Promise<void>
   loadStudentReports: (days?: number) => Promise<void>
@@ -811,6 +812,15 @@ export const useDashboard = create<State & Actions>((set, get) => ({
   devLeaveCentre: async () => {
     await devPost({ action: 'leave' })
     window.location.reload()
+  },
+
+  // Deleting the centre you are sitting inside also releases the seat, which
+  // means this session's role and centre are now wrong — reload. Deleting any
+  // other centre changes nothing about who you are, so the console just
+  // refreshes its list and stays open.
+  devDeleteCentre: async (centreId: string, confirm: string) => {
+    await devPost({ action: 'delete', centreId, confirm })
+    if (get().devSeat?.centreId === centreId) window.location.reload()
   },
 
   loadStaff: async () => {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/app/lib/push-guard'
 import { logError, logWarn } from '@/app/lib/log'
+import { verifyOperator } from '@/app/lib/operator'
 
 export const runtime = 'nodejs'
 // Every response is a live snapshot of the database — never prerender or cache it.
@@ -9,13 +10,6 @@ export const dynamic = 'force-dynamic'
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
-
-// The operator. Baked in rather than configured: there is exactly one person
-// who runs this system, and an env var that can be forgotten in a new Vercel
-// project is one more way to lock yourself out. This module is server-only, so
-// the address never reaches the browser — the probe below is what the client
-// gets to know.
-const ALLOWED = ['arnavh1512@gmail.com']
 
 // PostgREST caps rows per request; ask for a generous page and report honestly
 // when a table hits the ceiling rather than quietly under-counting.
@@ -89,7 +83,14 @@ async function authorize(req: NextRequest): Promise<Auth | NextResponse> {
   const uid = userData.user?.id
   if (!uid) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-  return { admin, uid, allowed: ALLOWED.includes(userData.user?.email?.toLowerCase() ?? '') }
+  const verdict = verifyOperator(userData.user)
+  // Holding the operator's address but failing the identity checks is not
+  // ordinary traffic — it is either a misconfigured project or someone who has
+  // managed to point an account at that address. Either way it wants a log line.
+  if (!verdict.operator && verdict.reason !== 'not_listed')
+    logWarn('dev.identity_rejected', { uid, reason: verdict.reason })
+
+  return { admin, uid, allowed: verdict.operator }
 }
 
 // Which centre the operator is currently sitting inside, if any. Derived rather
@@ -403,5 +404,74 @@ export async function POST(req: NextRequest) {
     return nostore({ ok: true, seat: { centreId, centreName: centre.name } })
   }
 
+  if (action === 'delete') return deleteCentre(admin, uid, body)
+
   return nostore({ error: 'unknown action' }, 400)
+}
+
+// Child tables in dependency order. Every one of them carries `centre_id`, but
+// they also reference each other — attendance points at students, tests point at
+// subjects, timetable points at teachers — and none of those FKs cascade. So the
+// rows have to come out leaves-first or Postgres refuses the parent.
+const LEAF_TABLES = [
+  'attendance', 'results', 'assignments', 'fees', 'notifications',
+  'reminders', 'meetings', 'timetable', 'notes', 'push_subscriptions',
+] as const
+const SPINE_TABLES = ['tests', 'students', 'teachers', 'subjects', 'branches'] as const
+
+// Deleting a centre erases a real customer's entire history and cannot be
+// undone from here. Two things stand between a stray tap and that: the request
+// must repeat the centre's exact name, and the UI makes you type it.
+async function deleteCentre(admin: SupabaseClient, uid: string, body: unknown): Promise<NextResponse> {
+  const { centreId, confirm } = (body ?? {}) as { centreId?: unknown; confirm?: unknown }
+  if (typeof centreId !== 'string' || !UUID.test(centreId)) return nostore({ error: 'invalid centre' }, 400)
+
+  const { data, error: lookupErr } = await admin
+    .from('centres').select('id,name').eq('id', centreId).maybeSingle()
+  if (lookupErr) {
+    logError('dev.delete_lookup_failed', { uid, message: lookupErr.message })
+    return nostore({ error: 'could not read that centre' }, 500)
+  }
+  const centre = data as { id: string; name: string } | null
+  if (!centre) return nostore({ error: 'centre not found' }, 404)
+  if (typeof confirm !== 'string' || confirm.trim() !== centre.name)
+    return nostore({ error: `type the centre name exactly to confirm: ${centre.name}` }, 400)
+
+  logWarn('dev.centre_delete_started', { uid, centre: centreId })
+
+  // Members first, and not only the operator: once the centre is gone their
+  // profiles would point at nothing, so they go back to the unregistered state
+  // a fresh sign-in lands in. This is also what releases the operator's own
+  // seat, which is why deleting a centre you are sitting inside works.
+  const { error: detachErr } = await admin
+    .from('profiles')
+    .update({ centre_id: null, branch_id: null, role: 'student', staff_status: 'none', head_requested: false })
+    .eq('centre_id', centreId)
+  if (detachErr) {
+    logError('dev.detach_failed', { uid, centre: centreId, message: detachErr.message })
+    return nostore({ error: 'could not detach members — nothing was deleted' }, 500)
+  }
+
+  const failed: string[] = []
+  for (const table of [...LEAF_TABLES, ...SPINE_TABLES]) {
+    const { error } = await admin.from(table).delete().eq('centre_id', centreId)
+    if (error) {
+      failed.push(table)
+      logError('dev.delete_table_failed', { uid, centre: centreId, table, message: error.message })
+    }
+  }
+  // Stop before the centre row itself: a half-deleted centre that still exists
+  // can be retried or inspected, whereas an orphaned pile of rows whose centre
+  // is gone is unreachable by every query in the app.
+  if (failed.length)
+    return nostore({ error: `could not clear: ${failed.join(', ')}. The centre was left in place.` }, 500)
+
+  const { error: centreErr } = await admin.from('centres').delete().eq('id', centreId)
+  if (centreErr) {
+    logError('dev.delete_centre_failed', { uid, centre: centreId, message: centreErr.message })
+    return nostore({ error: 'the centre’s data was cleared but the centre could not be removed' }, 500)
+  }
+
+  logWarn('dev.centre_deleted', { uid, centre: centreId })
+  return nostore({ ok: true, seat: null, deleted: centre.name })
 }

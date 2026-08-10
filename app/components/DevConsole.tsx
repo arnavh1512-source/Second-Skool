@@ -82,7 +82,7 @@ async function fetchSnapshot(): Promise<Snapshot> {
 }
 
 export function DevConsoleScreen() {
-  const { exitDevConsole, devSeat, devEnterCentre, devLeaveCentre } = useDashboard()
+  const { exitDevConsole, devSeat, devEnterCentre, devLeaveCentre, devDeleteCentre } = useDashboard()
   const [data, setData] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -90,6 +90,33 @@ export function DevConsoleScreen() {
   // Which centre is mid-request. The page reloads on success, so this only ever
   // clears on failure — and then it must clear, or the button stays dead.
   const [seating, setSeating] = useState<string | null>(null)
+
+  // The centre whose delete confirmation is open, and what has been typed into
+  // it. Held here rather than per-card so opening one closes any other.
+  const [doomed, setDoomed] = useState<CentreRow | null>(null)
+  const [typed, setTyped] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const settle = useCallback((p: Promise<Snapshot>, alive: () => boolean) => {
+    p.then(d => { if (alive()) { setData(d); setError(null) } })
+      .catch(e => { if (alive()) { setError(e instanceof Error ? e.message : 'Something went wrong'); setData(null) } })
+      .finally(() => { if (alive()) setLoading(false) })
+  }, [])
+
+  const confirmDelete = () => {
+    if (!doomed) return
+    setDeleting(true)
+    setError(null)
+    devDeleteCentre(doomed.id, typed)
+      .then(() => {
+        setDoomed(null)
+        setTyped('')
+        setLoading(true)
+        settle(fetchSnapshot(), () => true)
+      })
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not delete that centre'))
+      .finally(() => setDeleting(false))
+  }
 
   const seat = (centreId: string | null) => {
     setSeating(centreId ?? 'leave')
@@ -100,12 +127,6 @@ export function DevConsoleScreen() {
       setSeating(null)
     })
   }
-
-  const settle = useCallback((p: Promise<Snapshot>, alive: () => boolean) => {
-    p.then(d => { if (alive()) { setData(d); setError(null) } })
-      .catch(e => { if (alive()) { setError(e instanceof Error ? e.message : 'Something went wrong'); setData(null) } })
-      .finally(() => { if (alive()) setLoading(false) })
-  }, [])
 
   useEffect(() => {
     let alive = true
@@ -201,13 +222,57 @@ export function DevConsoleScreen() {
           </div>
 
           {tab === 'centres'
-            ? <Centres rows={data.centres} seatId={devSeat?.centreId ?? null} seating={seating} onSeat={seat} />
+            ? <Centres
+                rows={data.centres}
+                seatId={devSeat?.centreId ?? null}
+                seating={seating}
+                onSeat={seat}
+                onDelete={c => { setDoomed(c); setTyped(''); setError(null) }}
+              />
             : <People rows={data.staff} />}
 
           <div className="text-[11px] text-td-subtle text-center mt-5">
             Snapshot {ago(data.generatedAt)} · this view reads aggregates only. Open a centre to edit its data.
           </div>
         </>
+      )}
+
+      {doomed && (
+        <div className="fixed inset-0 z-[80] bg-black/45 flex items-end md:items-center justify-center p-4">
+          <div className="bg-white rounded-[18px] p-5 w-full max-w-sm">
+            <div className="text-[16px] font-extrabold text-td-dark">Delete {doomed.name}?</div>
+            <p className="text-[12.5px] text-td-text mt-2 leading-relaxed">
+              This erases {doomed.students.approved} students, {doomed.staff.approved} staff memberships and every
+              attendance record, result, fee and note belonging to this centre. Its members go back to being
+              unregistered accounts. It cannot be undone from here.
+            </p>
+            <label className="block text-[11.5px] font-bold text-td-muted mt-3.5 mb-1.5">
+              Type <span className="text-td-dark">{doomed.name}</span> to confirm
+            </label>
+            <input
+              value={typed}
+              onChange={e => setTyped(e.target.value)}
+              autoFocus
+              className="w-full text-[13.5px] py-2.5 px-3 rounded-[12px] border border-td-border outline-none focus:border-td-primary"
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => { setDoomed(null); setTyped('') }}
+                disabled={deleting}
+                className="flex-1 text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer border border-td-border bg-white text-td-text disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleting || typed.trim() !== doomed.name}
+                className="flex-1 text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border-none bg-td-red text-white disabled:opacity-40"
+              >
+                {deleting ? 'Deleting…' : 'Delete for ever'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
@@ -238,9 +303,10 @@ type CentresProps = {
   seatId: string | null
   seating: string | null
   onSeat: (centreId: string | null) => void
+  onDelete: (centre: CentreRow) => void
 }
 
-function Centres({ rows, seatId, seating, onSeat }: CentresProps) {
+function Centres({ rows, seatId, seating, onSeat, onDelete }: CentresProps) {
   if (!rows.length) return <Empty>No centres yet.</Empty>
   return (
     <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
@@ -283,14 +349,23 @@ function Centres({ rows, seatId, seating, onSeat }: CentresProps) {
             created {day(c.createdAt)} · staff code {c.joinCode ?? '—'} · student code {c.studentJoinCode ?? '—'}
           </div>
 
-          <button
-            onClick={() => onSeat(c.id === seatId ? null : c.id)}
-            disabled={seating !== null}
-            className="w-full mt-3 text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border-none text-white disabled:opacity-50"
-            style={{ background: c.id === seatId ? '#e8553c' : '#2a6fdb' }}
-          >
-            {seating === c.id ? 'Opening…' : c.id === seatId ? 'Leave this centre' : 'Open & edit as head'}
-          </button>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => onSeat(c.id === seatId ? null : c.id)}
+              disabled={seating !== null}
+              className="flex-1 text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border-none text-white disabled:opacity-50"
+              style={{ background: c.id === seatId ? '#e8553c' : '#2a6fdb' }}
+            >
+              {seating === c.id ? 'Opening…' : c.id === seatId ? 'Leave this centre' : 'Open & edit as head'}
+            </button>
+            <button
+              onClick={() => onDelete(c)}
+              aria-label={`Delete ${c.name}`}
+              className="text-[12.5px] font-extrabold py-2.5 px-3 rounded-[12px] cursor-pointer border border-[#f4d8cf] bg-[#fdf3f0] text-td-red shrink-0"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       ))}
     </div>
