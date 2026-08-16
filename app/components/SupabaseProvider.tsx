@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+import { totalsByStudent, countDailyRows, attendancePct, type AttendanceTotal } from '../lib/attendance'
 import { useDashboard, registerRefresh, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type StuResultItem, type AttLogItem, type NotifItem, type FeeHistoryItem, type ScheduleItem } from '../store'
 
 // Minimal shape of the Supabase rows this provider reads — the DB schema is the
@@ -144,6 +145,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       { data: subjects },
       { data: attendance },
       { data: batches },
+      { data: attTotals, error: attTotalsErr },
     ] = await Promise.all([
       // Defensive caps: orderings put the newest rows first, so a centre that
       // outgrows a cap loses only the oldest tail, never current data.
@@ -155,23 +157,33 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       supabase.from('timetable').select('*').order('start_time', { ascending: true }).limit(1000),
       supabase.from('fees').select('*').order('due_date', { ascending: false }).limit(5000),
       supabase.from('tests').select('*').order('date', { ascending: false }).limit(1000),
-      supabase.from('results').select('*').limit(20000),
+      // Ordered so that a centre which outgrows the cap loses its oldest
+      // results rather than an arbitrary slice — without an ORDER BY, which
+      // rows Postgres drops at the limit is undefined.
+      supabase.from('results').select('*').order('created_at', { ascending: false }).limit(20000),
       supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('subjects').select('*').limit(100),
-      supabase.from('attendance').select('*').order('date', { ascending: false }).limit(20000),
+      // Only the columns the recent-activity log needs. Percentages no longer
+      // come from these rows (see attTotals below), so this set being capped
+      // can shorten the log but can no longer corrupt a statistic.
+      supabase.from('attendance').select('student_id,date,status').order('date', { ascending: false }).limit(20000),
       supabase.from('batches').select('*').order('created_at', { ascending: true }).limit(200),
+      // One row per student, aggregated in the database across archived
+      // monthly rollups and live daily rows. Uncapped by construction.
+      supabase.rpc('student_attendance_totals'),
     ])
 
     const mappedTeachers = (teachers ?? []).map(mapTeacher)
-    // Per-student attendance % from the fetched attendance rows (mapStudent
-    // alone can't know it — without this every student shows 0%).
-    const attByStudent: Record<string, { p: number; t: number }> = {}
-    for (const a of (attendance ?? []) as Row[]) {
-      const k = a.student_id as string
-      if (!attByStudent[k]) attByStudent[k] = { p: 0, t: 0 }
-      attByStudent[k].t++
-      if (a.status === 'Present') attByStudent[k].p++
-    }
+    // Per-student attendance counts (mapStudent alone can't know them — without
+    // this every student shows 0%). Prefer the database's aggregate: it spans
+    // the full history and is one row per student, so no cap can truncate it.
+    // Counting the fetched daily rows is the fallback for a database that has
+    // not had supabase/attendance-totals.sql applied yet — correct only while
+    // the centre stays under the row cap, which is exactly the bug the RPC
+    // exists to remove.
+    const attByStudent = attTotalsErr
+      ? countDailyRows((attendance ?? []) as Row[])
+      : totalsByStudent((attTotals ?? []) as AttendanceTotal[])
     // Self-registered students awaiting approval are held out of the roster (and
     // every count/ranking derived from it) until the head approves them.
     const approvedRows = (students ?? []).filter((s) => ((s.status as string) ?? 'approved') === 'approved')
@@ -191,12 +203,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const mappedStudents = approvedRows.map((row) => {
       const st = mapStudent(row)
       const branch = branchNameById[row.branch_id as string]
-      const att = attByStudent[st.dbId ?? '']
+      const pct = attendancePct(attByStudent[st.dbId ?? ''])
       const fee = feeByStudent[st.dbId ?? '']
       return {
         ...st,
         ...(branch ? { branch } : {}),
-        ...(att && att.t > 0 ? { attendance: Math.round((att.p / att.t) * 100) } : {}),
+        ...(pct === null ? {} : { attendance: pct }),
         ...(fee ? { feeCollected: fee.collected, feeDue: fee.due } : {}),
       }
     })
@@ -310,7 +322,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       Absent: { icon: '❌', tint: '#fdecea', color: '#e8553c' },
       Leave: { icon: '📋', tint: '#fcf3e3', color: '#e0962f' },
     }
-    const stuAttendanceLog: AttLogItem[] = (attendance ?? []).slice(0, 15).map((a: Row) => {
+    const stuAttendanceLog: AttLogItem[] = (attendance ?? []).slice(0, 15).map((a) => {
       const d = new Date(a.date)
       const si = statusIcons[a.status] ?? statusIcons.Present
       return {
