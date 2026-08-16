@@ -90,8 +90,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Stamp the centre's own name into the payload, read server-side so a caller
+  // can't sign a notification as somebody else's centre. The service worker
+  // shows it whenever a push arrives without a title of its own — a parent
+  // recognises "Sharma Classes", not the platform name.
+  const { data: centreRow } = await admin.from('centres').select('name').eq('id', centre).single()
+
   // Only same-app relative paths in notification links (see push-guard).
-  const payload = JSON.stringify({ title, body: text ?? '', url: safeLink(link) })
+  const payload = JSON.stringify({ title, body: text ?? '', url: safeLink(link), centre: centreRow?.name ?? '' })
   // Fan out in bounded batches (100) so a large centre can't stall the request
   // or flood the push service at once. 404/410 = expired subscription → prune;
   // any other failure is logged (id + status only, no PII) so it's visible in

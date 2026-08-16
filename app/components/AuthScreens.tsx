@@ -234,7 +234,7 @@ export function useNotificationGate(): boolean {
 }
 
 export function NotificationGateScreen() {
-  const { stuPending, students, currentStudentDbId, signOut, notify } = useDashboard()
+  const { stuPending, students, currentStudentDbId, signOut, notify, centreName } = useDashboard()
   const code = stuPending?.code
     || students.find(s => s.dbId === currentStudentDbId)?.id
     || (typeof window !== 'undefined' ? localStorage.getItem('student_code') ?? '' : '')
@@ -254,7 +254,7 @@ export function NotificationGateScreen() {
     window.dispatchEvent(new Event(PERM_EVENT))
     setBusy(false)
     if (!r.ok) { notify(r.error || 'Could not turn on reminders'); return }
-    const t = await testNotification()
+    const t = await testNotification(centreName)
     notify(t.ok ? 'Reminders on — check for the test alert' : 'Reminders on')
   }
 
@@ -267,8 +267,8 @@ export function NotificationGateScreen() {
       <div className="text-[20px] font-extrabold text-td-dark">{blocked ? 'Reminders are blocked' : 'Turn on reminders'}</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">
         {blocked
-          ? 'Your browser is blocking reminders for Second Skool, so we can’t tell you about tests, homework or fees. Allow them to continue.'
-          : 'Second Skool needs to send you reminders about tests, homework and fees. Turn them on to continue.'}
+          ? `Your browser is blocking reminders from ${centreName || 'your coaching centre'}, so we can’t tell you about tests, homework or fees. Allow them to continue.`
+          : `${centreName || 'Your coaching centre'} needs to send you reminders about tests, homework and fees. Turn them on to continue.`}
       </div>
 
       {blocked ? (

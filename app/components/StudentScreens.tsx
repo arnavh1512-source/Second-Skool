@@ -79,7 +79,7 @@ export function StuHomeScreen() {
             // Immediately prove the device can actually display one. Turning
             // alerts "on" and seeing nothing for days is how a student ends up
             // believing the app is broken when it's a phone setting.
-            const t = await testNotification()
+            const t = await testNotification(useDashboard.getState().centreName)
             useDashboard.getState().notify(t.ok ? 'Alerts on — check your notifications for a test' : (t.error || 'Alerts on'))
           }} className="inline-flex items-center gap-1.5 bg-[#eaf1fc] text-td-primary text-[12px] font-bold py-[7px] px-3 rounded-[20px] cursor-pointer border-none shrink-0">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>

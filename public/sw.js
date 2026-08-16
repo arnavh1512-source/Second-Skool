@@ -9,7 +9,9 @@ self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim(
 self.addEventListener('push', (event) => {
   let data = {}
   try { data = event.data ? event.data.json() : {} } catch { data = { body: event.data && event.data.text() } }
-  const title = data.title || 'Second Skool'
+  // Fall back to the sending centre's name, not the platform's — the parent
+  // knows their coaching centre. `data.centre` is stamped server-side.
+  const title = data.title || data.centre || 'Second Skool'
   const options = {
     body: data.body || '',
     icon: '/icon-512.png',

@@ -59,12 +59,15 @@ export async function enablePush(kind: 'profile' | 'student', ref: string): Prom
 // if the test pops up but a real reminder never does, delivery is broken; if
 // neither pops up, it's the device's own notification settings and no amount of
 // server work will fix it.
-export async function testNotification(): Promise<{ ok: boolean; error?: string }> {
+// `centreName` is passed in rather than read from the store because the store
+// imports this module — the notification is signed with the centre's own name
+// so a parent recognises who it is from, not the platform they've never heard of.
+export async function testNotification(centreName?: string): Promise<{ ok: boolean; error?: string }> {
   if (!pushSupported()) return { ok: false, error: 'Notifications aren’t supported on this device/browser' }
   if (Notification.permission !== 'granted') return { ok: false, error: 'Turn on Alerts first' }
   try {
     const reg = await navigator.serviceWorker.ready
-    await reg.showNotification('Second Skool', {
+    await reg.showNotification(centreName?.trim() || 'Second Skool', {
       body: 'Test alert — reminders will look like this.',
       icon: '/icon-512.png',
       badge: '/icon-512.png',
