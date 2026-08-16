@@ -73,6 +73,7 @@ function Sidebar() {
     { icon: '📆', label: 'Meetings', screen: 'meetings' },
     { icon: '🏢', label: 'Branches', screen: 'branches' },
     { icon: '📖', label: 'Subjects', screen: 'subjects' },
+    { icon: '👥', label: 'Batches', screen: 'batches' },
   ]
 
   return (
