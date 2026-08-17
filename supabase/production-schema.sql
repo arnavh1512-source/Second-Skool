@@ -127,13 +127,9 @@ create table if not exists public.assignments (
   created_at timestamptz default now()
 );
 
-create table if not exists public.assignment_submissions (
-  id uuid primary key default uuid_generate_v4(),
-  assignment_id uuid not null references public.assignments(id) on delete cascade,
-  student_id uuid not null references public.students(id) on delete cascade,
-  submitted_at timestamptz default now(),
-  unique(assignment_id, student_id)
-);
+-- assignment_submissions and subscriptions used to be created here. Both were
+-- never wired to the app and held no rows; dropped by drop-dead-tables.sql.
+-- Do not re-add them — see that file for why.
 
 create table if not exists public.fees (
   id uuid primary key default uuid_generate_v4(),
@@ -182,15 +178,6 @@ create table if not exists public.timetable (
   created_at timestamptz default now()
 );
 
-create table if not exists public.subscriptions (
-  id uuid primary key default uuid_generate_v4(),
-  branch_id uuid not null references public.branches(id),
-  plan text not null check (plan in ('Monthly','Half-yearly','Yearly')),
-  price numeric(10,2) not null,
-  starts_at date not null default current_date, renews_at date not null,
-  status text default 'active' check (status in ('active','cancelled','expired')),
-  created_at timestamptz default now()
-);
 
 create table if not exists public.attendance_monthly (
   id uuid primary key default uuid_generate_v4(),
@@ -466,14 +453,14 @@ create or replace trigger students_updated_at before update on public.students f
 
 -- ─── ROW LEVEL SECURITY ──────────────────────────────────────────────────────
 do $$ declare t text; begin
-  foreach t in array array['profiles','centres','branches','teachers','students','attendance','subjects','tests','results','assignments','assignment_submissions','fees','meetings','reminders','notifications','timetable','subscriptions','attendance_monthly','code_attempts','notes']
+  foreach t in array array['profiles','centres','branches','teachers','students','attendance','subjects','tests','results','assignments','fees','meetings','reminders','notifications','timetable','attendance_monthly','code_attempts','notes']
   loop execute format('alter table public.%I enable row level security', t); end loop;
 end $$;
 
 -- Drop every existing policy on these tables, then recreate the canonical set.
 do $$ declare r record; begin
   for r in select policyname, tablename from pg_policies where schemaname='public'
-    and tablename in ('profiles','centres','branches','teachers','students','attendance','subjects','tests','results','assignments','assignment_submissions','fees','meetings','reminders','notifications','timetable','subscriptions','attendance_monthly','code_attempts','notes')
+    and tablename in ('profiles','centres','branches','teachers','students','attendance','subjects','tests','results','assignments','fees','meetings','reminders','notifications','timetable','attendance_monthly','code_attempts','notes')
   loop execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename); end loop;
 end $$;
 
@@ -507,14 +494,13 @@ create policy subjects_read  on public.subjects  for select to authenticated usi
 create policy fees_read      on public.fees      for select to authenticated using (public.is_staff() and centre_id=public.current_centre());
 create policy meetings_read  on public.meetings  for select to authenticated using (public.is_staff() and centre_id=public.current_centre());
 create policy att_monthly_read on public.attendance_monthly for select to authenticated using (public.is_staff() and centre_id=public.current_centre());
--- subscriptions + code_attempts: no policies => only SECURITY DEFINER paths touch them.
+-- code_attempts: no policies => only SECURITY DEFINER paths touch it.
 
 -- ─── COLUMN-LEVEL PRIVILEGES (block self-privilege-escalation) ───────────────
 revoke insert, update on public.profiles from authenticated;
 grant update (full_name, phone, avatar_url) on public.profiles to authenticated;
 revoke update on public.centres from authenticated;
 grant update (name, logo_url) on public.centres to authenticated;
-revoke all on public.subscriptions from authenticated, anon;
 
 -- ─── FUNCTION GRANTS ─────────────────────────────────────────────────────────
 revoke all on function public.current_centre() from public, anon;

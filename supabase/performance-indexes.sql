@@ -79,14 +79,10 @@ create index if not exists reminders_centre_created_idx
 create index if not exists notes_centre_created_idx
   on public.notes (centre_id, created_at desc);
 
--- assignment_submissions and subscriptions carry no centre_id — they inherit
--- their tenant through assignment_id / branch_id. Index the foreign key that
--- is not already the leading column of a unique index.
-create index if not exists assignment_submissions_student_idx
-  on public.assignment_submissions (student_id);
-
-create index if not exists subscriptions_branch_idx
-  on public.subscriptions (branch_id);
+-- This file used to index assignment_submissions (student_id) and
+-- subscriptions (branch_id). Both tables were dead — never queried by the app,
+-- no rows, no RLS policies — and drop-dead-tables.sql removed them, taking
+-- those two indexes with them. Don't re-add either.
 
 create index if not exists attendance_monthly_centre_idx
   on public.attendance_monthly (centre_id);
