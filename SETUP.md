@@ -31,10 +31,19 @@ all access is enforced by Row-Level Security and SECURITY DEFINER functions.
 ## 3. Database (one time)
 
 1. Open Supabase → **SQL Editor**.
-2. Paste the entire contents of [`supabase/schema.sql`](supabase/schema.sql) and run it.
-   - Safe to re-run on an existing database — the migration block is idempotent
-     (`add column if not exists`, `create or replace`, `drop policy if exists`).
+2. Run the files in [`supabase/migrations/`](supabase/migrations) in numeric
+   order, starting with `0000_schema_migrations.sql`, then `0001_baseline.sql`,
+   then the rest. One file at a time; each records itself in the ledger.
+   - Every file is idempotent (`add column if not exists`, `create or replace`,
+     `drop policy if exists`), so a re-run is safe.
+   - Already running the old loose `.sql` files in production? Run
+     `0000_schema_migrations.sql` and then
+     [`supabase/adopt-existing-database.sql`](supabase/adopt-existing-database.sql)
+     instead — it marks 0001–0014 as applied without touching your data.
 3. That's it. No table edits, no manually setting anyone to "admin".
+
+Full details, including how to add the next migration:
+[`supabase/README.md`](supabase/README.md).
 
 ---
 

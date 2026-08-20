@@ -179,7 +179,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // this every student shows 0%). Prefer the database's aggregate: it spans
     // the full history and is one row per student, so no cap can truncate it.
     // Counting the fetched daily rows is the fallback for a database that has
-    // not had supabase/attendance-totals.sql applied yet — correct only while
+    // not had supabase/migrations/0013_attendance_totals.sql applied yet — correct only while
     // the centre stays under the row cap, which is exactly the bug the RPC
     // exists to remove.
     const attByStudent = attTotalsErr

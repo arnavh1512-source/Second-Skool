@@ -14,3 +14,9 @@ alter table public.reminders drop constraint if exists reminders_type_check;
 alter table public.reminders
   add constraint reminders_type_check
   check (type in ('Notice', 'Test', 'Absence', 'Fee', 'Homework'));
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0009_reminder_notice_type')
+  on conflict (version) do nothing;

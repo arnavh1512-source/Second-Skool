@@ -31,5 +31,11 @@
 drop table if exists public.assignment_submissions;
 drop table if exists public.subscriptions;
 
--- The indexes performance-indexes.sql created on these two go with the tables;
+-- The indexes 0012_performance_indexes.sql created on these two go with the tables;
 -- Postgres drops them as part of the DROP TABLE. Nothing else to clean up.
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0014_drop_dead_tables')
+  on conflict (version) do nothing;

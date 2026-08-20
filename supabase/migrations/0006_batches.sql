@@ -33,3 +33,9 @@ create policy batches_read on public.batches for select to authenticated
 --    approve_student RPC signature unchanged; RLS on students still applies).
 alter table public.students
   add column if not exists batch text;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0006_batches')
+  on conflict (version) do nothing;

@@ -36,3 +36,9 @@ revoke all on function public.secure_code(int) from public, anon, authenticated;
 
 -- Verify immediately — should print a 6-char code with no error.
 do $$ begin raise notice 'secure_code hotfix OK: %', public.secure_code(6); end $$;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0008_audit_hardening_search_path')
+  on conflict (version) do nothing;

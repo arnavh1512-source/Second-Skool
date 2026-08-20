@@ -91,3 +91,9 @@ comment on function public.student_attendance_totals() is
 -- Verify with:      select * from cron.job;
 -- Run once by hand: select public.archive_old_attendance();
 -- Unschedule with:  select cron.unschedule('archive-attendance');
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0013_attendance_totals')
+  on conflict (version) do nothing;

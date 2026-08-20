@@ -10,7 +10,7 @@
 //  2. Counting the daily attendance rows the browser happens to hold. That set
 //     is capped, so past the cap the denominator is short and the percentage is
 //     silently too high or too low. Kept only as a fallback for a database
-//     where `supabase/attendance-totals.sql` has not been applied yet.
+//     where `supabase/migrations/0013_attendance_totals.sql` has not been applied yet.
 
 export type AttendanceTotal = { student_id: string; present: number; total: number }
 export type AttendanceCount = { p: number; t: number }

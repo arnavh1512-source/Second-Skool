@@ -43,9 +43,15 @@ update public.profiles
    and coalesce(char_length(trim(subject)), 0) >= 2
    and coalesce(char_length(trim(qualification)), 0) >= 2;
 
--- Column-level grants, matching security-hardening.sql: a user may edit these
+-- Column-level grants, matching 0001_baseline.sql: a user may edit these
 -- fields on their own row (enforced by the profiles_update_self policy) and
 -- nothing else. role, staff_status and centre_id stay unwritable from the
 -- client, so this cannot be used to self-approve or switch centres.
 grant update (full_name, phone, avatar_url, subject, qualification, profile_completed_at)
   on public.profiles to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0010_staff_profile_details')
+  on conflict (version) do nothing;

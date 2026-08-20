@@ -83,3 +83,9 @@ update public.push_subscriptions s
 delete from public.push_subscriptions s
  where (s.kind = 'profile' and not exists (select 1 from public.profiles p where p.id::text = s.ref))
     or (s.kind = 'student' and not exists (select 1 from public.students st where st.student_code = s.ref));
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0011_push_subscription_ownership')
+  on conflict (version) do nothing;

@@ -126,3 +126,9 @@ begin
 end; $$;
 revoke all on function public.regenerate_student_code() from public, anon;
 grant execute on function public.regenerate_student_code() to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0007_audit_hardening')
+  on conflict (version) do nothing;

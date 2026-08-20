@@ -29,7 +29,7 @@ create index if not exists students_status_idx on public.students (centre_id, st
 
 -- 2) Student self-signup (anon) ----------------------------------------------
 -- Validates the join code → centre, enforces the required fields, mints a unique
--- code, and inserts a PENDING student. Reuses code_attempts (from rate-limit.sql)
+-- code, and inserts a PENDING student. Reuses code_attempts (from 0001_baseline.sql)
 -- to throttle invalid-join-code spam. Returns the new code + centre name so the
 -- app can show the student their code on the waiting screen.
 create or replace function public.student_signup(
@@ -136,7 +136,7 @@ grant execute on function public.approve_student(uuid,text,uuid,numeric,date) to
 grant execute on function public.reject_student(uuid) to authenticated;
 
 -- 4) Snapshot: gate the dashboard on approval --------------------------------
--- Rebuilds get_student_snapshot (rate-limit.sql version) so that:
+-- Rebuilds get_student_snapshot (0001_baseline.sql version) so that:
 --   • invalid code   → null (throttled, unchanged)
 --   • pending student → { status:'pending', ... } so the app holds on the
 --                       waiting screen instead of showing the dashboard
@@ -187,3 +187,9 @@ begin
 end; $$;
 
 grant execute on function public.get_student_snapshot(text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0003_student_onboarding')
+  on conflict (version) do nothing;

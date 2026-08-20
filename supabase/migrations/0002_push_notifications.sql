@@ -35,3 +35,9 @@ end; $$;
 
 revoke all on function public.save_push_subscription(text,text,text,text,text) from public;
 grant execute on function public.save_push_subscription(text,text,text,text,text) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0002_push_notifications')
+  on conflict (version) do nothing;

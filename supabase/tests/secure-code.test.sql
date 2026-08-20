@@ -1,6 +1,7 @@
 -- ============================================================================
 -- SELF-VERIFYING TEST — secure_code (audit fix H1)
--- Run AFTER audit-hardening.sql, in the Supabase SQL editor. No pgTAP / setup:
+-- Run AFTER migrations/0007_audit_hardening.sql, in the Supabase SQL editor.
+-- No pgTAP, no setup:
 -- each check RAISEs on failure; a clean run prints "secure_code: ALL PASSED".
 -- ============================================================================
 do $$

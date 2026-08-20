@@ -157,8 +157,8 @@ npm install
 cp .env.example .env.local        # then fill it in
 
 # 3 — database
-#     Run the SQL in supabase/ against your project:
-#     production-schema.sql first, then the feature migrations.
+#     Run supabase/migrations/*.sql in numeric order, starting with
+#     0000_schema_migrations.sql. See supabase/README.md.
 
 # 4 — push keys
 npx web-push generate-vapid-keys  # paste into .env.local

@@ -170,3 +170,9 @@ end; $$;
 
 revoke all on function public.regenerate_student_code() from public, anon;
 grant execute on function public.regenerate_student_code() to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0004_student_join_code')
+  on conflict (version) do nothing;

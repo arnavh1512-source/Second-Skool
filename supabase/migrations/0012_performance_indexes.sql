@@ -81,7 +81,7 @@ create index if not exists notes_centre_created_idx
 
 -- This file used to index assignment_submissions (student_id) and
 -- subscriptions (branch_id). Both tables were dead — never queried by the app,
--- no rows, no RLS policies — and drop-dead-tables.sql removed them, taking
+-- no rows, no RLS policies — and 0014_drop_dead_tables.sql removed them, taking
 -- those two indexes with them. Don't re-add either.
 
 create index if not exists attendance_monthly_centre_idx
@@ -145,3 +145,9 @@ analyze public.fees;
 analyze public.tests;
 analyze public.timetable;
 analyze public.teachers;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0012_performance_indexes')
+  on conflict (version) do nothing;

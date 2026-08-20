@@ -4,8 +4,9 @@
 -- The complete, current database in ONE idempotent script. Run it on a fresh
 -- Supabase project to create everything, OR on your existing DB to verify /
 -- top up to the latest state (existing tables are skipped; functions, policies
--- and grants are refreshed). Supersedes: schema.sql, multitenancy.sql,
--- period-and-rollup.sql, security-hardening.sql, rate-limit.sql, notes.sql.
+-- and grants are refreshed). Folds in the six pre-baseline scripts that used to
+-- live loose in supabase/ (schema, multitenancy, period-and-rollup,
+-- security-hardening, rate-limit, notes); they are in git history if needed.
 -- Safe to re-run. ⚠️ Back up first if the DB already holds real data.
 -- ============================================================================
 
@@ -534,3 +535,9 @@ do $$ begin
     alter publication supabase_realtime add table public.profiles;
   end if;
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0001_baseline')
+  on conflict (version) do nothing;
