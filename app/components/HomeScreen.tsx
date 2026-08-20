@@ -1,6 +1,7 @@
 'use client'
 
 import { useDashboard, initials, type Screen } from '../store'
+import { Icon, ink, type IconName } from './Icon'
 
 export function HomeScreen() {
   const { role, go, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
@@ -14,11 +15,11 @@ export function HomeScreen() {
   // Home = the four quick daily shortcuts (same for head and teacher, clean
   // grid). Timetable is a bottom tab; Study material + all management (fees,
   // rankings, meetings, branches, subjects, reports, staff) live in More.
-  const quickActions: { icon: string; label: string; tint: string; screen: Screen; tab?: string }[] = [
-    { icon: '✅', label: 'Attendance', tint: '#e7f5ee', screen: 'attendance' },
-    { icon: '📊', label: 'Results', tint: '#eaf1fc', screen: 'results' },
-    { icon: '📚', label: 'Assignment', tint: '#fcf3e3', screen: 'assign' },
-    { icon: '🔔', label: 'Reminder', tint: '#fdecea', screen: 'reminder' },
+  const quickActions: { icon: IconName; label: string; tint: string; screen: Screen; tab?: string }[] = [
+    { icon: 'attendance', label: 'Attendance', tint: '#e7f5ee', screen: 'attendance' },
+    { icon: 'results', label: 'Results', tint: '#eaf1fc', screen: 'results' },
+    { icon: 'homework', label: 'Assignment', tint: '#fcf3e3', screen: 'assign' },
+    { icon: 'reminder', label: 'Reminder', tint: '#fdecea', screen: 'reminder' },
   ]
 
   return (
@@ -65,7 +66,7 @@ export function HomeScreen() {
       <div className="grid grid-cols-4 gap-[11px] mb-[26px] lg:max-w-2xl">
         {quickActions.map(a => (
           <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-white rounded-[18px] py-3 px-1.5 cursor-pointer flex flex-col items-center gap-[7px]">
-            <div className="w-[42px] h-[42px] rounded-[13px] flex items-center justify-center text-xl" style={{ background: a.tint }}>{a.icon}</div>
+            <div className="w-[42px] h-[42px] rounded-[13px] flex items-center justify-center" style={{ background: a.tint, color: ink(a.tint) }}><Icon name={a.icon} size={21} /></div>
             <span className="text-[10.5px] font-bold text-td-text text-center leading-tight">{a.label}</span>
           </button>
         ))}

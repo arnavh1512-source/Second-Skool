@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import type { ComponentType } from 'react'
 import { useDashboard, type Screen } from './store'
 import { PhoneFrame } from './components/Shell'
+import { Icon } from './components/Icon'
 import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -111,8 +112,8 @@ function OperatorEntry() {
       style={{ background: devSeat ? '#e8553c' : undefined }}
     >
       {devSeat
-        ? <><span>⚠️</span><span className="truncate">{devSeat.centreName}</span></>
-        : <>🛠️ Console</>}
+        ? <><Icon name="warning" size={15} className="shrink-0" /><span className="truncate">{devSeat.centreName}</span></>
+        : <><Icon name="console" size={15} className="shrink-0" />Console</>}
     </button>
   )
 }

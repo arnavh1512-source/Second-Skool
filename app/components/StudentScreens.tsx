@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useDashboard, GRADIENTS, initials, av, stuGrade } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
+import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 
 export function StuHomeScreen() {
@@ -130,15 +131,15 @@ export function StuHomeScreen() {
 
       <div className="grid grid-cols-3 gap-2.5 mb-5">
         <button onClick={() => go('stuTimetable', 'stuHome')} className="text-left bg-white border border-td-border rounded-[18px] p-3 cursor-pointer">
-          <div className="w-[38px] h-[38px] rounded-[12px] bg-[#eef0fc] flex items-center justify-center text-lg mb-2">🗓️</div>
+          <div className="w-[38px] h-[38px] rounded-[12px] bg-[#eef0fc] flex items-center justify-center mb-2" style={{ color: ink('#eef0fc') }}><Icon name="timetable" size={20} /></div>
           <div className="text-[12.5px] font-extrabold text-td-dark leading-tight">Timetable</div>
         </button>
         <button onClick={() => go('stuAssignments', 'stuHome')} className="text-left bg-white border border-td-border rounded-[18px] p-3 cursor-pointer">
-          <div className="w-[38px] h-[38px] rounded-[12px] bg-[#fcf3e3] flex items-center justify-center text-lg mb-2">📚</div>
+          <div className="w-[38px] h-[38px] rounded-[12px] bg-[#fcf3e3] flex items-center justify-center mb-2" style={{ color: ink('#fcf3e3') }}><Icon name="homework" size={20} /></div>
           <div className="text-[12.5px] font-extrabold text-td-dark leading-tight">Homework</div>
         </button>
         <button onClick={() => go('stuNotes', 'stuHome')} className="relative text-left bg-white border border-td-border rounded-[18px] p-3 cursor-pointer">
-          <div className="w-[38px] h-[38px] rounded-[12px] bg-[#e7f5ee] flex items-center justify-center text-lg mb-2">📄</div>
+          <div className="w-[38px] h-[38px] rounded-[12px] bg-[#e7f5ee] flex items-center justify-center mb-2" style={{ color: ink('#e7f5ee') }}><Icon name="notes" size={20} /></div>
           <div className="text-[12.5px] font-extrabold text-td-dark leading-tight">Material</div>
           {newNotes > 0 && <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-td-red text-white text-[10.5px] font-extrabold flex items-center justify-center">{newNotes}</span>}
         </button>
@@ -147,7 +148,7 @@ export function StuHomeScreen() {
       {stuPendingFee && (
         <button onClick={() => go('stuFees', 'stuHome')} className="w-full text-left border-none cursor-pointer rounded-[18px] p-[15px] flex items-center gap-[13px] mb-5" style={{ background: 'linear-gradient(135deg,#e8553c,#ef7a64)' }}>
           <div className="w-[42px] h-[42px] rounded-[13px] bg-white/20 flex items-center justify-center shrink-0">
-            <span className="text-xl">💳</span>
+            <Icon name="fees" size={21} className="text-white" />
           </div>
           <div className="flex-1">
             <div className="text-sm font-extrabold text-white">{stuPendingFee.amount} fee due</div>
@@ -163,7 +164,7 @@ export function StuHomeScreen() {
           <div className="flex flex-col gap-2.5 mb-[22px]">
             {stuReminders.map(r => (
               <button key={r.title + r.when} onClick={() => go('stuNotif', 'stuHome')} className="w-full text-left bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px] cursor-pointer">
-                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-lg" style={{ background: r.tint }}>{r.icon}</div>
+                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: r.tint, color: ink(r.tint) }}><DataIcon value={r.icon} size={20} /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[13.5px] font-bold text-td-dark">{r.title}</div>
                   <div className="text-xs text-td-muted mt-0.5 truncate">{r.detail}</div>
@@ -242,7 +243,7 @@ export function StuAttendanceScreen() {
         <div className="flex flex-col gap-2.5">
           {stuAttendanceLog.map(d => (
             <div key={d.date} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px]">
-              <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-lg" style={{ background: d.tint }}>{d.icon}</div>
+              <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: d.tint, color: ink(d.tint) }}><DataIcon value={d.icon} size={20} /></div>
               <div className="flex-1">
                 <div className="text-[13.5px] font-bold text-td-dark">{d.day}</div>
                 <div className="text-xs text-td-muted mt-0.5">{d.date}</div>
@@ -319,10 +320,12 @@ export function StuRankingScreen() {
   const rows = (rankData[stuRankSubject] || []).map((r, i) => ({ rank: i + 1, name: r[0], score: r[1] }))
   const top3 = rows.slice(0, 3)
   const rest = rows.slice(3)
-  const medals = ['🥈', '🥇', '🥉']
+  const medals: IconName[] = ['silver', 'gold', 'bronze']
   const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3
   const podiumHeights = [88, 110, 72]
   const podiumBg = ['#c0cfe8', '#2a6fdb', '#d4c9a8']
+  // Silver, gold, bronze — podium order, not rank order.
+  const MEDAL_INK = ['#8f9bb3', '#e0962f', '#b06a3a']
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
@@ -350,7 +353,7 @@ export function StuRankingScreen() {
                 const isYou = me?.name === p.name
                 return (
                   <div key={p.name} className="flex flex-col items-center">
-                    <div className="text-2xl mb-1">{medals[pi]}</div>
+                    <Icon name={medals[pi]} size={26} className="mb-1" style={{ color: MEDAL_INK[pi] }} />
                     <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px] mb-1.5" style={{ background: GRADIENTS[pi] }}>{initials(p.name)}</div>
                     <div className="text-[11px] font-extrabold text-td-dark text-center leading-tight mb-0.5">{p.name.split(' ')[0]}{isYou && <span className="text-td-primary"> (You)</span>}</div>
                     <div className="text-[11px] font-bold text-td-primary mb-1.5">{p.score}%</div>
@@ -431,7 +434,7 @@ export function StuTeacherDetail() {
           <div className="text-[11px] text-td-muted font-semibold mt-1">Years exp.</div>
         </div>
         <div className="bg-white border border-td-border rounded-[18px] p-3.5 text-center">
-          <div className="text-2xl font-extrabold text-td-amber">⭐ {t.rating || '—'}</div>
+          <div className="text-2xl font-extrabold text-td-amber flex items-center justify-center gap-1.5"><Icon name="star" size={20} />{t.rating || '—'}</div>
           <div className="text-[11px] text-td-muted font-semibold mt-1">Rating</div>
         </div>
       </div>
@@ -508,7 +511,7 @@ export function StuNotifScreen() {
         <div className="flex flex-col gap-2.5">
           {stuNotifications.map(n => (
             <div key={n.title + n.when} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-start gap-[13px]">
-              <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-lg mt-0.5" style={{ background: n.tint }}>{n.icon}</div>
+              <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center mt-0.5" style={{ background: n.tint, color: ink(n.tint) }}><DataIcon value={n.icon} size={20} /></div>
               <div className="flex-1 min-w-0">
                 <div className="text-[13.5px] font-bold text-td-dark">{n.title}</div>
                 <div className="text-xs text-td-muted mt-1 leading-relaxed">{n.detail}</div>
@@ -586,7 +589,7 @@ export function StuAssignmentsScreen() {
           {stuAssignments.map((a, i) => (
             <button key={i} onClick={() => setOpen(open === i ? null : i)} className="w-full text-left bg-white border border-td-border rounded-[18px] p-4 cursor-pointer">
               <div className="flex items-center gap-[13px]">
-                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-lg bg-[#fcf3e3]">📚</div>
+                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center bg-[#fcf3e3]" style={{ color: ink('#fcf3e3') }}><Icon name="homework" size={20} /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-extrabold text-td-dark">{a.title}</div>
                   <div className="text-[12px] text-td-muted mt-0.5">{a.subject}{a.due ? ` · due ${a.due}` : ''}</div>
@@ -614,11 +617,11 @@ export function StuProfileScreen() {
 
   // Every detail is centre-managed. A student can view but never change their
   // own record — only the head teacher edits it (from Students → Edit Student).
-  const fields = [
-    { icon: '🏫', label: 'School', value: me?.school || '—', locked: true },
-    { icon: '📚', label: 'Standard', value: me?.klass || '—', locked: true },
-    { icon: '📱', label: 'Parent contact', value: me?.parent || '—', locked: true },
-    { icon: '📍', label: 'Address', value: me?.address || '—', locked: true },
+  const fields: { icon: IconName; label: string; value: string; locked: boolean }[] = [
+    { icon: 'school', label: 'School', value: me?.school || '—', locked: true },
+    { icon: 'standard', label: 'Standard', value: me?.klass || '—', locked: true },
+    { icon: 'phone', label: 'Parent contact', value: me?.parent || '—', locked: true },
+    { icon: 'address', label: 'Address', value: me?.address || '—', locked: true },
   ]
 
   return (
@@ -663,7 +666,7 @@ export function StuProfileScreen() {
       <div className="flex flex-col gap-2.5 mb-5">
         {fields.map(f => (
           <div key={f.label} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px]">
-            <span className="text-lg">{f.icon}</span>
+            <Icon name={f.icon} size={20} className="text-td-muted shrink-0" />
             <div className="flex-1">
               <div className="text-[11px] text-td-subtle font-semibold">{f.label}</div>
               <div className="text-[13.5px] font-bold text-td-dark mt-0.5">{f.value}</div>

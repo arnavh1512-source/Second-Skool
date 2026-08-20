@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useDashboard, REMINDER_TEMPLATES, initials, av } from '../store'
 import { ScreenHeader, PrimaryButton } from './Shell'
+import { Icon, type IconName } from './Icon'
 
 export function TimetableScreen() {
   const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, role } = useDashboard()
@@ -286,7 +287,7 @@ export function ResultsScreen() {
     }).filter((r): r is NonNullable<typeof r> => r !== null)
     if (resultRows.length) {
       await supabase.from('results').insert(resultRows)
-      useDashboard.getState().notifyClass(selKlass, 'New results published', `${testName} · ${selSubject} — check your marks in the app`, '📊')
+      useDashboard.getState().notifyClass(selKlass, 'New results published', `${testName} · ${selSubject} — check your marks in the app`, 'results')
     }
     notify('Results published & parents notified')
     setMarks({})
@@ -392,12 +393,12 @@ export function RemindersScreen() {
   const { reminderType, back, set, saveReminder } = useDashboard()
   const [message, setMessage] = useState(REMINDER_TEMPLATES[reminderType] ?? '')
   const [filter, setFilter] = useState('all')
-  const types = [
-    { key: 'Notice', label: 'Notice', icon: '📢' },
-    { key: 'Fee', label: 'Fees', icon: '💳' },
-    { key: 'Homework', label: 'Homework', icon: '📚' },
-    { key: 'Test', label: 'Test', icon: '📝' },
-    { key: 'Absence', label: 'Absence', icon: '🟡' },
+  const types: { key: string; label: string; icon: IconName }[] = [
+    { key: 'Notice', label: 'Notice', icon: 'notice' },
+    { key: 'Fee', label: 'Fees', icon: 'fees' },
+    { key: 'Homework', label: 'Homework', icon: 'homework' },
+    { key: 'Test', label: 'Test', icon: 'test' },
+    { key: 'Absence', label: 'Absence', icon: 'absence' },
   ]
 
   return (
@@ -410,7 +411,7 @@ export function RemindersScreen() {
           const active = r.key === reminderType
           return (
             <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-2xl p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? '#eaf1fc' : '#fff', borderColor: active ? '#2a6fdb' : '#e6eaf2' }}>
-              <span className="text-xl">{r.icon}</span>
+              <Icon name={r.icon} size={21} className="shrink-0" style={{ color: active ? '#2a6fdb' : '#6b7689' }} />
               <span className="text-[13.5px] font-bold" style={{ color: active ? '#2a6fdb' : '#3a4456' }}>{r.label}</span>
             </button>
           )

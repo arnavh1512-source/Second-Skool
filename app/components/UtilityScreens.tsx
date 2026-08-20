@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
+import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
 
@@ -377,7 +378,7 @@ export function BatchesScreen() {
   )
 }
 
-type MoreItem = { icon: string; label: string; tint: string; screen: Screen; badge?: number }
+type MoreItem = { icon: IconName; label: string; tint: string; screen: Screen; badge?: number }
 
 export function MoreScreen() {
   const { goFrom, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents } = useDashboard()
@@ -390,29 +391,29 @@ export function MoreScreen() {
   const studentRequestCount = pendingStudents.length
 
   const daily: MoreItem[] = [
-    { icon: '🙋', label: 'Student requests', tint: '#e7f5ee', screen: 'studentRequests', badge: studentRequestCount },
-    { icon: '✅', label: 'Mark attendance', tint: '#e7f5ee', screen: 'attendance' },
-    { icon: '📊', label: 'Enter results', tint: '#eaf1fc', screen: 'results' },
-    { icon: '📚', label: 'Assignments', tint: '#fcf3e3', screen: 'assign' },
-    { icon: '📄', label: 'Study material', tint: '#eef0fc', screen: 'notes' },
-    { icon: '🔔', label: 'Send reminders', tint: '#fdecea', screen: 'reminder' },
+    { icon: 'requests', label: 'Student requests', tint: '#e7f5ee', screen: 'studentRequests', badge: studentRequestCount },
+    { icon: 'attendance', label: 'Mark attendance', tint: '#e7f5ee', screen: 'attendance' },
+    { icon: 'results', label: 'Enter results', tint: '#eaf1fc', screen: 'results' },
+    { icon: 'homework', label: 'Assignments', tint: '#fcf3e3', screen: 'assign' },
+    { icon: 'notes', label: 'Study material', tint: '#eef0fc', screen: 'notes' },
+    { icon: 'reminder', label: 'Send reminders', tint: '#fdecea', screen: 'reminder' },
   ]
   const management: MoreItem[] = [
-    { icon: '🛡️', label: 'Staff access & approvals', tint: '#eef0fc', screen: 'staffApprovals', badge: pendingCount },
-    { icon: '📈', label: 'Weekly report', tint: '#e7f5ee', screen: 'reports' },
-    { icon: '💳', label: 'Fees & alerts', tint: '#e7f5ee', screen: 'fees' },
-    { icon: '🏆', label: 'Rankings', tint: '#fcf3e3', screen: 'rankings' },
-    { icon: '📅', label: 'Meetings', tint: '#eaf1fc', screen: 'meetings' },
-    { icon: '🏢', label: 'Branches', tint: '#eef0fc', screen: 'branches' },
-    { icon: '📖', label: 'Subjects', tint: '#eaf1fc', screen: 'subjects' },
-    { icon: '👥', label: 'Batches', tint: '#e7f5ee', screen: 'batches' },
+    { icon: 'approvals', label: 'Staff access & approvals', tint: '#eef0fc', screen: 'staffApprovals', badge: pendingCount },
+    { icon: 'reports', label: 'Weekly report', tint: '#e7f5ee', screen: 'reports' },
+    { icon: 'fees', label: 'Fees & alerts', tint: '#e7f5ee', screen: 'fees' },
+    { icon: 'rankings', label: 'Rankings', tint: '#fcf3e3', screen: 'rankings' },
+    { icon: 'meetings', label: 'Meetings', tint: '#eaf1fc', screen: 'meetings' },
+    { icon: 'branches', label: 'Branches', tint: '#eef0fc', screen: 'branches' },
+    { icon: 'subjects', label: 'Subjects', tint: '#eaf1fc', screen: 'subjects' },
+    { icon: 'batches', label: 'Batches', tint: '#e7f5ee', screen: 'batches' },
   ]
 
   const card = (list: MoreItem[]) => (
     <div className="bg-white border border-td-border rounded-[20px] overflow-hidden">
       {list.map(m => (
         <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
-          <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-lg" style={{ background: m.tint }}>{m.icon}</div>
+          <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
           {!!m.badge && m.badge > 0 && <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
           <ChevronRight />
@@ -477,9 +478,9 @@ export function NotificationsScreen() {
     else notify(res.error || 'Could not enable')
   }
 
-  const row = (icon: string, tint: string, label: string, count: number, screen: Screen) => (
+  const row = (icon: IconName, tint: string, label: string, count: number, screen: Screen) => (
     <button onClick={() => go(screen, 'home')} className="w-full text-left border-none bg-white border border-td-border rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
-      <div className="w-11 h-11 rounded-[13px] shrink-0 flex items-center justify-center text-xl" style={{ background: tint }}>{icon}</div>
+      <div className="w-11 h-11 rounded-[13px] shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-extrabold text-td-dark">{label}</div>
         <div className="text-[12px] text-td-muted mt-0.5">{count} waiting for your review</div>
@@ -503,8 +504,8 @@ export function NotificationsScreen() {
         </div>
       ) : (
         <>
-          {studentCount > 0 && row('🙋', '#e7f5ee', 'Student join requests', studentCount, 'studentRequests')}
-          {staffCount > 0 && row('🛡️', '#eef0fc', 'Staff access requests', staffCount, 'staffApprovals')}
+          {studentCount > 0 && row('requests', '#e7f5ee', 'Student join requests', studentCount, 'studentRequests')}
+          {staffCount > 0 && row('approvals', '#eef0fc', 'Staff access requests', staffCount, 'staffApprovals')}
         </>
       )}
 

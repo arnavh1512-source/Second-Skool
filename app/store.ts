@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { supabase } from './lib/supabase'
 import { sendPush, enablePush, pushSupported } from './lib/push'
 import { logError } from './lib/log'
+import type { IconName } from './components/Icon'
 
 // The full-dataset fetch lives in SupabaseProvider (it owns the row mappers).
 // It registers itself here so store actions can re-pull fresh data after a
@@ -138,7 +139,7 @@ interface Actions {
   saveMeeting: (title: string, type: string, date: string, time: string) => void
   saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => void
   saveReminder: (type: string, message: string, targetClass: string, filter?: string) => void
-  notifyClass: (klass: string, title: string, detail: string, icon: string) => void
+  notifyClass: (klass: string, title: string, detail: string, icon: IconName) => void
   addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => void
   toggleFeeStatus: (idx: number) => void
   addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => void
@@ -372,7 +373,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       .map((name, i) => (att[i] === 'absent' ? students.find(s => s.name === name) : null))
       .filter((s): s is NonNullable<typeof s> => !!s?.dbId)
     if (absent.length) {
-      const rows = absent.map(s => ({ student_id: s.dbId, title: 'Marked absent today', detail: `${s.name} was marked absent. Please contact the centre if this is a mistake.`, icon: '🟡' }))
+      const rows = absent.map(s => ({ student_id: s.dbId, title: 'Marked absent today', detail: `${s.name} was marked absent. Please contact the centre if this is a mistake.`, icon: 'absence' }))
       supabase.from('notifications').insert(rows).then(dbErr('send notifications', get().notify))
       const codes = absent.map(s => s.id).filter(Boolean)
       if (codes.length) sendPush({ studentCodes: codes, title: 'Marked absent today', body: 'Your ward was marked absent at the centre today.' }).then(() => {})
@@ -408,14 +409,14 @@ export const useDashboard = create<State & Actions>((set, get) => ({
       instructions: instructions || null, subject_id: subjectId ?? null,
     }).then(dbErr('save assignment', get().notify))
     set({ assignmentsList: [item, ...assignmentsList] })
-    get().notifyClass(klass, 'New homework', `${title} — due ${item.due}`, '📚')
+    get().notifyClass(klass, 'New homework', `${title} — due ${item.due}`, 'homework')
     get().notify('Assignment created · class notified')
   },
 
   saveReminder: (type, message, targetClass, filter) => {
     const { students } = get()
-    const icons: Record<string, string> = { Notice: '📢', Test: '📝', Absence: '🟡', Fee: '💳', Homework: '📚' }
-    const icon = icons[type] ?? '🔔'
+    const icons: Record<string, IconName> = { Notice: 'notice', Test: 'test', Absence: 'absence', Fee: 'fees', Homework: 'homework' }
+    const icon: IconName = icons[type] ?? 'reminder'
     const title = type === 'Notice' ? 'Notice' : `${type} Reminder`
 
     let targets = students.filter(s => s.dbId)
@@ -644,7 +645,7 @@ export const useDashboard = create<State & Actions>((set, get) => ({
     }).select('id').single()
     if (error) { get().notify('Could not save note'); return }
     set((s) => ({ notesList: [{ dbId: data.id, ...n }, ...s.notesList] }))
-    get().notifyClass(n.klass, 'New study material', n.subject ? `${n.title.trim()} · ${n.subject}` : n.title.trim(), '📄')
+    get().notifyClass(n.klass, 'New study material', n.subject ? `${n.title.trim()} · ${n.subject}` : n.title.trim(), 'notes')
     get().notify('Note shared with the class')
   },
 
@@ -1042,10 +1043,10 @@ export const REMINDER_TEMPLATES: Record<string, string> = {
 }
 
 // --- Student snapshot mapping (from get_student_snapshot RPC) ---
-const STATUS_ICONS: Record<string, { icon: string; tint: string; color: string }> = {
-  Present: { icon: '✅', tint: '#e7f5ee', color: '#2fa36b' },
-  Absent: { icon: '❌', tint: '#fdecea', color: '#e8553c' },
-  Leave: { icon: '📋', tint: '#fcf3e3', color: '#e0962f' },
+const STATUS_ICONS: Record<string, { icon: IconName; tint: string; color: string }> = {
+  Present: { icon: 'attendance', tint: '#e7f5ee', color: '#2fa36b' },
+  Absent: { icon: 'absent', tint: '#fdecea', color: '#e8553c' },
+  Leave: { icon: 'leave', tint: '#fcf3e3', color: '#e0962f' },
 }
 
 function timeAgo(dateStr: string): string {
@@ -1119,7 +1120,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   const stuPendingFee = pending ? { amount: rupee(pending.amount ?? 0), period: pending.period ?? '', dueDate: fmtDate(pending.dueDate ?? '') } : null
 
   const stuNotifications: NotifItem[] = (snap.notifications ?? []).map((n: SnapRow) => ({
-    icon: n.icon ?? '📢', tint: '#eaf1fc', title: n.title ?? '', detail: n.detail ?? '',
+    icon: n.icon ?? 'notice', tint: '#eaf1fc', title: n.title ?? '', detail: n.detail ?? '',
     when: timeAgo(n.createdAt ?? ''), dbId: n.createdAt ?? '',
   }))
   // Home surfaces only the last 2 days of notifications so the feed stays short;

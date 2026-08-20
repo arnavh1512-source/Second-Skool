@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useDashboard, initials, type Screen, type Tab } from '../store'
+import { Icon, type IconName } from './Icon'
 
 // Desktop breakpoint (lg). Starts false so SSR/hydration match the phone
 // layout; the media query resolves during the auth-loading phase, well before
@@ -18,7 +19,7 @@ export function useIsDesktop() {
   return desktop
 }
 
-type NavItem = { icon: string; label: string; screen: Screen; tab?: Tab; active?: Screen[]; badge?: number }
+type NavItem = { icon: IconName; label: string; screen: Screen; tab?: Tab; active?: Screen[]; badge?: number }
 
 function NavRow({ item }: { item: NavItem }) {
   const { screen, go } = useDashboard()
@@ -30,7 +31,7 @@ function NavRow({ item }: { item: NavItem }) {
         on ? 'bg-[#eaf1fc] text-td-primary' : 'text-td-text hover:bg-[#f4f6fb]'
       }`}
     >
-      <span className="w-[30px] h-[30px] rounded-[9px] bg-white border border-td-border flex items-center justify-center text-[15px] shrink-0">{item.icon}</span>
+      <span className="w-[30px] h-[30px] rounded-[9px] bg-white border border-td-border flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
       <span className={`flex-1 text-[13.5px] ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
         <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
@@ -52,28 +53,28 @@ function Sidebar() {
   const stuReq = pendingStudents.length
 
   const main: NavItem[] = [
-    { icon: '🏠', label: 'Dashboard', screen: 'home', tab: 'home' },
-    { icon: '📅', label: 'Timetable', screen: 'timetable', tab: 'timetable' },
-    { icon: '👥', label: 'Students', screen: 'students', tab: 'students', active: ['addStudent', 'editStudent'] },
-    ...(isAdmin ? [{ icon: '🧑‍🏫', label: 'Staff', screen: 'teachers' as Screen, tab: 'teachers' as Tab, active: ['addTeacher' as Screen] }] : []),
+    { icon: 'home', label: 'Dashboard', screen: 'home', tab: 'home' },
+    { icon: 'timetable', label: 'Timetable', screen: 'timetable', tab: 'timetable' },
+    { icon: 'students', label: 'Students', screen: 'students', tab: 'students', active: ['addStudent', 'editStudent'] },
+    ...(isAdmin ? [{ icon: 'staff' as IconName, label: 'Staff', screen: 'teachers' as Screen, tab: 'teachers' as Tab, active: ['addTeacher' as Screen] }] : []),
   ]
   const teaching: NavItem[] = [
-    { icon: '✅', label: 'Attendance', screen: 'attendance' },
-    { icon: '📊', label: 'Results', screen: 'results' },
-    { icon: '📚', label: 'Homework', screen: 'assign' },
-    { icon: '📄', label: 'Study material', screen: 'notes' },
-    { icon: '🔔', label: 'Reminders', screen: 'reminder' },
+    { icon: 'attendance', label: 'Attendance', screen: 'attendance' },
+    { icon: 'results', label: 'Results', screen: 'results' },
+    { icon: 'homework', label: 'Homework', screen: 'assign' },
+    { icon: 'notes', label: 'Study material', screen: 'notes' },
+    { icon: 'reminder', label: 'Reminders', screen: 'reminder' },
   ]
   const manage: NavItem[] = [
-    { icon: '🛡️', label: 'Approvals', screen: 'staffApprovals', badge: pending },
-    { icon: '🙋', label: 'Student requests', screen: 'studentRequests', badge: stuReq },
-    { icon: '📈', label: 'Reports', screen: 'reports' },
-    { icon: '💳', label: 'Fees', screen: 'fees' },
-    { icon: '🏆', label: 'Rankings', screen: 'rankings' },
-    { icon: '📆', label: 'Meetings', screen: 'meetings' },
-    { icon: '🏢', label: 'Branches', screen: 'branches' },
-    { icon: '📖', label: 'Subjects', screen: 'subjects' },
-    { icon: '👥', label: 'Batches', screen: 'batches' },
+    { icon: 'approvals', label: 'Approvals', screen: 'staffApprovals', badge: pending },
+    { icon: 'requests', label: 'Student requests', screen: 'studentRequests', badge: stuReq },
+    { icon: 'reports', label: 'Reports', screen: 'reports' },
+    { icon: 'fees', label: 'Fees', screen: 'fees' },
+    { icon: 'rankings', label: 'Rankings', screen: 'rankings' },
+    { icon: 'meetings', label: 'Meetings', screen: 'meetings' },
+    { icon: 'branches', label: 'Branches', screen: 'branches' },
+    { icon: 'subjects', label: 'Subjects', screen: 'subjects' },
+    { icon: 'batches', label: 'Batches', screen: 'batches' },
   ]
 
   return (

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useDashboard } from '../store'
 import { ScreenHeader, PrimaryButton } from './Shell'
+import { Icon, ink } from './Icon'
 import { uploadNoteFile } from '../lib/upload'
 
 const FileIcon = ({ url }: { url: string }) => (
@@ -90,7 +91,7 @@ export function NotesScreen() {
               {n.body && <div className="text-[13px] text-td-text leading-relaxed mt-2">{n.body}</div>}
               <div className="flex gap-2 mt-2.5">
                 {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="text-[12px] font-bold text-td-primary flex items-center gap-1.5"><FileIcon url={n.fileUrl} /> File</a>}
-                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="text-[12px] font-bold text-td-primary flex items-center gap-1.5">▶ Video</a>}
+                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="text-[12px] font-bold text-td-primary flex items-center gap-1.5"><Icon name="next" size={13} />Video</a>}
               </div>
             </div>
           ))}
@@ -120,7 +121,7 @@ export function StuNotesScreen() {
           {stuNotes.map((n, i) => (
             <div key={i} className="bg-white border border-td-border rounded-[18px] p-4">
               <div className="flex items-center gap-[11px]">
-                <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center text-lg bg-[#eaf1fc]">📄</div>
+                <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-[#eaf1fc]" style={{ color: ink('#eaf1fc') }}><Icon name="notes" size={19} /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-extrabold text-td-dark">{n.title}</div>
                   {n.subject && <div className="text-[11.5px] text-td-muted mt-0.5">{n.subject}</div>}
@@ -129,7 +130,7 @@ export function StuNotesScreen() {
               {n.body && <div className="text-[13px] text-td-text leading-relaxed mt-2.5">{n.body}</div>}
               <div className="flex gap-2.5 mt-2.5">
                 {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border border-td-primary text-td-primary text-[12.5px] font-bold py-2 rounded-[12px]">Open file</a>}
-                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-[#e8553c] text-white text-[12.5px] font-bold py-2 rounded-[12px]">▶ Watch video</a>}
+                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-[#e8553c] text-white text-[12.5px] font-bold py-2 rounded-[12px] flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
               </div>
             </div>
           ))}

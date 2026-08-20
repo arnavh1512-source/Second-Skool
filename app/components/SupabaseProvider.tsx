@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { IconName } from './Icon'
 import { supabase } from '../lib/supabase'
 import { totalsByStudent, countDailyRows, attendancePct, type AttendanceTotal } from '../lib/attendance'
 import { useDashboard, registerRefresh, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type StuResultItem, type AttLogItem, type NotifItem, type FeeHistoryItem, type ScheduleItem } from '../store'
@@ -317,10 +318,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Attendance log (for student view)
-    const statusIcons: Record<string, { icon: string; tint: string; color: string }> = {
-      Present: { icon: '✅', tint: '#e7f5ee', color: '#2fa36b' },
-      Absent: { icon: '❌', tint: '#fdecea', color: '#e8553c' },
-      Leave: { icon: '📋', tint: '#fcf3e3', color: '#e0962f' },
+    const statusIcons: Record<string, { icon: IconName; tint: string; color: string }> = {
+      Present: { icon: 'attendance', tint: '#e7f5ee', color: '#2fa36b' },
+      Absent: { icon: 'absent', tint: '#fdecea', color: '#e8553c' },
+      Leave: { icon: 'leave', tint: '#fcf3e3', color: '#e0962f' },
     }
     const stuAttendanceLog: AttLogItem[] = (attendance ?? []).slice(0, 15).map((a) => {
       const d = new Date(a.date)
@@ -347,7 +348,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     // Notifications (for student view)
     const stuNotifications: NotifItem[] = (notifications ?? []).map((n: Row) => ({
-      icon: n.icon ?? '📢', tint: n.tint ?? '#eaf1fc',
+      icon: n.icon ?? 'notice', tint: n.tint ?? '#eaf1fc',
       title: n.title ?? '', detail: n.detail ?? '',
       when: timeAgo(n.created_at), dbId: n.id,
     }))
