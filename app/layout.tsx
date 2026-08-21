@@ -45,7 +45,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale. It was here to stop iOS zooming on input focus, but it
+  // also blocks pinch-zoom outright — and the people most likely to pinch a
+  // fee table or a marks row are parents reading small text on an old phone.
+  // The cost is that iOS zooms in when focusing an input under 16px, which
+  // several forms use — a cosmetic nuisance, and the right fix is 16px inputs,
+  // not taking pinch-zoom away from everyone.
   viewportFit: 'cover', // lets the app use safe-area insets on notched phones
 }
 

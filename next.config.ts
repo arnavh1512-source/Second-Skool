@@ -8,9 +8,17 @@ import type { NextConfig } from "next";
 //  - img-src allows https/data/blob so Google avatars + Unsplash/Pexels load.
 //  - object-src/base-uri/form-action/frame-ancestors are the cheap high-value
 //    locks (clickjacking, base-tag hijack, form exfiltration).
+// 'unsafe-eval' is a dev-only allowance: Turbopack's HMR runtime evaluates
+// code at runtime, the production bundle does not. Shipping it to production
+// hands any future injection a working eval() for free, so it stops at the
+// dev boundary.
+const scriptSrc = process.env.NODE_ENV === 'development'
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  : "script-src 'self' 'unsafe-inline'"
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",

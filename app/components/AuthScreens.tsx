@@ -117,7 +117,7 @@ export function LoginScreen() {
             autoFocus value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && submitCode()}
-            placeholder="e.g. TUT-7X2K9Q"
+            placeholder="e.g. TUT-7X2K9Q" aria-label="Your student code" required aria-required="true"
             className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary text-center tracking-[0.2em] font-bold mt-7"
           />
           <button onClick={submitCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">
@@ -133,13 +133,13 @@ export function LoginScreen() {
         <>
           <div className="text-sm text-td-muted mt-2 leading-relaxed">Sign in with your teacher email and password. Use the same email as your Google account.</div>
           <input
-            autoFocus value={email} type="email" inputMode="email" autoComplete="email"
+            autoFocus value={email} type="email" inputMode="email" autoComplete="email" aria-label="Email address" required aria-required="true"
             onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
             className="w-full border border-td-border rounded-[14px] p-[15px] text-base text-td-dark outline-none focus:border-td-primary mt-7"
           />
           <input
-            value={password} type="password" autoComplete="current-password"
+            value={password} type="password" autoComplete="current-password" aria-label="Password" required aria-required="true"
             onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !busy && signInWithPassword()}
             placeholder="Password"
@@ -156,33 +156,33 @@ export function LoginScreen() {
           <div className="text-sm text-td-muted mt-2 leading-relaxed">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
           <div className="flex flex-col gap-3 mt-6">
             <div>
-              <label className="text-xs font-bold text-td-muted">Student code <span className="text-[#e8553c]">*</span></label>
-              <input value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 tracking-[0.15em] font-bold text-center" />
-              <div className="text-[11px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
+              <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-[#e8553c]">*</span></label>
+              <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 tracking-[0.15em] font-bold text-center" />
+              <div id="reg-code-hint" className="text-[11px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
-              <label className="text-xs font-bold text-td-muted">Full name <span className="text-[#e8553c]">*</span></label>
-              <input value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+              <label htmlFor="reg-name" className="text-xs font-bold text-td-muted">Full name <span className="text-[#e8553c]">*</span></label>
+              <input id="reg-name" required aria-required="true" autoComplete="name" value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
             </div>
             <div>
-              <label className="text-xs font-bold text-td-muted">Parent&apos;s phone <span className="text-[#e8553c]">*</span></label>
-              <input value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+              <label htmlFor="reg-parent" className="text-xs font-bold text-td-muted">Parent&apos;s phone <span className="text-[#e8553c]">*</span></label>
+              <input id="reg-parent" required aria-required="true" type="tel" autoComplete="tel" value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs font-bold text-td-muted">Class <span className="text-[#e8553c]">*</span></label>
-                <select value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 bg-white">
+                <label htmlFor="reg-class" className="text-xs font-bold text-td-muted">Class <span className="text-[#e8553c]">*</span></label>
+                <select id="reg-class" required aria-required="true" value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 bg-white">
                   {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="flex-1">
-                <label className="text-xs font-bold text-td-muted">School <span className="text-[#e8553c]">*</span></label>
-                <input value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+                <label htmlFor="reg-school" className="text-xs font-bold text-td-muted">School <span className="text-[#e8553c]">*</span></label>
+                <input id="reg-school" required aria-required="true" value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold text-td-muted">Address <span className="text-td-subtle font-semibold">(optional)</span></label>
-              <input value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
+              <label htmlFor="reg-address" className="text-xs font-bold text-td-muted">Address <span className="text-td-subtle font-semibold">(optional)</span></label>
+              <input id="reg-address" autoComplete="street-address" value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
             </div>
           </div>
           <button onClick={submitSignup} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-4 disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for approval'}</button>
@@ -496,7 +496,7 @@ export function RegisterScreen() {
       {mode === 'join' && (
         <div className="mt-7 flex flex-col gap-3">
           <label className="text-xs font-bold text-td-muted">Centre join code</label>
-          <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary text-center tracking-[0.2em] font-bold" />
+          <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary text-center tracking-[0.2em] font-bold" />
           <PrimaryButton onClick={() => code.trim().length >= 4 ? run(() => joinCentre(code)) : undefined}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
           <div className="text-[12px] text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
           <button onClick={() => setMode('choose')} className="text-[13px] text-td-muted font-bold py-2 cursor-pointer border-none bg-transparent">Back</button>
@@ -572,7 +572,7 @@ export function DeniedScreen() {
             autoFocus value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && submit()}
-            placeholder="e.g. 7X2K9Q"
+            placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true"
             className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary text-center tracking-[0.2em] font-bold"
           />
           <button onClick={submit} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[14px] rounded-2xl cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>

@@ -97,7 +97,10 @@ function Toast() {
   const toast = useDashboard(s => s.toast)
   if (!toast) return null
   return (
-    <div className="absolute left-5 right-5 bottom-[104px] bg-td-dark text-white py-3.5 px-4 rounded-[14px] text-[13.5px] font-semibold text-center z-30 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease]">
+    // Every validation message in the app arrives here ("Enter your full name",
+    // "Invalid code"). Without a live region a screen-reader user submitted the
+    // form, heard nothing, and had no way to know why it did not go through.
+    <div role="status" aria-live="polite" className="absolute left-5 right-5 bottom-[104px] bg-td-dark text-white py-3.5 px-4 rounded-[14px] text-[13.5px] font-semibold text-center z-30 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease]">
       {toast}
     </div>
   )

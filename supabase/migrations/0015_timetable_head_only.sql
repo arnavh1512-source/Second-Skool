@@ -25,7 +25,13 @@
 --   * centre scoping is unchanged on both — no cross-centre access either way
 -- ============================================================================
 
-drop policy if exists timetable_staff on public.timetable;
+-- Idempotent: every policy this file owns is dropped first, so a re-run (or a
+-- half-finished run) lands in the same place instead of failing with 42710.
+drop policy if exists timetable_staff        on public.timetable;
+drop policy if exists timetable_staff_read   on public.timetable;
+drop policy if exists timetable_head_insert  on public.timetable;
+drop policy if exists timetable_head_update  on public.timetable;
+drop policy if exists timetable_head_delete  on public.timetable;
 
 -- Read: any approved staff member, own centre only.
 create policy timetable_staff_read on public.timetable
