@@ -3,6 +3,7 @@ import { enablePush, pushSupported, sendPush } from '../../lib/push'
 import { genStudentCode } from '../codes'
 import { dbErr } from '../db'
 import { isoDay } from '../format'
+import { LIMITS, capLength, clampText } from '../validate'
 import type { Slice } from '../slice'
 import { mapSnapshot } from '../snapshot'
 import type { State, Student, Tab } from '../types'
@@ -13,8 +14,19 @@ type Keys =
   | 'loadStudentByCode'
 
 export const createStudentsSlice: Slice<Keys> = (set, get) => ({
+  // Free text is capped here rather than at each input, because this is the
+  // single door every roster edit goes through. Without it a 500-character
+  // name propagated into fees, results, rankings, the timetable and the
+  // student's own dashboard, breaking every layout it touched.
   setStudentField: (patch) => set((s) => {
-    const arr = [...s.students]; arr[s.editIndex] = { ...arr[s.editIndex], ...patch }
+    const capped = {
+      ...patch,
+      ...(patch.name   !== undefined && { name:   capLength(patch.name,   LIMITS.name) }),
+      ...(patch.klass  !== undefined && { klass:  capLength(patch.klass,  LIMITS.klass) }),
+      ...(patch.school !== undefined && { school: capLength(patch.school, LIMITS.school) }),
+      ...(patch.parent !== undefined && { parent: capLength(patch.parent, LIMITS.parent) }),
+    }
+    const arr = [...s.students]; arr[s.editIndex] = { ...arr[s.editIndex], ...capped }
     const updated = arr[s.editIndex]
     if (updated.dbId) {
       supabase.from('students').update({
@@ -39,8 +51,12 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     if (!f.klass.trim()) { get().notify('Select your class'); return }
     if (f.school.trim().length < 2) { get().notify('Enter your school name'); return }
     const { data, error } = await supabase.rpc('student_signup', {
-      p_join_code: f.joinCode.trim(), p_name: f.name.trim(), p_parent: f.parent.trim(),
-      p_class: f.klass.trim(), p_school: f.school.trim(), p_address: f.address.trim() || null,
+      p_join_code: f.joinCode.trim(),
+      p_name: clampText(f.name, LIMITS.name),
+      p_parent: clampText(f.parent, LIMITS.parent),
+      p_class: clampText(f.klass, LIMITS.klass),
+      p_school: clampText(f.school, LIMITS.school),
+      p_address: clampText(f.address, LIMITS.address) || null,
     })
     if (error || !data) { get().notify(error?.message || 'Could not register — check the centre code'); return }
     const d = data as { code: string; name: string; centre: string }
@@ -71,10 +87,18 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
   },
 
   addStudent: () => {
-    const { newStudent: ns, students, branchesList } = get()
-    if (!ns.name.trim()) { get().notify('Enter student name'); return }
-    if (!ns.parent.trim()) { get().notify('Enter parent contact'); return }
-    if (ns.parent && !/^\+?\d[\d\s\-]{6,}$/.test(ns.parent)) { get().notify('Invalid phone number'); return }
+    const { newStudent: raw, students, branchesList } = get()
+    if (!raw.name.trim()) { get().notify('Enter student name'); return }
+    if (!raw.parent.trim()) { get().notify('Enter parent contact'); return }
+    if (raw.parent && !/^\+?\d[\d\s\-]{6,}$/.test(raw.parent)) { get().notify('Invalid phone number'); return }
+    const ns = {
+      ...raw,
+      name: clampText(raw.name, LIMITS.name),
+      klass: clampText(raw.klass, LIMITS.klass),
+      school: clampText(raw.school, LIMITS.school),
+      parent: clampText(raw.parent, LIMITS.parent),
+      address: clampText(raw.address, LIMITS.address),
+    }
     let code = genStudentCode()
     while (students.some(s => s.id === code)) code = genStudentCode()
     const student: Student = {

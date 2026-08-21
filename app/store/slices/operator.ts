@@ -1,12 +1,26 @@
 import { supabase } from '../../lib/supabase'
 import type { Slice } from '../slice'
 
+// Raised when there is genuinely no usable session left. The console matches on
+// this to offer a way back in, so keep the two in step.
+export const SESSION_EXPIRED = 'Session expired — sign in again'
+
+// getSession() hands back whatever is in storage without reaching for a new
+// access token, so a tab left open past expiry saw "session expired" while a
+// perfectly good refresh token sat unused beside it. Try the refresh before
+// declaring the operator signed out.
+export async function operatorToken(): Promise<string | null> {
+  const { data: s } = await supabase.auth.getSession()
+  if (s.session?.access_token) return s.session.access_token
+  const { data: r } = await supabase.auth.refreshSession()
+  return r.session?.access_token ?? null
+}
+
 // Operator-only writes. Throws with the server's own message so the console can
 // show why something was refused instead of a generic failure.
 async function devPost(body: Record<string, string>): Promise<void> {
-  const { data: s } = await supabase.auth.getSession()
-  const token = s.session?.access_token
-  if (!token) throw new Error('Session expired — sign in again')
+  const token = await operatorToken()
+  if (!token) throw new Error(SESSION_EXPIRED)
   const res = await fetch('/api/dev', {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
@@ -27,8 +41,7 @@ export const createOperatorSlice: Slice<Keys> = (set, get) => ({
   checkDevAccess: async () => {
     if (get().devAllowed !== null) return
     try {
-      const { data: s } = await supabase.auth.getSession()
-      const token = s.session?.access_token
+      const token = await operatorToken()
       if (!token) { set({ devAllowed: false }); return }
       const res = await fetch('/api/dev?probe=1', { headers: { authorization: `Bearer ${token}` }, cache: 'no-store' })
       const json = await res.json().catch(() => ({}))

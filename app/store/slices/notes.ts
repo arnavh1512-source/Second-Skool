@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase'
 import { dbErr } from '../db'
+import { LIMITS, clampText, safeLinkUrl } from '../validate'
 import type { Slice } from '../slice'
 
 type Keys = 'loadNotes' | 'addNote' | 'deleteNote' | 'loadStudentNotes'
@@ -19,12 +20,17 @@ export const createNotesSlice: Slice<Keys> = (set, get) => ({
   addNote: async (n) => {
     if (!n.title.trim()) { get().notify('Enter a title'); return }
     if (!n.body.trim() && !n.fileUrl && !n.linkUrl) { get().notify('Add a note, file, or link'); return }
+    // Any scheme used to be stored verbatim, so `javascript:alert(1)` became a
+    // link served to every student in the class. React will not navigate one
+    // today, but the row is still handed to whatever reads the API next.
+    const linkUrl = safeLinkUrl(n.linkUrl)
+    if (n.linkUrl.trim() && !linkUrl) { get().notify('Video link must be a full https:// address'); return }
     const { data, error } = await supabase.from('notes').insert({
-      title: n.title.trim(), subject: n.subject || null, class: n.klass,
-      body: n.body.trim() || null, file_url: n.fileUrl || null, link_url: n.linkUrl.trim() || null,
+      title: clampText(n.title, LIMITS.title), subject: n.subject || null, class: n.klass,
+      body: n.body.trim() || null, file_url: n.fileUrl || null, link_url: linkUrl,
     }).select('id').single()
     if (error) { get().notify('Could not save note'); return }
-    set((s) => ({ notesList: [{ dbId: data.id, ...n }, ...s.notesList] }))
+    set((s) => ({ notesList: [{ dbId: data.id, ...n, linkUrl: linkUrl ?? '' }, ...s.notesList] }))
     get().notifyClass(n.klass, 'New study material', n.subject ? `${n.title.trim()} · ${n.subject}` : n.title.trim(), 'notes')
     get().notify('Note shared with the class')
   },

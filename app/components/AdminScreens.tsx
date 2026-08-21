@@ -388,7 +388,15 @@ export function ReportsScreen() {
           )}
 
           <div className="bg-[#f4f6fb] border border-[#e6eaf2] rounded-[14px] p-3.5 text-[12.5px] text-td-muted mb-4 lg:max-w-xl">
-            {r.unassigned_students > 0 && <div>Unassigned students: <span className="font-bold text-td-text">{r.unassigned_students}</span></div>}
+            {/* Students created before any branch existed belong to no branch, so
+                the per-branch totals above legitimately exclude them. Buried as a
+                grey footnote this read as "complete"; it now looks like the
+                caveat it is. */}
+            {r.unassigned_students > 0 && (
+              <div className="bg-[#fcf3e3] border border-[#f0dfbc] rounded-[12px] p-2.5 text-td-amber font-bold">
+                {r.unassigned_students} student{r.unassigned_students === 1 ? '' : 's'} not assigned to any branch — they are not counted in the per-branch totals above.
+              </div>
+            )}
             <div>Tests conducted this {period === 7 ? 'week' : 'month'}: <span className="font-bold text-td-text">{r.tests_this_week}</span></div>
           </div>
 

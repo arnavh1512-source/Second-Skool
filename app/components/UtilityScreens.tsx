@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, type Screen, type Student } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, LIMITS, clampText, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
@@ -25,9 +25,12 @@ export function FeesScreen() {
     if (!selStudent) { notify('Select a student'); return }
     const amt = Number(amount)
     if (!amt || amt <= 0) { notify('Enter a valid amount'); return }
+    // fees.amount is numeric(10,2), so anything larger used to be rejected by
+    // Postgres with an error the head never saw — the form just sat there.
+    if (amt > LIMITS.feeAmount) { notify(`Amount cannot exceed ₹${LIMITS.feeAmount.toLocaleString('en-IN')}`); return }
     if (!period.trim()) { notify('Enter the fee period'); return }
     if (!dueDate) { notify('Select a due date'); return }
-    addFee(selStudent, amt, period.trim(), dueDate)
+    addFee(selStudent, amt, clampText(period, LIMITS.period), dueDate)
     setSelStudent(''); setAmount(''); setPeriod(''); setDueDate(''); setShowForm(false)
   }
 

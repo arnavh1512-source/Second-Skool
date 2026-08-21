@@ -116,6 +116,7 @@ export interface Actions {
   saveAttendance: (roster: Student[]) => void
   saveMeeting: (title: string, type: string, date: string, time: string) => void
   saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => Promise<void>
+  deleteAssignment: (dbId: string) => Promise<void>
   saveReminder: (type: string, message: string, targetClass: string, filter?: string) => void
   notifyClass: (klass: string, title: string, detail: string, icon: IconName) => void
   addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => void

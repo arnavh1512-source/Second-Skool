@@ -1,9 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useDashboard } from '../store'
+import { useDashboard, SESSION_EXPIRED, operatorToken } from '../store'
 import { ScreenHeader } from './Shell'
-import { supabase } from '../lib/supabase'
 
 // ---- shape of /api/dev ------------------------------------------------------
 type Counts = { approved: number; pending: number; rejected: number }
@@ -72,9 +71,8 @@ const day = (iso: string) =>
 // Kept outside the component so the mount effect can call it without touching
 // React state synchronously — every setState below happens in a callback.
 async function fetchSnapshot(): Promise<Snapshot> {
-  const { data: s } = await supabase.auth.getSession()
-  const token = s.session?.access_token
-  if (!token) throw new Error('Session expired — sign in again')
+  const token = await operatorToken()
+  if (!token) throw new Error(SESSION_EXPIRED)
   const res = await fetch('/api/dev', { headers: { authorization: `Bearer ${token}` }, cache: 'no-store' })
   const json = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(json?.error ?? `Request failed (${res.status})`)
@@ -82,7 +80,7 @@ async function fetchSnapshot(): Promise<Snapshot> {
 }
 
 export function DevConsoleScreen() {
-  const { exitDevConsole, devSeat, devEnterCentre, devLeaveCentre, devDeleteCentre } = useDashboard()
+  const { exitDevConsole, devSeat, devEnterCentre, devLeaveCentre, devDeleteCentre, signOut } = useDashboard()
   const [data, setData] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -155,8 +153,22 @@ export function DevConsoleScreen() {
         }
       />
 
+      {/* An expired session used to be a dead end: the message named the
+          problem and every control on the page — back, Refresh — led nowhere,
+          because the console sits outside the router and nothing here could
+          reach the sign-in screen. Say what to do and provide the way to do it. */}
       {error && (
-        <div className="bg-[#fdf3f0] border border-[#f4d8cf] text-td-red text-[13px] rounded-[14px] p-3.5 mb-4">{error}</div>
+        <div className="bg-[#fdf3f0] border border-[#f4d8cf] text-td-red text-[13px] rounded-[14px] p-3.5 mb-4 flex items-center gap-3">
+          <span className="flex-1 min-w-0">{error}</span>
+          {error === SESSION_EXPIRED && (
+            <button
+              onClick={signOut}
+              className="text-[12px] font-extrabold py-2 px-3 rounded-[10px] cursor-pointer border-none bg-td-red text-white shrink-0"
+            >
+              Sign in again
+            </button>
+          )}
+        </div>
       )}
 
       {devSeat && (

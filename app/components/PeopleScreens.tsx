@@ -94,7 +94,18 @@ export function EditStudentScreen() {
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Full name</label><input value={st.name} onChange={e => setStudentField({ name: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class / batch</label><input value={st.klass} onChange={e => setStudentField({ klass: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Attendance %</label><input value={st.attendance} onChange={e => setStudentField({ attendance: Number(e.target.value) })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+          {/* Attendance is computed from the attendance register, not stored on
+              the student. It used to be an editable box that wrote to nothing:
+              setStudentField never persisted it and the next refresh recomputed
+              it, so a head who "corrected" a percentage watched it revert with
+              no explanation. Read-only, and it says where the number comes from. */}
+          <div>
+            <label htmlFor="stu-attendance" className="text-xs font-bold text-td-muted mb-[7px] block">Attendance %</label>
+            <output
+              id="stu-attendance"
+              className="w-full block border border-td-border bg-[#f7f9fc] rounded-[14px] p-[13px] text-sm text-td-muted"
+            >{st.attendance}% · from the register</output>
+          </div>
         </div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">School</label><input value={st.school} onChange={e => setStudentField({ school: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Parent contact</label><input value={st.parent} onChange={e => setStudentField({ parent: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>

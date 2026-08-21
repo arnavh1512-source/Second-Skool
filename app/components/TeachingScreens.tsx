@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useDashboard, REMINDER_TEMPLATES, initials, av } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
 import { ScreenHeader, PrimaryButton } from './Shell'
 import { Icon, type IconName } from './Icon'
 
@@ -276,22 +276,49 @@ export function ResultsScreen() {
     if (!testName.trim()) { notify('Enter test name'); return }
     if (!selKlass) { notify('Add students first'); return }
     if (!selSubject) { notify('Add a subject first (More → Subjects)'); return }
+    if (!isWholeNumber(maxMarks, 1, LIMITS.maxMarks)) { notify(`Max marks must be a whole number from 1 to ${LIMITS.maxMarks}`); return }
+    const max = Number(maxMarks)
+
+    // Validate every mark before writing anything. The old version ran Number(m)
+    // straight into an int column, so 51/50 published, notified the class and
+    // fed the ranking, and a stray letter became NaN. Marks are the most visible
+    // thing a parent sees; a wrong one is not undone by an apology later.
+    const entered = Object.entries(marks).filter(([, m]) => m.trim() !== '')
+    if (!entered.length) { notify('Enter at least one mark'); return }
+    for (const [idx, m] of entered) {
+      if (!isWholeNumber(m, 0, max)) {
+        notify(`${roster[Number(idx)]?.name ?? 'A student'}: marks must be a whole number from 0 to ${max}`)
+        return
+      }
+    }
+
     const { supabase } = await import('../lib/supabase')
     const subjectId = useDashboard.getState().subjects.find(s => s.name === selSubject)?.dbId
     const { data: test, error } = await supabase.from('tests').insert({
-      name: testName, subject_id: subjectId ?? null, class: selKlass,
-      max_marks: Number(maxMarks) || 50, date: new Date().toISOString().split('T')[0],
+      name: clampText(testName, LIMITS.title), subject_id: subjectId ?? null, class: selKlass,
+      max_marks: max, date: new Date().toISOString().split('T')[0],
     }).select().single()
     if (error || !test) { notify('Could not publish — try again'); return }
-    const resultRows = Object.entries(marks).map(([idx, m]) => {
-      const student = students.filter(s => s.klass === selKlass)[Number(idx)]
-      if (!student?.dbId || !m) return null
+
+    const resultRows = entered.map(([idx, m]) => {
+      const student = roster[Number(idx)]
+      if (!student?.dbId) return null
       return { test_id: test.id, student_id: student.dbId, marks: Number(m) }
     }).filter((r): r is NonNullable<typeof r> => r !== null)
-    if (resultRows.length) {
-      await supabase.from('results').insert(resultRows)
-      useDashboard.getState().notifyClass(selKlass, 'New results published', `${testName} · ${selSubject} — check your marks in the app`, 'results')
+
+    // The marks are the point of the test row, so a failed results insert means
+    // the publish failed. Drop the now-empty test instead of leaving an orphan,
+    // and never claim success or notify the class — the previous version ignored
+    // this error entirely and told the teacher, and every parent, that results
+    // were published when nothing had been written.
+    const { error: resultsError } = await supabase.from('results').insert(resultRows)
+    if (resultsError) {
+      await supabase.from('tests').delete().eq('id', test.id)
+      notify('Could not publish results — nothing was saved')
+      return
     }
+
+    useDashboard.getState().notifyClass(selKlass, 'New results published', `${testName} · ${selSubject} — check your marks in the app`, 'results')
     notify('Results published & parents notified')
     setMarks({})
   }
@@ -338,7 +365,7 @@ export function ResultsScreen() {
 }
 
 export function AssignmentsScreen() {
-  const { back, assignmentsList, saveAssignment, subjects, students } = useDashboard()
+  const { back, assignmentsList, saveAssignment, deleteAssignment, subjects, students } = useDashboard()
   const [title, setTitle] = useState('')
   const [subject, setSubject] = useState('')
   const [klass, setKlass] = useState('')
@@ -378,10 +405,19 @@ export function AssignmentsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {assignmentsList.map(a => (
-            <div key={a.title + a.due} className="bg-white border border-td-border rounded-2xl p-3.5">
-              <div className="flex justify-between items-start">
+            <div key={a.dbId ?? a.title + a.due} className="bg-white border border-td-border rounded-2xl p-3.5">
+              <div className="flex justify-between items-start gap-2">
                 <div className="text-[13.5px] font-bold text-td-dark">{a.title}</div>
-                <span className="text-[11px] font-bold text-td-amber bg-[#fcf3e3] py-1 px-[9px] rounded-[20px] whitespace-nowrap">Due {a.due}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[11px] font-bold text-td-amber bg-[#fcf3e3] py-1 px-[9px] rounded-[20px] whitespace-nowrap">Due {a.due}</span>
+                  {a.dbId && (
+                    <button
+                      onClick={() => deleteAssignment(a.dbId!)}
+                      aria-label={`Delete assignment ${a.title}`}
+                      className="border-none bg-transparent text-td-muted hover:text-td-red cursor-pointer p-1 leading-none text-base"
+                    >×</button>
+                  )}
+                </div>
               </div>
               <div className="text-xs text-td-muted mt-[5px]">{a.klass} · {a.total} students</div>
             </div>

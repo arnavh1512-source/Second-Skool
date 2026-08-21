@@ -1,10 +1,11 @@
 import { supabase } from '../../lib/supabase'
 import { isoDay } from '../format'
+import { LIMITS, clampText } from '../validate'
 import type { Slice } from '../slice'
 import type { AssignmentItem, BatchItem, BranchItem, SubjectItem } from '../types'
 
 type Keys =
-  | 'saveAssignment' | 'addBranch' | 'deleteBranch'
+  | 'saveAssignment' | 'deleteAssignment' | 'addBranch' | 'deleteBranch'
   | 'addSubject' | 'deleteSubject' | 'addBatch' | 'deleteBatch'
 
 // Every action here awaits its write and only then touches state. The previous
@@ -24,7 +25,7 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
     const subjectId = subjects.find(s => s.name === subject)?.dbId
 
     const { error } = await supabase.from('assignments').insert({
-      title, class: klass, due_date: isoDay(d),
+      title: clampText(title, LIMITS.title), class: klass, due_date: isoDay(d),
       instructions: instructions || null, subject_id: subjectId ?? null,
     })
     if (error) { get().notify('Could not create assignment — check your connection'); return }
@@ -33,6 +34,17 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
     // Only notify the class once the homework actually exists for them to open.
     get().notifyClass(klass, 'New homework', `${title} — due ${item.due}`, 'homework')
     get().notify('Assignment created · class notified')
+  },
+
+  // Homework outlives the students it was set for: the class roster is
+  // recomputed from whoever is in the class today, so deleting a student drops
+  // an assignment to "0 students" and leaves it on the teacher's screen with no
+  // way to clear it. Old assignments accumulated forever.
+  deleteAssignment: async (dbId) => {
+    const { error } = await supabase.from('assignments').delete().eq('id', dbId)
+    if (error) { get().notify('Could not remove assignment'); return }
+    set((s) => ({ assignmentsList: s.assignmentsList.filter(a => a.dbId !== dbId) }))
+    get().notify('Assignment removed')
   },
 
   addBranch: async (name, address, isMain) => {
