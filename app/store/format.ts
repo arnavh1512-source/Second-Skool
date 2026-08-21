@@ -19,6 +19,13 @@ export function timeAgo(dateStr: string): string {
 export const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
 export const rupee = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`
 
-// `YYYY-MM-DD` for the Postgres `date` columns. UTC, as every call site has
-// always computed it — one spelling so they can never drift apart.
-export const isoDay = (d: Date = new Date()) => d.toISOString().split('T')[0]
+// `YYYY-MM-DD` for the Postgres `date` columns, in the device's own timezone.
+//
+// Deliberately not toISOString(), which is UTC: the UTC day rolls at 05:30 IST,
+// so an early-morning class marked in India was filed under the previous date.
+// A teacher means "today" in the room they are standing in, so the business
+// date is the local one. One spelling, so the call sites can never drift.
+export const isoDay = (d: Date = new Date()) => {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}

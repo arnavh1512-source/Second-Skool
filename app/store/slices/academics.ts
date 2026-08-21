@@ -1,5 +1,4 @@
 import { supabase } from '../../lib/supabase'
-import { dbErr } from '../db'
 import { isoDay } from '../format'
 import type { Slice } from '../slice'
 import type { AssignmentItem, BatchItem, BranchItem, SubjectItem } from '../types'
@@ -8,86 +7,100 @@ type Keys =
   | 'saveAssignment' | 'addBranch' | 'deleteBranch'
   | 'addSubject' | 'deleteSubject' | 'addBatch' | 'deleteBatch'
 
+// Every action here awaits its write and only then touches state. The previous
+// version fired the query, updated the list and toasted success in the same
+// tick, so a rejected insert (offline, RLS, duplicate) still showed "added" and
+// left a row that existed only on screen until the next refresh removed it.
+// A head who saw "Branch added" had no way to know it had not been.
 export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
-  saveAssignment: (title, subject, klass, dueDate, instructions) => {
+  saveAssignment: async (title, subject, klass, dueDate, instructions) => {
     if (!title.trim()) { get().notify('Enter a title'); return }
-    const { assignmentsList, subjects } = get()
+    const { subjects } = get()
     const d = new Date(dueDate || Date.now())
     const item: AssignmentItem = {
       title, klass, due: `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`,
       submitted: 0, total: get().students.filter(s => s.klass.includes(klass.replace('Class ', ''))).length,
     }
     const subjectId = subjects.find(s => s.name === subject)?.dbId
-    supabase.from('assignments').insert({
+
+    const { error } = await supabase.from('assignments').insert({
       title, class: klass, due_date: isoDay(d),
       instructions: instructions || null, subject_id: subjectId ?? null,
-    }).then(dbErr('save assignment', get().notify))
-    set({ assignmentsList: [item, ...assignmentsList] })
+    })
+    if (error) { get().notify('Could not create assignment — check your connection'); return }
+
+    set((s) => ({ assignmentsList: [item, ...s.assignmentsList] }))
+    // Only notify the class once the homework actually exists for them to open.
     get().notifyClass(klass, 'New homework', `${title} — due ${item.due}`, 'homework')
     get().notify('Assignment created · class notified')
   },
 
-  addBranch: (name, address, isMain) => {
-    const { branchesList } = get()
+  addBranch: async (name, address, isMain) => {
     const branch: BranchItem = { name, address, main: isMain, students: 0, staff: 0 }
-    supabase.from('branches').insert({ name, address, is_main: isMain }).select().single()
-      .then(({ data }) => {
-        if (data) set((s) => ({ branchesList: s.branchesList.map(b => b.name === name && !b.dbId ? { ...b, dbId: data.id } : b) }))
-      })
-    set({ branchesList: [branch, ...branchesList] })
+    const { data, error } = await supabase
+      .from('branches').insert({ name, address, is_main: isMain }).select().single()
+    if (error || !data) { get().notify('Could not add branch — check your connection'); return }
+
+    set((s) => ({ branchesList: [{ ...branch, dbId: data.id }, ...s.branchesList] }))
     get().notify('Branch added')
   },
 
-  deleteBranch: (dbId) => {
+  deleteBranch: async (dbId) => {
+    const { error } = await supabase.from('branches').delete().eq('id', dbId)
+    if (error) { get().notify('Could not remove branch'); return }
     set((s) => ({ branchesList: s.branchesList.filter(b => b.dbId !== dbId) }))
-    supabase.from('branches').delete().eq('id', dbId).then(dbErr('delete branch', get().notify))
     get().notify('Branch removed')
   },
 
-  addSubject: (name) => {
-    const { subjects: list } = get()
-    if (list.some(s => s.name.toLowerCase() === name.toLowerCase())) { get().notify('Subject already exists'); return }
-    const item: SubjectItem = { name, dbId: '' }
-    supabase.from('subjects').insert({ name }).select().single()
-      .then(({ data }) => {
-        if (data) set((s) => ({ subjects: s.subjects.map(x => x.name === name && !x.dbId ? { ...x, dbId: data.id } : x) }))
-      })
-    set({ subjects: [...list, item] })
+  addSubject: async (name) => {
+    if (get().subjects.some(s => s.name.toLowerCase() === name.toLowerCase())) { get().notify('Subject already exists'); return }
+    const { data, error } = await supabase.from('subjects').insert({ name }).select().single()
+    if (error || !data) { get().notify('Could not add subject — check your connection'); return }
+
+    const item: SubjectItem = { name, dbId: data.id }
+    set((s) => ({ subjects: [...s.subjects, item] }))
     get().notify(`Subject "${name}" added`)
   },
 
-  deleteSubject: (dbId) => {
+  deleteSubject: async (dbId) => {
     const name = get().subjects.find(x => x.dbId === dbId)?.name
     // Remove everywhere: the subject row (DB cascades its tests/results;
     // assignments keep the record but drop the subject label) plus any
-    // timetable periods that reference it by name.
+    // timetable periods that reference it by name. The subject row goes first —
+    // if it fails there is nothing to reconcile and the UI is left untouched.
+    const { error } = await supabase.from('subjects').delete().eq('id', dbId)
+    if (error) { get().notify('Could not remove subject'); return }
+    if (name) {
+      const { error: periodErr } = await supabase.from('timetable').delete().eq('subject', name)
+      // The subject is already gone, so this is a partial failure, not a total
+      // one. Say so rather than claiming a clean removal.
+      if (periodErr) get().notify('Subject removed, but its timetable periods could not be cleared')
+    }
+
     set((s) => ({
       subjects: s.subjects.filter(x => x.dbId !== dbId),
       timetableData: Object.fromEntries(Object.entries(s.timetableData).map(([d, rows]) => [d, rows.filter(p => p[2] !== name)])),
       schedule: s.schedule.filter(c => c.subject !== name),
     }))
-    supabase.from('subjects').delete().eq('id', dbId).then(dbErr('delete subject', get().notify))
-    if (name) supabase.from('timetable').delete().eq('subject', name).then(dbErr('remove periods', get().notify))
     get().notify('Subject removed everywhere')
   },
 
-  addBatch: (name) => {
-    const { batches: list } = get()
-    if (list.some(b => b.name.toLowerCase() === name.toLowerCase())) { get().notify('Batch already exists'); return }
-    const item: BatchItem = { name, dbId: '' }
-    supabase.from('batches').insert({ name }).select().single()
-      .then(({ data }) => {
-        if (data) set((s) => ({ batches: s.batches.map(x => x.name === name && !x.dbId ? { ...x, dbId: data.id } : x) }))
-      })
-    set({ batches: [...list, item] })
+  addBatch: async (name) => {
+    if (get().batches.some(b => b.name.toLowerCase() === name.toLowerCase())) { get().notify('Batch already exists'); return }
+    const { data, error } = await supabase.from('batches').insert({ name }).select().single()
+    if (error || !data) { get().notify('Could not add batch — check your connection'); return }
+
+    const item: BatchItem = { name, dbId: data.id }
+    set((s) => ({ batches: [...s.batches, item] }))
     get().notify(`Batch "${name}" added`)
   },
 
-  deleteBatch: (dbId) => {
+  deleteBatch: async (dbId) => {
     // Remove the batch row only. Students already assigned keep their batch
     // label (historical); the head can reassign them from the roster if needed.
+    const { error } = await supabase.from('batches').delete().eq('id', dbId)
+    if (error) { get().notify('Could not remove batch'); return }
     set((s) => ({ batches: s.batches.filter(x => x.dbId !== dbId) }))
-    supabase.from('batches').delete().eq('id', dbId).then(dbErr('delete batch', get().notify))
     get().notify('Batch removed')
   },
 })

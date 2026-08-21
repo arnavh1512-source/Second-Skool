@@ -222,6 +222,17 @@ function watchPermission(read: () => void): () => void {
   }
 }
 
+// A student whose browser has blocked notifications cannot grant them from
+// inside the page — requestPermission() is a silent no-op once denied — so the
+// gate had no exit: their only options were "Turn on reminders" (does nothing)
+// and "Sign out". Marks, fees and homework were unreachable because of a
+// browser setting they may not be able to change on a borrowed phone. This flag
+// lets a *blocked* student continue anyway. It is deliberately not offered
+// while permission is still 'default': there the prompt genuinely works, and
+// the centre's whole reason for the gate is that reminders get switched on.
+const BYPASS_KEY = 'notif_gate_bypass'
+const gateBypassed = () => typeof window !== 'undefined' && localStorage.getItem(BYPASS_KEY) === '1'
+
 // True once we know a student has not granted notification permission.
 // Deliberately starts false: gating on the very first paint, before the effect
 // has read the real value, would flash the gate at students who already
@@ -229,7 +240,13 @@ function watchPermission(read: () => void): () => void {
 // permission to grant, so holding them would lock them out permanently.
 export function useNotificationGate(): boolean {
   const [gated, setGated] = useState(false)
-  useEffect(() => watchPermission(() => setGated(pushSupported() && Notification.permission !== 'granted')), [])
+  useEffect(() => watchPermission(() => {
+    const granted = Notification.permission === 'granted'
+    // Permission granted later clears the bypass, so a student who fixes it in
+    // browser settings goes back to the normal (gated-if-revoked) behaviour.
+    if (granted && gateBypassed()) localStorage.removeItem(BYPASS_KEY)
+    setGated(pushSupported() && !granted && !gateBypassed())
+  }), [])
   return gated
 }
 
@@ -280,6 +297,13 @@ export function NotificationGateScreen() {
             <li>Switch it to <span className="font-bold text-td-text">Allow</span></li>
             <li>Come back here — this screen clears on its own</li>
           </ol>
+          <button
+            onClick={() => { localStorage.setItem(BYPASS_KEY, '1'); window.dispatchEvent(new Event(PERM_EVENT)) }}
+            className="mt-3 w-full text-[12.5px] font-bold text-td-primary py-2.5 cursor-pointer border-none bg-transparent"
+          >
+            Continue without reminders
+          </button>
+          <div className="text-[11.5px] text-td-subtle leading-relaxed mt-1">You will not be told about tests, homework or fees until you allow them.</div>
         </div>
       ) : (
         <div className="mt-7 w-full max-w-[320px]">

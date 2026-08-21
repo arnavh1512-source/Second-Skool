@@ -193,7 +193,10 @@ export function TimetableScreen() {
 export function AttendanceScreen() {
   const { attClass, att, students, back, set, toggleAtt, saveAttendance } = useDashboard()
   const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
-  const roster = students.filter(s => s.klass === attClass).map(s => s.name)
+  // Student objects, not names — the roster is passed straight to saveAttendance,
+  // which needs the database id. Resolving by name broke centres with two
+  // students of the same name (both mapped to the first one's record).
+  const roster = students.filter(s => s.klass === attClass)
   const absentCount = roster.reduce((a, _, i) => a + (att[i] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 
@@ -235,12 +238,12 @@ export function AttendanceScreen() {
 
           <div className="text-xs text-td-subtle font-semibold mb-2.5">Tap a student to toggle present / absent</div>
           <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
-            {roster.map((name, i) => {
+            {roster.map((s, i) => {
               const absent = att[i] === 'absent'
               return (
-                <button key={name} onClick={() => toggleAtt(i)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? '#fdecea' : '#fff', borderColor: absent ? '#f4c4bc' : '#e6eaf2' }}>
-                  <div className="w-[38px] h-[38px] rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(name)}</div>
-                  <div className="flex-1 text-[13.5px] font-bold text-td-dark">{name}</div>
+                <button key={s.dbId ?? s.id ?? i} onClick={() => toggleAtt(i)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? '#fdecea' : '#fff', borderColor: absent ? '#f4c4bc' : '#e6eaf2' }}>
+                  <div className="w-[38px] h-[38px] rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
+                  <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
                   <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: absent ? '#e8553c' : '#2fa36b' }}>
                     <span className="w-[9px] h-[9px] rounded-full" style={{ background: absent ? '#e8553c' : '#2fa36b' }} />
                     {absent ? 'Absent' : 'Present'}
@@ -265,7 +268,7 @@ export function ResultsScreen() {
   const [marks, setMarks] = useState<Record<number, string>>({})
   const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
   const selKlass = klass || classes[0] || ''
-  const roster = students.filter(s => s.klass === selKlass).map(s => s.name)
+  const roster = students.filter(s => s.klass === selKlass)
   const subjectNames = subjects.map(s => s.name)
   const selSubject = subject || subjectNames[0] || ''
 
@@ -319,10 +322,10 @@ export function ResultsScreen() {
         <div className="text-center text-td-muted text-sm py-8">No students in {selKlass || 'this class'}</div>
       ) : (
         <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
-          {roster.map((name, i) => (
-            <div key={name} className="border border-td-border bg-white rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
-              <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(name)}</div>
-              <div className="flex-1 text-[13.5px] font-bold text-td-dark">{name}</div>
+          {roster.map((s, i) => (
+            <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-white rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
+              <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
+              <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
               <input value={marks[i] ?? ''} onChange={e => setMarks(m => ({ ...m, [i]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-[11px] py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
               <span className="text-[13px] text-td-subtle font-semibold">/{maxMarks}</span>
             </div>

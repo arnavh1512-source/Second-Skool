@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { initialState } from '../initial-state'
 import { landingScreen } from '../navigation'
 import type { Slice } from '../slice'
 import type { Screen, StaffMember, StaffStatus, Tab } from '../types'
@@ -53,16 +54,23 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
     get().notify('Access removed'); await get().loadStaff()
   },
 
+  // Wipe every piece of state back to the initial value rather than listing the
+  // keys to clear. The hand-written list this replaced had fallen six keys
+  // behind the store — centre name, logo, join code and the three report
+  // objects survived a sign-out, so on a shared device the next head saw the
+  // previous centre's data until their own load landed. Spreading initialState
+  // means a key added to a slice tomorrow is cleared here for free.
   signOut: () => {
     supabase.auth.signOut()
     if (typeof window !== 'undefined') localStorage.removeItem('student_code')
     set({
-      role: null, googleEmail: '', screen: 'home' as Screen, tab: 'home' as Tab,
-      supabaseUserId: null, staffStatus: 'none', headExists: false, staffList: [], devAllowed: null, devConsoleOpen: false, devSeat: null,
-      teachers: [], students: [], branchesList: [], meetingsList: [], assignmentsList: [],
-      timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
-      stuReminders: [], stuNotifications: [], stuAttendanceLog: [], stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null, stuNotes: [],
-      currentStudentDbId: null, stuPendingFee: null, stuPending: null, stuDenied: null, pendingStudents: [], studentJoinCode: '',
+      ...initialState,
+      // The two things that must not come back as their initial value: the app
+      // has finished deciding who you are (it is nobody), and you land on the
+      // sign-in screen rather than the pre-auth splash.
+      authLoading: false,
+      screen: 'home' as Screen,
+      tab: 'home' as Tab,
     })
     get().notify('Signed out')
   },

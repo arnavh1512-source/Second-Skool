@@ -54,13 +54,19 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     })
   },
 
-  deleteStudent: () => {
+  // Deleting a student cascades their attendance, results, fees and notes, so
+  // this is the most destructive action in the app. It waits for the delete to
+  // land before touching the roster — the previous version removed the row and
+  // said "Student removed" immediately, so a failed delete left the head
+  // believing a student was gone while every record was still in the database.
+  deleteStudent: async () => {
     const { editIndex, students } = get()
     const student = students[editIndex]
     if (student?.dbId) {
-      supabase.from('students').delete().eq('id', student.dbId).then(dbErr('delete student', get().notify))
+      const { error } = await supabase.from('students').delete().eq('id', student.dbId)
+      if (error) { get().notify('Could not remove student — nothing was deleted'); return }
     }
-    set({ students: students.filter((_, i) => i !== editIndex), editIndex: 0 })
+    set((s) => ({ students: s.students.filter((_, i) => i !== editIndex), editIndex: 0 }))
     get().notify('Student removed'); get().back()
   },
 
