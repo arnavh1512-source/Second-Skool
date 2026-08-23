@@ -7,7 +7,7 @@
 # artifact.
 #
 # SETUP — one secret, then this runs on its own:
-#   Supabase Dashboard > Connect > Session pooler > copy the URI
+#   Supabase Dashboard > Connect > Direct > Session pooler > copy the URI
 #   GitHub > Settings > Secrets and variables > Actions > New repository secret
 #     Name:  SUPABASE_DB_URL
 #     Value: postgresql://postgres.<ref>:<password>@aws-...pooler.supabase.com:5432/postgres
@@ -17,10 +17,22 @@
 #   it one. Direct connections are IPv6-only and GitHub runners are IPv4, so
 #   the pooler is the only route that works from here.
 #
+#   The password must not contain characters that need percent-encoding in a
+#   URI (@ / : ? # %). Use a long alphanumeric one and that whole class of
+#   confusing auth failures goes away.
+#
 # OPTIONAL — add a BACKUP_PASSPHRASE secret and the dumps are encrypted at
 # rest with GPG. Without it they are plain gzip, which is acceptable only
 # because this repo is private. If the repo is ever made public, artifacts
 # become world-readable and this secret stops being optional.
+#
+# WHY A CONTAINER: pg_dump refuses to dump a server newer than itself, and
+# this database is Postgres 17 while the runner image ships an older client.
+# The first version of this workflow added the PGDG apt repository to get the
+# pg17 client — three commands that each assume the runner image has not
+# already done something similar, and it failed on the first real run. The
+# official postgres image already contains exactly the client we need, so the
+# whole problem is better deleted than debugged.
 #
 # Restoring is documented in supabase/BACKUP.md. A backup nobody has tried to
 # restore is a guess, not a backup — do the drill once.
@@ -41,32 +53,34 @@ concurrency:
 jobs:
   dump:
     runs-on: ubuntu-latest
+    # Debian-based on purpose. The alpine variant is musl, and GitHub's
+    # JavaScript actions (upload-artifact) want glibc.
+    container: postgres:17-bookworm
     timeout-minutes: 20
     permissions:
       contents: read
 
     steps:
-      - name: Fail early if the connection string is missing
+      - name: Check the toolchain and the secret
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::SUPABASE_DB_URL is not set. See the setup notes at the top of this file."
+          set -euo pipefail
+          pg_dump --version
+          if [ -z "${SUPABASE_DB_URL:-}" ]; then
+            echo "::error::SUPABASE_DB_URL is not set. Add it under Settings > Secrets and variables > Actions as a repository *secret*, not a variable."
             exit 1
           fi
-
-      # The runner ships an older client. pg_dump refuses to dump a server
-      # newer than itself, and this database is Postgres 17.
-      - name: Install PostgreSQL 17 client
-        run: |
-          sudo install -d /usr/share/postgresql-common/pgdg
-          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-            | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
-          echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
-            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
-          pg_dump --version
+          # Catch the two connection strings that look right and are not,
+          # before pg_dump spends the timeout finding out the hard way.
+          case "$SUPABASE_DB_URL" in
+            *:6543/*)
+              echo "::error::That is the transaction pooler (port 6543). pg_dump needs a session — use the Session pooler on port 5432."
+              exit 1 ;;
+            *db.*.supabase.co*)
+              echo "::error::That is the direct connection, which is IPv6-only. GitHub runners are IPv4 — use the Session pooler (host ends in pooler.supabase.com)."
+              exit 1 ;;
+          esac
 
       - name: Dump application data
         env:
@@ -118,6 +132,7 @@ jobs:
           set -euo pipefail
           gzip out/public.sql out/auth-users.sql
           if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
+            command -v gpg >/dev/null || { apt-get update -qq && apt-get install -y -qq gnupg; }
             for f in out/*.gz; do
               gpg --batch --yes --symmetric --cipher-algo AES256 \
                   --passphrase "$BACKUP_PASSPHRASE" "$f"
