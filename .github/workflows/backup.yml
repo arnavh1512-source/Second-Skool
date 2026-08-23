@@ -87,6 +87,13 @@ jobs:
               echo "::error::That is the direct connection, which is IPv6-only. GitHub runners are IPv4 — use the Session pooler (host ends in pooler.supabase.com)."
               exit 1 ;;
           esac
+          # The dashboard hands you the URI with the password still written as
+          # a bracketed placeholder. It looks like a filled-in string.
+          case "$SUPABASE_DB_URL" in
+            *'[YOUR-PASSWORD]'*|*'[your-password]'*|*'<password>'*)
+              echo "::error::The password is still the placeholder from the dashboard. Replace [YOUR-PASSWORD], brackets included, with the real database password."
+              exit 1 ;;
+          esac
           # The pooler multiplexes every project on one host, so it needs the
           # tenant in the username. Plain `postgres` gets you a bare
           # "password authentication failed" that reads like a wrong password.
