@@ -34,6 +34,12 @@
 # official postgres image already contains exactly the client we need, so the
 # whole problem is better deleted than debugged.
 #
+# WHY `set -eu` AND NOT `set -euo pipefail`: the runner does not find a
+# bash inside this container and falls back to `sh -e {0}`, which is dash.
+# dash has no `pipefail` and exits 2 on the attempt, killing the step on its
+# very first line. Nothing here pipes anything, so pipefail was never
+# earning its keep. Keep every script in this file POSIX sh.
+#
 # Restoring is documented in supabase/BACKUP.md. A backup nobody has tried to
 # restore is a guess, not a backup — do the drill once.
 
@@ -65,7 +71,7 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          set -euo pipefail
+          set -eu
           pg_dump --version
           if [ -z "${SUPABASE_DB_URL:-}" ]; then
             echo "::error::SUPABASE_DB_URL is not set. Add it under Settings > Secrets and variables > Actions as a repository *secret*, not a variable."
@@ -86,7 +92,7 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          set -euo pipefail
+          set -eu
           mkdir -p out
           # Schema plus data for everything the app owns. No --clean: a file
           # full of DROP statements is a loaded gun sitting in an artifact.
@@ -99,7 +105,7 @@ jobs:
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          set -euo pipefail
+          set -eu
           # Data only. A fresh Supabase project builds the auth schema itself,
           # so the structure is never what you want to restore — the rows are.
           pg_dump "$SUPABASE_DB_URL" \
@@ -113,7 +119,7 @@ jobs:
       # looks like success on the runs page for months.
       - name: Verify the dumps are real
         run: |
-          set -euo pipefail
+          set -eu
           for f in out/public.sql out/auth-users.sql; do
             size=$(stat -c%s "$f")
             echo "$f — $size bytes"
@@ -129,7 +135,7 @@ jobs:
         env:
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          set -euo pipefail
+          set -eu
           gzip out/public.sql out/auth-users.sql
           if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
             command -v gpg >/dev/null || { apt-get update -qq && apt-get install -y -qq gnupg; }
