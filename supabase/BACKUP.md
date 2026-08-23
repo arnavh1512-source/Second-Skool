@@ -13,15 +13,25 @@ GitHub artifact for 90 days.
 
 One secret, once.
 
-1. Supabase Dashboard → **Connect** → **Session pooler** → copy the URI.
-   It looks like:
+1. Supabase Dashboard → **Connect** → the **Direct / Connection string** tab →
+   Connection Method: **Session pooler** → copy the URI. It looks like:
    ```
    postgresql://postgres.lfrxlignexqzresgymlx:PASSWORD@aws-N-ap-south-1.pooler.supabase.com:5432/postgres
    ```
    It has to be the **session** pooler on port **5432**. The transaction pooler
    (6543) does not hold a session open and `pg_dump` cannot work through it.
    The direct connection is IPv6-only and GitHub's runners are IPv4, so the
-   pooler is the only route in.
+   pooler is the only route in. Two tells that you copied the right one: the
+   user is `postgres.<ref>` rather than plain `postgres`, and the host ends in
+   `pooler.supabase.com` rather than `supabase.co`. The workflow checks both
+   and fails with a readable message rather than a timeout.
+
+   Ignore the "Enable IPv4 add-on" banner on that tab — it is a paid add-on
+   for a problem the session pooler solves for free.
+
+   The password must not contain characters that need percent-encoding in a
+   URI (`@ / : ? # %`). If you are resetting it, pick a long alphanumeric one
+   and the whole class of confusing auth failures disappears.
 
 2. GitHub → Settings → Secrets and variables → Actions → New repository secret
    - Name: `SUPABASE_DB_URL`
