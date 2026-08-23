@@ -44,10 +44,15 @@ export interface TeacherActivity { name: string; email: string; is_head: boolean
 
 export interface StaffProfile { name: string; phone: string; subject: string; qualification: string }
 
+export type ToastKind = 'info' | 'error'
+
 export interface State {
   screen: Screen; tab: Tab; role: Role; origin: string | null
   attClass: string; att: Record<number, string>; rankSubject: string; ttDay: string
-  toast: string; editIndex: number
+  toast: string; toastKind: ToastKind; editIndex: number
+  // Mirrors navigator.onLine. Every write checks it before firing, so a teacher
+  // on dead mobile data is told up front instead of after a failed round-trip.
+  online: boolean
   staffStatus: StaffStatus; headExists: boolean; staffList: StaffMember[]; weeklyReport: WeeklyReport | null; studentReports: StudentReport[] | null; teacherActivity: TeacherActivity[] | null
   googleEmail: string; myName: string; myPhone: string; mySubject: string; myQualification: string; profileDone: boolean
   centreName: string; centreLogo: string; joinCode: string; studentJoinCode: string; reminderType: string; plan: string
@@ -99,7 +104,9 @@ export interface Actions {
   go: (screen: Screen, tab?: Tab) => void
   goFrom: (screen: Screen, tab: Tab, origin: string) => void
   back: () => void
-  notify: (msg: string) => void
+  notify: (msg: string, kind?: ToastKind) => void
+  dismissToast: () => void
+  setOnline: (v: boolean) => void
   set: (partial: Partial<State>) => void
 
   toggleAtt: (i: number) => void
@@ -113,22 +120,22 @@ export interface Actions {
   deleteStudent: () => Promise<void>
   saveTeacher: () => Promise<void>
   addStudent: () => void
-  saveAttendance: (roster: Student[]) => void
-  saveMeeting: (title: string, type: string, date: string, time: string) => void
-  saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => Promise<void>
+  saveAttendance: (roster: Student[]) => Promise<void>
+  saveMeeting: (title: string, type: string, date: string, time: string) => Promise<boolean>
+  saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => Promise<boolean>
   deleteAssignment: (dbId: string) => Promise<void>
   saveReminder: (type: string, message: string, targetClass: string, filter?: string) => void
   notifyClass: (klass: string, title: string, detail: string, icon: IconName) => void
-  addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => void
-  toggleFeeStatus: (idx: number) => void
-  addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => void
-  deleteTimetableEntry: (day: string, p: string[]) => void
-  updateTimetableEntry: (day: string, oldP: string[], startTime: string, endTime: string, subject: string, klass: string, room: string) => void
-  addBranch: (name: string, address: string, isMain: boolean) => Promise<void>
+  addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => Promise<boolean>
+  toggleFeeStatus: (idx: number) => Promise<void>
+  addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => Promise<boolean>
+  deleteTimetableEntry: (day: string, p: string[]) => Promise<void>
+  updateTimetableEntry: (day: string, oldP: string[], startTime: string, endTime: string, subject: string, klass: string, room: string) => Promise<boolean>
+  addBranch: (name: string, address: string, isMain: boolean) => Promise<boolean>
   deleteBranch: (dbId: string) => Promise<void>
-  addSubject: (name: string) => Promise<void>
+  addSubject: (name: string) => Promise<boolean>
   deleteSubject: (dbId: string) => Promise<void>
-  addBatch: (name: string) => Promise<void>
+  addBatch: (name: string) => Promise<boolean>
   deleteBatch: (dbId: string) => Promise<void>
   loadNotes: () => Promise<void>
   addNote: (n: { title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }) => Promise<void>

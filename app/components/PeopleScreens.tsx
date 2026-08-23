@@ -1,7 +1,7 @@
 'use client'
 
 import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
-import { ScreenHeader, PrimaryButton, BackButton, ChevronRight } from './Shell'
+import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState } from './Shell'
 import { whatsappShareUrl, studentCodeMessage } from '../lib/share'
 
 // Full school range so any tuition centre can pick the right standard.
@@ -32,7 +32,16 @@ export function StudentsScreen() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">{students.length === 0 ? 'No students added yet' : 'No results'}</div>
+        students.length === 0 ? (
+          <EmptyState
+            title="No students yet"
+            hint="Add your students once, and attendance, marks, fees and rankings all work from that list."
+            actionLabel={isAdmin ? 'Add your first student' : undefined}
+            onAction={isAdmin ? () => (origin === 'admin' ? goFrom('addStudent', 'students', 'admin') : go('addStudent', 'students')) : undefined}
+          />
+        ) : (
+          <EmptyState title="No matches" hint={`Nothing matches "${searchQuery}". Check the spelling, or clear the search.`} />
+        )
       ) : (
         <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {filtered.map((s, i) => {

@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { friendlyError } from '../errors'
 import { enablePush, pushSupported, sendPush } from '../../lib/push'
 import { genStudentCode } from '../codes'
 import { dbErr } from '../db'
@@ -46,10 +47,10 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
   // screen with their code (they save it now; it only works once approved).
   studentSignup: async () => {
     const { stuSignup: f } = get()
-    if (f.name.trim().length < 2) { get().notify('Enter your full name'); return }
-    if (!/^\+?\d[\d\s\-]{6,}$/.test(f.parent.trim())) { get().notify('Enter a valid parent phone number'); return }
-    if (!f.klass.trim()) { get().notify('Select your class'); return }
-    if (f.school.trim().length < 2) { get().notify('Enter your school name'); return }
+    if (f.name.trim().length < 2) { get().notify('Enter your full name', 'error'); return }
+    if (!/^\+?\d[\d\s\-]{6,}$/.test(f.parent.trim())) { get().notify('Enter a valid parent phone number', 'error'); return }
+    if (!f.klass.trim()) { get().notify('Select your class', 'error'); return }
+    if (f.school.trim().length < 2) { get().notify('Enter your school name', 'error'); return }
     const { data, error } = await supabase.rpc('student_signup', {
       p_join_code: f.joinCode.trim(),
       p_name: clampText(f.name, LIMITS.name),
@@ -58,7 +59,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       p_school: clampText(f.school, LIMITS.school),
       p_address: clampText(f.address, LIMITS.address) || null,
     })
-    if (error || !data) { get().notify(error?.message || 'Could not register — check the centre code'); return }
+    if (error || !data) { get().notify(friendlyError(error, 'register'), 'error'); return }
     const d = data as { code: string; name: string; centre: string }
     if (typeof window !== 'undefined') localStorage.setItem('student_code', d.code)
     // Let the head know a request is waiting (best-effort push).
@@ -80,7 +81,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     const student = students[editIndex]
     if (student?.dbId) {
       const { error } = await supabase.from('students').delete().eq('id', student.dbId)
-      if (error) { get().notify('Could not remove student — nothing was deleted'); return }
+      if (error) { get().notify('Could not remove student — nothing was deleted', 'error'); return }
     }
     set((s) => ({ students: s.students.filter((_, i) => i !== editIndex), editIndex: 0 }))
     get().notify('Student removed'); get().back()
@@ -88,9 +89,9 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
 
   addStudent: () => {
     const { newStudent: raw, students, branchesList } = get()
-    if (!raw.name.trim()) { get().notify('Enter student name'); return }
-    if (!raw.parent.trim()) { get().notify('Enter parent contact'); return }
-    if (raw.parent && !/^\+?\d[\d\s\-]{6,}$/.test(raw.parent)) { get().notify('Invalid phone number'); return }
+    if (!raw.name.trim()) { get().notify('Enter student name', 'error'); return }
+    if (!raw.parent.trim()) { get().notify('Enter parent contact', 'error'); return }
+    if (raw.parent && !/^\+?\d[\d\s\-]{6,}$/.test(raw.parent)) { get().notify('Invalid phone number', 'error'); return }
     const ns = {
       ...raw,
       name: clampText(raw.name, LIMITS.name),
@@ -111,7 +112,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       parent_contact: ns.parent, student_code: code, fee_status: 'Due',
       address: ns.address, branch_id: branchId ?? null,
     }).select().single().then(({ data, error }) => {
-      if (error) { get().notify('Could not save student — check connection'); return }
+      if (error) { get().notify('Could not save student — check connection', 'error'); return }
       if (data) {
         set((s) => ({ students: s.students.map(x => x.id === code && !x.dbId ? { ...x, dbId: data.id } : x) }))
         // Optional enrolment fee — creates the first fee record so the student
@@ -135,7 +136,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       p_fee: fee.trim() && amt > 0 ? amt : null,
       p_fee_due: feeDue || null,
     })
-    if (error) { get().notify(error.message || 'Could not approve'); return }
+    if (error) { get().notify(friendlyError(error, 'approve the student'), 'error'); return }
     // Batch isn't part of the approve RPC — persist it directly (RLS scopes the
     // update to the head's own centre). Non-blocking; roster refresh follows.
     if (batch && batch.trim()) {
@@ -148,14 +149,14 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
 
   rejectStudent: async (dbId) => {
     const { error } = await supabase.rpc('reject_student', { p_id: dbId })
-    if (error) { get().notify(error.message || 'Could not decline'); return }
+    if (error) { get().notify(friendlyError(error, 'decline the request'), 'error'); return }
     set((s) => ({ pendingStudents: s.pendingStudents.filter(p => p.dbId !== dbId) }))
     get().notify('Request declined')
   },
 
   loadStudentByCode: async (code, navigate = true) => {
     const trimmed = code.trim()
-    if (trimmed.length < 4) { if (navigate) get().notify('Enter your code'); return false }
+    if (trimmed.length < 4) { if (navigate) get().notify('Enter your code', 'error'); return false }
     const { data, error } = await supabase.rpc('get_student_snapshot', { p_code: trimmed })
     if (error || !data) {
       // Distinguish a transient throttle from a genuinely dead code.
@@ -165,7 +166,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       // hijacks a head's device when a stale test code is left in storage.
       // Never clear on a rate-limit: the code may be perfectly valid.
       if (!throttled && typeof window !== 'undefined') localStorage.removeItem('student_code')
-      if (navigate) get().notify(throttled ? error!.message : 'Invalid code — check with your teacher')
+      if (navigate) get().notify(throttled ? error!.message : 'Invalid code — check with your teacher', 'error')
       return false
     }
     const snap = data as { status?: string; student?: { name?: string; code?: string } }

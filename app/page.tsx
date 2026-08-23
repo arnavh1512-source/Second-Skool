@@ -9,6 +9,8 @@ import { Icon } from './components/Icon'
 import { DesktopShell, DesktopAuthShell, useIsDesktop } from './components/DesktopShell'
 import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { ConnectionStatus } from './components/ConnectionStatus'
+import { InstallPrompt } from './components/InstallPrompt'
 import { LoginScreen, ProfileSetupScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen, NotificationGateScreen, useNotificationGate } from './components/AuthScreens'
 import { HomeScreen } from './components/HomeScreen'
 
@@ -71,6 +73,8 @@ export default function Page() {
         <AppShell>
           <ScreenRouter />
         </AppShell>
+        <ConnectionStatus />
+        <InstallPrompt />
         <OperatorEntry />
       </SupabaseProvider>
     </ErrorBoundary>

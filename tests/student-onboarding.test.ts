@@ -80,11 +80,21 @@ describe('studentSignup validation (no network on invalid input)', () => {
   })
 
   it('surfaces a server error and does not navigate', async () => {
-    rpc.mockResolvedValueOnce({ data: null, error: { message: 'Invalid centre code' } })
+    rpc.mockResolvedValueOnce({ data: null, error: { code: 'P0001', message: 'Invalid centre code — check with your teacher' } })
     fill({ name: 'Neha Sharma', parent: '+91 90000 00000', school: 'DPS' })
     await S().studentSignup()
-    expect(S().toast).toBe('Invalid centre code')
+    expect(S().toast).toBe('Invalid centre code — check with your teacher')
     expect(S().screen).toBe('home')
+    expect(S().stuPending).toBeNull()
+  })
+
+  it('translates a failure that carries no human-written message', async () => {
+    // A dropped connection or an unmapped Postgres code. The raw text is
+    // useless to a student, so she gets a sentence she can act on instead.
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'TypeError: Failed to fetch' } })
+    fill({ name: 'Neha Sharma', parent: '+91 90000 00000', school: 'DPS' })
+    await S().studentSignup()
+    expect(S().toast).toContain('No internet')
     expect(S().stuPending).toBeNull()
   })
 })
@@ -109,10 +119,17 @@ describe('approveStudent', () => {
   })
 
   it('keeps the student in the queue when the RPC errors', async () => {
-    rpc.mockResolvedValueOnce({ data: null, error: { message: 'Not allowed' } })
+    rpc.mockResolvedValueOnce({ data: null, error: { code: 'P0001', message: 'Not authorized' } })
     await S().approveStudent('d1', 'Class 10', null, '', '')
     expect(S().pendingStudents.map(p => p.dbId)).toEqual(['d1', 'd2'])
-    expect(S().toast).toBe('Not allowed')
+    expect(S().toast).toBe('Not authorized')
+  })
+
+  it('translates a permission failure that arrives as a bare SQLSTATE', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { code: '42501', message: 'permission denied for table students' } })
+    await S().approveStudent('d1', 'Class 10', null, '', '')
+    expect(S().pendingStudents.map(p => p.dbId)).toEqual(['d1', 'd2'])
+    expect(S().toast).toBe("You don't have permission to do that. Ask the centre head.")
   })
 })
 
@@ -128,9 +145,9 @@ describe('rejectStudent', () => {
   })
 
   it('keeps the student when the RPC errors', async () => {
-    rpc.mockResolvedValueOnce({ data: null, error: { message: 'nope' } })
+    rpc.mockResolvedValueOnce({ data: null, error: { code: 'P0001', message: 'Request not found or already handled' } })
     await S().rejectStudent('d1')
     expect(S().pendingStudents.length).toBe(2)
-    expect(S().toast).toBe('nope')
+    expect(S().toast).toBe('Request not found or already handled')
   })
 })

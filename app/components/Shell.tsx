@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useState } from 'react'
 import { useDashboard, type Screen, type Tab } from '../store'
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
@@ -93,15 +93,75 @@ function BottomTabBar() {
   )
 }
 
+// Every validation message and every write failure in the app arrives here
+// ("Enter your full name", "No internet — attendance has NOT been saved").
+// Two things were wrong with the single style it used to have:
+//
+//   1. A failure looked exactly like a success. Same dark pill, same weight,
+//      no icon — so a message saying the save did not happen read, at a glance,
+//      like the ones saying it did.
+//   2. Everything vanished after 2.6s. Long enough to notice a confirmation,
+//      nowhere near long enough to read a sentence explaining what went wrong
+//      and what to do about it. Errors now hold for 9s (see nav.ts) and can be
+//      dismissed by tapping, so neither number has to be a compromise.
+//
+// The red is #8f2417 rather than the brand td-red (#e8553c): white on td-red
+// is about 3:1, which fails WCAG AA for body text, and this is the one surface
+// where the text absolutely must be readable.
 function Toast() {
   const toast = useDashboard(s => s.toast)
+  const kind = useDashboard(s => s.toastKind)
+  const dismissToast = useDashboard(s => s.dismissToast)
   if (!toast) return null
+  const err = kind === 'error'
   return (
-    // Every validation message in the app arrives here ("Enter your full name",
-    // "Invalid code"). Without a live region a screen-reader user submitted the
-    // form, heard nothing, and had no way to know why it did not go through.
-    <div role="status" aria-live="polite" className="absolute left-5 right-5 bottom-[104px] bg-td-dark text-white py-3.5 px-4 rounded-[14px] text-[13.5px] font-semibold text-center z-30 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease]">
-      {toast}
+    <div
+      role={err ? 'alert' : 'status'}
+      aria-live={err ? 'assertive' : 'polite'}
+      className={`absolute left-5 right-5 bottom-[104px] rounded-[14px] text-white z-30 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-dark'}`}
+    >
+      <button
+        type="button"
+        onClick={dismissToast}
+        aria-label="Dismiss message"
+        className={`w-full flex items-start gap-2.5 py-3.5 px-4 cursor-pointer ${err ? 'text-left' : 'justify-center text-center'}`}
+      >
+        {err && (
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="shrink-0 mt-px" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5" /><path d="M12 16.5h.01" />
+          </svg>
+        )}
+        <span className="text-[13.5px] font-semibold leading-snug">{toast}</span>
+      </button>
+    </div>
+  )
+}
+
+// A blank screen with "No students added yet" on it is a dead end. A head who
+// has just created her centre lands on Attendance, Fees or Results and is told
+// nothing is there — but not that students live on a different screen, or how
+// to get to it. She has to guess, and the guess is the moment she puts the
+// phone down. Every empty state that has an obvious next step now carries the
+// button for it.
+export function EmptyState({ title, hint, actionLabel, onAction }: {
+  title: string
+  hint?: string
+  actionLabel?: string
+  onAction?: () => void
+}) {
+  return (
+    <div className="text-center bg-white border border-td-border rounded-[16px] py-9 px-6">
+      <div className="text-[15px] font-extrabold text-td-dark mb-1.5">{title}</div>
+      {hint && <p className="text-[13px] text-td-muted leading-relaxed max-w-[290px] mx-auto mb-0">{hint}</p>}
+      {actionLabel && onAction && (
+        <button
+          type="button"
+          onClick={onAction}
+          className="mt-4 bg-td-primary text-white text-[13.5px] font-extrabold px-5 py-2.5 rounded-[12px] border-none cursor-pointer"
+        >
+          {actionLabel}
+        </button>
+      )}
     </div>
   )
 }
@@ -126,16 +186,61 @@ export function ScreenHeader({ title, onBack, right }: { title: string; onBack: 
   )
 }
 
-export function PrimaryButton({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  const busy = useRef(false)
-  const guard = useCallback(() => {
-    if (busy.current) return
-    busy.current = true
-    onClick()
-    setTimeout(() => { busy.current = false }, 800)
-  }, [onClick])
+function Spinner() {
   return (
-    <button onClick={guard} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="animate-spin shrink-0">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity=".35" strokeWidth="3" />
+      <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// The 800ms lock was a double-tap guard, not a busy state, and the difference
+// matters on the connections these teachers actually have. Saving attendance
+// for a class of forty over a weak 3G link takes seconds; for all of them the
+// button sat there looking idle and tappable, then quietly unlocked itself
+// before the write had even landed. Nothing on screen said the save was in
+// flight, so the honest reading of the screen was "nothing happened" — and the
+// second tap was the reasonable response to that.
+//
+// So the lock now follows the real work: if the handler returns a promise the
+// button stays disabled and spinning until it settles, whether it settles in
+// 200ms or twelve seconds. Handlers that are genuinely synchronous keep the
+// old timer, which is the right guard for them.
+export function PrimaryButton({ onClick, children }: { onClick: () => unknown; children: React.ReactNode }) {
+  const [busy, setBusy] = useState(false)
+  const locked = useRef(false)
+
+  const guard = useCallback(() => {
+    if (locked.current) return
+    locked.current = true
+    const release = () => { locked.current = false; setBusy(false) }
+
+    let result: unknown
+    try {
+      result = onClick()
+    } catch (e) {
+      // A handler that throws synchronously must not leave the button dead.
+      release()
+      throw e
+    }
+
+    if (result && typeof (result as Promise<unknown>).then === 'function') {
+      setBusy(true)
+      void (result as Promise<unknown>).finally(release)
+    } else {
+      setTimeout(release, 800)
+    }
+  }, [onClick])
+
+  return (
+    <button
+      onClick={guard}
+      disabled={busy}
+      aria-busy={busy}
+      className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
+    >
+      {busy && <Spinner />}
       {children}
     </button>
   )

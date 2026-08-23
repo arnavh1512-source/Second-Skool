@@ -30,7 +30,7 @@ export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass'> = (
           // devices is indistinguishable from "push is broken" — the teacher
           // presses send, nothing buzzes, and there's no way to tell whether
           // the feature failed or simply nobody has turned notifications on.
-          if (r.error) get().notify(`Push failed: ${r.error}`)
+          if (r.error) get().notify('Could not send the phone notification. It was still sent inside the app.', 'error')
           else if (r.sent) get().notify(`Also pushed to ${r.sent} device(s)`)
           // Subscriptions the push service refused. Distinct from "nobody
           // subscribed": the student thinks notifications are on, so telling

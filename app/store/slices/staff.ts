@@ -1,4 +1,6 @@
 import { supabase } from '../../lib/supabase'
+import { logError } from '../../lib/log'
+import { friendlyError } from '../errors'
 import { initialState } from '../initial-state'
 import { landingScreen } from '../navigation'
 import type { Slice } from '../slice'
@@ -21,7 +23,7 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
       .select('id, full_name, email, role, staff_status, head_requested, phone, subject, qualification')
       .neq('staff_status', 'none')
       .order('created_at', { ascending: false })
-    if (error) { console.error('loadStaff failed:', error.message); get().notify(`Could not load staff: ${error.message}`); return }
+    if (error) { logError('staff.load_failed', { message: error.message }); get().notify(friendlyError(error, 'load the staff list'), 'error'); return }
     const list: StaffMember[] = (data ?? []).map((r: Record<string, unknown>) => ({
       id: r.id as string, name: r.full_name as string, email: (r.email as string) ?? '',
       role: r.role as string, status: r.staff_status as StaffStatus, headRequested: !!r.head_requested,
@@ -32,25 +34,25 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
 
   approveTeacher: async (id) => {
     const { error } = await supabase.rpc('approve_teacher', { p_id: id })
-    if (error) { get().notify('Could not approve'); return }
+    if (error) { get().notify('Could not approve', 'error'); return }
     get().notify('Teacher approved'); await get().loadStaff()
   },
 
   rejectTeacher: async (id) => {
     const { error } = await supabase.rpc('reject_teacher', { p_id: id })
-    if (error) { get().notify('Could not reject'); return }
+    if (error) { get().notify('Could not reject', 'error'); return }
     get().notify('Teacher rejected'); await get().loadStaff()
   },
 
   grantHead: async (id) => {
     const { error } = await supabase.rpc('grant_head', { p_id: id })
-    if (error) { get().notify('Could not grant head access'); return }
+    if (error) { get().notify('Could not grant head access', 'error'); return }
     get().notify('Head access granted'); await get().loadStaff()
   },
 
   removeStaff: async (id) => {
     const { error } = await supabase.rpc('remove_staff', { p_id: id })
-    if (error) { get().notify('Could not remove'); return }
+    if (error) { get().notify('Could not remove', 'error'); return }
     get().notify('Access removed'); await get().loadStaff()
   },
 
@@ -88,12 +90,12 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
     const id = get().supabaseUserId
     if (!id) return false
     const trimmed = name.trim()
-    if (trimmed.length < 2) { get().notify('Please enter your full name'); return false }
+    if (trimmed.length < 2) { get().notify('Please enter your full name', 'error'); return false }
     const tel = phone.trim()
-    if (!/^\+?\d[\d\s-]{6,}$/.test(tel)) { get().notify('Enter a valid phone number'); return false }
+    if (!/^\+?\d[\d\s-]{6,}$/.test(tel)) { get().notify('Enter a valid phone number', 'error'); return false }
     const sub = subject.trim(), qual = qualification.trim()
-    if (sub.length < 2) { get().notify('Enter the subject you teach'); return false }
-    if (qual.length < 2) { get().notify('Enter your qualification'); return false }
+    if (sub.length < 2) { get().notify('Enter the subject you teach', 'error'); return false }
+    if (qual.length < 2) { get().notify('Enter your qualification', 'error'); return false }
 
     const { error } = await supabase.from('profiles').update({
       full_name: trimmed.slice(0, 120), phone: tel,
@@ -103,7 +105,7 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
       // marker heals on the next edit instead of trapping someone in setup.
       profile_completed_at: new Date().toISOString(),
     }).eq('id', id)
-    if (error) { get().notify('Could not save profile — check your connection'); return false }
+    if (error) { get().notify('Could not save profile — check your connection', 'error'); return false }
 
     const wasSetup = !get().profileDone
     set({ myName: trimmed, myPhone: tel, mySubject: sub, myQualification: qual, profileDone: true })
@@ -119,9 +121,9 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
   // installed PWA with email+password — a fully in-app flow that survives
   // relaunches (unlike Google's redirect, which escapes to the browser).
   setMyPassword: async (password) => {
-    if (password.length < 8) { get().notify('Password must be at least 8 characters'); return false }
+    if (password.length < 8) { get().notify('Password must be at least 8 characters', 'error'); return false }
     const { error } = await supabase.auth.updateUser({ password })
-    if (error) { get().notify(error.message || 'Could not set password'); return false }
+    if (error) { get().notify(error.message || 'Could not set password', 'error'); return false }
     get().notify('Password set — you can now sign in with your email')
     return true
   },

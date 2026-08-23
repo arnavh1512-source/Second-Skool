@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, LIMITS, clampText, type Screen, type Student } from '../store'
-import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
+import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
 
 export function FeesScreen() {
-  const { students, back, notify, addFee, toggleFeeStatus, saveReminder } = useDashboard()
+  const { students, back, notify, addFee, toggleFeeStatus, saveReminder, go, role } = useDashboard()
   const [showForm, setShowForm] = useState(false)
   const [selStudent, setSelStudent] = useState('')
   const [amount, setAmount] = useState('')
@@ -21,7 +21,7 @@ export function FeesScreen() {
   const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
   const rows = [...students.filter(d => d.feeStatus !== 'Paid'), ...students.filter(d => d.feeStatus === 'Paid')]
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!selStudent) { notify('Select a student'); return }
     const amt = Number(amount)
     if (!amt || amt <= 0) { notify('Enter a valid amount'); return }
@@ -30,7 +30,7 @@ export function FeesScreen() {
     if (amt > LIMITS.feeAmount) { notify(`Amount cannot exceed ₹${LIMITS.feeAmount.toLocaleString('en-IN')}`); return }
     if (!period.trim()) { notify('Enter the fee period'); return }
     if (!dueDate) { notify('Select a due date'); return }
-    addFee(selStudent, amt, clampText(period, LIMITS.period), dueDate)
+    if (!(await addFee(selStudent, amt, clampText(period, LIMITS.period), dueDate))) return
     setSelStudent(''); setAmount(''); setPeriod(''); setDueDate(''); setShowForm(false)
   }
 
@@ -80,7 +80,12 @@ export function FeesScreen() {
       <button onClick={() => { if (pendingCount === 0) { notify('No pending fees'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-white text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
 
       {rows.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">No students added yet</div>
+        <EmptyState
+          title="No students yet"
+          hint="Fees are tracked per student, so there is nothing to collect until you have added some."
+          actionLabel={role === 'admin' ? 'Add a student' : undefined}
+          onAction={role === 'admin' ? () => go('addStudent', 'students') : undefined}
+        />
       ) : (
         <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {rows.map(d => {
@@ -130,12 +135,12 @@ export function MeetingsScreen() {
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Time</label><input value={time} onChange={e => setTime(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         </div>
-        <PrimaryButton onClick={() => { saveMeeting(title, type, date, time); setTitle(''); setDate('') }}>Schedule &amp; invite</PrimaryButton>
+        <PrimaryButton onClick={async () => { if (await saveMeeting(title, type, date, time)) { setTitle(''); setDate('') } }}>Schedule &amp; invite</PrimaryButton>
       </div>
 
       <div className="text-[15px] font-extrabold text-td-dark mb-3">Upcoming</div>
       {meetingsList.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-4">No meetings scheduled</div>
+        <EmptyState title="No meetings scheduled" hint="Use the form above to add one — it will appear here and on the home screen." />
       ) : (
         <div className="flex flex-col gap-2.5">
           {meetingsList.map(m => (
@@ -228,9 +233,9 @@ export function BranchesScreen() {
   const [isMain, setIsMain] = useState(false)
   const [openBranch, setOpenBranch] = useState<string | null>(null)
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim()) { useDashboard.getState().notify('Enter branch name'); return }
-    addBranch(name.trim(), address.trim(), isMain)
+    if (!(await addBranch(name.trim(), address.trim(), isMain))) return
     setName(''); setAddress(''); setIsMain(false); setShowForm(false)
   }
 
@@ -294,10 +299,9 @@ export function SubjectsScreen() {
   const { subjects, back, addSubject, deleteSubject } = useDashboard()
   const [name, setName] = useState('')
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim()) { useDashboard.getState().notify('Enter subject name'); return }
-    addSubject(name.trim())
-    setName('')
+    if (await addSubject(name.trim())) setName('')
   }
 
   return (
@@ -335,10 +339,9 @@ export function BatchesScreen() {
   const [name, setName] = useState('')
   const [openBatch, setOpenBatch] = useState<string | null>(null)
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!name.trim()) { useDashboard.getState().notify('Enter batch name'); return }
-    addBatch(name.trim())
-    setName('')
+    if (await addBatch(name.trim())) setName('')
   }
 
   return (

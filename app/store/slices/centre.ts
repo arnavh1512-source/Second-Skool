@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { friendlyError } from '../errors'
 import { sendPush } from '../../lib/push'
 import type { Slice } from '../slice'
 
@@ -9,14 +10,14 @@ type Keys =
 export const createCentreSlice: Slice<Keys> = (set, get) => ({
   createCentre: async (name) => {
     const { error } = await supabase.rpc('create_centre', { p_name: name })
-    if (error) { get().notify(error.message || 'Could not create centre'); return }
+    if (error) { get().notify(friendlyError(error, 'create the centre'), 'error'); return }
     get().notify('Centre created — welcome!')
     if (typeof window !== 'undefined') window.location.reload()
   },
 
   joinCentre: async (code) => {
     const { error } = await supabase.rpc('join_centre', { p_code: code })
-    if (error) { get().notify(error.message || 'Invalid centre code'); return }
+    if (error) { get().notify(friendlyError(error, 'join the centre'), 'error'); return }
     sendPush({ notifyHead: true, title: 'New access request', body: `${get().myName || 'A teacher'} is requesting access to your centre.` })
     set({ role: 'teacher', staffStatus: 'pending', screen: 'pending', tab: 'home' })
   },
@@ -31,19 +32,19 @@ export const createCentreSlice: Slice<Keys> = (set, get) => ({
 
   regenerateStudentCode: async () => {
     const { data, error } = await supabase.rpc('regenerate_student_code')
-    if (error || !data) { get().notify(error?.message || 'Could not change the code'); return }
+    if (error || !data) { get().notify(friendlyError(error, 'change the code'), 'error'); return }
     set({ studentJoinCode: data as string })
     get().notify('New student code generated')
   },
 
   renameCentre: async (name) => {
     const trimmed = name.trim()
-    if (trimmed.length < 2) { get().notify('Enter a centre name'); return }
+    if (trimmed.length < 2) { get().notify('Enter a centre name', 'error'); return }
     const id = get().supabaseUserId
     if (!id) return
     // RLS centres_write allows only the owner to update their centre row.
     const { error } = await supabase.from('centres').update({ name: trimmed }).eq('owner_id', id)
-    if (error) { get().notify('Could not rename — only the centre owner can'); return }
+    if (error) { get().notify('Could not rename — only the centre owner can', 'error'); return }
     set({ centreName: trimmed })
     get().notify('Centre renamed')
   },
@@ -56,7 +57,7 @@ export const createCentreSlice: Slice<Keys> = (set, get) => ({
     const id = get().supabaseUserId
     if (!id) return
     const { error } = await supabase.from('centres').update({ logo_url: dataUrl || null }).eq('owner_id', id)
-    if (error) { get().notify('Could not save logo — only the centre owner can'); return }
+    if (error) { get().notify('Could not save logo — only the centre owner can', 'error'); return }
     set({ centreLogo: dataUrl })
     get().notify(dataUrl ? 'Centre logo updated' : 'Centre logo removed')
   },

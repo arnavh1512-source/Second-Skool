@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
-import { ScreenHeader, PrimaryButton } from './Shell'
+import { ScreenHeader, PrimaryButton, EmptyState } from './Shell'
 import { Icon, type IconName } from './Icon'
 
 export function TimetableScreen() {
@@ -32,12 +32,15 @@ export function TimetableScreen() {
 
   const resetForm = () => { setStartTime('09:00'); setEndTime('10:00'); setSubject(''); setKlass(''); setRoom(''); setShowForm(false); setEditing(null) }
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!selKlass) return
     const subj = subject || subjectNames[0] || 'Free period'
-    if (editing) updateTimetableEntry(ttDay, editing, startTime, endTime, subj, selKlass, room)
-    else addTimetableEntry(ttDay, startTime, endTime, subj, selKlass, room)
-    resetForm()
+    // Keep the form filled in when the write fails. Clearing it on the way out
+    // meant a failed save cost her the times as well as the period.
+    const ok = editing
+      ? await updateTimetableEntry(ttDay, editing, startTime, endTime, subj, selKlass, room)
+      : await addTimetableEntry(ttDay, startTime, endTime, subj, selKlass, room)
+    if (ok) resetForm()
   }
 
   const startEdit = (p: string[]) => {
@@ -191,7 +194,7 @@ export function TimetableScreen() {
 }
 
 export function AttendanceScreen() {
-  const { attClass, att, students, back, set, toggleAtt, saveAttendance } = useDashboard()
+  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role } = useDashboard()
   const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
   // Student objects, not names — the roster is passed straight to saveAttendance,
   // which needs the database id. Resolving by name broke centres with two
@@ -213,7 +216,12 @@ export function AttendanceScreen() {
       </div>
 
       {classes.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">No students added yet</div>
+        <EmptyState
+          title="No students yet"
+          hint="Attendance is marked class by class. Add your students first and their classes will appear here."
+          actionLabel={role === 'admin' ? 'Add a student' : undefined}
+          onAction={role === 'admin' ? () => go('addStudent', 'students') : undefined}
+        />
       ) : (
         <>
           <div className="flex gap-[9px] overflow-x-auto mb-4 scrollbar-hide">
@@ -260,7 +268,7 @@ export function AttendanceScreen() {
 }
 
 export function ResultsScreen() {
-  const { students, subjects, back, notify } = useDashboard()
+  const { students, subjects, back, notify, go, role } = useDashboard()
   const [klass, setKlass] = useState('')
   const [subject, setSubject] = useState('')
   const [testName, setTestName] = useState('Unit Test')
@@ -346,7 +354,12 @@ export function ResultsScreen() {
 
       <div className="text-sm font-extrabold text-td-dark mb-3">Enter marks</div>
       {roster.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">No students in {selKlass || 'this class'}</div>
+        <EmptyState
+          title={selKlass ? `No students in ${selKlass}` : 'No students in this class'}
+          hint="Marks are entered per student. Add a student to this class and they will show up here."
+          actionLabel={role === 'admin' ? 'Add a student' : undefined}
+          onAction={role === 'admin' ? () => go('addStudent', 'students') : undefined}
+        />
       ) : (
         <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {roster.map((s, i) => (
@@ -396,7 +409,10 @@ export function AssignmentsScreen() {
         </div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Due date</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Instructions</label><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none resize-none focus:border-td-primary" /></div>
-        <PrimaryButton onClick={() => { if (!selKlass) return; saveAssignment(title, selSubject, selKlass, dueDate, instructions); setTitle(''); setInstructions('') }}>Create &amp; notify class</PrimaryButton>
+        <PrimaryButton onClick={async () => {
+          if (!selKlass) return
+          if (await saveAssignment(title, selSubject, selKlass, dueDate, instructions)) { setTitle(''); setInstructions('') }
+        }}>Create &amp; notify class</PrimaryButton>
       </div>
 
       <div className="text-[15px] font-extrabold text-td-dark mb-3">Active assignments</div>

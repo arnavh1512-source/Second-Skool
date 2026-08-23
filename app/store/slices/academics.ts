@@ -15,7 +15,7 @@ type Keys =
 // A head who saw "Branch added" had no way to know it had not been.
 export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
   saveAssignment: async (title, subject, klass, dueDate, instructions) => {
-    if (!title.trim()) { get().notify('Enter a title'); return }
+    if (!title.trim()) { get().notify('Enter a title', 'error'); return false }
     const { subjects } = get()
     const d = new Date(dueDate || Date.now())
     const item: AssignmentItem = {
@@ -28,12 +28,13 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
       title: clampText(title, LIMITS.title), class: klass, due_date: isoDay(d),
       instructions: instructions || null, subject_id: subjectId ?? null,
     })
-    if (error) { get().notify('Could not create assignment — check your connection'); return }
+    if (error) { get().notify('Could not create assignment — check your connection', 'error'); return false }
 
     set((s) => ({ assignmentsList: [item, ...s.assignmentsList] }))
     // Only notify the class once the homework actually exists for them to open.
     get().notifyClass(klass, 'New homework', `${title} — due ${item.due}`, 'homework')
     get().notify('Assignment created · class notified')
+    return true
   },
 
   // Homework outlives the students it was set for: the class roster is
@@ -42,7 +43,7 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
   // way to clear it. Old assignments accumulated forever.
   deleteAssignment: async (dbId) => {
     const { error } = await supabase.from('assignments').delete().eq('id', dbId)
-    if (error) { get().notify('Could not remove assignment'); return }
+    if (error) { get().notify('Could not remove assignment', 'error'); return }
     set((s) => ({ assignmentsList: s.assignmentsList.filter(a => a.dbId !== dbId) }))
     get().notify('Assignment removed')
   },
@@ -51,27 +52,29 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
     const branch: BranchItem = { name, address, main: isMain, students: 0, staff: 0 }
     const { data, error } = await supabase
       .from('branches').insert({ name, address, is_main: isMain }).select().single()
-    if (error || !data) { get().notify('Could not add branch — check your connection'); return }
+    if (error || !data) { get().notify('Could not add branch — check your connection', 'error'); return false }
 
     set((s) => ({ branchesList: [{ ...branch, dbId: data.id }, ...s.branchesList] }))
     get().notify('Branch added')
+    return true
   },
 
   deleteBranch: async (dbId) => {
     const { error } = await supabase.from('branches').delete().eq('id', dbId)
-    if (error) { get().notify('Could not remove branch'); return }
+    if (error) { get().notify('Could not remove branch', 'error'); return }
     set((s) => ({ branchesList: s.branchesList.filter(b => b.dbId !== dbId) }))
     get().notify('Branch removed')
   },
 
   addSubject: async (name) => {
-    if (get().subjects.some(s => s.name.toLowerCase() === name.toLowerCase())) { get().notify('Subject already exists'); return }
+    if (get().subjects.some(s => s.name.toLowerCase() === name.toLowerCase())) { get().notify('Subject already exists', 'error'); return false }
     const { data, error } = await supabase.from('subjects').insert({ name }).select().single()
-    if (error || !data) { get().notify('Could not add subject — check your connection'); return }
+    if (error || !data) { get().notify('Could not add subject — check your connection', 'error'); return false }
 
     const item: SubjectItem = { name, dbId: data.id }
     set((s) => ({ subjects: [...s.subjects, item] }))
     get().notify(`Subject "${name}" added`)
+    return true
   },
 
   deleteSubject: async (dbId) => {
@@ -81,12 +84,12 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
     // timetable periods that reference it by name. The subject row goes first —
     // if it fails there is nothing to reconcile and the UI is left untouched.
     const { error } = await supabase.from('subjects').delete().eq('id', dbId)
-    if (error) { get().notify('Could not remove subject'); return }
+    if (error) { get().notify('Could not remove subject', 'error'); return }
     if (name) {
       const { error: periodErr } = await supabase.from('timetable').delete().eq('subject', name)
       // The subject is already gone, so this is a partial failure, not a total
       // one. Say so rather than claiming a clean removal.
-      if (periodErr) get().notify('Subject removed, but its timetable periods could not be cleared')
+      if (periodErr) get().notify('Subject removed, but its timetable periods could not be cleared', 'error')
     }
 
     set((s) => ({
@@ -98,20 +101,21 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
   },
 
   addBatch: async (name) => {
-    if (get().batches.some(b => b.name.toLowerCase() === name.toLowerCase())) { get().notify('Batch already exists'); return }
+    if (get().batches.some(b => b.name.toLowerCase() === name.toLowerCase())) { get().notify('Batch already exists', 'error'); return false }
     const { data, error } = await supabase.from('batches').insert({ name }).select().single()
-    if (error || !data) { get().notify('Could not add batch — check your connection'); return }
+    if (error || !data) { get().notify('Could not add batch — check your connection', 'error'); return false }
 
     const item: BatchItem = { name, dbId: data.id }
     set((s) => ({ batches: [...s.batches, item] }))
     get().notify(`Batch "${name}" added`)
+    return true
   },
 
   deleteBatch: async (dbId) => {
     // Remove the batch row only. Students already assigned keep their batch
     // label (historical); the head can reassign them from the roster if needed.
     const { error } = await supabase.from('batches').delete().eq('id', dbId)
-    if (error) { get().notify('Could not remove batch'); return }
+    if (error) { get().notify('Could not remove batch', 'error'); return }
     set((s) => ({ batches: s.batches.filter(x => x.dbId !== dbId) }))
     get().notify('Batch removed')
   },

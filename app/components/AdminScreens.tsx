@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useDashboard, initials, av } from '../store'
-import { ScreenHeader } from './Shell'
+import { ScreenHeader, EmptyState } from './Shell'
 import { supabase } from '../lib/supabase'
 import { whatsappShareUrl, weeklyReportMessage, studentReportMessage } from '../lib/share'
 import { useState } from 'react'
@@ -270,7 +270,7 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
 }
 
 export function ReportsScreen() {
-  const { back, weeklyReport: r, loadWeeklyReport, studentReports, loadStudentReports, teacherActivity, loadTeacherActivity, myPhone, centreName, loadMyCentre } = useDashboard()
+  const { back, weeklyReport: r, loadWeeklyReport, studentReports, loadStudentReports, teacherActivity, loadTeacherActivity, myPhone, centreName, loadMyCentre, go } = useDashboard()
   const [tab, setTab] = useState<'branches' | 'students' | 'teachers'>('branches')
   const [period, setPeriod] = useState<7 | 30>(7)
   useEffect(() => { loadWeeklyReport(period); loadStudentReports(period); loadTeacherActivity(period); loadMyCentre() }, [period, loadWeeklyReport, loadStudentReports, loadTeacherActivity, loadMyCentre])
@@ -330,7 +330,12 @@ export function ReportsScreen() {
         !studentReports ? (
           <div className="text-center text-td-muted text-sm py-12">Generating reports…</div>
         ) : studentReports.length === 0 ? (
-          <div className="text-center text-td-muted text-sm py-10 bg-white border border-td-border rounded-[16px]">No students yet.</div>
+          <EmptyState
+            title="No students yet"
+            hint="Weekly progress reports are built per student, so there is nothing to send until you have added some."
+            actionLabel="Add a student"
+            onAction={() => go('addStudent', 'students')}
+          />
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
             <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">Send each parent their child&apos;s weekly progress.</div>
