@@ -87,11 +87,11 @@ export function LoginScreen() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with password</span>
           </button>
-          <div className="text-[11.5px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
+          <div className="text-[12px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
 
           <div className="flex items-center gap-3 mt-5">
             <div className="flex-1 h-px bg-[#e6eaf2]" />
-            <span className="text-[11.5px] text-td-subtle font-semibold">or</span>
+            <span className="text-[12px] text-td-subtle font-semibold">or</span>
             <div className="flex-1 h-px bg-[#e6eaf2]" />
           </div>
 
@@ -106,7 +106,7 @@ export function LoginScreen() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2cad8" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
 
-          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Your tuition centre sets up teacher access. Students only ever need their code.</div>
+          <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">Your tuition centre sets up teacher access. Students only ever need their code.</div>
         </>
       )}
 
@@ -125,7 +125,7 @@ export function LoginScreen() {
           </button>
           <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-white text-[13.5px] font-bold text-td-primary mt-3">New here? Register yourself</button>
           <button onClick={() => { setMode('choose'); setCode('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
+          <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
         </>
       )}
 
@@ -147,7 +147,7 @@ export function LoginScreen() {
           />
           <button onClick={signInWithPassword} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
           <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-[11.5px] text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
+          <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
         </>
       )}
 
@@ -158,7 +158,7 @@ export function LoginScreen() {
             <div>
               <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-[#e8553c]">*</span></label>
               <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 tracking-[0.15em] font-bold text-center" />
-              <div id="reg-code-hint" className="text-[11px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
+              <div id="reg-code-hint" className="text-[12px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
               <label htmlFor="reg-name" className="text-xs font-bold text-td-muted">Full name <span className="text-[#e8553c]">*</span></label>
@@ -303,7 +303,7 @@ export function NotificationGateScreen() {
           >
             Continue without reminders
           </button>
-          <div className="text-[11.5px] text-td-subtle leading-relaxed mt-1">You will not be told about tests, homework or fees until you allow them.</div>
+          <div className="text-[12px] text-td-subtle leading-relaxed mt-1">You will not be told about tests, homework or fees until you allow them.</div>
         </div>
       ) : (
         <div className="mt-7 w-full max-w-[320px]">
@@ -313,7 +313,7 @@ export function NotificationGateScreen() {
 
       {code && (
         <div className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-white">
-          <div className="text-[11px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+          <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
           <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
         </div>
       )}
@@ -361,7 +361,7 @@ export function StuPendingScreen() {
 
       {code && (
         <button onClick={copyCode} className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-white cursor-pointer">
-          <div className="text-[11px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+          <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
           <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
         </button>
       )}
@@ -420,7 +420,7 @@ export function ProfileSetupScreen() {
         onKeyDown={e => e.key === 'Enter' && submit()}
         className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary"
       />
-      {hint && <div className="text-[11.5px] text-td-subtle mt-1.5">{hint}</div>}
+      {hint && <div className="text-[12px] text-td-subtle mt-1.5">{hint}</div>}
     </div>
   )
 
@@ -437,7 +437,7 @@ export function ProfileSetupScreen() {
         {field('Phone', phone, setPhone, '+91 98765 43210', 'Your head teacher uses this to reach you.')}
         {field('Subject you teach', subject, setSubject, 'e.g. Mathematics, Physics')}
         {field('Qualification', qualification, setQualification, 'e.g. M.Sc. Mathematics')}
-        <div className="text-[11.5px] text-td-subtle">All four are required — your students see them on your teacher profile.</div>
+        <div className="text-[12px] text-td-subtle">All four are required — your students see them on your teacher profile.</div>
         <PrimaryButton onClick={submit}>{busy ? 'Saving…' : 'Continue'}</PrimaryButton>
       </div>
 

@@ -34,11 +34,11 @@ export function StaffApprovalsScreen() {
       {joinCode && (
         <button onClick={() => { navigator.clipboard.writeText(joinCode); notify('Join code copied!') }} className="w-full lg:max-w-md text-left border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5 cursor-pointer flex items-center justify-between">
           <div>
-            <div className="text-[11px] font-bold text-td-muted">{centreName || 'Your centre'} · JOIN CODE</div>
+            <div className="text-[12px] font-bold text-td-muted">{centreName || 'Your centre'} · JOIN CODE</div>
             <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{joinCode}</div>
-            <div className="text-[11px] text-td-muted mt-0.5">Share with teachers so they can join your centre.</div>
+            <div className="text-[12px] text-td-muted mt-0.5">Share with teachers so they can join your centre.</div>
           </div>
-          <div className="text-[11px] font-bold text-td-primary flex items-center gap-1 shrink-0">
+          <div className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             Copy
           </div>
@@ -56,7 +56,7 @@ export function StaffApprovalsScreen() {
                 <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-extrabold text-td-dark truncate">{s.name}</div>
-                  <div className="text-[11.5px] text-td-muted truncate">{s.email}</div>
+                  <div className="text-[12px] text-td-muted truncate">{s.email}</div>
                 </div>
               </div>
               {/* What this person said about themselves. The phone is a link
@@ -107,9 +107,9 @@ export function StaffApprovalsScreen() {
                   <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i + 3) }}>{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-extrabold text-td-dark truncate">{s.name}{isSelf && <span className="text-td-muted font-semibold"> · you</span>}</div>
-                    <div className="text-[11.5px] text-td-muted truncate">{s.email}</div>
+                    <div className="text-[12px] text-td-muted truncate">{s.email}</div>
                   </div>
-                  <span className="text-[10.5px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: isHead ? '#2a6fdb' : '#2fa36b', background: isHead ? '#eaf1fc' : '#e7f5ee' }}>{isHead ? 'Head' : 'Teacher'}</span>
+                  <span className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: isHead ? '#2a6fdb' : '#2fa36b', background: isHead ? '#eaf1fc' : '#e7f5ee' }}>{isHead ? 'Head' : 'Teacher'}</span>
                 </div>
                 {!isHead && (
                   <div className="flex gap-2.5 mt-3">
@@ -144,11 +144,11 @@ export function StudentRequestsScreen() {
         <div className="w-full lg:max-w-md border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5">
           <div className="flex items-start justify-between gap-3">
             <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-left flex-1 min-w-0 cursor-pointer">
-              <div className="text-[11px] font-bold text-td-muted">{centreName || 'Your centre'} · STUDENT CODE</div>
+              <div className="text-[12px] font-bold text-td-muted">{centreName || 'Your centre'} · STUDENT CODE</div>
               <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{studentJoinCode}</div>
-              <div className="text-[11px] text-td-muted mt-0.5">Share with students so they can register themselves.</div>
+              <div className="text-[12px] text-td-muted mt-0.5">Share with students so they can register themselves.</div>
             </button>
-            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-[11px] font-bold text-td-primary flex items-center gap-1 shrink-0 cursor-pointer">
+            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0 cursor-pointer">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               Copy
             </button>
@@ -156,7 +156,7 @@ export function StudentRequestsScreen() {
           {role === 'admin' && (
             <button
               onClick={() => { if (confirm('Generate a new student code? The old one will stop working immediately.')) regenerateStudentCode() }}
-              className="text-[11px] font-bold text-td-muted underline mt-2 cursor-pointer"
+              className="text-[12px] font-bold text-td-muted underline mt-2 cursor-pointer"
             >
               Generate a new code
             </button>
@@ -208,9 +208,9 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
         <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(idx) }}>{initials(s.name)}</div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-extrabold text-td-dark truncate">{s.name}</div>
-          <div className="text-[11.5px] text-td-muted truncate">{s.klass} · {s.school}</div>
+          <div className="text-[12px] text-td-muted truncate">{s.klass} · {s.school}</div>
         </div>
-        {s.when && <span className="text-[10.5px] text-td-subtle shrink-0">{s.when}</span>}
+        {s.when && <span className="text-[12px] text-td-subtle shrink-0">{s.when}</span>}
       </div>
       <div className="text-[12px] text-td-muted leading-relaxed mb-3 bg-[#f7f9fc] rounded-[10px] p-2.5">
         <div>Parent: <span className="font-semibold text-td-text">{s.parent || '—'}</span></div>
@@ -227,12 +227,12 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
         <div className="flex flex-col gap-2.5">
           <div className="flex gap-2.5">
             <div className="flex-1">
-              <label className="text-[11px] font-bold text-td-muted">Batch / class</label>
+              <label className="text-[12px] font-bold text-td-muted">Batch / class</label>
               <input value={klass} onChange={e => setKlass(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
             </div>
             {branches.length > 0 && (
               <div className="flex-1">
-                <label className="text-[11px] font-bold text-td-muted">Branch</label>
+                <label className="text-[12px] font-bold text-td-muted">Branch</label>
                 <select value={branch} onChange={e => setBranch(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1 bg-white">
                   <option value="">—</option>
                   {branches.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
@@ -242,7 +242,7 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           </div>
           {batchList.length > 0 && (
             <div>
-              <label className="text-[11px] font-bold text-td-muted">Batch</label>
+              <label className="text-[12px] font-bold text-td-muted">Batch</label>
               <select value={batch} onChange={e => setBatch(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1 bg-white">
                 <option value="">No batch</option>
                 {batchList.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
@@ -251,11 +251,11 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           )}
           <div className="flex gap-2.5">
             <div className="flex-1">
-              <label className="text-[11px] font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
+              <label className="text-[12px] font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
               <input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="e.g. 800" className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
             </div>
             <div className="flex-1">
-              <label className="text-[11px] font-bold text-td-muted">Due date</label>
+              <label className="text-[12px] font-bold text-td-muted">Due date</label>
               <input type="date" value={feeDue} onChange={e => setFeeDue(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
             </div>
           </div>
@@ -305,9 +305,9 @@ export function ReportsScreen() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="text-[14.5px] font-extrabold text-td-dark">{t.name || t.email}</div>
-                    <div className="text-[11.5px] text-td-muted">{t.email}</div>
+                    <div className="text-[12px] text-td-muted">{t.email}</div>
                   </div>
-                  <span className="text-[10.5px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: t.is_head ? '#2a6fdb' : '#2fa36b', background: t.is_head ? '#eaf1fc' : '#e7f5ee' }}>{t.is_head ? 'Head' : 'Teacher'}</span>
+                  <span className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: t.is_head ? '#2a6fdb' : '#2fa36b', background: t.is_head ? '#eaf1fc' : '#e7f5ee' }}>{t.is_head ? 'Head' : 'Teacher'}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {[
@@ -317,13 +317,13 @@ export function ReportsScreen() {
                   ].map(x => (
                     <div key={x.l} className="bg-[#f7f9fc] rounded-[12px] py-2.5">
                       <div className="text-[18px] font-extrabold text-td-dark leading-none">{x.v}</div>
-                      <div className="text-[10.5px] text-td-muted mt-1 font-semibold">{x.l}</div>
+                      <div className="text-[12px] text-td-muted mt-1 font-semibold">{x.l}</div>
                     </div>
                   ))}
                 </div>
               </div>
             ))}
-            <div className="text-[11px] text-td-subtle text-center leading-relaxed mt-1 lg:col-span-full">Activity is counted from when staff started using the app — older records aren&apos;t attributed.</div>
+            <div className="text-[12px] text-td-subtle text-center leading-relaxed mt-1 lg:col-span-full">Activity is counted from when staff started using the app — older records aren&apos;t attributed.</div>
           </div>
         )
       ) : tab === 'students' ? (
@@ -346,9 +346,9 @@ export function ReportsScreen() {
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <div className="text-[14.5px] font-extrabold text-td-dark">{s.name}</div>
-                      <div className="text-[11.5px] text-td-muted">{s.klass}</div>
+                      <div className="text-[12px] text-td-muted">{s.klass}</div>
                     </div>
-                    <span className="text-[10.5px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: s.fee_status === 'Paid' ? '#2fa36b' : '#e0962f', background: s.fee_status === 'Paid' ? '#e7f5ee' : '#fcf3e3' }}>{s.fee_status}</span>
+                    <span className="text-[12px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: s.fee_status === 'Paid' ? '#2fa36b' : '#e0962f', background: s.fee_status === 'Paid' ? '#e7f5ee' : '#fcf3e3' }}>{s.fee_status}</span>
                   </div>
                   <div className="text-[12px] text-td-muted mb-3">Attendance: <span className="font-bold text-td-text">{attPct === null ? '—' : `${attPct}%`}</span> · Tests: <span className="font-bold text-td-text">{s.tests}{s.tests > 0 ? ` (avg ${s.avg_pct}%)` : ''}</span></div>
                   <button onClick={() => window.open(whatsappShareUrl(s.parent, studentReportMessage(s, centreName || undefined, period)), '_blank')} disabled={!s.parent} className="w-full border-none bg-[#25D366] text-white text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2">
@@ -383,7 +383,7 @@ export function ReportsScreen() {
                     ].map(s => (
                       <div key={s.label}>
                         <div className="text-[17px] font-extrabold text-td-dark leading-none">{s.value}</div>
-                        <div className="text-[11px] text-td-muted mt-1 font-semibold">{s.label}</div>
+                        <div className="text-[12px] text-td-muted mt-1 font-semibold">{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -409,7 +409,7 @@ export function ReportsScreen() {
             <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
             Send to WhatsApp
           </button>
-          <div className="text-[11.5px] text-td-subtle text-center mt-3 leading-relaxed">Opens WhatsApp with the report ready to send to yourself or a co-owner.</div>
+          <div className="text-[12px] text-td-subtle text-center mt-3 leading-relaxed">Opens WhatsApp with the report ready to send to yourself or a co-owner.</div>
         </>
       )}
     </div>

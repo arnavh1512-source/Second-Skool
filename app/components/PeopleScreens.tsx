@@ -54,7 +54,7 @@ export function StudentsScreen() {
                   <div className="text-sm font-extrabold text-td-dark">{s.name}</div>
                   <div className="text-xs text-td-muted mt-0.5">{s.klass} · {s.attendance}% attendance</div>
                 </div>
-                {isAdmin && <span className="text-[10.5px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: f.c, background: f.b }}>{s.feeStatus}</span>}
+                {isAdmin && <span className="text-[12px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: f.c, background: f.b }}>{s.feeStatus}</span>}
                 {isAdmin && <ChevronRight />}
               </button>
             )
@@ -86,10 +86,10 @@ export function EditStudentScreen() {
 
       <button onClick={() => { navigator.clipboard.writeText(st.id); notify('Code copied!') }} className="w-full border border-dashed border-td-primary bg-[#eaf1fc] rounded-[14px] p-3 mb-2.5 cursor-pointer flex items-center justify-between">
         <div>
-          <div className="text-[11px] font-bold text-td-muted">STUDENT LINK CODE</div>
+          <div className="text-[12px] font-bold text-td-muted">STUDENT LINK CODE</div>
           <div className="text-[18px] font-extrabold text-td-primary tracking-wider">{st.id}</div>
         </div>
-        <div className="text-[11px] font-bold text-td-primary flex items-center gap-1">
+        <div className="text-[12px] font-bold text-td-primary flex items-center gap-1">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy
         </div>
@@ -155,7 +155,7 @@ export function AddStudentScreen() {
         <div className="text-[18px] font-extrabold text-td-dark mb-2">Student added!</div>
         <div className="text-[13px] text-td-muted text-center leading-relaxed mb-5 max-w-[280px]">Share this code with the parent so the student can log in.</div>
         <div className="w-full max-w-[280px] border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-4 text-center mb-5">
-          <div className="text-[11px] font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
+          <div className="text-[12px] font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
           <div className="text-[24px] font-extrabold text-td-primary tracking-[0.15em]">{lastAdded.code}</div>
         </div>
         <button onClick={() => window.open(whatsappShareUrl(lastAdded.parent, studentCodeMessage(lastAdded.name, lastAdded.code)), '_blank')} className="w-full max-w-[280px] border-none bg-[#25D366] text-white text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer mb-3 flex items-center justify-center gap-2">
@@ -245,7 +245,7 @@ export function StaffScreen() {
               <div className="flex-1 min-w-0">
                 <div className="text-[15px] font-extrabold text-td-dark">{t.name}</div>
                 <div className="text-[12.5px] text-td-primary font-bold mt-0.5">{t.subject}</div>
-                <div className="text-[11.5px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
+                <div className="text-[12px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
               </div>
             </div>
           ))}

@@ -45,11 +45,11 @@ export function FeesScreen() {
       <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
         <div className="flex-1 bg-[#e7f5ee] rounded-2xl p-3.5">
           <div className="text-[21px] font-extrabold text-td-green leading-tight">{inr(totalCollected)}</div>
-          <div className="text-[11px] text-[#5a8a72] font-semibold mt-[3px]">Collected · {paidCount} paid</div>
+          <div className="text-[12px] text-[#5a8a72] font-semibold mt-[3px]">Collected · {paidCount} paid</div>
         </div>
         <div className="flex-1 bg-[#fdecea] rounded-2xl p-3.5">
           <div className="text-[21px] font-extrabold text-td-red leading-tight">{inr(totalRemaining)}</div>
-          <div className="text-[11px] text-[#a35545] font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
+          <div className="text-[12px] text-[#a35545] font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
         </div>
       </div>
 
@@ -102,7 +102,7 @@ export function FeesScreen() {
                     {(d.feeDue ?? 0) === 0 && (d.feeCollected ?? 0) > 0 && <span className="text-td-green font-semibold"> · {inr(d.feeCollected!)} paid</span>}
                   </div>
                 </div>
-                <button onClick={() => toggleFeeStatus(realIdx)} className="text-[10.5px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
+                <button onClick={() => toggleFeeStatus(realIdx)} className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
               </div>
             )
           })}
@@ -147,7 +147,7 @@ export function MeetingsScreen() {
             <div key={m.title + m.day} className="bg-white border border-td-border rounded-2xl p-3.5 flex items-center gap-[13px]">
               <div className="w-[46px] text-center shrink-0 bg-[#eaf1fc] rounded-xl py-2">
                 <div className="text-base font-extrabold text-td-primary leading-none">{m.day}</div>
-                <div className="text-[10px] text-td-primary font-semibold mt-0.5">{m.mon}</div>
+                <div className="text-[12px] text-td-primary font-semibold mt-0.5">{m.mon}</div>
               </div>
               <div className="flex-1">
                 <div className="text-[13.5px] font-bold text-td-dark">{m.title}</div>
@@ -215,10 +215,10 @@ function StudentRoster({ list }: { list: Student[] }) {
           <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
           <div className="flex-1 min-w-0">
             <div className="text-[13.5px] font-bold text-td-dark truncate">{s.name}</div>
-            <div className="text-[11.5px] text-td-muted truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
-            <div className="text-[11px] text-td-subtle truncate">{s.id}{s.parent ? ` · ${s.parent}` : ''}</div>
+            <div className="text-[12px] text-td-muted truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
+            <div className="text-[12px] text-td-subtle truncate">{s.id}{s.parent ? ` · ${s.parent}` : ''}</div>
           </div>
-          <span className="text-[10.5px] font-bold py-1 px-2.5 rounded-[20px] shrink-0" style={{ color: feeColor(s.feeStatus).c, background: feeColor(s.feeStatus).b }}>{s.feeStatus}</span>
+          <span className="text-[12px] font-bold py-1 px-2.5 rounded-[20px] shrink-0" style={{ color: feeColor(s.feeStatus).c, background: feeColor(s.feeStatus).b }}>{s.feeStatus}</span>
         </div>
       ))}
     </div>
@@ -275,13 +275,13 @@ export function BranchesScreen() {
             <div key={b.name} className="bg-white border border-td-border rounded-[18px] p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="text-[15px] font-extrabold text-td-dark">{b.name}</div>
-                {b.main && <span className="text-[10px] font-bold text-td-primary bg-[#eaf1fc] py-1 px-[9px] rounded-[20px]">Main</span>}
+                {b.main && <span className="text-[12px] font-bold text-td-primary bg-[#eaf1fc] py-1 px-[9px] rounded-[20px]">Main</span>}
               </div>
               <div className="text-[12.5px] text-td-muted mb-3">{b.address}</div>
               <div className="flex items-center justify-between">
                 <button onClick={() => setOpenBranch(open ? null : b.name)} className="flex gap-[18px] bg-transparent border-none p-0 cursor-pointer text-left">
-                  <div><div className="text-base font-extrabold text-td-dark">{roster.length}</div><div className="text-[11px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
-                  <div><div className="text-base font-extrabold text-td-dark">{b.staff}</div><div className="text-[11px] text-td-subtle font-semibold">Staff</div></div>
+                  <div><div className="text-base font-extrabold text-td-dark">{roster.length}</div><div className="text-[12px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
+                  <div><div className="text-base font-extrabold text-td-dark">{b.staff}</div><div className="text-[12px] text-td-subtle font-semibold">Staff</div></div>
                 </button>
                 {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-2 px-3.5 rounded-[12px] cursor-pointer">Remove</button>}
               </div>
@@ -370,7 +370,7 @@ export function BatchesScreen() {
                 <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{b.name[0]}</div>
                 <button onClick={() => setOpenBatch(open ? null : b.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
                   <div className="text-[14px] font-bold text-td-dark truncate">{b.name}</div>
-                  <div className="text-[11.5px] text-td-muted font-semibold">{roster.length} student{roster.length === 1 ? '' : 's'} {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
+                  <div className="text-[12px] text-td-muted font-semibold">{roster.length} student{roster.length === 1 ? '' : 's'} {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
                 </button>
                 {b.dbId && <button onClick={() => { if (window.confirm(`Remove batch "${b.name}"? Students keep their records; only the batch label is deleted.`)) deleteBatch(b.dbId) }} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
               </div>
@@ -421,7 +421,7 @@ export function MoreScreen() {
         <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
-          {!!m.badge && m.badge > 0 && <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
+          {!!m.badge && m.badge > 0 && <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
           <ChevronRight />
         </button>
       ))}
@@ -491,7 +491,7 @@ export function NotificationsScreen() {
         <div className="text-sm font-extrabold text-td-dark">{label}</div>
         <div className="text-[12px] text-td-muted mt-0.5">{count} waiting for your review</div>
       </div>
-      <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{count}</span>
+      <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{count}</span>
       <ChevronRight />
     </button>
   )
@@ -592,7 +592,7 @@ export function StaffProfileScreen() {
         <div className="text-[12.5px] text-td-muted mt-0.5">{googleEmail}</div>
         <div className="inline-flex items-center gap-[6px] bg-[#e7f5ee] rounded-[20px] py-[5px] px-[11px] mt-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-td-green" />
-          <span className="text-[11px] font-bold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
+          <span className="text-[12px] font-bold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
         </div>
       </div>
 
@@ -621,7 +621,7 @@ export function StaffProfileScreen() {
                     <button onClick={() => saveCentreLogo('')} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer">Remove</button>
                   )}
                 </div>
-                <p className="text-[11.5px] text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
+                <p className="text-[12px] text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
               </div>
               <input ref={logoInput} type="file" accept="image/*" className="hidden" onChange={e => pickLogo(e.target.files?.[0])} />
             </div>
@@ -650,7 +650,7 @@ export function StaffProfileScreen() {
       ) : (
         <div className="border border-td-border rounded-2xl p-4 mt-3">
           <div className="text-sm font-extrabold text-td-dark">Set a password</div>
-          <p className="text-[11.5px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
+          <p className="text-[12px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
           <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder="New password (min 8 chars)" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-3" />
           <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-2.5" />
           <div className="flex gap-2 mt-3">

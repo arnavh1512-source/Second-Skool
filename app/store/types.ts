@@ -53,6 +53,9 @@ export interface State {
   // Mirrors navigator.onLine. Every write checks it before firing, so a teacher
   // on dead mobile data is told up front instead of after a failed round-trip.
   online: boolean
+  // When the full dataset last came back from the server. Null until the first
+  // successful pull — the screen has never held server data at that point.
+  lastSyncedAt: number | null
   staffStatus: StaffStatus; headExists: boolean; staffList: StaffMember[]; weeklyReport: WeeklyReport | null; studentReports: StudentReport[] | null; teacherActivity: TeacherActivity[] | null
   googleEmail: string; myName: string; myPhone: string; mySubject: string; myQualification: string; profileDone: boolean
   centreName: string; centreLogo: string; joinCode: string; studentJoinCode: string; reminderType: string; plan: string

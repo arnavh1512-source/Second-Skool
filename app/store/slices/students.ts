@@ -199,6 +199,9 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
 
     if (typeof window !== 'undefined') localStorage.setItem('student_code', trimmed)
     const patch: Partial<State> = mapSnapshot(data)
+    // The snapshot is this student's whole dataset, so a successful pull is a
+    // sync in exactly the same sense as the staff one.
+    patch.lastSyncedAt = Date.now()
     // Only navigate on the initial load; a background (focus) refresh just
     // updates the data and must not yank the student off their current screen.
     if (navigate) {

@@ -75,7 +75,7 @@ export function TimetableScreen() {
           const active = d.s === ttDay
           return (
             <button key={d.s} onClick={() => set({ ttDay: d.s })} className="shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-1.5 cursor-pointer text-center" style={{ background: active ? '#2a6fdb' : '#fff', borderColor: active ? '#2a6fdb' : '#e6eaf2' }}>
-              <div className="text-[11px] font-bold" style={{ color: active ? '#fff' : '#3a4456' }}>{d.s}</div>
+              <div className="text-[12px] font-bold" style={{ color: active ? '#fff' : '#3a4456' }}>{d.s}</div>
               <div className="text-sm font-extrabold mt-0.5" style={{ color: active ? '#fff' : '#3a4456' }}>{d.d}</div>
             </button>
           )
@@ -121,23 +121,23 @@ export function TimetableScreen() {
           return (
             <div key={d.s} className={`rounded-2xl border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-[#f7faff]' : 'border-td-border bg-white'}`}>
               <button onClick={() => set({ ttDay: d.s })} className="w-full text-center mb-2 cursor-pointer bg-transparent border-none">
-                <div className="text-[11px] font-bold text-td-muted">{d.s}</div>
+                <div className="text-[12px] font-bold text-td-muted">{d.s}</div>
                 <div className="text-[15px] font-extrabold text-td-dark">{d.d}</div>
               </button>
               {ps.length === 0 ? (
-                <div className="text-center text-td-subtle text-[11px] py-3">—</div>
+                <div className="text-center text-td-subtle text-[12px] py-3">—</div>
               ) : (
                 <div className="flex flex-col gap-1.5">
                   {ps.map((p, i) => {
                     const s = periodStyle(p)
                     return (
                       <div key={i} className="rounded-[11px] border p-2" style={{ background: s.bg, borderColor: s.border }}>
-                        <div className="text-[10.5px] font-bold text-td-muted">{p[0]}–{p[1]}</div>
+                        <div className="text-[12px] font-bold text-td-muted">{p[0]}–{p[1]}</div>
                         <div className="text-[12px] font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
-                        <div className="text-[10.5px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
+                        <div className="text-[12px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
                         {isAdmin && (
                           <div className="flex gap-1 mt-1.5">
-                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-[#dbe6fa] bg-[#eaf1fc] text-td-primary text-[11px] cursor-pointer">✎</button>
+                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-[#dbe6fa] bg-[#eaf1fc] text-td-primary text-[12px] cursor-pointer">✎</button>
                             <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] cursor-pointer">×</button>
                           </div>
                         )}
@@ -164,7 +164,7 @@ export function TimetableScreen() {
               <div key={i} className="flex gap-[13px] items-stretch">
                 <div className="shrink-0 w-[58px] text-right pt-1">
                   <div className="text-[12.5px] font-extrabold text-td-dark">{p[0]}</div>
-                  <div className="text-[10.5px] text-td-subtle font-semibold">{p[1]}</div>
+                  <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
                 </div>
                 <div className="shrink-0 flex flex-col items-center">
                   <div className="w-[11px] h-[11px] rounded-full border-2 border-white" style={{ background: s.dot, boxShadow: `0 0 0 2px ${s.dot}` }} />
@@ -175,7 +175,7 @@ export function TimetableScreen() {
                     <div className="flex justify-between items-center gap-2">
                       <div className="text-sm font-extrabold" style={{ color: s.titleColor }}>{p[2]}</div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[10.5px] font-bold py-1 px-[9px] rounded-[20px]" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
+                        <span className="text-[12px] font-bold py-1 px-[9px] rounded-[20px]" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
                         {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-[#dbe6fa] bg-[#eaf1fc] text-td-primary flex items-center justify-center cursor-pointer text-[12px] leading-none">✎</button>}
                         {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red flex items-center justify-center cursor-pointer text-[15px] leading-none">×</button>}
                       </div>
@@ -236,11 +236,11 @@ export function AttendanceScreen() {
           <div className="flex gap-2.5 mb-4">
             <div className="flex-1 bg-[#e7f5ee] rounded-[14px] p-3 text-center">
               <div className="text-[22px] font-extrabold text-td-green">{presentCount}</div>
-              <div className="text-[11px] text-[#5a8a72] font-semibold">Present</div>
+              <div className="text-[12px] text-[#5a8a72] font-semibold">Present</div>
             </div>
             <div className="flex-1 bg-[#fdecea] rounded-[14px] p-3 text-center">
               <div className="text-[22px] font-extrabold text-td-red">{absentCount}</div>
-              <div className="text-[11px] text-[#a35545] font-semibold">Absent</div>
+              <div className="text-[12px] text-[#a35545] font-semibold">Absent</div>
             </div>
           </div>
 
@@ -425,7 +425,7 @@ export function AssignmentsScreen() {
               <div className="flex justify-between items-start gap-2">
                 <div className="text-[13.5px] font-bold text-td-dark">{a.title}</div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[11px] font-bold text-td-amber bg-[#fcf3e3] py-1 px-[9px] rounded-[20px] whitespace-nowrap">Due {a.due}</span>
+                  <span className="text-[12px] font-bold text-td-amber bg-[#fcf3e3] py-1 px-[9px] rounded-[20px] whitespace-nowrap">Due {a.due}</span>
                   {a.dbId && (
                     <button
                       onClick={() => deleteAssignment(a.dbId!)}

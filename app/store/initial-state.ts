@@ -7,6 +7,7 @@ export const initialState: State = {
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
   toast: '', toastKind: 'info', editIndex: 0,
   online: typeof navigator === 'undefined' ? true : navigator.onLine,
+  lastSyncedAt: null,
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
   googleEmail: '', myName: '', myPhone: '', mySubject: '', myQualification: '', profileDone: true,
   centreName: '', centreLogo: '', joinCode: '', studentJoinCode: '', reminderType: 'Test', plan: 'Monthly',

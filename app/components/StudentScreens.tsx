@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDashboard, GRADIENTS, initials, av, stuGrade } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { Icon, DataIcon, ink, type IconName } from './Icon'
+import { LastUpdated } from './LastUpdated'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 
 export function StuHomeScreen() {
@@ -89,21 +90,25 @@ export function StuHomeScreen() {
         )}
       </div>
 
+      <div className="mb-3.5">
+        <LastUpdated />
+      </div>
+
       <div className="grid grid-cols-2 gap-2.5 mb-3.5">
         <button onClick={() => go('stuAttendance', 'stuHome')} className="rounded-[18px] p-3.5 text-white text-left border-none cursor-pointer" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
           <div className="text-2xl font-extrabold leading-none">{attendancePct}%</div>
-          <div className="text-[11px] opacity-85 mt-1.5 font-semibold">Attendance</div>
+          <div className="text-[12px] opacity-85 mt-1.5 font-semibold">Attendance</div>
         </button>
         <button onClick={() => go('stuRanking', 'stuRanking')} className="bg-white border border-td-border rounded-[18px] p-3.5 text-left cursor-pointer">
           {rankInfo.rank > 0 ? (
             <>
               <div className="text-2xl font-extrabold leading-none text-td-dark">#{rankInfo.rank}<span className="text-sm text-td-muted font-semibold"> / {rankInfo.total}</span></div>
-              <div className="text-[11px] text-td-muted mt-1.5 font-semibold">Class Rank</div>
+              <div className="text-[12px] text-td-muted mt-1.5 font-semibold">Class Rank</div>
             </>
           ) : (
             <>
               <div className="text-2xl font-extrabold leading-none text-td-dark">&mdash;</div>
-              <div className="text-[11px] text-td-muted mt-1.5 font-semibold">No rank yet</div>
+              <div className="text-[12px] text-td-muted mt-1.5 font-semibold">No rank yet</div>
             </>
           )}
         </button>
@@ -111,19 +116,19 @@ export function StuHomeScreen() {
 
       {stuMonthly && (stuMonthly.attTotal > 0 || stuMonthly.tests > 0) && (
         <div className="rounded-[18px] p-4 mb-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2fa36b,#4db786)' }}>
-          <div className="text-[11px] font-bold opacity-85 mb-2.5">THIS MONTH</div>
+          <div className="text-[12px] font-bold opacity-85 mb-2.5">THIS MONTH</div>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <div className="text-[19px] font-extrabold leading-none">{stuMonthly.attTotal > 0 ? `${Math.round((stuMonthly.attPresent / stuMonthly.attTotal) * 100)}%` : '—'}</div>
-              <div className="text-[10.5px] opacity-80 mt-1 font-semibold">Attendance</div>
+              <div className="text-[12px] opacity-80 mt-1 font-semibold">Attendance</div>
             </div>
             <div>
               <div className="text-[19px] font-extrabold leading-none">{stuMonthly.tests}</div>
-              <div className="text-[10.5px] opacity-80 mt-1 font-semibold">Tests</div>
+              <div className="text-[12px] opacity-80 mt-1 font-semibold">Tests</div>
             </div>
             <div>
               <div className="text-[19px] font-extrabold leading-none">{stuMonthly.tests > 0 ? `${stuMonthly.avgPct}%` : '—'}</div>
-              <div className="text-[10.5px] opacity-80 mt-1 font-semibold">Avg score</div>
+              <div className="text-[12px] opacity-80 mt-1 font-semibold">Avg score</div>
             </div>
           </div>
         </div>
@@ -141,7 +146,7 @@ export function StuHomeScreen() {
         <button onClick={() => go('stuNotes', 'stuHome')} className="relative text-left bg-white border border-td-border rounded-[18px] p-3 cursor-pointer">
           <div className="w-[38px] h-[38px] rounded-[12px] bg-[#e7f5ee] flex items-center justify-center mb-2" style={{ color: ink('#e7f5ee') }}><Icon name="notes" size={20} /></div>
           <div className="text-[12.5px] font-extrabold text-td-dark leading-tight">Material</div>
-          {newNotes > 0 && <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-td-red text-white text-[10.5px] font-extrabold flex items-center justify-center">{newNotes}</span>}
+          {newNotes > 0 && <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-td-red text-white text-[12px] font-extrabold flex items-center justify-center">{newNotes}</span>}
         </button>
       </div>
 
@@ -169,7 +174,7 @@ export function StuHomeScreen() {
                   <div className="text-[13.5px] font-bold text-td-dark">{r.title}</div>
                   <div className="text-xs text-td-muted mt-0.5 truncate">{r.detail}</div>
                 </div>
-                <span className="text-[11px] text-td-subtle font-semibold shrink-0">{r.when}</span>
+                <span className="text-[12px] text-td-subtle font-semibold shrink-0">{r.when}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2cad8" strokeWidth="2.4" strokeLinecap="round" className="shrink-0"><path d="m9 18 6-6-6-6"/></svg>
               </button>
             ))}
@@ -186,7 +191,7 @@ export function StuHomeScreen() {
               const g = stuGrade(pct)
               return (
                 <div key={r.subject + r.test} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px]">
-                  <span className="text-[11px] font-extrabold py-[5px] px-2.5 rounded-[10px]" style={{ color: g.c, background: g.t }}>{g.g}</span>
+                  <span className="text-[12px] font-extrabold py-[5px] px-2.5 rounded-[10px]" style={{ color: g.c, background: g.t }}>{g.g}</span>
                   <div className="flex-1">
                     <div className="text-[13.5px] font-bold text-td-dark">{r.subject}</div>
                     <div className="text-xs text-td-muted mt-0.5">{r.test} · {r.date}</div>
@@ -248,7 +253,7 @@ export function StuAttendanceScreen() {
                 <div className="text-[13.5px] font-bold text-td-dark">{d.day}</div>
                 <div className="text-xs text-td-muted mt-0.5">{d.date}</div>
               </div>
-              <span className="text-[11px] font-bold" style={{ color: d.color }}>{d.status}</span>
+              <span className="text-[12px] font-bold" style={{ color: d.color }}>{d.status}</span>
             </div>
           ))}
         </div>
@@ -277,11 +282,11 @@ export function StuResultsScreen() {
           <div className="grid grid-cols-2 gap-2.5 mb-5">
             <div className="rounded-[18px] p-3.5 text-center" style={{ background: overall.t }}>
               <div className="text-2xl font-extrabold" style={{ color: overall.c }}>{overall.g}</div>
-              <div className="text-[11px] font-semibold mt-1" style={{ color: overall.c, opacity: .7 }}>Overall grade</div>
+              <div className="text-[12px] font-semibold mt-1" style={{ color: overall.c, opacity: .7 }}>Overall grade</div>
             </div>
             <div className="bg-white border border-td-border rounded-[18px] p-3.5 text-center">
               <div className="text-2xl font-extrabold text-td-dark">{avg}%</div>
-              <div className="text-[11px] text-td-muted font-semibold mt-1">Average</div>
+              <div className="text-[12px] text-td-muted font-semibold mt-1">Average</div>
             </div>
           </div>
 
@@ -293,7 +298,7 @@ export function StuResultsScreen() {
               return (
                 <div key={r.subject + r.test} className="bg-white border border-td-border rounded-[18px] p-3.5">
                   <div className="flex items-center gap-[13px] mb-2.5">
-                    <span className="text-[11px] font-extrabold py-[5px] px-2.5 rounded-[10px]" style={{ color: g.c, background: g.t }}>{g.g}</span>
+                    <span className="text-[12px] font-extrabold py-[5px] px-2.5 rounded-[10px]" style={{ color: g.c, background: g.t }}>{g.g}</span>
                     <div className="flex-1">
                       <div className="text-[13.5px] font-bold text-td-dark">{r.subject}</div>
                       <div className="text-xs text-td-muted mt-0.5">{r.test} · {r.date}</div>
@@ -355,8 +360,8 @@ export function StuRankingScreen() {
                   <div key={p.name} className="flex flex-col items-center">
                     <Icon name={medals[pi]} size={26} className="mb-1" style={{ color: MEDAL_INK[pi] }} />
                     <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px] mb-1.5" style={{ background: GRADIENTS[pi] }}>{initials(p.name)}</div>
-                    <div className="text-[11px] font-extrabold text-td-dark text-center leading-tight mb-0.5">{p.name.split(' ')[0]}{isYou && <span className="text-td-primary"> (You)</span>}</div>
-                    <div className="text-[11px] font-bold text-td-primary mb-1.5">{p.score}%</div>
+                    <div className="text-[12px] font-extrabold text-td-dark text-center leading-tight mb-0.5">{p.name.split(' ')[0]}{isYou && <span className="text-td-primary"> (You)</span>}</div>
+                    <div className="text-[12px] font-bold text-td-primary mb-1.5">{p.score}%</div>
                     <div className="w-[72px] rounded-t-[10px]" style={{ height: podiumHeights[pi], background: podiumBg[pi] }} />
                   </div>
                 )
@@ -402,7 +407,7 @@ export function StuTeachersScreen() {
               <div className="flex-1 min-w-0">
                 <div className="text-[15px] font-extrabold text-td-dark">{t.name}</div>
                 <div className="text-[12.5px] text-td-primary font-bold mt-0.5">{t.subject}</div>
-                <div className="text-[11.5px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
+                <div className="text-[12px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
               </div>
               <ChevronRight />
             </button>
@@ -431,11 +436,11 @@ export function StuTeacherDetail() {
       <div className="grid grid-cols-2 gap-2.5 mb-5">
         <div className="bg-white border border-td-border rounded-[18px] p-3.5 text-center">
           <div className="text-2xl font-extrabold text-td-dark">{t.experience}</div>
-          <div className="text-[11px] text-td-muted font-semibold mt-1">Years exp.</div>
+          <div className="text-[12px] text-td-muted font-semibold mt-1">Years exp.</div>
         </div>
         <div className="bg-white border border-td-border rounded-[18px] p-3.5 text-center">
           <div className="text-2xl font-extrabold text-td-amber flex items-center justify-center gap-1.5"><Icon name="star" size={20} />{t.rating || '—'}</div>
-          <div className="text-[11px] text-td-muted font-semibold mt-1">Rating</div>
+          <div className="text-[12px] text-td-muted font-semibold mt-1">Rating</div>
         </div>
       </div>
 
@@ -515,7 +520,7 @@ export function StuNotifScreen() {
               <div className="flex-1 min-w-0">
                 <div className="text-[13.5px] font-bold text-td-dark">{n.title}</div>
                 <div className="text-xs text-td-muted mt-1 leading-relaxed">{n.detail}</div>
-                <div className="text-[11px] text-td-subtle font-semibold mt-1.5">{n.when}</div>
+                <div className="text-[12px] text-td-subtle font-semibold mt-1.5">{n.when}</div>
               </div>
             </div>
           ))}
@@ -558,7 +563,7 @@ export function StuTimetableScreen() {
               <div key={i} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px]">
                 <div className="text-center shrink-0 w-[56px]">
                   <div className="text-[12.5px] font-extrabold text-td-primary">{p[0]}</div>
-                  <div className="text-[10.5px] text-td-subtle font-semibold">{p[1]}</div>
+                  <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
                 </div>
                 <div className="w-px h-[34px] bg-[#eef1f7]" />
                 <div className="flex-1 min-w-0">
@@ -637,7 +642,7 @@ export function StuProfileScreen() {
           <div className="text-[18px] font-extrabold">{displayName}</div>
           <div className="text-[12.5px] opacity-80 mt-0.5">{me?.klass ?? ''}</div>
           {stuResults.length > 0 && (
-            <span className="inline-block text-[10.5px] font-bold bg-white/20 py-1 px-2.5 rounded-[20px] mt-1.5">{grade.g} · {avg}%</span>
+            <span className="inline-block text-[12px] font-bold bg-white/20 py-1 px-2.5 rounded-[20px] mt-1.5">{grade.g} · {avg}%</span>
           )}
         </div>
       </div>
@@ -652,11 +657,11 @@ export function StuProfileScreen() {
           className="w-full text-left border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[18px] p-3.5 mb-5 cursor-pointer flex items-center justify-between gap-3"
         >
           <div className="min-w-0">
-            <div className="text-[11px] font-bold text-td-muted">YOUR STUDENT CODE</div>
+            <div className="text-[12px] font-bold text-td-muted">YOUR STUDENT CODE</div>
             <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em] truncate">{me.id}</div>
-            <div className="text-[11px] text-td-muted mt-0.5">Use this to sign in on any device. Keep it private.</div>
+            <div className="text-[12px] text-td-muted mt-0.5">Use this to sign in on any device. Keep it private.</div>
           </div>
-          <div className="text-[11px] font-bold text-td-primary flex items-center gap-1 shrink-0">
+          <div className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             Copy
           </div>
@@ -668,7 +673,7 @@ export function StuProfileScreen() {
           <div key={f.label} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px]">
             <Icon name={f.icon} size={20} className="text-td-muted shrink-0" />
             <div className="flex-1">
-              <div className="text-[11px] text-td-subtle font-semibold">{f.label}</div>
+              <div className="text-[12px] text-td-subtle font-semibold">{f.label}</div>
               <div className="text-[13.5px] font-bold text-td-dark mt-0.5">{f.value}</div>
             </div>
             {f.locked && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c2cad8" strokeWidth="2.2" strokeLinecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>}
@@ -676,7 +681,7 @@ export function StuProfileScreen() {
         ))}
       </div>
 
-      <div className="text-[11.5px] text-td-subtle text-center leading-relaxed">Your details are managed by your tuition centre and can&apos;t be changed here. Ask your teacher if something needs updating.</div>
+      <div className="text-[12px] text-td-subtle text-center leading-relaxed">Your details are managed by your tuition centre and can&apos;t be changed here. Ask your teacher if something needs updating.</div>
     </div>
   )
 }

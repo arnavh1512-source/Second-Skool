@@ -39,6 +39,12 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       const st = useDashboard.getState()
       if (st.supabaseUserId && (st.role === 'admin' || st.role === 'teacher') && st.staffStatus === 'approved') {
         await fetchAllData().catch(() => {})
+      } else if (!st.supabaseUserId && st.currentStudentDbId) {
+        // A code-access student has no Supabase session, so the staff branch
+        // above skips them entirely and refreshData() used to be a no-op on
+        // every student screen. Their snapshot is the equivalent pull.
+        const code = localStorage.getItem('student_code')
+        if (code) await st.loadStudentByCode(code, false).catch(() => false)
       }
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps -- register once; fetchAllData reads fresh state via store actions
@@ -360,6 +366,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       branchesList, meetingsList, assignmentsList, timetableData, schedule,
       rankData, subjects: subjectItems, batches: batchList, stuResults, stuAttendanceLog,
       stuFeeHistory, stuPendingFee, stuNotifications, stuReminders, pendingStudents,
+      lastSyncedAt: Date.now(),
     })
   }
 

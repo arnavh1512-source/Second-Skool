@@ -175,7 +175,7 @@ export function DevConsoleScreen() {
         <div className="bg-[#fdf3f0] border border-[#f4d8cf] rounded-[14px] p-3.5 mb-4 flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-extrabold text-td-red">Inside {devSeat.centreName}</div>
-            <div className="text-[11.5px] text-td-muted">
+            <div className="text-[12px] text-td-muted">
               You are a head of this centre — every edit is real, and their staff list shows you.
             </div>
           </div>
@@ -243,7 +243,7 @@ export function DevConsoleScreen() {
               />
             : <People rows={data.staff} />}
 
-          <div className="text-[11px] text-td-subtle text-center mt-5">
+          <div className="text-[12px] text-td-subtle text-center mt-5">
             Snapshot {ago(data.generatedAt)} · this view reads aggregates only. Open a centre to edit its data.
           </div>
         </>
@@ -258,7 +258,7 @@ export function DevConsoleScreen() {
               attendance record, result, fee and note belonging to this centre. Its members go back to being
               unregistered accounts. It cannot be undone from here.
             </p>
-            <label className="block text-[11.5px] font-bold text-td-muted mt-3.5 mb-1.5">
+            <label className="block text-[12px] font-bold text-td-muted mt-3.5 mb-1.5">
               Type <span className="text-td-dark">{doomed.name}</span> to confirm
             </label>
             <input
@@ -293,9 +293,9 @@ export function DevConsoleScreen() {
 function Stat({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
   return (
     <div className="bg-white border border-td-border rounded-[16px] p-3.5">
-      <div className="text-[11px] font-bold text-td-muted">{label}</div>
+      <div className="text-[12px] font-bold text-td-muted">{label}</div>
       <div className="text-[20px] font-extrabold text-td-dark mt-0.5 leading-tight">{value}</div>
-      {sub && <div className="text-[11px] text-td-amber mt-0.5">{sub}</div>}
+      {sub && <div className="text-[12px] text-td-amber mt-0.5">{sub}</div>}
     </div>
   )
 }
@@ -303,9 +303,9 @@ function Stat({ label, value, sub }: { label: string; value: number | string; su
 function Field({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
-      <div className="text-[11px] text-td-muted">{label}</div>
+      <div className="text-[12px] text-td-muted">{label}</div>
       <div className="text-[13px] font-extrabold text-td-dark">{value}</div>
-      {sub && <div className="text-[11px] text-td-amber">{sub}</div>}
+      {sub && <div className="text-[12px] text-td-amber">{sub}</div>}
     </div>
   )
 }
@@ -327,16 +327,16 @@ function Centres({ rows, seatId, seating, onSeat, onDelete }: CentresProps) {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-[15px] font-extrabold text-td-dark truncate">{c.name}</div>
-              <div className="text-[11.5px] text-td-muted truncate">
+              <div className="text-[12px] text-td-muted truncate">
                 {c.owner?.name ?? 'no owner'}{c.owner?.email ? ` · ${c.owner.email}` : ''}
               </div>
-              <div className="text-[11.5px] text-td-subtle">head last signed in {ago(c.owner?.lastSignIn ?? null)}</div>
+              <div className="text-[12px] text-td-subtle">head last signed in {ago(c.owner?.lastSignIn ?? null)}</div>
             </div>
             <div className="text-right shrink-0">
               <div className={`text-[13px] font-extrabold ${c.activity7d.total ? 'text-td-green' : 'text-td-subtle'}`}>
                 {c.activity7d.total} · 7d
               </div>
-              <div className="text-[11px] text-td-muted">active {ago(c.lastActive)}</div>
+              <div className="text-[12px] text-td-muted">active {ago(c.lastActive)}</div>
             </div>
           </div>
 
@@ -347,7 +347,7 @@ function Centres({ rows, seatId, seating, onSeat, onDelete }: CentresProps) {
             <Field label="Fees" value={inr(c.fees.collected)} sub={c.fees.outstanding ? `${inr(c.fees.outstanding)} due` : undefined} />
           </div>
 
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-[#f0f2f7] text-[11px] text-td-muted">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-[#f0f2f7] text-[12px] text-td-muted">
             <span>attendance {c.activity30d.attendance}</span>
             <span>results {c.activity30d.results}</span>
             <span>assignments {c.activity30d.assignments}</span>
@@ -357,7 +357,7 @@ function Centres({ rows, seatId, seating, onSeat, onDelete }: CentresProps) {
             <span className="text-td-subtle">(30d)</span>
           </div>
 
-          <div className="text-[11px] text-td-subtle mt-2">
+          <div className="text-[12px] text-td-subtle mt-2">
             created {day(c.createdAt)} · staff code {c.joinCode ?? '—'} · student code {c.studentJoinCode ?? '—'}
           </div>
 
@@ -392,14 +392,14 @@ function People({ rows }: { rows: StaffRow[] }) {
         <div key={s.id} className="bg-white border border-td-border rounded-[16px] p-3.5 flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <div className="text-[13.5px] font-extrabold text-td-dark truncate">{s.name ?? '—'}</div>
-            <div className="text-[11.5px] text-td-muted truncate">{s.email ?? '—'}</div>
-            <div className="text-[11px] text-td-subtle truncate">
+            <div className="text-[12px] text-td-muted truncate">{s.email ?? '—'}</div>
+            <div className="text-[12px] text-td-subtle truncate">
               {s.centre ?? 'unattached'} · {s.role === 'admin' ? 'head' : s.role} · joined {day(s.createdAt)}
             </div>
           </div>
           <div className="text-right shrink-0">
             <span
-              className="text-[10.5px] font-extrabold rounded-md px-2 py-0.5 inline-block"
+              className="text-[12px] font-extrabold rounded-md px-2 py-0.5 inline-block"
               style={
                 s.status === 'approved' ? { background: '#e7f5ee', color: '#2fa36b' }
                   : s.status === 'pending' ? { background: '#fcf3e3', color: '#e0962f' }
@@ -409,7 +409,7 @@ function People({ rows }: { rows: StaffRow[] }) {
             >
               {s.status}
             </span>
-            <div className="text-[11px] text-td-muted mt-1">{ago(s.lastSignIn)}</div>
+            <div className="text-[12px] text-td-muted mt-1">{ago(s.lastSignIn)}</div>
           </div>
         </div>
       ))}

@@ -34,14 +34,14 @@ function NavRow({ item }: { item: NavItem }) {
       <span className="w-[30px] h-[30px] rounded-[9px] bg-white border border-td-border flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
       <span className={`flex-1 text-[13.5px] ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
-        <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
+        <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
       )}
     </button>
   )
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-[11px] font-extrabold text-td-muted uppercase tracking-wide px-3 mt-5 mb-1.5">{children}</div>
+  return <div className="text-[12px] font-extrabold text-td-muted uppercase tracking-wide px-3 mt-5 mb-1.5">{children}</div>
 }
 
 function Sidebar() {
@@ -86,7 +86,7 @@ function Sidebar() {
           : <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-extrabold text-[15px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
         <div className="min-w-0">
           <div className="text-[14.5px] font-extrabold text-td-dark truncate">{centreName || 'Second Skool'}</div>
-          <div className="text-[11px] text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
+          <div className="text-[12px] text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
         </div>
       </div>
 
@@ -107,7 +107,7 @@ function Sidebar() {
           <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-bold text-[13px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{initials(name)}</div>
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-extrabold text-td-dark truncate">{name}</div>
-            <div className="text-[11px] text-td-muted truncate">{googleEmail}</div>
+            <div className="text-[12px] text-td-muted truncate">{googleEmail}</div>
           </div>
         </button>
         <button onClick={signOut} className="w-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer flex items-center justify-center gap-2">

@@ -54,7 +54,7 @@ function BottomTabBar() {
         {stuTabs.map(t => (
           <button key={t.key} onClick={() => go(t.screen, t.key)} className="border-none bg-transparent cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
             {t.icon(color(t.key))}
-            <span className="text-[10.5px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
+            <span className="text-[12px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
           </button>
         ))}
       </div>
@@ -86,7 +86,7 @@ function BottomTabBar() {
               <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-white" />
             )}
           </span>
-          <span className="text-[10.5px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
+          <span className="text-[12px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
         </button>
       ))}
     </div>

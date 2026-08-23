@@ -2,6 +2,7 @@
 
 import { useDashboard, initials, type Screen } from '../store'
 import { Icon, ink, type IconName } from './Icon'
+import { LastUpdated } from './LastUpdated'
 
 export function HomeScreen() {
   const { role, go, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
@@ -38,36 +39,39 @@ export function HomeScreen() {
         </button>
       </div>
 
-      {isAdmin ? (
-        <button onClick={() => go('branches')} className="inline-flex items-center gap-[7px] bg-white border border-td-border rounded-[20px] py-[7px] px-[13px] mb-[18px] cursor-pointer">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
-          <span className="text-[12.5px] font-semibold text-td-text">{mainBranch?.name ?? 'No branch'}</span>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9aa4b6" strokeWidth="2.4" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-      ) : mainBranch ? (
-        <div className="inline-flex items-center gap-[7px] bg-white border border-td-border rounded-[20px] py-[7px] px-[13px] mb-[18px]">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
-          <span className="text-[12.5px] font-semibold text-td-text">{mainBranch.name}</span>
-        </div>
-      ) : null}
+      <div className="flex items-center justify-between gap-3 mb-[18px]">
+        {isAdmin ? (
+          <button onClick={() => go('branches')} className="inline-flex items-center gap-[7px] bg-white border border-td-border rounded-[20px] py-[7px] px-[13px] cursor-pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+            <span className="text-[12.5px] font-semibold text-td-text">{mainBranch?.name ?? 'No branch'}</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9aa4b6" strokeWidth="2.4" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        ) : mainBranch ? (
+          <div className="inline-flex items-center gap-[7px] bg-white border border-td-border rounded-[20px] py-[7px] px-[13px]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+            <span className="text-[12.5px] font-semibold text-td-text">{mainBranch.name}</span>
+          </div>
+        ) : <span />}
+        <LastUpdated />
+      </div>
 
       <div className="grid grid-cols-2 gap-2.5 mb-3.5 lg:max-w-md">
         <div className="rounded-[18px] p-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
           <div className="text-2xl font-extrabold leading-none">{schedule.length}</div>
-          <div className="text-[11px] opacity-85 mt-1.5 font-semibold">Classes today</div>
+          <div className="text-[12px] opacity-85 mt-1.5 font-semibold">Classes today</div>
         </div>
         <div className="bg-white border border-td-border rounded-[18px] p-3.5">
           <div className="text-2xl font-extrabold leading-none text-td-dark">{students.length}</div>
-          <div className="text-[11px] text-td-muted mt-1.5 font-semibold">Students</div>
+          <div className="text-[12px] text-td-muted mt-1.5 font-semibold">Students</div>
         </div>
       </div>
 
       <div className="text-base font-extrabold text-td-dark mb-[13px]">Quick actions</div>
-      <div className="grid grid-cols-4 gap-[11px] mb-[26px] lg:max-w-2xl">
+      <div className="grid grid-cols-4 gap-2 mb-[26px] lg:max-w-2xl">
         {quickActions.map(a => (
-          <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-white rounded-[18px] py-3 px-1.5 cursor-pointer flex flex-col items-center gap-[7px]">
+          <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-white rounded-[18px] py-3 px-0.5 cursor-pointer flex flex-col items-center gap-[7px]">
             <div className="w-[42px] h-[42px] rounded-[13px] flex items-center justify-center" style={{ background: a.tint, color: ink(a.tint) }}><Icon name={a.icon} size={21} /></div>
-            <span className="text-[10.5px] font-bold text-td-text text-center leading-tight">{a.label}</span>
+            <span className="text-[12px] font-bold text-td-text text-center leading-tight tracking-tight">{a.label}</span>
           </button>
         ))}
       </div>
@@ -81,14 +85,14 @@ export function HomeScreen() {
             <div key={i} className="flex items-center gap-[13px] bg-white border border-td-border rounded-[18px] py-3.5 px-[15px]">
               <div className="text-center shrink-0 w-[52px]">
                 <div className="text-sm font-extrabold text-td-primary">{c.time}</div>
-                <div className="text-[10px] text-td-subtle font-semibold">{c.ampm}</div>
+                <div className="text-[12px] text-td-subtle font-semibold">{c.ampm}</div>
               </div>
               <div className="w-px h-[34px] bg-[#eef1f7]" />
               <div className="flex-1">
                 <div className="text-[13.5px] font-bold text-td-dark">{c.subject}</div>
                 <div className="text-xs text-td-muted mt-0.5">{c.klass} · {c.room}</div>
               </div>
-              <span className="text-[11px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: c.statusColor, background: c.statusBg }}>{c.status}</span>
+              <span className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: c.statusColor, background: c.statusBg }}>{c.status}</span>
             </div>
           ))}
         </div>

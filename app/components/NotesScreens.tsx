@@ -84,9 +84,9 @@ export function NotesScreen() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-extrabold text-td-dark">{n.title}</div>
-                  <div className="text-[11.5px] text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
+                  <div className="text-[12px] text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
                 </div>
-                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[11.5px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>
+                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>
               </div>
               {n.body && <div className="text-[13px] text-td-text leading-relaxed mt-2">{n.body}</div>}
               <div className="flex gap-2 mt-2.5">
@@ -124,7 +124,7 @@ export function StuNotesScreen() {
                 <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-[#eaf1fc]" style={{ color: ink('#eaf1fc') }}><Icon name="notes" size={19} /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-extrabold text-td-dark">{n.title}</div>
-                  {n.subject && <div className="text-[11.5px] text-td-muted mt-0.5">{n.subject}</div>}
+                  {n.subject && <div className="text-[12px] text-td-muted mt-0.5">{n.subject}</div>}
                 </div>
               </div>
               {n.body && <div className="text-[13px] text-td-text leading-relaxed mt-2.5">{n.body}</div>}
