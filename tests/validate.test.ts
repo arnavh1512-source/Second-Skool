@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { LIMITS, capLength, clampText, isWholeNumber, safeLinkUrl } from '../app/store/validate'
+import { LIMITS, MIN_PASSWORD_LENGTH, capLength, clampText, isWholeNumber, passwordTooShort, safeLinkUrl } from '../app/store/validate'
 
 // These are the boundary guards for every free-text and numeric field a head or
 // teacher can type into. An external QA pass stored a 500-character name, an
@@ -112,5 +112,25 @@ describe('LIMITS', () => {
       name: 80, klass: 40, school: 120, parent: 20, address: 200,
       period: 40, title: 120, maxMarks: 1000, feeAmount: 10_000_000,
     })
+  })
+})
+
+describe('passwordTooShort', () => {
+  // Supabase enforces its own floor server-side. When ours was lower, an
+  // 8-character password passed the field's own check and came back rejected
+  // in Supabase's wording, which the head reads as the app being broken.
+  it('mirrors the Supabase minimum password length', () => {
+    expect(MIN_PASSWORD_LENGTH).toBe(10)
+  })
+
+  it('rejects anything below the floor', () => {
+    expect(passwordTooShort('')).toBe(true)
+    expect(passwordTooShort('short')).toBe(true)
+    expect(passwordTooShort('nineChars')).toBe(true)
+  })
+
+  it('accepts the floor exactly, and above', () => {
+    expect(passwordTooShort('tenChars!!')).toBe(false)
+    expect(passwordTooShort('a much longer passphrase')).toBe(false)
   })
 })

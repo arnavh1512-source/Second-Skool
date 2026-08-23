@@ -21,6 +21,19 @@ export const LIMITS = {
 } as const
 
 /**
+ * Minimum length for a staff sign-in password.
+ *
+ * This has to match the floor configured in Supabase (Authentication > Sign In
+ * / Providers > Email > Minimum password length). If the app's number is lower,
+ * the user gets past our check and Supabase rejects the save with its own
+ * wording — the field says one thing and the server says another.
+ */
+export const MIN_PASSWORD_LENGTH = 10
+
+/** True when a password is too short to be accepted. */
+export const passwordTooShort = (pw: string): boolean => pw.length < MIN_PASSWORD_LENGTH
+
+/**
  * Cut to length, keeping whitespace. For fields edited live, keystroke by
  * keystroke — trimming here would swallow the space the moment it is typed,
  * so "John" could never become "John Smith".

@@ -3,6 +3,7 @@ import { logError } from '../../lib/log'
 import { friendlyError } from '../errors'
 import { initialState } from '../initial-state'
 import { landingScreen } from '../navigation'
+import { MIN_PASSWORD_LENGTH, passwordTooShort } from '../validate'
 import type { Slice } from '../slice'
 import type { Screen, StaffMember, StaffStatus, Tab } from '../types'
 
@@ -121,7 +122,7 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
   // installed PWA with email+password — a fully in-app flow that survives
   // relaunches (unlike Google's redirect, which escapes to the browser).
   setMyPassword: async (password) => {
-    if (password.length < 8) { get().notify('Password must be at least 8 characters', 'error'); return false }
+    if (passwordTooShort(password)) { get().notify(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`, 'error'); return false }
     const { error } = await supabase.auth.updateUser({ password })
     if (error) { get().notify(error.message || 'Could not set password', 'error'); return false }
     get().notify('Password set — you can now sign in with your email')

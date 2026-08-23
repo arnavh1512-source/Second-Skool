@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, LIMITS, clampText, type Screen, type Student } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, LIMITS, MIN_PASSWORD_LENGTH, clampText, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
@@ -651,7 +651,7 @@ export function StaffProfileScreen() {
         <div className="border border-td-border rounded-2xl p-4 mt-3">
           <div className="text-sm font-extrabold text-td-dark">Set a password</div>
           <p className="text-[12px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
-          <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder="New password (min 8 chars)" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-3" />
+          <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-3" />
           <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-2.5" />
           <div className="flex gap-2 mt-3">
             <button onClick={savePassword} disabled={pwBusy} className="flex-1 border-none bg-td-primary text-white text-[13.5px] font-extrabold py-[12px] rounded-[12px] cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
