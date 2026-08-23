@@ -87,6 +87,18 @@ jobs:
               echo "::error::That is the direct connection, which is IPv6-only. GitHub runners are IPv4 — use the Session pooler (host ends in pooler.supabase.com)."
               exit 1 ;;
           esac
+          # The pooler multiplexes every project on one host, so it needs the
+          # tenant in the username. Plain `postgres` gets you a bare
+          # "password authentication failed" that reads like a wrong password.
+          case "$SUPABASE_DB_URL" in
+            *pooler.supabase.com*)
+              case "$SUPABASE_DB_URL" in
+                postgresql://postgres.*) : ;;
+                *)
+                  echo "::error::The pooler needs the tenant-qualified user 'postgres.<project-ref>', not plain 'postgres'. Re-copy the Session pooler URI rather than editing the direct one by hand."
+                  exit 1 ;;
+              esac ;;
+          esac
 
       - name: Dump application data
         env:
