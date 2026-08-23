@@ -1,0 +1,138 @@
+# Nightly database backup.
+#
+# The Supabase free plan takes no backups at all — no snapshots, no PITR, no
+# export button. This database holds student names, home addresses and parents'
+# phone numbers, so "no backups" is not a posture we can keep. This workflow is
+# the free-tier substitute: a nightly pg_dump stored as a private GitHub
+# artifact.
+#
+# SETUP — one secret, then this runs on its own:
+#   Supabase Dashboard > Connect > Session pooler > copy the URI
+#   GitHub > Settings > Secrets and variables > Actions > New repository secret
+#     Name:  SUPABASE_DB_URL
+#     Value: postgresql://postgres.<ref>:<password>@aws-...pooler.supabase.com:5432/postgres
+#
+#   It must be the SESSION pooler (port 5432), not the transaction pooler
+#   (6543) — pg_dump needs a session, and the transaction pooler will not give
+#   it one. Direct connections are IPv6-only and GitHub runners are IPv4, so
+#   the pooler is the only route that works from here.
+#
+# OPTIONAL — add a BACKUP_PASSPHRASE secret and the dumps are encrypted at
+# rest with GPG. Without it they are plain gzip, which is acceptable only
+# because this repo is private. If the repo is ever made public, artifacts
+# become world-readable and this secret stops being optional.
+#
+# Restoring is documented in supabase/BACKUP.md. A backup nobody has tried to
+# restore is a guess, not a backup — do the drill once.
+
+name: Database backup
+
+on:
+  schedule:
+    # 20:00 UTC = 01:30 IST, well clear of tuition hours.
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+# Never let two dumps overlap.
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - name: Fail early if the connection string is missing
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL is not set. See the setup notes at the top of this file."
+            exit 1
+          fi
+
+      # The runner ships an older client. pg_dump refuses to dump a server
+      # newer than itself, and this database is Postgres 17.
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/pgdg.gpg
+          echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
+
+      - name: Dump application data
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          # Schema plus data for everything the app owns. No --clean: a file
+          # full of DROP statements is a loaded gun sitting in an artifact.
+          pg_dump "$SUPABASE_DB_URL" \
+            --schema=public \
+            --no-owner --no-privileges \
+            --file=out/public.sql
+
+      - name: Dump auth users
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          # Data only. A fresh Supabase project builds the auth schema itself,
+          # so the structure is never what you want to restore — the rows are.
+          pg_dump "$SUPABASE_DB_URL" \
+            --data-only \
+            --table=auth.users \
+            --table=auth.identities \
+            --no-owner --no-privileges \
+            --file=out/auth-users.sql
+
+      # A dump that silently produced nothing is worse than no dump, because it
+      # looks like success on the runs page for months.
+      - name: Verify the dumps are real
+        run: |
+          set -euo pipefail
+          for f in out/public.sql out/auth-users.sql; do
+            size=$(stat -c%s "$f")
+            echo "$f — $size bytes"
+            if [ "$size" -lt 1000 ]; then
+              echo "::error::$f is only $size bytes. Treating this as a failed backup."
+              exit 1
+            fi
+          done
+          grep -q 'CREATE TABLE public.students' out/public.sql || {
+            echo "::error::public.sql has no students table. The dump is incomplete."; exit 1; }
+
+      - name: Compress and encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          gzip out/public.sql out/auth-users.sql
+          if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
+            for f in out/*.gz; do
+              gpg --batch --yes --symmetric --cipher-algo AES256 \
+                  --passphrase "$BACKUP_PASSPHRASE" "$f"
+              rm "$f"
+            done
+            echo "Encrypted with AES256. Decrypt with: gpg --decrypt <file>.gpg > <file>"
+          else
+            echo "::warning::BACKUP_PASSPHRASE is not set — dumps are stored as plain gzip. Safe only while this repository stays private."
+          fi
+          ls -lh out/
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: out/
+          retention-days: 90
+          if-no-files-found: error
