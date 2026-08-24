@@ -219,11 +219,25 @@ describe('the promise on the waiting screen', () => {
     expect(enablePush).toHaveBeenCalledWith('student', 'TUT-ABCDEFGH')
   })
 
+  it('subscribes once, not on every 15s re-check', async () => {
+    // This sits on the polling path. Without a guard the student writes the
+    // same subscription row four times a minute for as long as they wait.
+    vi.stubGlobal('Notification', { permission: 'granted' })
+    supported.on = true
+    const snap = { data: { status: 'pending', student: { name: 'Neha', code: 'TUT-POLLPOLL' } }, error: null }
+    rpc.mockResolvedValue(snap)
+
+    await S().loadStudentByCode('TUT-POLLPOLL', false)
+    await S().loadStudentByCode('TUT-POLLPOLL', false)
+    await S().loadStudentByCode('TUT-POLLPOLL', false)
+    expect(enablePush).toHaveBeenCalledTimes(1)
+  })
+
   it('does not subscribe when the browser cannot do push at all', async () => {
     supported.on = false
-    rpc.mockResolvedValueOnce({ data: { status: 'pending', student: { name: 'Neha', code: 'TUT-ABCDEFGH' } }, error: null })
+    rpc.mockResolvedValueOnce({ data: { status: 'pending', student: { name: 'Neha', code: 'TUT-NOPUSHXX' } }, error: null })
 
-    await S().loadStudentByCode('TUT-ABCDEFGH', false)
+    await S().loadStudentByCode('TUT-NOPUSHXX', false)
     expect(enablePush).not.toHaveBeenCalled()
   })
 })

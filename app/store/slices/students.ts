@@ -24,8 +24,18 @@ import type { State, Student, Tab } from '../types'
 // Only when permission is already granted: at 'default' the gate screen asks
 // properly, with a reason, and firing a bare browser dialog behind it is worse
 // than waiting. At 'denied' there is nothing to do.
+//
+// Once per code per page load. The waiting screen re-checks every 15s and this
+// sits on that path, so without the guard a student staring at "You're on the
+// list" writes the same subscription row four times a minute for as long as
+// they wait.
+let subscribed = ''
 const subscribePending = (code: string) => {
-  if (pushSupported() && Notification.permission === 'granted') enablePush('student', code).catch(() => {})
+  if (subscribed === code) return
+  if (!pushSupported() || Notification.permission !== 'granted') return
+  subscribed = code
+  // A failure must not be remembered as a success — the next poll should retry.
+  enablePush('student', code).then(r => { if (!r.ok) subscribed = '' }).catch(() => { subscribed = '' })
 }
 
 type Keys =
