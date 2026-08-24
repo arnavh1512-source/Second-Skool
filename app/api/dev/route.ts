@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/app/lib/push-guard'
 import { logError, logWarn } from '@/app/lib/log'
 import { verifyOperator } from '@/app/lib/operator'
+import { LEAF_TABLES, SPINE_TABLES } from '@/app/lib/centre-tables'
 
 export const runtime = 'nodejs'
 // Every response is a live snapshot of the database — never prerender or cache it.
@@ -432,15 +433,6 @@ export async function POST(req: NextRequest) {
   return nostore({ error: 'unknown action' }, 400)
 }
 
-// Child tables in dependency order. Every one of them carries `centre_id`, but
-// they also reference each other — attendance points at students, tests point at
-// subjects, timetable points at teachers — and none of those FKs cascade. So the
-// rows have to come out leaves-first or Postgres refuses the parent.
-const LEAF_TABLES = [
-  'attendance', 'results', 'assignments', 'fees', 'notifications',
-  'reminders', 'meetings', 'timetable', 'notes', 'push_subscriptions',
-] as const
-const SPINE_TABLES = ['tests', 'students', 'teachers', 'subjects', 'branches'] as const
 
 // Deleting a centre erases a real customer's entire history and cannot be
 // undone from here. Two things stand between a stray tap and that: the request
