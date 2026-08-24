@@ -11,6 +11,23 @@ import type { Slice } from '../slice'
 import { mapSnapshot } from '../snapshot'
 import type { State, Student, Tab } from '../types'
 
+// Register this device against a student code while the head has not approved
+// them yet.
+//
+// enablePush used to run only once a student was approved (and from the
+// "turn on reminders" gate screen). But that gate only appears while
+// permission is un-granted — so on any device that had already allowed
+// notifications once, a newly joined student was subscribed nowhere at all,
+// with the app showing every sign that alerts were on. Nothing could reach
+// them, including the approval push above.
+//
+// Only when permission is already granted: at 'default' the gate screen asks
+// properly, with a reason, and firing a bare browser dialog behind it is worse
+// than waiting. At 'denied' there is nothing to do.
+const subscribePending = (code: string) => {
+  if (pushSupported() && Notification.permission === 'granted') enablePush('student', code).catch(() => {})
+}
+
 type Keys =
   | 'setStudentField' | 'setNewStudent' | 'setStuSignup' | 'studentSignup'
   | 'deleteStudent' | 'addStudent' | 'approveStudent' | 'rejectStudent' | 'saveStudentEdit'
@@ -99,6 +116,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
       role: 'student', staffStatus: 'none', screen: 'stuPending', tab: 'stuHome', authLoading: false,
     })
+    subscribePending(d.code)
   },
 
   // Deleting a student cascades their attendance, results, fees and notes, so
@@ -173,6 +191,9 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
   },
 
   approveStudent: async (dbId, klass, branchId, fee, feeDue, batch) => {
+    // Read the code before the row leaves pendingStudents below — it is the
+    // only handle we have for pushing to this student.
+    const code = get().pendingStudents.find(p => p.dbId === dbId)?.code
     const amt = Number(fee)
     const { error } = await supabase.rpc('approve_student', {
       p_id: dbId,
@@ -195,6 +216,16 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       }
     }
     set((s) => ({ pendingStudents: s.pendingStudents.filter(p => p.dbId !== dbId) }))
+    // The waiting screen promises "you'll get in the moment they approve you".
+    // Nothing was keeping that promise: approval sent no notification at all,
+    // so a student who had closed the app had no way to learn they were in
+    // short of reopening it and tapping Check approval on the off chance.
+    // Best-effort — an approval must never fail because a push did.
+    if (code) sendPush({
+      studentCodes: [code],
+      title: 'You\u2019re approved',
+      body: 'Open the app to see your timetable, marks and fees.',
+    }).catch(() => {})
     get().notify('Student approved')
     await get().refreshData()
   },
@@ -226,6 +257,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     // Awaiting the head's approval — hold on the waiting screen (no dashboard data).
     if (snap.status === 'pending') {
       writeLocal('student_code', trimmed)
+      subscribePending(trimmed)
       set({
         stuPending: { name: snap.student?.name ?? '', code: snap.student?.code ?? trimmed, centre: get().stuPending?.centre ?? '' },
         stuDenied: null,
@@ -256,7 +288,17 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     patch.lastSyncedAt = Date.now()
     // Only navigate on the initial load; a background (focus) refresh just
     // updates the data and must not yank the student off their current screen.
-    if (navigate) {
+    //
+    // Except from a waiting screen, where being moved off IS the point. The
+    // pending screen polls every 15s for exactly this, but polled with
+    // navigate=false (rightly — navigate also turns on error toasts, and a
+    // flaky signal would have popped "Invalid code" four times a minute). So
+    // the poll could see the approval and then do nothing with it: the student
+    // sat on "You're on the list" until they happened to tap Check approval by
+    // hand. The decline path already flips the screen on a background poll;
+    // this is the same rule applied to the outcome anyone actually waits for.
+    const onWaitingScreen = get().screen === 'stuPending' || get().screen === 'stuDenied'
+    if (navigate || onWaitingScreen) {
       Object.assign(patch, {
         role: 'student', staffStatus: 'none', screen: 'stuHome', tab: 'stuHome' as Tab,
         authLoading: false, stuPending: null, stuDenied: null, stuRankSubject: Object.keys(patch.rankData ?? {})[0] ?? '',

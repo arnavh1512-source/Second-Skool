@@ -4,7 +4,14 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 // `supabase` at module load, so the mock must be declared before the import.
 const rpc = vi.fn<(name: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>>()
 vi.mock('../app/lib/supabase', () => ({ supabase: { rpc: (...a: [string, Record<string, unknown>?]) => rpc(...a) } }))
-vi.mock('../app/lib/push', () => ({ sendPush: vi.fn(() => Promise.resolve()), enablePush: vi.fn(), pushSupported: () => false }))
+const sendPush = vi.fn(() => Promise.resolve())
+const enablePush = vi.fn(() => Promise.resolve({ ok: true }))
+const supported = { on: false }
+vi.mock('../app/lib/push', () => ({
+  sendPush: (...a: unknown[]) => sendPush(...(a as [])),
+  enablePush: (...a: unknown[]) => enablePush(...(a as [])),
+  pushSupported: () => supported.on,
+}))
 
 import { useDashboard, type PendingStudent } from '../app/store'
 
@@ -17,12 +24,15 @@ const pending = (over: Partial<PendingStudent> = {}): PendingStudent => ({
 
 beforeEach(() => {
   rpc.mockReset()
+  sendPush.mockClear()
+  enablePush.mockClear()
+  supported.on = false
   useDashboard.setState({
     stuSignup: { joinCode: 'ABC123', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
     stuPending: null, pendingStudents: [], toast: '', screen: 'home', role: 'admin',
   })
 })
-afterEach(() => vi.clearAllTimers())
+afterEach(() => { vi.clearAllTimers(); vi.unstubAllGlobals() })
 
 describe('studentSignup validation (no network on invalid input)', () => {
   const fill = (patch: Partial<ReturnType<typeof S>['stuSignup']>) =>
@@ -149,5 +159,71 @@ describe('rejectStudent', () => {
     await S().rejectStudent('d1')
     expect(S().pendingStudents.length).toBe(2)
     expect(S().toast).toBe('Request not found or already handled')
+  })
+})
+
+// A student sat on "You're on the list" long after the head had approved them.
+// Three separate things had to be wrong at once for that, and all three were.
+describe('the promise on the waiting screen', () => {
+  // The waiting screen polls every 15s, and polls with navigate=false because
+  // navigate also switches on error toasts. So the poll could see the approval
+  // and do nothing with it — the only working exit was tapping Check approval.
+  it('leaves the waiting screen when a background poll finds the student approved', async () => {
+    useDashboard.setState({ screen: 'stuPending', role: 'student', stuPending: { name: 'Neha', code: 'TUT-ABCDEFGH', centre: 'Sharma Classes' } })
+    rpc.mockResolvedValueOnce({ data: { status: 'approved', student: { name: 'Neha', code: 'TUT-ABCDEFGH' } }, error: null })
+
+    expect(await S().loadStudentByCode('TUT-ABCDEFGH', false)).toBe(true)
+    expect(S().screen).toBe('stuHome')
+    expect(S().stuPending).toBe(null)
+  })
+
+  it('still does not yank an approved student off the screen they are on', async () => {
+    // The rule the navigate flag exists for. A focus refresh on the fees screen
+    // must update the data and nothing else.
+    useDashboard.setState({ screen: 'stuFees', role: 'student', stuPending: null })
+    rpc.mockResolvedValueOnce({ data: { status: 'approved', student: { name: 'Neha', code: 'TUT-ABCDEFGH' } }, error: null })
+
+    await S().loadStudentByCode('TUT-ABCDEFGH', false)
+    expect(S().screen).toBe('stuFees')
+  })
+
+  // Nothing told the student they were in. Approval sent no push at all.
+  it('notifies the student when the head approves them', async () => {
+    useDashboard.setState({ pendingStudents: [pending()] })
+    rpc.mockResolvedValueOnce({ data: null, error: null })
+
+    await S().approveStudent('d1', 'Class 10', null, '', '')
+    expect(sendPush).toHaveBeenCalledWith(expect.objectContaining({ studentCodes: ['TUT-ABCDEFGH'] }))
+  })
+
+  it('does not tell the student they are approved when the approval failed', async () => {
+    useDashboard.setState({ pendingStudents: [pending()] })
+    rpc.mockResolvedValueOnce({ data: null, error: { code: 'P0001', message: 'Not authorized' } })
+
+    await S().approveStudent('d1', 'Class 10', null, '', '')
+    expect(sendPush).not.toHaveBeenCalled()
+  })
+
+  // And it could not have been delivered anyway: the only thing that ever
+  // subscribed a pending student was the "turn on reminders" gate screen,
+  // which is skipped on any device that already granted permission.
+  it('subscribes a student who is still waiting for approval', async () => {
+    // pushSupported() is what guards this in the browser, and it already
+    // checks Notification exists — the mock above bypasses that, so stand one up.
+    vi.stubGlobal('Notification', { permission: 'granted' })
+    supported.on = true
+    useDashboard.setState({ screen: 'stuPending', role: 'student' })
+    rpc.mockResolvedValueOnce({ data: { status: 'pending', student: { name: 'Neha', code: 'TUT-ABCDEFGH' } }, error: null })
+
+    await S().loadStudentByCode('TUT-ABCDEFGH', false)
+    expect(enablePush).toHaveBeenCalledWith('student', 'TUT-ABCDEFGH')
+  })
+
+  it('does not subscribe when the browser cannot do push at all', async () => {
+    supported.on = false
+    rpc.mockResolvedValueOnce({ data: { status: 'pending', student: { name: 'Neha', code: 'TUT-ABCDEFGH' } }, error: null })
+
+    await S().loadStudentByCode('TUT-ABCDEFGH', false)
+    expect(enablePush).not.toHaveBeenCalled()
   })
 })
