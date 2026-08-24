@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { safeLink, validatePushBody, createRateLimiter, rateLimit } from '../app/lib/push-guard'
+import { safeLink, signWithCentre, validatePushBody, createRateLimiter, rateLimit } from '../app/lib/push-guard'
 
 describe('safeLink', () => {
   it('keeps a same-app relative path', () => {
@@ -115,5 +115,40 @@ describe('rateLimit (in-memory fallback)', () => {
     expect(await rateLimit(a, 1, 30_000)).toBe(false)
     expect(await rateLimit(a, 1, 30_000)).toBe(true)
     expect(await rateLimit(b, 1, 30_000)).toBe(false) // b has its own budget
+  })
+})
+
+// A parent's lock screen used to read "Marked absent today" with nothing to say
+// who sent it. The centre name was in the payload but the service worker only
+// reached for it when a push arrived with no title of its own — and every
+// sender supplies a title, so it never once fired.
+describe('signWithCentre', () => {
+  it('puts the centre in the title and the message beneath it', () => {
+    expect(signWithCentre('Sharma Classes', 'Marked absent today', 'Your ward was marked absent.'))
+      .toEqual({ title: 'Sharma Classes', body: 'Marked absent today — Your ward was marked absent.' })
+  })
+
+  it('keeps the headline when there is no body to append', () => {
+    expect(signWithCentre('Sharma Classes', 'Fees due', ''))
+      .toEqual({ title: 'Sharma Classes', body: 'Fees due' })
+  })
+
+  it('leaves the notification alone when the centre has no name', () => {
+    // Signing with the platform name instead would be worse than not signing:
+    // the parent has never heard of Second Skool, they have heard of their
+    // child's tuition centre.
+    for (const name of [undefined, null, '', '   '])
+      expect(signWithCentre(name, 'Fees due', 'Rs. 500 outstanding.'))
+        .toEqual({ title: 'Fees due', body: 'Rs. 500 outstanding.' })
+  })
+
+  it('trims a padded centre name', () => {
+    expect(signWithCentre('  Sharma Classes  ', 'Fees due', '').title).toBe('Sharma Classes')
+  })
+
+  it('never loses the headline the teacher wrote', () => {
+    // Moving it into the body is the point; dropping it would not be.
+    expect(signWithCentre('Sharma Classes', 'Test on Monday', 'Chapter 4 and 5.').body)
+      .toContain('Test on Monday')
   })
 })

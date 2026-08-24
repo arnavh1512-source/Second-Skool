@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
-import { safeLink, validatePushBody, rateLimit } from '@/app/lib/push-guard'
+import { safeLink, signWithCentre, validatePushBody, rateLimit } from '@/app/lib/push-guard'
 import { logError } from '@/app/lib/log'
 
 export const runtime = 'nodejs'
@@ -66,7 +66,10 @@ export async function POST(req: NextRequest) {
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
   const { studentCodes, notifyHead, title, body: text, url: link } = parsed.value
 
-  const subs: Row[] = []
+  // Kept apart because they are signed differently: a parent needs to be told
+  // which centre is messaging them, the head already knows — it is theirs.
+  const studentSubs: Row[] = []
+  const headSubs: Row[] = []
 
   // Student targets — approved staff only (pending teachers may only notifyHead),
   // and only students in the caller's centre.
@@ -76,7 +79,7 @@ export async function POST(req: NextRequest) {
     const allowed = (students ?? []).map(s => s.student_code)
     if (allowed.length) {
       const { data } = await admin.from('push_subscriptions').select('endpoint,p256dh,auth').eq('kind', 'student').in('ref', allowed)
-      subs.push(...(data ?? []))
+      studentSubs.push(...(data ?? []))
     }
   }
 
@@ -86,18 +89,27 @@ export async function POST(req: NextRequest) {
     const ids = (heads ?? []).map(h => h.id)
     if (ids.length) {
       const { data } = await admin.from('push_subscriptions').select('endpoint,p256dh,auth').eq('kind', 'profile').in('ref', ids)
-      subs.push(...(data ?? []))
+      headSubs.push(...(data ?? []))
     }
   }
 
-  // Stamp the centre's own name into the payload, read server-side so a caller
-  // can't sign a notification as somebody else's centre. The service worker
-  // shows it whenever a push arrives without a title of its own — a parent
-  // recognises "Sharma Classes", not the platform name.
+  // The centre's name, read server-side so a caller can never sign a
+  // notification as somebody else's centre.
   const { data: centreRow } = await admin.from('centres').select('name').eq('id', centre).single()
+  const centreName = centreRow?.name ?? ''
 
   // Only same-app relative paths in notification links (see push-guard).
-  const payload = JSON.stringify({ title, body: text ?? '', url: safeLink(link), centre: centreRow?.name ?? '' })
+  const linkPath = safeLink(link)
+  // Two audiences, signed differently. A parent sees the centre's name as the
+  // title and the message beneath it (see signWithCentre) — an alert about
+  // their child with no sender attached reads like spam and gets swiped away.
+  // The head sees the message as written: it is their own centre, and stamping
+  // their own name on a join request they are waiting for is just noise.
+  const groups: Array<{ subs: Row[]; payload: string }> = [
+    { subs: studentSubs, payload: JSON.stringify({ ...signWithCentre(centreName, title, text ?? ''), url: linkPath, centre: centreName }) },
+    { subs: headSubs, payload: JSON.stringify({ title, body: text ?? '', url: linkPath, centre: centreName }) },
+  ].filter(g => g.subs.length > 0)
+
   // Fan out in bounded batches (100) so a large centre can't stall the request
   // or flood the push service at once. 404/410 = expired subscription → prune;
   // any other failure is logged (id + status only, no PII) so it's visible in
@@ -105,23 +117,25 @@ export async function POST(req: NextRequest) {
   const stale: string[] = []
   let failed = 0
   const BATCH = 100
-  for (let i = 0; i < subs.length; i += BATCH) {
-    await Promise.all(subs.slice(i, i + BATCH).map(async (s) => {
-      try {
-        await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload)
-      } catch (e: unknown) {
-        const code = (e as { statusCode?: number })?.statusCode
-        // 404/410 = subscription retired by the push service.
-        // 403 = the VAPID key that signed this send isn't the one the
-        // subscription was created with (i.e. the server keypair was rotated).
-        // Either way it can never be delivered to again, so prune it — leaving
-        // it behind means every future send reports a device that cannot
-        // receive anything.
-        if (code === 404 || code === 410 || code === 403) stale.push(s.endpoint)
-        else failed++
-        if (code !== 404 && code !== 410) logError('push.send_failed', { centre, statusCode: code ?? null })
-      }
-    }))
+  for (const { subs, payload } of groups) {
+    for (let i = 0; i < subs.length; i += BATCH) {
+      await Promise.all(subs.slice(i, i + BATCH).map(async (s) => {
+        try {
+          await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload)
+        } catch (e: unknown) {
+          const code = (e as { statusCode?: number })?.statusCode
+          // 404/410 = subscription retired by the push service.
+          // 403 = the VAPID key that signed this send isn't the one the
+          // subscription was created with (i.e. the server keypair was rotated).
+          // Either way it can never be delivered to again, so prune it — leaving
+          // it behind means every future send reports a device that cannot
+          // receive anything.
+          if (code === 404 || code === 410 || code === 403) stale.push(s.endpoint)
+          else failed++
+          if (code !== 404 && code !== 410) logError('push.send_failed', { centre, statusCode: code ?? null })
+        }
+      }))
+    }
   }
   if (stale.length) await admin.from('push_subscriptions').delete().in('endpoint', stale)
 
@@ -129,6 +143,6 @@ export async function POST(req: NextRequest) {
   // that was rejected by every push service still told the teacher "pushed to
   // 1 device" — the most misleading possible answer, because it points the
   // investigation at the phone instead of at the server.
-  const sent = subs.length - stale.length - failed
+  const sent = studentSubs.length + headSubs.length - stale.length - failed
   return NextResponse.json({ sent, ...(stale.length || failed ? { undelivered: stale.length + failed } : {}) })
 }

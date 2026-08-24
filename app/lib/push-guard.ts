@@ -103,3 +103,31 @@ export async function rateLimit(key: string, limit: number, windowMs: number): P
   }
   return memLimited(key, limit, windowMs)
 }
+
+// ---------------------------------------------------------------------------
+// Signing a notification with the centre it came from.
+//
+// The centre's name was already being sent in the payload, but the service
+// worker only reached for it when a push arrived with no title of its own —
+// and every sender supplies a title. So in practice a parent's lock screen read
+// "Marked absent today" with nothing to say who sent it: not the centre, not
+// even a name they recognise. For a parent with children at two centres it was
+// ambiguous, and for everyone else an unattributed alert about their child
+// reads like spam and gets swiped away.
+//
+// Messaging apps solved this long ago: the title is WHO it is from, the body is
+// WHAT they said. So the centre's name becomes the title and the original title
+// leads the body. "Sharma Classes / Marked absent today — Your ward was..."
+//
+// Composed on the server, not in the service worker, for two reasons: the
+// server is the only side that knows the centre name is genuine (it reads it
+// from the DB, so a caller can't sign as somebody else's centre), and a device
+// running a stale service worker gets the fix immediately instead of on its
+// next update.
+export function signWithCentre(centreName: string | null | undefined, title: string, body: string): { title: string; body: string } {
+  const centre = (centreName ?? '').trim()
+  // No centre name on record — leave the notification exactly as it was rather
+  // than signing it with the platform name, which the parent has never heard of.
+  if (!centre) return { title, body }
+  return { title: centre, body: body ? `${title} — ${body}` : title }
+}
