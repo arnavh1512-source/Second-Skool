@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useDashboard, SESSION_EXPIRED, operatorToken } from '../store'
+import { useDashboard, SESSION_EXPIRED, devFetch } from '../store'
 import { ScreenHeader } from './Shell'
 
 // ---- shape of /api/dev ------------------------------------------------------
@@ -70,14 +70,7 @@ const day = (iso: string) =>
 
 // Kept outside the component so the mount effect can call it without touching
 // React state synchronously — every setState below happens in a callback.
-async function fetchSnapshot(): Promise<Snapshot> {
-  const token = await operatorToken()
-  if (!token) throw new Error(SESSION_EXPIRED)
-  const res = await fetch('/api/dev', { headers: { authorization: `Bearer ${token}` }, cache: 'no-store' })
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json?.error ?? `Request failed (${res.status})`)
-  return json as Snapshot
-}
+const fetchSnapshot = (): Promise<Snapshot> => devFetch<Snapshot>('/api/dev')
 
 export function DevConsoleScreen() {
   const { exitDevConsole, devSeat, devEnterCentre, devLeaveCentre, devDeleteCentre, signOut } = useDashboard()

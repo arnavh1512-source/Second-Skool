@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { totalsByStudent, countDailyRows, attendancePct } from '../app/lib/attendance'
+import { totalsByStudent, countDailyRows, attendancePct, pickAttendanceClass } from '../app/lib/attendance'
 
 describe('totalsByStudent', () => {
   it('indexes server-computed totals by student id', () => {
@@ -76,5 +76,37 @@ describe('the bug this replaces', () => {
 
     // The server-side totals are unaffected by what the browser managed to fetch.
     expect(attendancePct(totalsByStudent([{ student_id: 'a', present: 10, total: 20 }]).a)).toBe(50)
+  })
+})
+
+describe('pickAttendanceClass', () => {
+  const classes = ['Class 9', 'Class 10', 'Class 12']
+
+  // The reported bug: the stored choice starts empty and nothing sets it until a
+  // chip is tapped, so Mark Attendance opened with chips but an empty roster.
+  it('falls back to the first class when nothing has been chosen', () => {
+    expect(pickAttendanceClass(classes, '')).toBe('Class 9')
+  })
+
+  it('keeps a class the teacher actually picked', () => {
+    expect(pickAttendanceClass(classes, 'Class 12')).toBe('Class 12')
+  })
+
+  // Delete the last student of a class, or rename it, and the stored choice
+  // names something that no longer exists.
+  it('falls back when the stored class has gone away', () => {
+    expect(pickAttendanceClass(classes, 'Class 11')).toBe('Class 9')
+  })
+
+  it('returns empty only when there are genuinely no classes', () => {
+    expect(pickAttendanceClass([], '')).toBe('')
+    expect(pickAttendanceClass([], 'Class 10')).toBe('')
+  })
+
+  it('never invents a class that is not on the list', () => {
+    for (const stored of ['', 'Class 10', 'nonsense']) {
+      const picked = pickAttendanceClass(classes, stored)
+      expect(classes).toContain(picked)
+    }
   })
 })

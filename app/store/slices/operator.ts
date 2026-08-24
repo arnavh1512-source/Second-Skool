@@ -1,33 +1,64 @@
 import { supabase } from '../../lib/supabase'
+import { usableToken } from '../../lib/session-token'
 import type { Slice } from '../slice'
 
 // Raised when there is genuinely no usable session left. The console matches on
 // this to offer a way back in, so keep the two in step.
 export const SESSION_EXPIRED = 'Session expired — sign in again'
 
-// getSession() hands back whatever is in storage without reaching for a new
-// access token, so a tab left open past expiry saw "session expired" while a
-// perfectly good refresh token sat unused beside it. Try the refresh before
-// declaring the operator signed out.
+// One refresh at a time, shared by every caller that asks while it is running.
+// Supabase rotates the refresh token on use, so two concurrent refreshes mean
+// the second presents a token the first already spent: it fails, returns null,
+// and the console announces "session expired" on a session that is fine. The
+// console mount and checkDevAccess both ask at once, so this was reachable on
+// an ordinary page load.
+let refreshing: Promise<string | null> | null = null
+
+function refreshOnce(): Promise<string | null> {
+  refreshing ??= supabase.auth.refreshSession()
+    .then(({ data }) => data.session?.access_token ?? null)
+    .catch(() => null)
+    .finally(() => { refreshing = null })
+  return refreshing
+}
+
 export async function operatorToken(): Promise<string | null> {
-  const { data: s } = await supabase.auth.getSession()
-  if (s.session?.access_token) return s.session.access_token
-  const { data: r } = await supabase.auth.refreshSession()
-  return r.session?.access_token ?? null
+  const { data } = await supabase.auth.getSession()
+  return usableToken(data.session) ?? await refreshOnce()
+}
+
+// Every call to /api/dev goes through here. A 401 gets one forced refresh and a
+// single retry: the token can expire between the check above and the server
+// reading it, and losing the console to that is not something to leave to luck.
+// Only a 401 that survives the retry is really a dead session.
+export async function devFetch<T>(url: string, init?: RequestInit): Promise<T> {
+  const send = (token: string) =>
+    fetch(url, { ...init, cache: 'no-store', headers: { ...init?.headers, authorization: `Bearer ${token}` } })
+
+  const first = await operatorToken()
+  if (!first) throw new Error(SESSION_EXPIRED)
+
+  let res = await send(first)
+  if (res.status === 401) {
+    const second = await refreshOnce()
+    if (!second) throw new Error(SESSION_EXPIRED)
+    res = await send(second)
+    if (res.status === 401) throw new Error(SESSION_EXPIRED)
+  }
+
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(json?.error ?? `Request failed (${res.status})`)
+  return json as T
 }
 
 // Operator-only writes. Throws with the server's own message so the console can
 // show why something was refused instead of a generic failure.
 async function devPost(body: Record<string, string>): Promise<void> {
-  const token = await operatorToken()
-  if (!token) throw new Error(SESSION_EXPIRED)
-  const res = await fetch('/api/dev', {
+  await devFetch('/api/dev', {
     method: 'POST',
-    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   })
-  const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json?.error ?? `Request failed (${res.status})`)
 }
 
 type Keys =
@@ -41,11 +72,8 @@ export const createOperatorSlice: Slice<Keys> = (set, get) => ({
   checkDevAccess: async () => {
     if (get().devAllowed !== null) return
     try {
-      const token = await operatorToken()
-      if (!token) { set({ devAllowed: false }); return }
-      const res = await fetch('/api/dev?probe=1', { headers: { authorization: `Bearer ${token}` }, cache: 'no-store' })
-      const json = await res.json().catch(() => ({}))
-      const allowed = res.ok && json?.allowed === true
+      const json = await devFetch<{ allowed?: boolean; seat?: { centreId: string; centreName: string } | null }>('/api/dev?probe=1')
+      const allowed = json?.allowed === true
       set({ devAllowed: allowed, devSeat: allowed ? (json?.seat ?? null) : null })
     } catch { set({ devAllowed: false, devSeat: null }) }
   },

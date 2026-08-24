@@ -46,3 +46,22 @@ export function attendancePct(count: AttendanceCount | undefined): number | null
   if (!count || count.t <= 0) return null
   return Math.round((count.p / count.t) * 100)
 }
+
+/**
+ * Which class the Mark Attendance screen should show.
+ *
+ * The stored choice starts empty and nothing sets it until a class chip is
+ * tapped, so the screen opened with chips rendered, 0 present, 0 absent and no
+ * students — on a centre where every student has a class. The store is not
+ * persisted, so that was every page load, on the screen a teacher opens daily.
+ * ResultsScreen always fell back to the first class; this had no fallback.
+ *
+ * Also covers the stale case: delete the last student of a class, or rename it,
+ * and the stored choice names a class that no longer exists.
+ *
+ * Returns '' only when there are genuinely no classes, which the caller shows
+ * as the "no students yet" empty state.
+ */
+export function pickAttendanceClass(classes: readonly string[], stored: string): string {
+  return classes.includes(stored) ? stored : (classes[0] ?? '')
+}

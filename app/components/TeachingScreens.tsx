@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
 import { ScreenHeader, PrimaryButton, EmptyState } from './Shell'
+import { pickAttendanceClass } from '../lib/attendance'
 import { Icon, type IconName } from './Icon'
 
 export function TimetableScreen() {
@@ -196,10 +197,19 @@ export function TimetableScreen() {
 export function AttendanceScreen() {
   const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role } = useDashboard()
   const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
+
+  const selClass = pickAttendanceClass(classes, attClass)
+
+  // att is keyed by the student's position in the roster, so a roster swap must
+  // clear it or yesterday's absences land on whoever now holds those indexes.
+  useEffect(() => {
+    if (selClass !== attClass) set({ attClass: selClass, att: {} })
+  }, [selClass, attClass, set])
+
   // Student objects, not names — the roster is passed straight to saveAttendance,
   // which needs the database id. Resolving by name broke centres with two
   // students of the same name (both mapped to the first one's record).
-  const roster = students.filter(s => s.klass === attClass)
+  const roster = students.filter(s => s.klass === selClass)
   const absentCount = roster.reduce((a, _, i) => a + (att[i] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 
@@ -226,7 +236,7 @@ export function AttendanceScreen() {
         <>
           <div className="flex gap-[9px] overflow-x-auto mb-4 scrollbar-hide">
             {classes.map(name => {
-              const active = name === attClass
+              const active = name === selClass
               return (
                 <button key={name} onClick={() => set({ attClass: name, att: {} })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? '#2a6fdb' : '#fff', color: active ? '#fff' : '#3a4456', borderColor: active ? '#2a6fdb' : '#e6eaf2' }}>{name}</button>
               )
