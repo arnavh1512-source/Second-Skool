@@ -23,6 +23,6 @@ export const initialState: State = {
   timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
   stuReminders: [], stuNotifications: [], stuAttendanceLog: [],
   stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null,
-  notesList: [], stuNotes: [],
+  notesList: [], stuNotes: [], feeRecords: {}, reminderHistory: [],
   currentStudentDbId: null, stuPendingFee: null, searchQuery: '', lastAdded: null,
 }

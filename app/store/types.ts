@@ -34,6 +34,13 @@ export interface StuAssignmentItem { title: string; subject: string; due: string
 export interface NoteItem { dbId?: string; title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }
 export interface StuNoteItem { title: string; subject: string; body: string; fileUrl: string; linkUrl: string; date: string }
 export interface FeeHistoryItem { period: string; date: string; amount: string }
+// The head's view of a single fee row. FeeHistoryItem is the parent's version
+// and carries no id, because a parent can only ever read theirs — the head
+// needs the id to be able to take a wrong one back off the child's balance.
+export interface FeeRecord { dbId: string; period: string; amount: number; dueDate: string; status: FeeStatus }
+// One line of the sent-reminder log. `when` is pre-formatted by timeAgo at
+// fetch time, the same way NotifItem does it.
+export interface ReminderLogItem { dbId: string; type: string; message: string; targetClass: string | null; when: string }
 export interface NotifItem { icon: string; tint: string; title: string; detail: string; when: string; dbId?: string }
 // A leaderboard row. `id` is the student's row id and is what decides who is
 // who — two students in the same centre can share a name, and keying the board
@@ -98,6 +105,11 @@ export interface State {
   stuNotifications: NotifItem[]
   stuAttendanceLog: AttLogItem[]
   stuFeeHistory: FeeHistoryItem[]
+  // Keyed by student id and filled only for the students whose fees have been
+  // opened, so a centre with 300 children does not fetch 300 fee histories to
+  // show a list of balances.
+  feeRecords: Record<string, FeeRecord[]>
+  reminderHistory: ReminderLogItem[]
   stuResults: StuResultItem[]
   stuAssignments: StuAssignmentItem[]
   stuMonthly: { attPresent: number; attTotal: number; tests: number; avgPct: number } | null
@@ -138,6 +150,9 @@ export interface Actions {
   saveReminder: (type: string, message: string, targetClass: string, filter?: string) => Promise<void>
   notifyClass: (klass: string, title: string, detail: string, icon: IconName) => Promise<void>
   addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => Promise<boolean>
+  loadStudentFees: (studentDbId: string) => Promise<void>
+  deleteFee: (feeId: string, studentDbId: string) => Promise<void>
+  loadReminderHistory: () => Promise<void>
   toggleFeeStatus: (key: string) => Promise<void>
   addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => Promise<boolean>
   deleteTimetableEntry: (day: string, p: string[]) => Promise<void>

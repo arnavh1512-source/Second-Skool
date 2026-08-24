@@ -488,7 +488,11 @@ export function AssignmentsScreen() {
 }
 
 export function RemindersScreen() {
-  const { reminderType, back, set, saveReminder } = useDashboard()
+  const { reminderType, back, set, saveReminder, reminderHistory, loadReminderHistory } = useDashboard()
+  // Every send has been recorded since the first release; nothing ever showed
+  // it back. Fetched on open rather than kept in the refresh cycle — it is
+  // reference material, not something the rest of the app reads.
+  useEffect(() => { loadReminderHistory() }, [loadReminderHistory])
   const [message, setMessage] = useState(REMINDER_TEMPLATES[reminderType] ?? '')
   const [filter, setFilter] = useState('all')
   const types: { key: string; label: string; icon: IconName }[] = [
@@ -526,7 +530,24 @@ export function RemindersScreen() {
       <label className="text-xs font-bold text-td-muted mb-[7px] block">Message</label>
       <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none resize-none mb-[18px] focus:border-td-primary" />
 
-      <PrimaryButton onClick={() => saveReminder(reminderType, message, 'all', filter)}>Send to students</PrimaryButton>
+      <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>
+
+      <div className="text-[15px] font-extrabold text-td-dark mt-7 mb-3">Recently sent</div>
+      {reminderHistory.length === 0 ? (
+        <EmptyState title="Nothing sent yet" hint="Reminders you send appear here, so you can check what has already gone out before sending it again." />
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {reminderHistory.map(r => (
+            <div key={r.dbId} className="bg-white border border-td-border rounded-2xl p-3.5">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11.5px] font-extrabold text-td-primary bg-[#eaf1fc] rounded-full py-[3px] px-2.5">{r.type}</span>
+                <span className="text-[11.5px] text-td-muted">{r.when}</span>
+              </div>
+              <div className="text-[13px] text-td-dark leading-snug">{r.message}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

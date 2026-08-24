@@ -1,9 +1,10 @@
 import { supabase } from '../../lib/supabase'
+import { feeStatusAfter } from '../../lib/fees'
 import { indexOfStudent } from '../../lib/student-key'
 import { changedNothing, dbErr, NOT_SAVED } from '../db'
 import { isoDay } from '../format'
 import type { Slice } from '../slice'
-import type { FeeStatus } from '../types'
+import type { FeeRecord, FeeStatus } from '../types'
 
 // Both actions here write money records, and both used to update the list and
 // toast success in the same tick they fired the write. "Fee record added" and
@@ -15,7 +16,7 @@ import type { FeeStatus } from '../types'
 // it is now rolled back when the write fails, and success is only claimed once
 // the write lands. This is the same fix f601d39 applied to nine actions; this
 // file was never opened by that pass or the one after it.
-export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus'> = (set, get) => ({
+export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus' | 'loadStudentFees' | 'deleteFee'> = (set, get) => ({
   addFee: async (studentDbId, amount, period, dueDate) => {
     const notify = get().notify
     if (!studentDbId) { notify('Choose a student before adding a fee', 'error'); return false }
@@ -92,6 +93,59 @@ export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus'> = (set, get) =
     }
 
     notify(`${student.name}: ${newStatus}`)
+    await get().refreshData()
+  },
+
+  // A balance is a total; it never said what it was made of. A parent asking
+  // why they owe 2,001 rupees could not be answered from this app, and the
+  // head could not see that 1 of it was a fee typed by mistake. Fetched per
+  // student, on open.
+  loadStudentFees: async (studentDbId) => {
+    const { data, error } = await supabase.from('fees')
+      .select('id, period, amount, due_date, status')
+      .eq('student_id', studentDbId).order('due_date', { ascending: false }).limit(100)
+    if (error) { dbErr('load the fee records', get().notify)({ error }); return }
+    const rows: FeeRecord[] = (data ?? []).map(f => ({
+      dbId: f.id as string,
+      period: (f.period as string) ?? '',
+      amount: Number(f.amount) || 0,
+      dueDate: (f.due_date as string) ?? '',
+      status: ((f.status as FeeStatus) ?? 'Due'),
+    }))
+    set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: rows } }))
+  },
+
+  // Money records were the one thing this app could create and never take
+  // back. A fee typed with the wrong amount, or against the wrong child, sat
+  // on that family's balance permanently — and the only way to clear it was to
+  // mark it Paid, which records money nobody ever handed over. Head-only,
+  // because fees_head is the policy that permits it: a teacher's delete is
+  // filtered out by RLS and returns PostgREST's silent zero-row success, which
+  // is exactly what changedNothing is here to catch.
+  deleteFee: async (feeId, studentDbId) => {
+    const notify = get().notify
+    if (!get().online) { notify('No internet — the fee has NOT been removed. Try again once you are back online.', 'error'); return }
+
+    const before = get().feeRecords[studentDbId] ?? []
+    set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before.filter(f => f.dbId !== feeId) } }))
+
+    const res = await supabase.from('fees').delete().eq('id', feeId).select('id')
+    if (res.error) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); dbErr('remove the fee', notify)(res); return }
+    if (changedNothing(res)) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); notify(NOT_SAVED, 'error'); return }
+
+    // The badge is a column, not a total, so refreshData alone would leave a
+    // student reading "Due" with nothing left owing. Recompute it from what
+    // actually remains — and if that write fails the fee is still gone, so
+    // say so rather than rolling back a delete that already happened.
+    const status = feeStatusAfter(get().feeRecords[studentDbId] ?? [])
+    const upd = await supabase.from('students').update({ fee_status: status }).eq('id', studentDbId).select('id')
+    if (upd.error || changedNothing(upd)) {
+      notify('Fee removed, but the status badge did not update — refresh to see it', 'error')
+      await get().refreshData()
+      return
+    }
+
+    notify('Fee record removed')
     await get().refreshData()
   },
 })

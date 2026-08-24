@@ -2,9 +2,10 @@ import { supabase } from '../../lib/supabase'
 import { sendPush } from '../../lib/push'
 import type { IconName } from '../../components/Icon'
 import { dbErr } from '../db'
+import { timeAgo } from '../format'
 import type { Slice } from '../slice'
 
-export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass'> = (_set, get) => ({
+export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass' | 'loadReminderHistory'> = (set, get) => ({
   saveReminder: async (type, message, targetClass, filter) => {
     const { students } = get()
     // The composer pre-fills a template, so an empty message means the head
@@ -91,5 +92,25 @@ export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass'> = (
     const codes = targets.map(s => s.id).filter(Boolean)
     if (codes.length) await sendPush({ studentCodes: codes, title, body: detail })
       .then(r => { if (!r.error) get().notify(`Notified ${targets.length} student(s) · push to ${r.sent} device(s)`) })
+  },
+
+  // Every reminder ever sent has been written to `reminders` since the first
+  // release and nothing has ever read them back. A head who could not
+  // remember whether she had already chased this month's fees had two
+  // choices: ask a parent, or send it twice. This is the third.
+  loadReminderHistory: async () => {
+    const { data, error } = await supabase.from('reminders')
+      .select('id, type, message, target_class, created_at')
+      .order('created_at', { ascending: false }).limit(50)
+    if (error) { dbErr('load the reminder history', get().notify)({ error }); return }
+    set({
+      reminderHistory: (data ?? []).map(r => ({
+        dbId: r.id as string,
+        type: (r.type as string) ?? 'Notice',
+        message: (r.message as string) ?? '',
+        targetClass: (r.target_class as string) ?? null,
+        when: timeAgo(r.created_at as string),
+      })),
+    })
   },
 })
