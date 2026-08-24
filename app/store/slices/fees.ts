@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase'
 import { indexOfStudent } from '../../lib/student-key'
-import { dbErr } from '../db'
+import { changedNothing, dbErr, NOT_SAVED } from '../db'
 import { isoDay } from '../format'
 import type { Slice } from '../slice'
 import type { FeeStatus } from '../types'
@@ -34,8 +34,11 @@ export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus'> = (set, get) =
 
     // The fee row is committed at this point, so a failure here is a mismatched
     // badge rather than a lost record — report it, but do not roll the fee back.
-    const r2 = await supabase.from('students').update({ fee_status: 'Due' }).eq('id', studentDbId)
+    const r2 = await supabase.from('students').update({ fee_status: 'Due' }).eq('id', studentDbId).select('id')
     if (r2.error) { dbErr('update the fee status', notify)(r2); await get().refreshData(); return true }
+    // The student row must exist — a fee was just inserted against it. Zero
+    // rows means the roster moved under us, and the badge is now wrong.
+    if (changedNothing(r2)) { notify('Fee saved, but the status badge did not update — refresh to see it', 'error'); await get().refreshData(); return true }
 
     notify('Fee record added')
     await get().refreshData()
@@ -67,8 +70,12 @@ export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus'> = (set, get) =
       : { ...student, feeStatus: newStatus }
     set({ students: arr })
 
-    const r1 = await supabase.from('students').update({ fee_status: newStatus }).eq('id', dbId)
+    const r1 = await supabase.from('students').update({ fee_status: newStatus }).eq('id', dbId).select('id')
     if (r1.error) { set({ students: before }); dbErr('change the fee status', notify)(r1); return }
+    // This write marks money paid. A student deleted in another session, or a
+    // row this session may not touch, comes back as a silent success — and the
+    // head walks away believing a fee was collected. Roll the badge back.
+    if (changedNothing(r1)) { set({ students: before }); notify(NOT_SAVED, 'error'); return }
 
     if (newStatus === 'Paid') {
       const r2 = await supabase.from('fees').update({ status: 'Paid', paid_date: isoDay() })

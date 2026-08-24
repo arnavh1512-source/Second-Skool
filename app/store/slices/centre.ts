@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { changedNothing } from '../db'
 import { friendlyError } from '../errors'
 import { sendPush } from '../../lib/push'
 import type { Slice } from '../slice'
@@ -42,9 +43,14 @@ export const createCentreSlice: Slice<Keys> = (set, get) => ({
     if (trimmed.length < 2) { get().notify('Enter a centre name', 'error'); return }
     const id = get().supabaseUserId
     if (!id) return
-    // RLS centres_write allows only the owner to update their centre row.
-    const { error } = await supabase.from('centres').update({ name: trimmed }).eq('owner_id', id)
-    if (error) { get().notify('Could not rename — only the centre owner can', 'error'); return }
+    // RLS centres_write allows only the owner to update their centre row —
+    // and that is exactly the condition PostgREST reports as success. A filter
+    // the policy rejects returns no error and no rows, so a teacher who
+    // reached this action was told "Centre renamed" while nothing changed, and
+    // the new name sat in local state until the next refresh took it away.
+    const res = await supabase.from('centres').update({ name: trimmed }).eq('owner_id', id).select('id')
+    if (res.error) { get().notify('Could not rename — only the centre owner can', 'error'); return }
+    if (changedNothing(res)) { get().notify('Could not rename — only the centre owner can', 'error'); return }
     set({ centreName: trimmed })
     get().notify('Centre renamed')
   },
@@ -56,8 +62,10 @@ export const createCentreSlice: Slice<Keys> = (set, get) => ({
   saveCentreLogo: async (dataUrl) => {
     const id = get().supabaseUserId
     if (!id) return
-    const { error } = await supabase.from('centres').update({ logo_url: dataUrl || null }).eq('owner_id', id)
-    if (error) { get().notify('Could not save logo — only the centre owner can', 'error'); return }
+    const res = await supabase.from('centres').update({ logo_url: dataUrl || null }).eq('owner_id', id).select('id')
+    if (res.error) { get().notify('Could not save logo — only the centre owner can', 'error'); return }
+    // Same silent-no-op as renameCentre: not the owner, no rows, no error.
+    if (changedNothing(res)) { get().notify('Could not save logo — only the centre owner can', 'error'); return }
     set({ centreLogo: dataUrl })
     get().notify(dataUrl ? 'Centre logo updated' : 'Centre logo removed')
   },

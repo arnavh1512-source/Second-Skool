@@ -108,8 +108,13 @@ export const createScheduleSlice: Slice<Keys> = (set, get) => ({
       .sort((a, b) => a[0].localeCompare(b[0])) } }))
 
     const res = await matchPeriod(supabase.from('timetable')
-      .update({ start_time: startTime, end_time: endTime, subject, class: klass, room: room || null }), day, oldP)
+      .update({ start_time: startTime, end_time: endTime, subject, class: klass, room: room || null }), day, oldP).select('id')
     if (res.error) { set({ timetableData: before }); dbErr('update the period', notify)(res); return false }
+    // The period being edited was on screen a moment ago, so it must match. If
+    // it does not, another device changed or removed it first — and without
+    // this the edit stayed on screen as though it had been saved, which is how
+    // two teachers end up reading two different timetables.
+    if (changedNothing(res)) { set({ timetableData: before }); notify(NOT_SAVED, 'error'); return false }
 
     notify(`Period updated: ${subject} on ${day}`)
     return true
@@ -122,8 +127,11 @@ export const createScheduleSlice: Slice<Keys> = (set, get) => ({
     const before = get().timetableData
     set((s) => ({ timetableData: { ...s.timetableData, [day]: (s.timetableData[day] ?? []).filter(x => !samePeriod(x, p)) } }))
 
-    const res = await matchPeriod(supabase.from('timetable').delete(), day, p)
+    const res = await matchPeriod(supabase.from('timetable').delete(), day, p).select('id')
     if (res.error) { set({ timetableData: before }); dbErr('remove the period', notify)(res); return }
+    // Same as the update: a delete that matched nothing removed the period
+    // from this screen only, and it came back on the next refresh.
+    if (changedNothing(res)) { set({ timetableData: before }); notify(NOT_SAVED, 'error'); return }
 
     notify('Period removed')
   },

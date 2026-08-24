@@ -4,7 +4,7 @@ import { enablePush, pushSupported, sendPush } from '../../lib/push'
 import { genStudentCode } from '../codes'
 import { writeLocal, removeLocal } from '../../lib/storage'
 import { findStudent, indexOfStudent, studentKey } from '../../lib/student-key'
-import { dbErr } from '../db'
+import { changedNothing, dbErr, NOT_SAVED } from '../db'
 import { isoDay } from '../format'
 import { LIMITS, capLength, clampText } from '../validate'
 import type { Slice } from '../slice'
@@ -54,11 +54,15 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     if (!st.name.trim()) { get().notify('Name is required', 'error'); return false }
     if (st.parent && !/^\+?\d[\d\s\-]{6,}$/.test(st.parent)) { get().notify('Invalid phone number', 'error'); return false }
     if (st.dbId) {
-      const { error } = await supabase.from('students').update({
+      const res = await supabase.from('students').update({
         name: st.name.trim(), class: st.klass, school: st.school,
         parent_contact: st.parent, fee_status: st.feeStatus,
-      }).eq('id', st.dbId)
-      if (error) { get().notify(friendlyError(error, 'update student'), 'error'); return false }
+      }).eq('id', st.dbId).select('id')
+      if (res.error) { get().notify(friendlyError(res.error, 'update student'), 'error'); return false }
+      // The row must exist — it was on the roster when the form opened. If it
+      // is gone, or out of this centre's reach, the edit vanished and the form
+      // must stay open rather than close on "Student record updated".
+      if (changedNothing(res)) { get().notify(NOT_SAVED, 'error'); return false }
     }
     get().notify('Student record updated')
     return true
@@ -181,7 +185,14 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     // Batch isn't part of the approve RPC — persist it directly (RLS scopes the
     // update to the head's own centre). Non-blocking; roster refresh follows.
     if (batch && batch.trim()) {
-      await supabase.from('students').update({ batch: batch.trim() }).eq('id', dbId)
+      // Was awaited and thrown away — not even an error check. A failure here
+      // left the student approved with no batch while the head was told the
+      // approval succeeded, and the missing batch only showed up later when
+      // she went looking for the child in a batch list they were not in.
+      const res = await supabase.from('students').update({ batch: batch.trim() }).eq('id', dbId).select('id')
+      if (res.error || changedNothing(res)) {
+        get().notify(`Student approved, but the batch was not saved — set it from the roster`, 'error')
+      }
     }
     set((s) => ({ pendingStudents: s.pendingStudents.filter(p => p.dbId !== dbId) }))
     get().notify('Student approved')
