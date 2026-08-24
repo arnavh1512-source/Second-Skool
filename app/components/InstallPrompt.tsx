@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useDashboard } from '../store'
+import { readLocal, writeLocal } from '../lib/storage'
 
 // Nothing in the app ever asked anyone to install it.
 //
@@ -41,17 +42,11 @@ const isIos = () =>
   !/crios|fxios|edgios/i.test(navigator.userAgent)
 
 const snoozed = () => {
-  try {
-    const at = Number(localStorage.getItem(DISMISS_KEY) || 0)
-    return at > 0 && Date.now() - at < SNOOZE_DAYS * 864e5
-  } catch {
-    return false
-  }
+  const at = Number(readLocal(DISMISS_KEY) || 0)
+  return at > 0 && Date.now() - at < SNOOZE_DAYS * 864e5
 }
 
-const remember = () => {
-  try { localStorage.setItem(DISMISS_KEY, String(Date.now())) } catch { /* private mode */ }
-}
+const remember = () => writeLocal(DISMISS_KEY, String(Date.now()))
 
 export function InstallPrompt() {
   const role = useDashboard(s => s.role)

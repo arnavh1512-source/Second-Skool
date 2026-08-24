@@ -5,6 +5,8 @@ import { useDashboard } from '../store'
 import { ScreenHeader, PrimaryButton } from './Shell'
 import { Icon, ink } from './Icon'
 import { uploadNoteFile } from '../lib/upload'
+import { writeLocal } from '../lib/storage'
+import { useBusy } from '../lib/use-busy'
 
 const FileIcon = ({ url }: { url: string }) => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={url ? '#2a6fdb' : '#c2cad8'} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
@@ -22,25 +24,24 @@ export function NotesScreen() {
   const [body, setBody] = useState('')
   const [link, setLink] = useState('')
   const [file, setFile] = useState<File | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [busy, run] = useBusy()
 
   useEffect(() => { loadNotes() }, [loadNotes])
 
   const reset = () => { setTitle(''); setSubject(''); setBody(''); setLink(''); setFile(null); setShowForm(false) }
 
-  const save = async () => {
+  const save = () => run(async () => {
     if (!title.trim()) { notify('Enter a title'); return }
     if (!selKlass) { notify('Add students first'); return }
-    setBusy(true)
     let fileUrl = ''
     if (file) {
       const res = await uploadNoteFile(file)
-      if (res.error) { notify(res.error); setBusy(false); return }
+      if (res.error) { notify(res.error); return }
       fileUrl = res.url ?? ''
     }
     await addNote({ title, subject, klass: selKlass, body, fileUrl, linkUrl: link })
-    setBusy(false); reset()
-  }
+    reset()
+  })
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
@@ -71,7 +72,7 @@ export function NotesScreen() {
             <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-[12.5px] text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-[10px] file:border-none file:bg-[#eaf1fc] file:text-td-primary file:font-bold file:text-[12px]" />
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></label><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-          <PrimaryButton onClick={busy ? () => {} : save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
+          <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
         </div>
       )}
 
@@ -107,7 +108,7 @@ export function StuNotesScreen() {
   // Opening the screen clears the "new material" badge on Home.
   useEffect(() => {
     loadStudentNotes()
-    if (typeof window !== 'undefined') localStorage.setItem('notes_seen_at', String(Date.now()))
+    writeLocal('notes_seen_at', String(Date.now()))
   }, [loadStudentNotes])
 
   return (
@@ -118,8 +119,8 @@ export function StuNotesScreen() {
         <div className="text-center text-td-muted text-sm py-12 leading-relaxed">No study material yet.<br />Notes your teacher shares will appear here.</div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {stuNotes.map((n) => (
-            <div key={`${n.date}-${n.title}`} className="bg-white border border-td-border rounded-[18px] p-4">
+          {stuNotes.map((n, i) => (
+            <div key={`${n.date}-${n.title}-${i}`} className="bg-white border border-td-border rounded-[18px] p-4">
               <div className="flex items-center gap-[11px]">
                 <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-[#eaf1fc]" style={{ color: ink('#eaf1fc') }}><Icon name="notes" size={19} /></div>
                 <div className="flex-1 min-w-0">

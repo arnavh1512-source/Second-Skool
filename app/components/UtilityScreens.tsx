@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { indexOfStudent, studentKey } from '../lib/student-key'
+import { useBusy } from '../lib/use-busy'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, LIMITS, MIN_PASSWORD_LENGTH, clampText, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
@@ -89,7 +91,7 @@ export function FeesScreen() {
       ) : (
         <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {rows.map(d => {
-            const realIdx = students.findIndex(s => s.id === d.id)
+            const realIdx = indexOfStudent(students, studentKey(d))
             const f = feeColor(d.feeStatus)
             return (
               <div key={d.id} className="bg-white border border-td-border rounded-2xl p-[13px] px-3.5 flex items-center gap-[13px]">
@@ -102,7 +104,7 @@ export function FeesScreen() {
                     {(d.feeDue ?? 0) === 0 && (d.feeCollected ?? 0) > 0 && <span className="text-td-green font-semibold"> · {inr(d.feeCollected!)} paid</span>}
                   </div>
                 </div>
-                <button onClick={() => toggleFeeStatus(realIdx)} className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
+                <button onClick={() => toggleFeeStatus(studentKey(d))} className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
               </div>
             )
           })}
@@ -143,8 +145,8 @@ export function MeetingsScreen() {
         <EmptyState title="No meetings scheduled" hint="Use the form above to add one — it will appear here and on the home screen." />
       ) : (
         <div className="flex flex-col gap-2.5">
-          {meetingsList.map(m => (
-            <div key={m.title + m.day} className="bg-white border border-td-border rounded-2xl p-3.5 flex items-center gap-[13px]">
+          {meetingsList.map((m, i) => (
+            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="bg-white border border-td-border rounded-2xl p-3.5 flex items-center gap-[13px]">
               <div className="w-[46px] text-center shrink-0 bg-[#eaf1fc] rounded-xl py-2">
                 <div className="text-base font-extrabold text-td-primary leading-none">{m.day}</div>
                 <div className="text-[12px] text-td-primary font-semibold mt-0.5">{m.mon}</div>
@@ -164,7 +166,7 @@ export function MeetingsScreen() {
 export function RankingsScreen() {
   const { rankSubject, rankData, subjects, back, set, go } = useDashboard()
   const subjectNames = subjects.map(s => s.name)
-  const rows = (rankData[rankSubject] || []).map((r, i) => ({ rank: i + 1, name: r[0], score: r[1] }))
+  const rows = (rankData[rankSubject] || []).map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, score: r.score }))
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
@@ -188,7 +190,7 @@ export function RankingsScreen() {
       ) : (
         <div className="flex flex-col gap-[9px] mb-5">
           {rows.map((r, i) => (
-            <div key={r.name} className="flex items-center gap-[13px] bg-white border border-td-border rounded-2xl p-3 px-3.5">
+            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] bg-white border border-td-border rounded-2xl p-3 px-3.5">
               <div className="w-[26px] text-center text-sm font-extrabold" style={{ color: i < 3 ? '#e0962f' : '#9aa4b6' }}>{r.rank}</div>
               <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(r.name)}</div>
               <div className="flex-1 text-[13.5px] font-bold text-td-dark">{r.name}</div>
@@ -272,7 +274,7 @@ export function BranchesScreen() {
             const roster = students.filter(s => s.branch === b.name)
             const open = openBranch === b.name
             return (
-            <div key={b.name} className="bg-white border border-td-border rounded-[18px] p-4">
+            <div key={b.dbId ?? b.name} className="bg-white border border-td-border rounded-[18px] p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="text-[15px] font-extrabold text-td-dark">{b.name}</div>
                 {b.main && <span className="text-[12px] font-bold text-td-primary bg-[#eaf1fc] py-1 px-[9px] rounded-[20px]">Main</span>}
@@ -322,7 +324,7 @@ export function SubjectsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {subjects.map((s, i) => (
-            <div key={s.name} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
+            <div key={s.dbId} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
               <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{s.name[0]}</div>
               <div className="flex-1 text-[14px] font-bold text-td-dark">{s.name}</div>
               {s.dbId && <button onClick={() => { if (window.confirm(`Remove "${s.name}" everywhere? Its tests, results and timetable periods will be deleted too.`)) deleteSubject(s.dbId!) }} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Remove</button>}
@@ -365,7 +367,7 @@ export function BatchesScreen() {
             const roster = students.filter(s => s.batch === b.name)
             const open = openBatch === b.name
             return (
-            <div key={b.name} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px]">
+            <div key={b.dbId} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px]">
               <div className="flex items-center gap-[13px]">
                 <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{b.name[0]}</div>
                 <button onClick={() => setOpenBatch(open ? null : b.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
@@ -473,16 +475,14 @@ export function NotificationsScreen() {
   const staffCount = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
   const empty = studentCount === 0 && staffCount === 0
 
-  const [pushBusy, setPushBusy] = useState(false)
+  const [pushBusy, runPush] = useBusy()
   const [pushOn, setPushOn] = useState(false)
-  const enableNotifs = async () => {
-    if (!supabaseUserId || pushBusy) return
-    setPushBusy(true)
+  const enableNotifs = () => runPush(async () => {
+    if (!supabaseUserId) return
     const res = await enablePush('profile', supabaseUserId)
-    setPushBusy(false)
     if (res.ok) { setPushOn(true); const t = await testNotification(useDashboard.getState().centreName); notify(t.ok ? 'Notifications on — check for a test alert' : (t.error || 'Notifications on for this device')) }
     else notify(res.error || 'Could not enable')
-  }
+  })
 
   const row = (icon: IconName, tint: string, label: string, count: number, screen: Screen) => (
     <button onClick={() => go(screen, 'home')} className="w-full text-left border-none bg-white border border-td-border rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
@@ -529,27 +529,27 @@ export function StaffProfileScreen() {
   const { go, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'
   const logoInput = useRef<HTMLInputElement>(null)
-  const [logoBusy, setLogoBusy] = useState(false)
-  const pickLogo = async (file?: File) => {
+  const [logoBusy, runLogo] = useBusy()
+  const pickLogo = (file?: File) => runLogo(async () => {
     if (!file) return
-    setLogoBusy(true)
     try { await saveCentreLogo(await fileToLogoDataUrl(file)) }
     catch (e) { notify(e instanceof Error ? e.message : 'Could not use that image') }
-    finally { setLogoBusy(false); if (logoInput.current) logoInput.current.value = '' }
-  }
+    finally { if (logoInput.current) logoInput.current.value = '' }
+  })
   const [pushOn, setPushOn] = useState(false)
-  const enableNotifs = async () => {
+  const [pushBusy, runPush] = useBusy()
+  const enableNotifs = () => runPush(async () => {
     if (!supabaseUserId) return
     const res = await enablePush('profile', supabaseUserId)
     if (res.ok) { setPushOn(true); const t = await testNotification(useDashboard.getState().centreName); notify(t.ok ? 'Notifications on — check for a test alert' : (t.error || 'Notifications on for this device')) }
     else notify(res.error || 'Could not enable')
-  }
+  })
   const [name, setName] = useState(myName)
   const [phone, setPhone] = useState(myPhone)
   const [subject, setSubject] = useState(mySubject)
   const [qualification, setQualification] = useState(myQualification)
   const [centre, setCentre] = useState(centreName)
-  const [busy, setBusy] = useState(false)
+  const [busy, run] = useBusy()
   const displayName = name || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
 
   useEffect(() => { if (isAdmin && !centreName) loadMyCentre() }, [isAdmin, centreName, loadMyCentre])
@@ -558,29 +558,24 @@ export function StaffProfileScreen() {
   const [prevCentreName, setPrevCentreName] = useState(centreName)
   if (centreName !== prevCentreName) { setPrevCentreName(centreName); setCentre(centreName) }
 
-  const save = async () => {
-    setBusy(true)
+  const save = () => run(async () => {
     // Only touch the centre name if the profile itself saved — otherwise a
     // rejected phone number would still rename the centre, which looks like a
     // partial success and is hard to reason about.
     if (await saveStaffProfile({ name, phone, subject, qualification })
       && isAdmin && centre.trim() && centre.trim() !== centreName) await renameCentre(centre)
-    setBusy(false)
-  }
+  })
 
   // Set an email+password login so this device (esp. the installed home-screen
   // app) can sign in without Google's redirect, which drops the session.
   const [pw, setPw] = useState('')
   const [pw2, setPw2] = useState('')
   const [pwOpen, setPwOpen] = useState(false)
-  const [pwBusy, setPwBusy] = useState(false)
-  const savePassword = async () => {
+  const [pwBusy, runPw] = useBusy()
+  const savePassword = () => runPw(async () => {
     if (pw !== pw2) { notify('Passwords do not match'); return }
-    setPwBusy(true)
-    const ok = await setMyPassword(pw)
-    setPwBusy(false)
-    if (ok) { setPw(''); setPw2(''); setPwOpen(false) }
-  }
+    if (await setMyPassword(pw)) { setPw(''); setPw2(''); setPwOpen(false) }
+  })
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
@@ -633,10 +628,10 @@ export function StaffProfileScreen() {
         </div>
       </div>
 
-      <PrimaryButton onClick={busy ? () => {} : save}>{busy ? 'Saving…' : 'Save changes'}</PrimaryButton>
+      <PrimaryButton onClick={save}>{busy ? 'Saving…' : 'Save changes'}</PrimaryButton>
 
       {pushSupported() && (
-        <button onClick={enableNotifs} disabled={pushOn} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           {pushOn ? 'Notifications enabled' : 'Enable notifications'}
         </button>

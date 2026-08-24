@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useDashboard } from '../store'
+import { useDashboard, fmtDayMonth } from '../store'
 
 // Every number on these screens is a cached copy. Attendance gets marked by
 // whoever is standing in front of the class, fees get collected at the desk,
@@ -25,7 +25,7 @@ const label = (at: number | null, now: number) => {
   const hrs = Math.floor(mins / 60)
   if (hrs === 1) return 'Updated 1 hour ago'
   if (hrs < 24) return `Updated ${hrs} hours ago`
-  return `Updated ${new Date(at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
+  return `Updated ${fmtDayMonth(at)}`
 }
 
 export function LastUpdated() {

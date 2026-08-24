@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase'
 import { friendlyError } from '../errors'
 import { enablePush, pushSupported, sendPush } from '../../lib/push'
 import { genStudentCode } from '../codes'
+import { writeLocal, removeLocal } from '../../lib/storage'
 import { findStudent, indexOfStudent, studentKey } from '../../lib/student-key'
 import { dbErr } from '../db'
 import { isoDay } from '../format'
@@ -12,7 +13,7 @@ import type { State, Student, Tab } from '../types'
 
 type Keys =
   | 'setStudentField' | 'setNewStudent' | 'setStuSignup' | 'studentSignup'
-  | 'deleteStudent' | 'addStudent' | 'approveStudent' | 'rejectStudent'
+  | 'deleteStudent' | 'addStudent' | 'approveStudent' | 'rejectStudent' | 'saveStudentEdit'
   | 'loadStudentByCode'
 
 export const createStudentsSlice: Slice<Keys> = (set, get) => ({
@@ -20,6 +21,12 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
   // single door every roster edit goes through. Without it a 500-character
   // name propagated into fees, results, rankings, the timetable and the
   // student's own dashboard, breaking every layout it touched.
+  // Local only. This used to fire a full-row UPDATE on every keystroke, which
+  // meant the record was already saved (repeatedly, out of order) before the
+  // Save button had validated anything — and clearing the name to retype it
+  // sent an empty string straight into the students_text_lengths check, so the
+  // head got a database error toast mid-word. Persisting is saveStudentEdit's
+  // job now.
   setStudentField: (patch) => set((s) => {
     const capped = {
       ...patch,
@@ -35,15 +42,27 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     const i = indexOfStudent(s.students, s.editId)
     if (i === -1) return {}
     const arr = [...s.students]; arr[i] = { ...arr[i], ...capped }
-    const updated = arr[i]
-    if (updated.dbId) {
-      supabase.from('students').update({
-        name: updated.name, class: updated.klass, school: updated.school,
-        parent_contact: updated.parent, fee_status: updated.feeStatus,
-      }).eq('id', updated.dbId).then(dbErr('update student', get().notify))
-    }
     return { students: arr }
   }),
+
+  // Validate, then write, then report — in that order. Returns false when the
+  // record was not saved so the caller can stay on the form.
+  saveStudentEdit: async () => {
+    const { students, editId } = get()
+    const st = findStudent(students, editId)
+    if (!st) { get().notify('That student is no longer on the roster', 'error'); return false }
+    if (!st.name.trim()) { get().notify('Name is required', 'error'); return false }
+    if (st.parent && !/^\+?\d[\d\s\-]{6,}$/.test(st.parent)) { get().notify('Invalid phone number', 'error'); return false }
+    if (st.dbId) {
+      const { error } = await supabase.from('students').update({
+        name: st.name.trim(), class: st.klass, school: st.school,
+        parent_contact: st.parent, fee_status: st.feeStatus,
+      }).eq('id', st.dbId)
+      if (error) { get().notify(friendlyError(error, 'update student'), 'error'); return false }
+    }
+    get().notify('Student record updated')
+    return true
+  },
 
   setNewStudent: (patch) => set((s) => ({ newStudent: { ...s.newStudent, ...patch } })),
   setStuSignup: (patch) => set((s) => ({ stuSignup: { ...s.stuSignup, ...patch } })),
@@ -68,7 +87,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     })
     if (error || !data) { get().notify(friendlyError(error, 'register'), 'error'); return }
     const d = data as { code: string; name: string; centre: string }
-    if (typeof window !== 'undefined') localStorage.setItem('student_code', d.code)
+    writeLocal('student_code', d.code)
     // Let the head know a request is waiting (best-effort push).
     sendPush({ notifyHead: true, title: 'New student request', body: `${d.name} has requested to join. Review and approve.` }).catch(() => {})
     set({
@@ -95,7 +114,9 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     get().notify('Student removed'); get().back()
   },
 
-  addStudent: () => {
+  // Awaited end to end. The success screen hands the parent a login code, so
+  // it must not appear until the row it refers to actually exists.
+  addStudent: async () => {
     const { newStudent: raw, students, branchesList } = get()
     if (!raw.name.trim()) { get().notify('Enter student name', 'error'); return }
     if (!raw.parent.trim()) { get().notify('Enter parent contact', 'error'); return }
@@ -114,32 +135,37 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       name: ns.name, klass: ns.klass, batch: ns.batch || undefined, attendance: 0,
       feeStatus: 'Due', school: ns.school, parent: ns.parent, id: code,
     }
-    const branchId = ns.branch ? branchesList.find(b => b.name.includes(ns.branch))?.dbId : null
-    supabase.from('students').insert({
+    // Exact match. `includes` picked the first branch merely *containing* the
+    // chosen name, so a centre with both "Main" and "Main Annexe" filed the
+    // student under whichever happened to be listed first.
+    const branchId = ns.branch ? branchesList.find(b => b.name === ns.branch)?.dbId : null
+    // Show the row straight away so the roster feels instant, but do not claim
+    // success until the insert lands.
+    set({ students: [student, ...students] })
+    const { data, error } = await supabase.from('students').insert({
       name: ns.name, class: student.klass, batch: ns.batch || null, school: ns.school,
       parent_contact: ns.parent, student_code: code, fee_status: 'Due',
       address: ns.address, branch_id: branchId ?? null,
-    }).select().single().then(({ data, error }) => {
-      if (error) {
-        // Roll the optimistic row back. Leaving it stranded gave the head a
-        // student who looked real — tappable, editable, counted in attendance —
-        // but had no dbId, so every edit silently wrote nothing. Having been
-        // told the save failed, they add the student again and now have two.
-        set((s) => ({ students: s.students.filter(x => !(x.id === code && !x.dbId)) }))
-        get().notify('Could not save student — check connection', 'error'); return
-      }
-      if (data) {
-        set((s) => ({ students: s.students.map(x => x.id === code && !x.dbId ? { ...x, dbId: data.id } : x) }))
-        // Optional enrolment fee — creates the first fee record so the student
-        // immediately sees what's due (keeps status and fee records in sync).
-        const amt = Number(ns.fee)
-        if (amt > 0) {
-          const period = new Date().toLocaleString('en', { month: 'short', year: 'numeric' })
-          supabase.from('fees').insert({ student_id: data.id, amount: amt, period, due_date: ns.feeDue || isoDay(), status: 'Due' }).then(dbErr('add enrolment fee', get().notify))
-        }
-      }
-    })
-    set({ students: [student, ...students], newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
+    }).select().single()
+    if (error || !data) {
+      // Roll the optimistic row back. Leaving it stranded gave the head a
+      // student who looked real — tappable, editable, counted in attendance —
+      // but had no dbId, so every edit silently wrote nothing. Having been
+      // told the save failed, they add the student again and now have two.
+      set((s) => ({ students: s.students.filter(x => !(x.id === code && !x.dbId)) }))
+      get().notify(friendlyError(error, 'save student'), 'error')
+      return
+    }
+    set((s) => ({ students: s.students.map(x => x.id === code && !x.dbId ? { ...x, dbId: data.id } : x) }))
+    // Optional enrolment fee — creates the first fee record so the student
+    // immediately sees what's due (keeps status and fee records in sync).
+    const amt = Number(ns.fee)
+    if (amt > 0) {
+      const period = new Date().toLocaleString('en', { month: 'short', year: 'numeric' })
+      const feeRes = await supabase.from('fees').insert({ student_id: data.id, amount: amt, period, due_date: ns.feeDue || isoDay(), status: 'Due' })
+      dbErr('add enrolment fee', get().notify)(feeRes)
+    }
+    set({ newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
   },
 
   approveStudent: async (dbId, klass, branchId, fee, feeDue, batch) => {
@@ -180,7 +206,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       // so it stops re-firing "Invalid code" on every launch — this is what
       // hijacks a head's device when a stale test code is left in storage.
       // Never clear on a rate-limit: the code may be perfectly valid.
-      if (!throttled && typeof window !== 'undefined') localStorage.removeItem('student_code')
+      if (!throttled) removeLocal('student_code')
       if (navigate) get().notify(throttled ? error!.message : 'Invalid code — check with your teacher', 'error')
       return false
     }
@@ -188,7 +214,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
 
     // Awaiting the head's approval — hold on the waiting screen (no dashboard data).
     if (snap.status === 'pending') {
-      if (typeof window !== 'undefined') localStorage.setItem('student_code', trimmed)
+      writeLocal('student_code', trimmed)
       set({
         stuPending: { name: snap.student?.name ?? '', code: snap.student?.code ?? trimmed, centre: get().stuPending?.centre ?? '' },
         stuDenied: null,
@@ -203,7 +229,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     // background polls too, so a live decline flips the screen immediately.
     if (snap.status && snap.status !== 'approved') {
       const prev = get().stuPending
-      if (typeof window !== 'undefined') localStorage.removeItem('student_code')
+      removeLocal('student_code')
       set({
         stuDenied: { name: prev?.name ?? snap.student?.name ?? '', centre: prev?.centre ?? '' },
         stuPending: null,
@@ -212,7 +238,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       return false
     }
 
-    if (typeof window !== 'undefined') localStorage.setItem('student_code', trimmed)
+    writeLocal('student_code', trimmed)
     const patch: Partial<State> = mapSnapshot(data)
     // The snapshot is this student's whole dataset, so a successful pull is a
     // sync in exactly the same sense as the staff one.

@@ -75,8 +75,39 @@ describe('mapSnapshot', () => {
   })
 
   it('passes through rankings and stringifies teacher rating', () => {
-    expect(r.rankData?.Mathematics?.[0]?.[0]).toBe('Arjun')
+    expect(r.rankData?.Mathematics?.[0]?.name).toBe('Arjun')
     expect(r.teachers?.[0].rating).toBe('4.5')
+  })
+
+  // The [name, score] pair is what a database that has not had the ranking
+  // migration applied still sends. It has to keep working, and it has to be
+  // obvious downstream that it carries no identity.
+  it('reads a legacy [name, score] board and leaves its ids null', () => {
+    expect(r.rankData?.Mathematics?.[0]).toEqual({ id: null, name: 'Arjun', score: 90 })
+    expect(r.rankData?.Mathematics?.[1]).toEqual({ id: null, name: 'Neha', score: 80 })
+  })
+
+  it('keeps two students who share a name apart on the current board', () => {
+    const mapped = mapSnapshot({
+      student: { dbId: 'd1', code: 'c1' },
+      rankings: { Mathematics: [
+        { id: 'd1', name: 'Arjun Patel', score: 91 },
+        { id: 'd9', name: 'Arjun Patel', score: 62 },
+      ] },
+    })
+    const board = mapped.rankData?.Mathematics ?? []
+    expect(board.length).toBe(2)
+    expect(board.map(x => x.id)).toEqual(['d1', 'd9'])
+    // Two rows, one name — only the id can say which of them is the reader.
+    expect(board.findIndex(x => x.id === 'd1')).toBe(0)
+  })
+
+  it('survives a board row with neither id nor name', () => {
+    const mapped = mapSnapshot({
+      student: { dbId: 'd1', code: 'c1' },
+      rankings: { Science: [{}] },
+    })
+    expect(mapped.rankData?.Science?.[0]).toEqual({ id: null, name: '', score: 0 })
   })
 
   it('handles a sparse snapshot without throwing', () => {

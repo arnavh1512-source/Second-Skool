@@ -70,6 +70,32 @@ async function fetchRows<T>(
   return rows
 }
 
+type AuthUser = { id: string; last_sign_in_at?: string | null }
+
+// listUsers is paginated at 1000 per call and silently returns only the first
+// page. A single page looked like "everyone" right up until the 1001st account,
+// at which point the operator console would start reporting long-standing users
+// as never having signed in. Walk every page, with the same CAP the table
+// queries use as the backstop.
+async function listAllUsers(admin: SupabaseClient, errors: string[]): Promise<AuthUser[]> {
+  const PER_PAGE = 1000
+  const out: AuthUser[] = []
+  try {
+    for (let page = 1; out.length < CAP; page++) {
+      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: PER_PAGE })
+      if (error) throw error
+      const users = data?.users ?? []
+      out.push(...users)
+      if (users.length < PER_PAGE) return out
+    }
+    errors.push(`auth.users (truncated at ${CAP})`)
+  } catch (e: unknown) {
+    errors.push('auth.users')
+    logError('dev.query_failed', { table: 'auth.users', message: e instanceof Error ? e.message : 'unknown' })
+  }
+  return out
+}
+
 // The service-role client below bypasses RLS entirely, so this function is the
 // only authorization boundary the route has. Every handler starts here.
 type Auth = { admin: SupabaseClient; uid: string; allowed: boolean }
@@ -156,17 +182,14 @@ export async function GET(req: NextRequest) {
     }))),
     // Sign-in times live in auth.users, not profiles — this is the only way to
     // tell "signed up and never came back" from "here every day".
-    admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-      .then(r => r.data?.users ?? [])
-      .catch((e: unknown) => {
-        errors.push('auth.users')
-        logError('dev.query_failed', { table: 'auth.users', message: e instanceof Error ? e.message : 'unknown' })
-        return [] as { id: string; last_sign_in_at?: string | null }[]
-      }),
+    listAllUsers(admin, errors),
   ])
 
   const lastSignIn = new Map(authUsers.map(u => [u.id, u.last_sign_in_at ?? null]))
   const profileById = new Map(profiles.map(p => [p.id, p]))
+  // O(1) lookup for the staff table below. `centres.find(...)` inside a .map()
+  // over every profile is quadratic, and both sides are capped at CAP.
+  const centreNameById = new Map(centres.map(c => [c.id, c.name]))
 
   // ---- per-centre roll-up ---------------------------------------------------
   type Bucket = {
@@ -275,7 +298,7 @@ export async function GET(req: NextRequest) {
       email: p.email,
       role: p.role,
       status: p.staff_status,
-      centre: p.centre_id ? centres.find(c => c.id === p.centre_id)?.name ?? null : null,
+      centre: p.centre_id ? centreNameById.get(p.centre_id) ?? null : null,
       createdAt: p.created_at,
       lastSignIn: lastSignIn.get(p.id) ?? null,
     }))
@@ -439,19 +462,11 @@ async function deleteCentre(admin: SupabaseClient, uid: string, body: unknown): 
 
   logWarn('dev.centre_delete_started', { uid, centre: centreId })
 
-  // Members first, and not only the operator: once the centre is gone their
-  // profiles would point at nothing, so they go back to the unregistered state
-  // a fresh sign-in lands in. This is also what releases the operator's own
-  // seat, which is why deleting a centre you are sitting inside works.
-  const { error: detachErr } = await admin
-    .from('profiles')
-    .update({ centre_id: null, branch_id: null, role: 'student', staff_status: 'none', head_requested: false })
-    .eq('centre_id', centreId)
-  if (detachErr) {
-    logError('dev.detach_failed', { uid, centre: centreId, message: detachErr.message })
-    return nostore({ error: 'could not detach members — nothing was deleted' }, 500)
-  }
-
+  // Data first, members last. Detaching up front looked tidier, but the abort
+  // below ("the centre was left in place") then left every member already
+  // stripped of their centre_id: the head could no longer see the centre they
+  // still own, and re-joining put them back as `pending` with no approved admin
+  // left to approve them. Nobody can undo that from inside the app.
   const failed: string[] = []
   for (const table of [...LEAF_TABLES, ...SPINE_TABLES]) {
     const { error } = await admin.from(table).delete().eq('centre_id', centreId)
@@ -462,9 +477,23 @@ async function deleteCentre(admin: SupabaseClient, uid: string, body: unknown): 
   }
   // Stop before the centre row itself: a half-deleted centre that still exists
   // can be retried or inspected, whereas an orphaned pile of rows whose centre
-  // is gone is unreachable by every query in the app.
+  // is gone is unreachable by every query in the app. Members are still
+  // attached at this point, so the head keeps their way back in.
   if (failed.length)
     return nostore({ error: `could not clear: ${failed.join(', ')}. The centre was left in place.` }, 500)
+
+  // Nothing can abort the delete from here, so release the members: once the
+  // centre is gone their profiles would point at nothing, and they go back to
+  // the unregistered state a fresh sign-in lands in. This also releases the
+  // operator seat, which is why deleting a centre you are sitting inside works.
+  const { error: detachErr } = await admin
+    .from('profiles')
+    .update({ centre_id: null, branch_id: null, role: 'student', staff_status: 'none', head_requested: false })
+    .eq('centre_id', centreId)
+  if (detachErr) {
+    logError('dev.detach_failed', { uid, centre: centreId, message: detachErr.message })
+    return nostore({ error: 'the centre data was cleared but its members could not be detached' }, 500)
+  }
 
   const { error: centreErr } = await admin.from('centres').delete().eq('id', centreId)
   if (centreErr) {

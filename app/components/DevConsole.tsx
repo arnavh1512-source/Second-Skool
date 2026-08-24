@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useDashboard, SESSION_EXPIRED, devFetch } from '../store'
+import { useDashboard, SESSION_EXPIRED, devFetch, fmtDate } from '../store'
 import { ScreenHeader } from './Shell'
 
 // ---- shape of /api/dev ------------------------------------------------------
@@ -65,8 +65,7 @@ const ago = (iso: string | null): string => {
   return `${Math.floor(days / 30)}mo ago`
 }
 
-const day = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+const day = (iso: string) => fmtDate(iso)
 
 // Kept outside the component so the mount effect can call it without touching
 // React state synchronously — every setState below happens in a callback.

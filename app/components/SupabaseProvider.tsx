@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import type { IconName } from './Icon'
 import { supabase } from '../lib/supabase'
+import { readLocal, removeLocal } from '../lib/storage'
 import { totalsByStudent, countDailyRows, attendancePct, type AttendanceTotal } from '../lib/attendance'
-import { useDashboard, registerRefresh, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type StuResultItem, type AttLogItem, type NotifItem, type FeeHistoryItem, type ScheduleItem } from '../store'
+import { useDashboard, registerRefresh, safeDate, timeAgo, type RankRow, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type ScheduleItem } from '../store'
 
 // Minimal shape of the Supabase rows this provider reads — the DB schema is the
 // source of truth, and existing `??` fallbacks handle nullable columns.
@@ -23,6 +23,14 @@ type Row = {
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const { setAuth, loadTeachers, loadStudents, set } = useDashboard()
   const lastRefresh = useRef(0)
+  // Which user this tab has already bootstrapped. getSession() and the
+  // INITIAL_SESSION event both resolve to the same session, and TOKEN_REFRESHED
+  // (hourly) and the SIGNED_IN that fires on every visibility change resolve to
+  // it again — each one used to re-run the whole 14-query bootstrap.
+  const authedFor = useRef<string | null>(null)
+  // Whether the first dataset has landed. Only the first load may blank the
+  // screen; later refreshes happen underneath whatever the user is doing.
+  const dataLoadedOnce = useRef(false)
   const role = useDashboard(s => s.role)
   const staffStatus = useDashboard(s => s.staffStatus)
 
@@ -43,7 +51,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // A code-access student has no Supabase session, so the staff branch
         // above skips them entirely and refreshData() used to be a no-op on
         // every student screen. Their snapshot is the equivalent pull.
-        const code = localStorage.getItem('student_code')
+        const code = readLocal('student_code')
         if (code) await st.loadStudentByCode(code, false).catch(() => false)
       }
     })
@@ -92,9 +100,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   // No Google session: a returning student may have a saved code; otherwise land on login.
   function resumeStudentOrLanding() {
-    const code = typeof window !== 'undefined' ? localStorage.getItem('student_code') : null
+    const code = readLocal('student_code')
     if (code) {
-      useDashboard.getState().loadStudentByCode(code).then(ok => { if (!ok) set({ authLoading: false }) })
+      useDashboard.getState().loadStudentByCode(code)
+        .then(ok => { if (!ok) set({ authLoading: false }) })
+        // Without this, a throw here left authLoading true forever: the app
+        // never leaves the splash spinner and a reload does the same thing.
+        .catch(() => set({ authLoading: false }))
     } else {
       set({ authLoading: false })
     }
@@ -104,7 +116,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // A Google-authenticated user is staff, never a code-access student. Purge
     // any student_code left over from testing so a session blip can't drop this
     // device into the student "invalid code" path.
-    if (typeof window !== 'undefined') localStorage.removeItem('student_code')
+    removeLocal('student_code')
     try {
       const { data: profile } = await supabase.from('profiles').select('role, staff_status, full_name, phone, subject, qualification, profile_completed_at').eq('id', userId).single()
       const role = (profile?.role as Role) ?? 'student'
@@ -124,10 +136,15 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Only approved staff load the centre's full dataset. dataLoading gates the
       // UI so Home never flashes zeros before the first fetch completes.
       if ((role === 'admin' || role === 'teacher') && staffStatus === 'approved') {
-        set({ dataLoading: true })
-        try { await fetchAllData() }
+        // Only the very first fetch may raise dataLoading. page.tsx swaps the
+        // live screen for a spinner while it is set, so raising it on a token
+        // refresh unmounted the attendance roster or the marks a teacher was
+        // halfway through typing, and their work went with it.
+        const first = !dataLoadedOnce.current
+        if (first) set({ dataLoading: true })
+        try { await fetchAllData(); dataLoadedOnce.current = true }
         catch { useDashboard.getState().notify('Could not load data — check your connection and refresh') }
-        finally { set({ dataLoading: false }) }
+        finally { if (first) set({ dataLoading: false }) }
       }
     } catch {
       // Network/unexpected failure before we resolved the role: never strand the
@@ -148,7 +165,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       { data: fees },
       { data: tests },
       { data: results },
-      { data: notifications },
       { data: subjects },
       { data: attendance },
       { data: batches },
@@ -168,7 +184,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // results rather than an arbitrary slice — without an ORDER BY, which
       // rows Postgres drops at the limit is undefined.
       supabase.from('results').select('*').order('created_at', { ascending: false }).limit(20000),
-      supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('subjects').select('*').limit(100),
       // Only the columns the recent-activity log needs. Percentages no longer
       // come from these rows (see attTotals below), so this set being capped
@@ -215,6 +230,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       return {
         ...st,
         ...(branch ? { branch } : {}),
+        // How many days this student has actually been marked. Distinguishes
+        // "never marked" from "marked and absent every time" — without it an
+        // absentee filter fires at every student added today.
+        attendanceMarked: attByStudent[st.dbId ?? '']?.t ?? 0,
         ...(pct === null ? {} : { attendance: pct }),
         ...(fee ? { feeCollected: fee.collected, feeDue: fee.due } : {}),
       }
@@ -243,10 +262,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     // Meetings
     const meetingsList: MeetingItem[] = (meetings ?? []).map((m: Row) => {
-      const d = new Date(m.date)
+      const d = safeDate(m.date as string)
       return {
-        day: String(d.getDate()).padStart(2, '0'),
-        mon: d.toLocaleString('en', { month: 'short' }),
+        day: d ? String(d.getDate()).padStart(2, '0') : '--',
+        mon: d ? d.toLocaleString('en', { month: 'short' }) : '',
         title: m.title, time: m.time ?? '', kind: m.meeting_type ?? 'Staff',
         dbId: m.id,
       }
@@ -254,10 +273,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     // Assignments
     const assignmentsList: AssignmentItem[] = (assignments ?? []).map((a: Row) => {
-      const d = new Date(a.due_date)
+      const d = safeDate(a.due_date as string)
       return {
         title: a.title, klass: a.class ?? '',
-        due: `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`,
+        due: d ? `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}` : 'No due date',
         submitted: 0, total: mappedStudents.filter(s => s.klass === (a.class ?? '')).length,
         dbId: a.id,
       }
@@ -276,96 +295,64 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const today = days[new Date().getDay()]
     const todayEntries = timetableData[today] ?? []
     const now = new Date()
+    // Minutes matter. This used to read only the hour, so a 09:30-10:30 period
+    // rendered as "9:00" on the teacher's home screen and flipped to "Ongoing"
+    // at 9:00 — half an hour before the class, while the 9:00 period it was
+    // sitting next to was still running.
     const schedule: ScheduleItem[] = todayEntries.map(([start, end, subject, klass, room]) => {
-      const [h] = start.split(':').map(Number)
+      const [h, m = 0] = start.split(':').map(Number)
       const ampm = h >= 12 ? 'PM' : 'AM'
       const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h
-      const startH = new Date(); startH.setHours(h, 0, 0, 0)
-      const [eh] = end.split(':').map(Number)
-      const endH = new Date(); endH.setHours(eh, 0, 0, 0)
-      const status = now > endH ? 'Done' : now >= startH ? 'Ongoing' : `${hour12}:00 ${ampm}`
+      const hhmm = `${hour12}:${String(m).padStart(2, '0')}`
+      const startH = new Date(); startH.setHours(h, m, 0, 0)
+      const [eh, em = 0] = end.split(':').map(Number)
+      const endH = new Date(); endH.setHours(eh, em, 0, 0)
+      const status = now > endH ? 'Done' : now >= startH ? 'Ongoing' : `${hhmm} ${ampm}`
       const statusColor = status === 'Done' ? '#2fa36b' : status === 'Ongoing' ? '#2a6fdb' : '#6b7689'
       const statusBg = status === 'Done' ? '#e7f5ee' : status === 'Ongoing' ? '#eaf1fc' : '#eef1f7'
-      return { time: `${hour12}:00`, ampm, subject, klass, room, status, statusColor, statusBg }
+      return { time: hhmm, ampm, subject, klass, room, status, statusColor, statusBg }
     })
 
     // Subjects
     const subjectItems = subjectList
 
-    // Results + Rankings
+    // Rankings
     const testMap: Record<string, Row> = Object.fromEntries((tests ?? []).map((t: Row) => [t.id, t]))
-    const stuResults: StuResultItem[] = (results ?? []).map((r: Row) => {
-      const test = testMap[r.test_id]
-      return {
-        subject: subjectMap[test?.subject_id] ?? 'Unknown',
-        test: test?.name ?? 'Test', date: test?.date ?? '',
-        marks: r.marks ?? 0, total: test?.max_marks ?? 100,
-      }
-    })
 
     // Compute rankings per subject from results
-    const rankData: Record<string, [string, number][]> = {}
-    const resultsBySubjectStudent: Record<string, Record<string, { total: number; max: number }>> = {}
+    // Bucketed by student id, not by student name. Two students called Aarav
+    // Patel used to collapse into a single leaderboard row carrying the sum of
+    // both their marks, which put one name at a rank neither child had earned.
+    const rankData: Record<string, RankRow[]> = {}
+    const resultsBySubjectStudent: Record<string, Record<string, { name: string; total: number; max: number }>> = {}
     for (const r of (results ?? []) as Row[]) {
       const test = testMap[r.test_id]
       if (!test) continue
       const subjectName = subjectMap[test.subject_id] ?? 'Unknown'
-      const student = studentMap[r.student_id]
-      const studentName = student?.name ?? 'Unknown'
+      const studentId = String(r.student_id ?? '')
+      if (!studentId) continue
+      const studentName = studentMap[r.student_id]?.name ?? 'Unknown'
       if (!resultsBySubjectStudent[subjectName]) resultsBySubjectStudent[subjectName] = {}
-      if (!resultsBySubjectStudent[subjectName][studentName]) resultsBySubjectStudent[subjectName][studentName] = { total: 0, max: 0 }
-      resultsBySubjectStudent[subjectName][studentName].total += r.marks ?? 0
-      resultsBySubjectStudent[subjectName][studentName].max += test.max_marks ?? 100
+      if (!resultsBySubjectStudent[subjectName][studentId]) resultsBySubjectStudent[subjectName][studentId] = { name: studentName, total: 0, max: 0 }
+      resultsBySubjectStudent[subjectName][studentId].total += r.marks ?? 0
+      resultsBySubjectStudent[subjectName][studentId].max += test.max_marks ?? 100
     }
-    for (const [subject, students] of Object.entries(resultsBySubjectStudent)) {
-      rankData[subject] = Object.entries(students)
-        .map(([name, { total, max }]) => [name, max > 0 ? Math.round((total / max) * 100) : 0] as [string, number])
-        .sort((a, b) => b[1] - a[1])
+    for (const [subject, byStudent] of Object.entries(resultsBySubjectStudent)) {
+      rankData[subject] = Object.entries(byStudent)
+        .map(([id, { name, total, max }]) => ({ id, name, score: max > 0 ? Math.round((total / max) * 100) : 0 }))
+        .sort((a, b) => b.score - a.score)
     }
 
-    // Attendance log (for student view)
-    const statusIcons: Record<string, { icon: IconName; tint: string; color: string }> = {
-      Present: { icon: 'attendance', tint: '#e7f5ee', color: '#2fa36b' },
-      Absent: { icon: 'absent', tint: '#fdecea', color: '#e8553c' },
-      Leave: { icon: 'leave', tint: '#fcf3e3', color: '#e0962f' },
-    }
-    const stuAttendanceLog: AttLogItem[] = (attendance ?? []).slice(0, 15).map((a) => {
-      const d = new Date(a.date)
-      const si = statusIcons[a.status] ?? statusIcons.Present
-      return {
-        day: d.toLocaleString('en', { weekday: 'long' }),
-        date: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        status: a.status, ...si,
-      }
-    })
-
-    // Fee history + pending fee (for student view)
-    const stuFeeHistory: FeeHistoryItem[] = (fees ?? []).filter((f: Row) => f.status === 'Paid').map((f: Row) => ({
-      period: f.period ?? '',
-      date: f.paid_date ? new Date(f.paid_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
-      amount: `₹${(f.amount ?? 0).toLocaleString('en-IN')}`,
-    }))
-    const pendingFee = (fees ?? []).find((f: Row) => f.status !== 'Paid')
-    const stuPendingFee = pendingFee ? {
-      amount: `₹${(pendingFee.amount ?? 0).toLocaleString('en-IN')}`,
-      period: pendingFee.period ?? '',
-      dueDate: pendingFee.due_date ? new Date(pendingFee.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '',
-    } : null
-
-    // Notifications (for student view)
-    const stuNotifications: NotifItem[] = (notifications ?? []).map((n: Row) => ({
-      icon: n.icon ?? 'notice', tint: n.tint ?? '#eaf1fc',
-      title: n.title ?? '', detail: n.detail ?? '',
-      when: timeAgo(n.created_at), dbId: n.id,
-    }))
-
-    // Reminders as notifications
-    const stuReminders: NotifItem[] = stuNotifications.slice(0, 3)
-
+    // Nothing student-facing is set here. This runs only in a staff session,
+    // and the six stu* fields it used to fill (results, attendance log, fee
+    // history, pending fee, notifications, reminders) are rendered by exactly
+    // one file — StudentScreens.tsx — which a staff session never mounts. They
+    // were derived from every row in the centre on every refresh, and the
+    // notifications query that fed two of them was a wasted round trip whose
+    // result nobody read.
     set({
       branchesList, meetingsList, assignmentsList, timetableData, schedule,
-      rankData, subjects: subjectItems, batches: batchList, stuResults, stuAttendanceLog,
-      stuFeeHistory, stuPendingFee, stuNotifications, stuReminders, pendingStudents,
+      rankData, subjects: subjectItems, batches: batchList, pendingStudents,
       lastSyncedAt: Date.now(),
     })
   }
@@ -385,15 +372,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       window.history.replaceState({}, '', window.location.pathname)
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) handleAuth(session.user.id, session.user.email ?? '')
-      else resumeStudentOrLanding()
-    })
+    // One bootstrap per signed-in user. getSession() and INITIAL_SESSION both
+    // resolve to the same session on a cold load, so this used to run the full
+    // dataset fetch twice on every page view — and again on each hourly token
+    // refresh. Signing out resets the marker, so a different user still loads.
+    const bootstrap = (session: { user?: { id: string; email?: string | null } | null } | null) => {
+      const user = session?.user
+      if (!user) { authedFor.current = null; dataLoadedOnce.current = false; resumeStudentOrLanding(); return }
+      if (authedFor.current === user.id) return
+      authedFor.current = user.id
+      handleAuth(user.id, user.email ?? '')
+    }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) handleAuth(session.user.id, session.user.email ?? '')
-      else resumeStudentOrLanding()
-    })
+    supabase.auth.getSession().then(({ data: { session } }) => bootstrap(session))
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => bootstrap(session))
 
     return () => subscription.unsubscribe()
   // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount; auth listener must not rebind per render
@@ -406,7 +399,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     if (st.supabaseUserId && (st.role === 'admin' || st.role === 'teacher') && st.staffStatus === 'approved') {
       fetchAllData().catch(() => {}) // ignore transient failures
     } else if (!st.supabaseUserId && st.currentStudentDbId) {
-      const code = localStorage.getItem('student_code')
+      const code = readLocal('student_code')
       if (code) st.loadStudentByCode(code, false) // refresh without navigating
     }
   }
@@ -448,7 +441,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (document.visibilityState !== 'visible') return
       const st = useDashboard.getState()
       if (!st.supabaseUserId && st.currentStudentDbId) {
-        const code = localStorage.getItem('student_code')
+        const code = readLocal('student_code')
         if (code) st.loadStudentByCode(code, false)
       }
     }, 60000)
@@ -478,13 +471,3 @@ function mapStudent(s: Record<string, unknown>): Student {
   }
 }
 
-function timeAgo(dateStr: string): string {
-  if (!dateStr) return ''
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  return `${days}d ago`
-}

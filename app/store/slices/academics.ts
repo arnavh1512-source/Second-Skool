@@ -20,19 +20,25 @@ export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
     const d = new Date(dueDate || Date.now())
     const item: AssignmentItem = {
       title, klass, due: `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`,
-      submitted: 0, total: get().students.filter(s => s.klass.includes(klass.replace('Class ', ''))).length,
+      // Exact match, like the refresh path and the database function both use.
+      // `includes` on the bare number meant "Class 1" also counted Class 10,
+      // 11 and 12, so the submitted-out-of count changed the moment the page
+      // was refreshed and the real figure replaced it.
+      submitted: 0, total: get().students.filter(s => s.klass === klass).length,
     }
     const subjectId = subjects.find(s => s.name === subject)?.dbId
 
-    const { error } = await supabase.from('assignments').insert({
+    // Take the id back: without it the new assignment renders with no delete
+    // button (it is gated on dbId) until the next full refresh.
+    const { data, error } = await supabase.from('assignments').insert({
       title: clampText(title, LIMITS.title), class: klass, due_date: isoDay(d),
       instructions: instructions || null, subject_id: subjectId ?? null,
-    })
-    if (error) { get().notify('Could not create assignment — check your connection', 'error'); return false }
+    }).select('id').single()
+    if (error || !data) { get().notify('Could not create assignment — check your connection', 'error'); return false }
 
-    set((s) => ({ assignmentsList: [item, ...s.assignmentsList] }))
+    set((s) => ({ assignmentsList: [{ ...item, dbId: data.id as string }, ...s.assignmentsList] }))
     // Only notify the class once the homework actually exists for them to open.
-    get().notifyClass(klass, 'New homework', `${title} — due ${item.due}`, 'homework')
+    await get().notifyClass(klass, 'New homework', `${title} — due ${item.due}`, 'homework')
     get().notify('Assignment created · class notified')
     return true
   },

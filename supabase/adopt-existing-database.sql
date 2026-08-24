@@ -12,9 +12,12 @@
 --   2. Run supabase/migrations/0000_schema_migrations.sql first.
 --   3. Run this file.
 --   4. Verify with the SELECT at the bottom: you should see 0000 - 0014.
+--   5. Then apply 0015 onwards in order, the normal way. This file only
+--      covers the migrations that predate the ledger; everything after 0014
+--      was written after it existed and must actually be run.
 --
--- ON A FRESH PROJECT: do NOT run this file. Run 0000, then 0001 - 0014 in
--- order, and each one records itself.
+-- ON A FRESH PROJECT: do NOT run this file. Run 0000, then every migration in
+-- supabase/migrations in numeric order, and each one records itself.
 -- ============================================================================
 
 insert into public.schema_migrations (version) values
@@ -34,5 +37,6 @@ insert into public.schema_migrations (version) values
   ('0014_drop_dead_tables')
 on conflict (version) do nothing;
 
--- Expect 15 rows, 0000 through 0014.
+-- Expect 15 rows, 0000 through 0014 — the pre-ledger set, not the whole
+-- migrations directory. Apply 0015 onwards afterwards.
 select version, applied_at from public.schema_migrations order by version;

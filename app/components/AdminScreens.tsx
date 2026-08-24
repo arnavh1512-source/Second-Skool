@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useDashboard, initials, av } from '../store'
+import { useBusy } from '../lib/use-busy'
+import { useDashboard, initials, av, fmtDate } from '../store'
 import { ScreenHeader, EmptyState } from './Shell'
 import { supabase } from '../lib/supabase'
-import { whatsappShareUrl, weeklyReportMessage, studentReportMessage } from '../lib/share'
+import { whatsappShareUrl, weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
 import { useState } from 'react'
 
 
@@ -32,7 +33,7 @@ export function StaffApprovalsScreen() {
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
 
       {joinCode && (
-        <button onClick={() => { navigator.clipboard.writeText(joinCode); notify('Join code copied!') }} className="w-full lg:max-w-md text-left border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5 cursor-pointer flex items-center justify-between">
+        <button onClick={() => copyText(joinCode, notify, 'Join code copied!')} className="w-full lg:max-w-md text-left border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5 cursor-pointer flex items-center justify-between">
           <div>
             <div className="text-[12px] font-bold text-td-muted">{centreName || 'Your centre'} · JOIN CODE</div>
             <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{joinCode}</div>
@@ -143,12 +144,12 @@ export function StudentRequestsScreen() {
       {studentJoinCode && (
         <div className="w-full lg:max-w-md border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-3.5 mb-5">
           <div className="flex items-start justify-between gap-3">
-            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-left flex-1 min-w-0 cursor-pointer">
+            <button onClick={() => copyText(studentJoinCode, notify, 'Student code copied!')} className="text-left flex-1 min-w-0 cursor-pointer">
               <div className="text-[12px] font-bold text-td-muted">{centreName || 'Your centre'} · STUDENT CODE</div>
               <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{studentJoinCode}</div>
               <div className="text-[12px] text-td-muted mt-0.5">Share with students so they can register themselves.</div>
             </button>
-            <button onClick={() => { navigator.clipboard.writeText(studentJoinCode); notify('Student code copied!') }} className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0 cursor-pointer">
+            <button onClick={() => copyText(studentJoinCode, notify, 'Student code copied!')} className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0 cursor-pointer">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               Copy
             </button>
@@ -187,20 +188,17 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
   onReject: (dbId: string) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [busy, run] = useBusy()
   const [klass, setKlass] = useState(s.klass)
   const [branch, setBranch] = useState('')
   const [batch, setBatch] = useState('')
   const [fee, setFee] = useState('')
   const [feeDue, setFeeDue] = useState('')
 
-  const confirm = async () => {
-    if (busy) return
-    setBusy(true)
+  const confirm = () => run(async () => {
     const branchId = branch ? branches.find(b => b.name === branch)?.dbId ?? null : null
     await onApprove(s.dbId, klass, branchId, fee, feeDue, batch || undefined)
-    setBusy(false)
-  }
+  })
 
   return (
     <div className="bg-white border border-td-border rounded-[16px] p-3.5 self-start">
@@ -299,9 +297,9 @@ export function ReportsScreen() {
           <div className="text-center text-td-muted text-sm py-10 bg-white border border-td-border rounded-[16px]">No approved staff yet.</div>
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
-            <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">What each staff member logged in the last 7 days.</div>
-            {teacherActivity.map(t => (
-              <div key={t.email + t.name} className="bg-white border border-td-border rounded-[18px] p-4">
+            <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">What each staff member logged in the last {period} days.</div>
+            {teacherActivity.map((t, i) => (
+              <div key={`${t.email}-${i}`} className="bg-white border border-td-border rounded-[18px] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="text-[14.5px] font-extrabold text-td-dark">{t.name || t.email}</div>
@@ -339,10 +337,10 @@ export function ReportsScreen() {
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
             <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">Send each parent their child&apos;s weekly progress.</div>
-            {studentReports.map(s => {
+            {studentReports.map((s, i) => {
               const attPct = s.att_total > 0 ? Math.round((s.att_present / s.att_total) * 100) : null
               return (
-                <div key={s.name + s.klass} className="bg-white border border-td-border rounded-[18px] p-4">
+                <div key={`${s.name}-${s.klass}-${i}`} className="bg-white border border-td-border rounded-[18px] p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <div className="text-[14.5px] font-extrabold text-td-dark">{s.name}</div>
@@ -364,14 +362,14 @@ export function ReportsScreen() {
         <div className="text-center text-td-muted text-sm py-12">Generating report…</div>
       ) : (
         <>
-          <div className="text-[12.5px] text-td-muted mb-4">Last {period} days · as of {new Date(r.generated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          <div className="text-[12.5px] text-td-muted mb-4">Last {period} days · as of {fmtDate(r.generated_at)}</div>
 
           {r.branches.length === 0 ? (
             <div className="text-center text-td-muted text-sm py-8 bg-white border border-td-border rounded-[16px] mb-4">No branches configured yet — add branches and assign students to see per-branch numbers.</div>
           ) : (
             <div className="flex flex-col gap-3 mb-4 lg:grid lg:grid-cols-2 xl:grid-cols-3">
-              {r.branches.map(b => (
-                <div key={b.name} className="bg-white border border-td-border rounded-[18px] p-4">
+              {r.branches.map((b, i) => (
+                <div key={`${b.name}-${i}`} className="bg-white border border-td-border rounded-[18px] p-4">
                   <div className="text-[15px] font-extrabold text-td-dark mb-3">{b.name}</div>
                   <div className="grid grid-cols-2 gap-3">
                     {[

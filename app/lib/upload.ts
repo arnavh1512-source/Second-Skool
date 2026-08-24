@@ -17,12 +17,20 @@ export function validateNoteFile(file: { size: number; type: string }): { ext?: 
   return { ext }
 }
 
-// Uploads a note file to the public 'notes' bucket under a random path and
-// returns its public URL. Oversized / non-PDF-or-image files are rejected first.
+// Uploads a note file to the public 'notes' bucket and returns its public URL.
+// Oversized / non-PDF-or-image files are rejected first.
+//
+// The path is `<centre_id>/<uuid>.<ext>`. The centre folder is not decoration:
+// the storage policies read that first segment to decide who may write and who
+// may delete, so without it every centre's staff could delete every other
+// centre's files. current_centre() is the same function the policies call, so
+// the folder and the check can never drift apart.
 export async function uploadNoteFile(file: File): Promise<{ url?: string; error?: string }> {
   const { ext, error: bad } = validateNoteFile(file)
   if (bad) return { error: bad }
-  const path = `${crypto.randomUUID()}.${ext}`
+  const { data: centreId, error: centreErr } = await supabase.rpc('current_centre')
+  if (centreErr || !centreId) return { error: 'Could not verify your centre — sign in again' }
+  const path = `${centreId}/${crypto.randomUUID()}.${ext}`
   const { error } = await supabase.storage.from('notes').upload(path, file, {
     contentType: file.type, upsert: false,
   })

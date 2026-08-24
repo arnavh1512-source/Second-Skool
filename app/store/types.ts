@@ -20,7 +20,7 @@ export type FeeStatus = 'Paid' | 'Due' | 'Overdue'
 export interface StaffMember { id: string; name: string; email: string; role: string; status: StaffStatus; headRequested: boolean; phone: string; subject: string; qualification: string }
 
 export interface Teacher { name: string; subject: string; experience: number; qualification: string; rating?: string; about?: string; dbId?: string }
-export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; feeStatus: FeeStatus; feeCollected?: number; feeDue?: number; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
+export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; attendanceMarked?: number; feeStatus: FeeStatus; feeCollected?: number; feeDue?: number; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string }
 // A self-registered student awaiting the head's approval (roster is separate).
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
@@ -35,6 +35,12 @@ export interface NoteItem { dbId?: string; title: string; subject: string; klass
 export interface StuNoteItem { title: string; subject: string; body: string; fileUrl: string; linkUrl: string; date: string }
 export interface FeeHistoryItem { period: string; date: string; amount: string }
 export interface NotifItem { icon: string; tint: string; title: string; detail: string; when: string; dbId?: string }
+// A leaderboard row. `id` is the student's row id and is what decides who is
+// who — two students in the same centre can share a name, and keying the board
+// on the name alone merged them into one entry and highlighted the wrong child
+// as "(You)". It is null only for a board built by an older snapshot RPC that
+// did not return ids.
+export interface RankRow { id: string | null; name: string; score: number }
 export interface SubjectItem { name: string; dbId: string }
 export interface BatchItem { name: string; dbId: string }
 export interface BranchReport { name: string; students: number; new_students: number; staff: number; att_pct: number; fees_collected: number; fees_pending: number }
@@ -85,7 +91,7 @@ export interface State {
   assignmentsList: AssignmentItem[]
   timetableData: Record<string, string[][]>
   schedule: ScheduleItem[]
-  rankData: Record<string, [string, number][]>
+  rankData: Record<string, RankRow[]>
   subjects: SubjectItem[]
   batches: BatchItem[]
   stuReminders: NotifItem[]
@@ -114,6 +120,7 @@ export interface Actions {
 
   toggleAtt: (key: string) => void
   setStudentField: (patch: Partial<Student>) => void
+  saveStudentEdit: () => Promise<boolean>
   setNewTeacher: (patch: Partial<State['newTeacher']>) => void
   setNewStudent: (patch: Partial<State['newStudent']>) => void
   setStuSignup: (patch: Partial<State['stuSignup']>) => void
@@ -122,15 +129,15 @@ export interface Actions {
   rejectStudent: (dbId: string) => Promise<void>
   deleteStudent: () => Promise<void>
   saveTeacher: () => Promise<void>
-  addStudent: () => void
+  addStudent: () => Promise<void>
   saveAttendance: (roster: Student[]) => Promise<void>
   saveMeeting: (title: string, type: string, date: string, time: string) => Promise<boolean>
   saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => Promise<boolean>
   deleteAssignment: (dbId: string) => Promise<void>
-  saveReminder: (type: string, message: string, targetClass: string, filter?: string) => void
-  notifyClass: (klass: string, title: string, detail: string, icon: IconName) => void
+  saveReminder: (type: string, message: string, targetClass: string, filter?: string) => Promise<void>
+  notifyClass: (klass: string, title: string, detail: string, icon: IconName) => Promise<void>
   addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => Promise<boolean>
-  toggleFeeStatus: (idx: number) => Promise<void>
+  toggleFeeStatus: (key: string) => Promise<void>
   addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => Promise<boolean>
   deleteTimetableEntry: (day: string, p: string[]) => Promise<void>
   updateTimetableEntry: (day: string, oldP: string[], startTime: string, endTime: string, subject: string, klass: string, room: string) => Promise<boolean>

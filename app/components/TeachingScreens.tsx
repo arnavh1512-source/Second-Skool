@@ -1,11 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { isoDay } from '../store/format'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
 import { ScreenHeader, PrimaryButton, EmptyState } from './Shell'
 import { pickAttendanceClass } from '../lib/attendance'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
+
+// Period labels that are not a subject. Matched exactly — see periodStyle.
+const SPECIAL_PERIODS = new Set(['Test', 'Staff meeting', 'Parent meeting', 'Doubt session'])
 
 export function TimetableScreen() {
   const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, role } = useDashboard()
@@ -52,7 +56,10 @@ export function TimetableScreen() {
 
   const periodStyle = (p: string[]) => {
     const free = p[2] === 'Free period'
-    const special = p[2].includes('Test') || p[2].includes('meeting') || p[2].includes('Doubt')
+    // Exact names, not substrings: a centre with a subject called "Test Prep"
+    // or "Doubt Solving" had every one of its regular periods styled as a
+    // one-off event on the timetable.
+    const special = SPECIAL_PERIODS.has(p[2])
     return {
       dot: free ? '#c2cad8' : special ? '#e0962f' : '#2a6fdb',
       bg: free ? '#f4f6fb' : '#fff',
@@ -130,10 +137,10 @@ export function TimetableScreen() {
                 <div className="text-center text-td-subtle text-[12px] py-3">—</div>
               ) : (
                 <div className="flex flex-col gap-1.5">
-                  {ps.map((p) => {
+                  {ps.map((p, i) => {
                     const s = periodStyle(p)
                     return (
-                      <div key={`${p[0]}-${p[2]}`} className="rounded-[11px] border p-2" style={{ background: s.bg, borderColor: s.border }}>
+                      <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="rounded-[11px] border p-2" style={{ background: s.bg, borderColor: s.border }}>
                         <div className="text-[12px] font-bold text-td-muted">{p[0]}–{p[1]}</div>
                         <div className="text-[12px] font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
                         <div className="text-[12px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
@@ -160,10 +167,10 @@ export function TimetableScreen() {
         <div className="text-center text-td-muted text-sm py-8">No periods scheduled for {dayNames[ttDay]}</div>
       ) : (
         <div className="flex flex-col">
-          {periods.map((p) => {
+          {periods.map((p, i) => {
             const s = periodStyle(p)
             return (
-              <div key={`${p[0]}-${p[2]}`} className="flex gap-[13px] items-stretch">
+              <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="flex gap-[13px] items-stretch">
                 <div className="shrink-0 w-[58px] text-right pt-1">
                   <div className="text-[12.5px] font-extrabold text-td-dark">{p[0]}</div>
                   <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
@@ -325,7 +332,9 @@ export function ResultsScreen() {
     const subjectId = useDashboard.getState().subjects.find(s => s.name === selSubject)?.dbId
     const { data: test, error } = await supabase.from('tests').insert({
       name: clampText(testName, LIMITS.title), subject_id: subjectId ?? null, class: selKlass,
-      max_marks: max, date: new Date().toISOString().split('T')[0],
+      // isoDay(), not toISOString(): the UTC day rolls at 05:30 IST, so a
+      // test entered early in the morning was filed against yesterday.
+      max_marks: max, date: isoDay(),
     }).select().single()
     if (error || !test) { notify('Could not publish — try again'); return }
 
@@ -441,8 +450,8 @@ export function AssignmentsScreen() {
         <div className="text-center text-td-muted text-sm py-4">No assignments yet</div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {assignmentsList.map(a => (
-            <div key={a.dbId ?? a.title + a.due} className="bg-white border border-td-border rounded-2xl p-3.5">
+          {assignmentsList.map((a, i) => (
+            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="bg-white border border-td-border rounded-2xl p-3.5">
               <div className="flex justify-between items-start gap-2">
                 <div className="text-[13.5px] font-bold text-td-dark">{a.title}</div>
                 <div className="flex items-center gap-1.5 shrink-0">

@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { indexOfStudent } from '../../lib/student-key'
 import { dbErr } from '../db'
 import { isoDay } from '../format'
 import type { Slice } from '../slice'
@@ -41,11 +42,17 @@ export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus'> = (set, get) =
     return true
   },
 
-  toggleFeeStatus: async (idx) => {
+  // Keyed on the student, not their slot. The badge is rendered from a
+  // filtered, sorted copy of the roster and the roster is re-fetched on every
+  // focus, so the position captured at render time routinely belongs to a
+  // different child by the time the head's finger lands — and this write marks
+  // fees paid.
+  toggleFeeStatus: async (key) => {
     const notify = get().notify
     const before = get().students
+    const idx = indexOfStudent(before, key)
     const student = before[idx]
-    if (!student) return
+    if (!student) { notify('That student is no longer on the roster', 'error'); return }
     const dbId = student.dbId
     if (!dbId) { notify('This student is not saved yet', 'error'); return }
     if (!get().online) { notify('No internet — the fee status has NOT been changed. Try again once you are back online.', 'error'); return }

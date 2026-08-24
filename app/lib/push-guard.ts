@@ -29,7 +29,11 @@ export function validatePushBody(raw: unknown): Validated {
   const { title, body, studentCodes } = b
   if (typeof title !== 'string' || title.length === 0 || title.length > 120) return { ok: false, error: 'bad title' }
   if (body !== undefined && (typeof body !== 'string' || body.length > 500)) return { ok: false, error: 'bad body' }
-  if (studentCodes !== undefined && (!Array.isArray(studentCodes) || studentCodes.length > 1000 || studentCodes.some(c => typeof c !== 'string')))
+  // Each code is checked too, not just the array length. Student codes are
+  // short and fixed-shape, so 1000 unbounded strings was a megabytes-per-request
+  // hole in an otherwise capped body.
+  if (studentCodes !== undefined && (!Array.isArray(studentCodes) || studentCodes.length > 1000
+    || studentCodes.some(c => typeof c !== 'string' || c.length === 0 || c.length > 32)))
     return { ok: false, error: 'bad targets' }
   return { ok: true, value: b as PushBody }
 }

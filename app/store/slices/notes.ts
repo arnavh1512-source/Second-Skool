@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { readLocal } from '../../lib/storage'
 import { dbErr } from '../db'
 import { LIMITS, clampText, safeLinkUrl } from '../validate'
 import type { Slice } from '../slice'
@@ -31,18 +32,22 @@ export const createNotesSlice: Slice<Keys> = (set, get) => ({
     }).select('id').single()
     if (error) { get().notify('Could not save note', 'error'); return }
     set((s) => ({ notesList: [{ dbId: data.id, ...n, linkUrl: linkUrl ?? '' }, ...s.notesList] }))
-    get().notifyClass(n.klass, 'New study material', n.subject ? `${n.title.trim()} · ${n.subject}` : n.title.trim(), 'notes')
+    await get().notifyClass(n.klass, 'New study material', n.subject ? `${n.title.trim()} · ${n.subject}` : n.title.trim(), 'notes')
     get().notify('Note shared with the class')
   },
 
   deleteNote: async (dbId) => {
+    const before = get().notesList
     set((s) => ({ notesList: s.notesList.filter(x => x.dbId !== dbId) }))
-    await supabase.from('notes').delete().eq('id', dbId).then(dbErr('delete note', get().notify))
+    const res = await supabase.from('notes').delete().eq('id', dbId)
+    // Put the note back rather than reporting a removal that did not happen —
+    // the note is still visible to every student in the class.
+    if (res.error) { set({ notesList: before }); dbErr('delete note', get().notify)(res); return }
     get().notify('Note removed')
   },
 
   loadStudentNotes: async () => {
-    const code = typeof window !== 'undefined' ? localStorage.getItem('student_code') : null
+    const code = readLocal('student_code')
     if (!code) return
     const { data, error } = await supabase.rpc('get_student_notes', { p_code: code })
     if (error) { get().notify('Could not load study material', 'error'); return }

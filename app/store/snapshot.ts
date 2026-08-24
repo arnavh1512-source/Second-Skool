@@ -3,7 +3,7 @@ import type { IconName } from '../components/Icon'
 import { fmtDate, rupee, timeAgo } from './format'
 import type {
   AttLogItem, FeeHistoryItem, FeeStatus, NotifItem, State,
-  StuAssignmentItem, StuResultItem, Student, Teacher,
+  RankRow, StuAssignmentItem, StuResultItem, Student, Teacher,
 } from './types'
 
 const STATUS_ICONS: Record<string, { icon: IconName; tint: string; color: string }> = {
@@ -33,18 +33,31 @@ export type Snapshot = {
   student?: { [key: string]: string | undefined }
   centre?: { name?: string; logo_url?: string }
   attendance?: SnapRow[]; results?: SnapRow[]; fees?: SnapRow[]; notifications?: SnapRow[]
+  // Lifetime counts, spanning the archived monthly rollups as well as the
+  // daily rows. `attendance` above only ever holds the un-archived days.
+  attendanceTotals?: { present?: number | null; total?: number | null }
   teachers?: SnapRow[]; timetable?: SnapRow[]; assignments?: SnapRow[]
-  rankings?: Record<string, [string, number][]>
+  rankings?: Record<string, ([string, number] | { id?: string | null; name?: string; score?: number })[]>
 }
 
 export function mapSnapshot(snap: Snapshot): Partial<State> {
   const s = snap.student ?? {}
   const attendance: SnapRow[] = snap.attendance ?? []
-  const present = attendance.filter(a => a.status === 'Present').length
-  const attPct = attendance.length ? Math.round((present / attendance.length) * 100) : 0
+  // Counting the daily rows is the fallback, not the answer. Once a centre is
+  // three months old archive_old_attendance() has moved everything older than
+  // 90 days into attendance_monthly and deleted it from `attendance`, so the
+  // daily list is a rolling window — and a percentage computed from it silently
+  // became "last 90 days" while the teacher, reading a different query, still
+  // saw the lifetime figure. The two numbers described the same child and did
+  // not match. attendanceTotals is the lifetime pair; the daily list stays for
+  // the day-by-day log, which is all it was ever able to show.
+  const totals = snap.attendanceTotals
+  const attTotal = totals?.total ?? attendance.length
+  const attPresent = totals?.present ?? attendance.filter(a => a.status === 'Present').length
+  const attPct = attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : 0
 
   const student: Student = {
-    name: s.name ?? '', klass: s.klass ?? '', attendance: attPct,
+    name: s.name ?? '', klass: s.klass ?? '', attendance: attPct, attendanceMarked: attTotal,
     feeStatus: (s.feeStatus ?? 'Due') as FeeStatus, school: s.school ?? '',
     parent: s.parent ?? '', id: s.code ?? '', address: s.address ?? '', dbId: s.dbId,
   }
@@ -71,6 +84,11 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   const pending = fees.find(f => f.status !== 'Paid')
   const stuPendingFee = pending ? { amount: rupee(pending.amount ?? 0), period: pending.period ?? '', dueDate: fmtDate(pending.dueDate ?? '') } : null
 
+  // dbId here is the creation timestamp, not a row id — the snapshot RPC does
+  // not return one. It is an identity for "which notification is this" (the
+  // reminder cutoff below parses it back into a date, and the home screen
+  // remembers the newest one the student has opened), but it is not unique on
+  // its own, so render keys pair it with the row index.
   const stuNotifications: NotifItem[] = (snap.notifications ?? []).map((n: SnapRow) => ({
     icon: n.icon ?? 'notice', tint: '#eaf1fc', title: n.title ?? '', detail: n.detail ?? '',
     when: timeAgo(n.createdAt ?? ''), dbId: n.createdAt ?? '',
@@ -88,7 +106,16 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
     rating: t.rating != null ? String(t.rating) : undefined, about: t.about ?? undefined,
   }))
 
-  const rankData = (snap.rankings ?? {}) as Record<string, [string, number][]>
+  // Two shapes on the wire: the current RPC returns {id, name, score} objects,
+  // and a centre whose database has not had the ranking migration applied yet
+  // still returns [name, score] pairs. Both normalise to the same row; the old
+  // one simply has no id, and the screens fall back to matching on the name.
+  const rankData: Record<string, RankRow[]> = {}
+  for (const [subject, rows] of Object.entries(snap.rankings ?? {})) {
+    rankData[subject] = (rows ?? []).map(r => Array.isArray(r)
+      ? { id: null, name: r[0] ?? '', score: r[1] ?? 0 }
+      : { id: r.id ?? null, name: r.name ?? '', score: r.score ?? 0 })
+  }
 
   // Class timetable (head sets it per class; the student sees their class's).
   const timetableData: Record<string, string[][]> = {}

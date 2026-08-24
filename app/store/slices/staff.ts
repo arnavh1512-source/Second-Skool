@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase'
 import { logError } from '../../lib/log'
+import { removeLocal } from '../../lib/storage'
 import { friendlyError } from '../errors'
 import { initialState } from '../initial-state'
 import { landingScreen } from '../navigation'
@@ -65,7 +66,7 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
   // means a key added to a slice tomorrow is cleared here for free.
   signOut: () => {
     supabase.auth.signOut()
-    if (typeof window !== 'undefined') localStorage.removeItem('student_code')
+    removeLocal('student_code')
     set({
       ...initialState,
       // The two things that must not come back as their initial value: the app

@@ -2,6 +2,8 @@
 // Students never sign in with Google — they enter a per-student code — so the
 // teacher needs a frictionless way to deliver that code to the parent.
 
+import { fmtDate } from '../store/format'
+
 const FALLBACK_ORIGIN = 'https://tution-management-taupe.vercel.app'
 
 // Prefer the live origin so custom domains / localhost share the right link.
@@ -29,7 +31,7 @@ const inr = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`
 // asterisks, • bullets). Sent by the head to themselves or a co-owner.
 export function weeklyReportMessage(r: WeeklyReport, centreName = 'Second Skool', days = 7): string {
   const period = days === 7 ? 'week' : 'month'
-  const date = new Date(r.generated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+  const date = fmtDate(r.generated_at)
   const lines: string[] = [`*${centreName} — ${days === 7 ? 'Weekly' : 'Monthly'} Report*`, `As of ${date}`, '']
   if (r.branches.length === 0) lines.push('No branches configured yet.')
   for (const b of r.branches) {
@@ -66,4 +68,22 @@ export function whatsappShareUrl(phone: string, message: string): string {
   const digits = (phone ?? '').replace(/\D/g, '')
   const intl = digits.length === 10 ? `91${digits}` : digits
   return `https://wa.me/${intl}?text=${encodeURIComponent(message)}`
+}
+
+/**
+ * Copy text and tell the user the truth about whether it worked.
+ *
+ * navigator.clipboard is undefined on any non-secure origin and inside several
+ * Android WebViews, and writeText() rejects when the document is not focused.
+ * Every call site used to assume both away and toast "Copied!" regardless, so
+ * a head who tapped the join code got a confirmation and an empty clipboard.
+ */
+export function copyText(text: string, notify: (msg: string, kind?: 'info' | 'error') => void, label = 'Copied!'): void {
+  if (!text) return
+  const clip = typeof navigator === 'undefined' ? undefined : navigator.clipboard
+  if (!clip?.writeText) { notify('Copying is not available here — press and hold to copy', 'error'); return }
+  clip.writeText(text).then(
+    () => notify(label),
+    () => notify('Could not copy — press and hold to copy', 'error'),
+  )
 }

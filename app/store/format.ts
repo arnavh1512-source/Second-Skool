@@ -7,16 +7,32 @@ export const av = (i: number) => COLORS[i % COLORS.length]
 export const feeColor = (s: string) => s === 'Paid' ? { c: '#2fa36b', b: '#e7f5ee' } : s === 'Due' ? { c: '#e0962f', b: '#fcf3e3' } : { c: '#e8553c', b: '#fdecea' }
 export const stuGrade = (pct: number) => pct >= 90 ? { g: 'A+', c: '#2fa36b', t: '#e7f5ee' } : pct >= 80 ? { g: 'A', c: '#2a6fdb', t: '#eaf1fc' } : pct >= 70 ? { g: 'B', c: '#e0962f', t: '#fcf3e3' } : { g: 'C', c: '#e8553c', t: '#fdecea' }
 
+// Every date the app renders comes out of Postgres or off a device clock, and
+// a malformed or missing one used to reach the screen as the literal string
+// "Invalid Date" (or "NaNm ago"). One parser decides what unparseable looks
+// like, and it looks like nothing at all.
+export const safeDate = (v: string | number | null | undefined): Date | null => {
+  if (v === null || v === undefined || v === '') return null
+  const d = new Date(v)
+  return isNaN(d.getTime()) ? null : d
+}
+
 export function timeAgo(dateStr: string): string {
-  if (!dateStr) return ''
-  const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
+  const parsed = safeDate(dateStr)
+  if (!parsed) return ''
+  const mins = Math.floor((Date.now() - parsed.getTime()) / 60000)
   if (mins < 60) return `${mins}m ago`
   const hours = Math.floor(mins / 60)
   if (hours < 24) return `${hours}h ago`
   return `${Math.floor(hours / 24)}d ago`
 }
 
-export const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+export const fmtDate = (d: string | number | null | undefined) =>
+  safeDate(d)?.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) ?? ''
+
+// Same, without the year — for labels that sit next to a relative time.
+export const fmtDayMonth = (d: string | number | null | undefined) =>
+  safeDate(d)?.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) ?? ''
 export const rupee = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`
 
 // `YYYY-MM-DD` for the Postgres `date` columns, in the device's own timezone.

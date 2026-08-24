@@ -1,10 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { copyText } from '../lib/share'
 import { useDashboard } from '../store'
 import { supabase } from '../lib/supabase'
 import { PrimaryButton } from './Shell'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
+import { readLocal, writeLocal, removeLocal } from '../lib/storage'
+import { useBusy } from '../lib/use-busy'
 
 const LOGO = (
   // eslint-disable-next-line @next/next/no-img-element
@@ -17,48 +20,36 @@ export function LoginScreen() {
   const { authLoading, notify, loadStudentByCode, stuSignup, setStuSignup, studentSignup } = useDashboard()
   const [mode, setMode] = useState<'choose' | 'student' | 'register' | 'email'>('choose')
   const [code, setCode] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [busy, run] = useBusy()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = () => run(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/` },
     })
     if (error) notify('Google sign-in failed')
-  }
+  })
 
   // Email+password sign-in: the reliable path for the installed (home-screen)
   // app. Google's redirect escapes to the phone browser and the session never
   // lands back in the PWA, so the head is logged out on every launch. A password
   // login stays fully in-app, so the session persists. Staff set their password
   // once from My Profile (Set password) after a Google sign-in.
-  const signInWithPassword = async () => {
+  const signInWithPassword = () => run(async () => {
     const e = email.trim().toLowerCase()
     if (!e.includes('@') || e.length < 5) { notify('Enter your email'); return }
     if (!password) { notify('Enter your password'); return }
-    setBusy(true)
     // On success, SupabaseProvider's onAuthStateChange picks up the session and
     // routes the head/teacher into the app.
     const { error } = await supabase.auth.signInWithPassword({ email: e, password })
-    setBusy(false)
     if (error) notify('Wrong email or password')
-  }
+  })
 
-  const submitCode = async () => {
-    if (busy) return
-    setBusy(true)
-    await loadStudentByCode(code)
-    setBusy(false)
-  }
+  const submitCode = () => run(() => loadStudentByCode(code))
 
-  const submitSignup = async () => {
-    if (busy) return
-    setBusy(true)
-    await studentSignup()
-    setBusy(false)
-  }
+  const submitSignup = () => run(() => studentSignup())
 
   if (authLoading) {
     return (
@@ -231,7 +222,7 @@ function watchPermission(read: () => void): () => void {
 // while permission is still 'default': there the prompt genuinely works, and
 // the centre's whole reason for the gate is that reminders get switched on.
 const BYPASS_KEY = 'notif_gate_bypass'
-const gateBypassed = () => typeof window !== 'undefined' && localStorage.getItem(BYPASS_KEY) === '1'
+const gateBypassed = () => readLocal(BYPASS_KEY) === '1'
 
 // True once we know a student has not granted notification permission.
 // Deliberately starts false: gating on the very first paint, before the effect
@@ -241,11 +232,17 @@ const gateBypassed = () => typeof window !== 'undefined' && localStorage.getItem
 export function useNotificationGate(): boolean {
   const [gated, setGated] = useState(false)
   useEffect(() => watchPermission(() => {
+    // Read the guard BEFORE touching Notification. watchPermission calls this
+    // synchronously, so on a browser with no Notification API (a plain iOS
+    // Safari tab, most Android in-app WebViews) the ReferenceError escaped the
+    // effect, hit ErrorBoundary and replaced the entire app — login screen
+    // included — for every visitor, gated or not.
+    if (!pushSupported()) { setGated(false); return }
     const granted = Notification.permission === 'granted'
     // Permission granted later clears the bypass, so a student who fixes it in
     // browser settings goes back to the normal (gated-if-revoked) behaviour.
-    if (granted && gateBypassed()) localStorage.removeItem(BYPASS_KEY)
-    setGated(pushSupported() && !granted && !gateBypassed())
+    if (granted && gateBypassed()) removeLocal(BYPASS_KEY)
+    setGated(!granted && !gateBypassed())
   }), [])
   return gated
 }
@@ -254,26 +251,24 @@ export function NotificationGateScreen() {
   const { stuPending, students, currentStudentDbId, signOut, notify, centreName } = useDashboard()
   const code = stuPending?.code
     || students.find(s => s.dbId === currentStudentDbId)?.id
-    || (typeof window !== 'undefined' ? localStorage.getItem('student_code') ?? '' : '')
+    || (readLocal('student_code') ?? '')
 
   const [perm, setPerm] = useState<NotificationPermission>('default')
-  const [busy, setBusy] = useState(false)
+  const [busy, run] = useBusy()
 
   useEffect(() => watchPermission(() => setPerm(Notification.permission)), [])
 
-  const turnOn = async () => {
-    if (busy || !code) return
-    setBusy(true)
+  const turnOn = () => run(async () => {
+    if (!code) return
     const r = await enablePush('student', code)
     setPerm(Notification.permission)
     // Tell the router's copy of this state too, so a grant clears the gate
     // straight away instead of waiting for the next focus change.
     window.dispatchEvent(new Event(PERM_EVENT))
-    setBusy(false)
     if (!r.ok) { notify(r.error || 'Could not turn on reminders'); return }
     const t = await testNotification(centreName)
     notify(t.ok ? 'Reminders on — check for the test alert' : 'Reminders on')
-  }
+  })
 
   const blocked = perm === 'denied'
   return (
@@ -298,7 +293,7 @@ export function NotificationGateScreen() {
             <li>Come back here — this screen clears on its own</li>
           </ol>
           <button
-            onClick={() => { localStorage.setItem(BYPASS_KEY, '1'); window.dispatchEvent(new Event(PERM_EVENT)) }}
+            onClick={() => { writeLocal(BYPASS_KEY, '1'); window.dispatchEvent(new Event(PERM_EVENT)) }}
             className="mt-3 w-full text-[12.5px] font-bold text-td-primary py-2.5 cursor-pointer border-none bg-transparent"
           >
             Continue without reminders
@@ -324,8 +319,8 @@ export function NotificationGateScreen() {
 
 export function StuPendingScreen() {
   const { stuPending, signOut, loadStudentByCode, notify } = useDashboard()
-  const [busy, setBusy] = useState(false)
-  const code = stuPending?.code || (typeof window !== 'undefined' ? localStorage.getItem('student_code') ?? '' : '')
+  const [busy, run] = useBusy()
+  const code = stuPending?.code || (readLocal('student_code') ?? '')
 
   useEffect(() => {
     if (!code) return
@@ -335,20 +330,18 @@ export function StuPendingScreen() {
     return () => clearInterval(id)
   }, [code, loadStudentByCode])
 
-  const checkNow = async () => {
-    if (busy || !code) return
-    setBusy(true)
+  const checkNow = () => run(async () => {
+    if (!code) return
     const ok = await loadStudentByCode(code, true)
-    setBusy(false)
     // Only reassure if they're genuinely still pending. If the head declined,
     // loadStudentByCode has already routed to the declined screen — don't
     // flash a "hang tight" toast that contradicts it.
     if (!ok && useDashboard.getState().screen === 'stuPending') notify('Still awaiting approval — hang tight')
-  }
+  })
 
   const copyCode = () => {
     if (!code) return
-    navigator.clipboard?.writeText(code).then(() => notify('Code copied'), () => {})
+    copyText(code, notify, 'Code copied')
   }
 
   return (
@@ -401,16 +394,11 @@ export function ProfileSetupScreen() {
   const [phone, setPhone] = useState('')
   const [subject, setSubject] = useState('')
   const [qualification, setQualification] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [busy, run] = useBusy()
 
   // No disabled state: saveStaffProfile validates and says exactly what's
   // wrong. A dead button that never explains itself is the worse failure.
-  const submit = async () => {
-    if (busy) return
-    setBusy(true)
-    await saveStaffProfile({ name, phone, subject, qualification })
-    setBusy(false)
-  }
+  const submit = () => run(() => saveStaffProfile({ name, phone, subject, qualification }))
 
   const field = (label: string, value: string, onChange: (v: string) => void, placeholder: string, hint?: string) => (
     <div>
@@ -447,13 +435,12 @@ export function ProfileSetupScreen() {
 }
 
 export function RegisterScreen() {
-  const { googleEmail, createCentre, joinCentre, signOut } = useDashboard()
-  const [busy, setBusy] = useState(false)
+  const { googleEmail, createCentre, joinCentre, signOut, notify } = useDashboard()
+  const [busy, run] = useBusy()
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
   const [centreName, setCentreName] = useState('')
   const [code, setCode] = useState('')
 
-  const run = async (fn: () => Promise<void>) => { setBusy(true); await fn(); setBusy(false) }
 
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col">
@@ -488,7 +475,7 @@ export function RegisterScreen() {
         <div className="mt-7 flex flex-col gap-3">
           <label className="text-xs font-bold text-td-muted">Centre name</label>
           <input autoFocus value={centreName} onChange={e => setCentreName(e.target.value)} placeholder="e.g. Bright Future Tuition" className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary" />
-          <PrimaryButton onClick={() => centreName.trim().length >= 2 ? run(() => createCentre(centreName)) : undefined}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
+          <PrimaryButton onClick={() => run(() => centreName.trim().length >= 2 ? createCentre(centreName) : notify('Enter your centre name'))}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
           <button onClick={() => setMode('choose')} className="text-[13px] text-td-muted font-bold py-2 cursor-pointer border-none bg-transparent">Back</button>
         </div>
       )}
@@ -497,7 +484,7 @@ export function RegisterScreen() {
         <div className="mt-7 flex flex-col gap-3">
           <label className="text-xs font-bold text-td-muted">Centre join code</label>
           <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary text-center tracking-[0.2em] font-bold" />
-          <PrimaryButton onClick={() => code.trim().length >= 4 ? run(() => joinCentre(code)) : undefined}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
+          <PrimaryButton onClick={() => run(() => code.trim().length >= 4 ? joinCentre(code) : notify('Enter the full join code'))}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
           <div className="text-[12px] text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
           <button onClick={() => setMode('choose')} className="text-[13px] text-td-muted font-bold py-2 cursor-pointer border-none bg-transparent">Back</button>
         </div>
@@ -541,16 +528,15 @@ export function PendingScreen() {
 }
 
 export function DeniedScreen() {
-  const { signOut, joinCentre } = useDashboard()
+  const { signOut, joinCentre, notify } = useDashboard()
   const [mode, setMode] = useState<'view' | 'join'>('view')
   const [code, setCode] = useState('')
-  const [busy, setBusy] = useState(false)
-  const submit = async () => {
-    if (busy || code.trim().length < 4) return
-    setBusy(true)
-    await joinCentre(code)
-    setBusy(false)
-  }
+  const [busy, run] = useBusy()
+  const submit = () => run(() => {
+    // A dead button that never explains itself is the worse failure.
+    if (code.trim().length < 4) { notify('Enter the full centre code'); return }
+    return joinCentre(code)
+  })
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
       <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fdecea] flex items-center justify-center mb-5">
