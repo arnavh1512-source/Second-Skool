@@ -3,7 +3,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/app/lib/push-guard'
 import { logError, logWarn } from '@/app/lib/log'
 import { verifyOperator } from '@/app/lib/operator'
-import { LEAF_TABLES, SPINE_TABLES } from '@/app/lib/centre-tables'
+import { ACTIVITY_TABLES, LEAF_TABLES, SPINE_TABLES } from '@/app/lib/centre-tables'
 
 export const runtime = 'nodejs'
 // Every response is a live snapshot of the database — never prerender or cache it.
@@ -42,7 +42,6 @@ type CentreRow = {
   created_at: string
 }
 
-const ACTIVITY_TABLES = ['attendance', 'results', 'assignments', 'tests', 'notes', 'reminders'] as const
 type ActivityTable = (typeof ACTIVITY_TABLES)[number]
 
 const emptyCounts = (): Record<ActivityTable, number> =>

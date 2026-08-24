@@ -32,3 +32,27 @@ export const SPINE_TABLES = ['tests', 'students', 'teachers', 'subjects', 'branc
 //              erasing a centre must not erase the people who were in it.
 //   centres  — the parent row itself, removed last by the caller.
 export const CENTRE_DELETE_EXEMPT = ['profiles', 'centres'] as const
+
+// What counts as a centre being used. This drives the operator console's
+// "no activity in N days (never used)" flag, which is the prompt to delete a
+// centre - so a table missing here does not merely under-report, it invites
+// deleting a centre that is quietly in use. fees, meetings and timetable were
+// all absent: a teacher who collected fees and built a timetable but had not
+// yet marked attendance read as never used.
+export const ACTIVITY_TABLES = [
+  'attendance', 'results', 'assignments', 'tests', 'notes',
+  'reminders', 'fees', 'meetings', 'timetable',
+] as const
+
+// Centre-scoped tables that deliberately do not count as activity:
+//   attendance_monthly - a rollup of attendance, not a separate thing anyone did
+//   notifications      - written by the system, not by the teacher
+//   push_subscriptions - a device registering, not work done in the app
+//   batches, subjects, branches - reference lists, part of setting up
+//   students, teachers - the roster; a centre with a roster and nothing else
+//                        genuinely is set up but never used, which is exactly
+//                        the signal the console is trying to give.
+export const NOT_ACTIVITY = [
+  'attendance_monthly', 'notifications', 'push_subscriptions',
+  'batches', 'subjects', 'branches', 'students', 'teachers',
+] as const

@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { CENTRE_DELETE_EXEMPT, LEAF_TABLES, SPINE_TABLES } from '../app/lib/centre-tables'
+import { ACTIVITY_TABLES, CENTRE_DELETE_EXEMPT, LEAF_TABLES, NOT_ACTIVITY, SPINE_TABLES } from '../app/lib/centre-tables'
 
 // Every table that references centres(id) has to be cleared before the centre
 // row can go, because none of those FKs cascade. The delete list is hand-written
@@ -79,5 +79,37 @@ describe('centre delete covers every centre-scoped table', () => {
     // Erasing a centre must not erase the people who were in it — they are
     // detached instead, which is also what gives the head a way back in.
     expect([...LEAF_TABLES, ...SPINE_TABLES]).not.toContain('profiles')
+  })
+})
+
+// The same drift, one screen over. ACTIVITY_TABLES decides which centres the
+// console reports as "never used", and never-used is the prompt to delete one.
+// fees, meetings and timetable were all missing from it, so a teacher who
+// collected fees and built a timetable but had not yet marked attendance was
+// listed as having never touched the app.
+describe('activity detection covers every table that records work', () => {
+  const scoped = readCentreScopedTables()
+  const classified = new Set<string>([...ACTIVITY_TABLES, ...NOT_ACTIVITY, ...CENTRE_DELETE_EXEMPT])
+
+  it('classifies every centre-scoped table as activity or not', () => {
+    expect([...scoped].filter(t => !classified.has(t)).sort()).toEqual([])
+  })
+
+  it('counts the tables a teacher fills in by hand', () => {
+    // Each of these is a deliberate action by a person. If any stops counting,
+    // a live centre starts looking abandoned.
+    for (const t of ['attendance', 'results', 'assignments', 'fees', 'meetings', 'timetable', 'notes', 'reminders', 'tests'])
+      expect(ACTIVITY_TABLES).toContain(t)
+  })
+
+  it('never counts a table as both activity and not', () => {
+    expect([...ACTIVITY_TABLES].filter(t => ([...NOT_ACTIVITY] as string[]).includes(t))).toEqual([])
+  })
+
+  it('only counts tables that are actually deleted with the centre', () => {
+    // An activity table outside the delete lists would leave rows behind that
+    // keep a deleted centre looking active.
+    const deleted = new Set<string>([...LEAF_TABLES, ...SPINE_TABLES])
+    expect([...ACTIVITY_TABLES].filter(t => !deleted.has(t)).sort()).toEqual([])
   })
 })
