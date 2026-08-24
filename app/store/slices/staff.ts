@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase'
 import { logError } from '../../lib/log'
 import { removeLocal } from '../../lib/storage'
+import { changedNothing, NOT_SAVED } from '../db'
 import { friendlyError } from '../errors'
 import { initialState } from '../initial-state'
 import { landingScreen } from '../navigation'
@@ -90,7 +91,10 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
 
   saveStaffProfile: async ({ name, phone, subject, qualification }) => {
     const id = get().supabaseUserId
-    if (!id) return false
+    // Was a bare `return false`: the button went back to "Continue" and nothing
+    // else happened, which is the exact shape of the bug QA hit — a form that
+    // swallows the tap and never says why.
+    if (!id) { get().notify('You are signed out — sign in again', 'error'); return false }
     const trimmed = name.trim()
     if (trimmed.length < 2) { get().notify('Please enter your full name', 'error'); return false }
     const tel = phone.trim()
@@ -99,15 +103,19 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
     if (sub.length < 2) { get().notify('Enter the subject you teach', 'error'); return false }
     if (qual.length < 2) { get().notify('Enter your qualification', 'error'); return false }
 
-    const { error } = await supabase.from('profiles').update({
+    const res = await supabase.from('profiles').update({
       full_name: trimmed.slice(0, 120), phone: tel,
       subject: sub.slice(0, 120), qualification: qual.slice(0, 120),
       // Stamped on every save, not only the first. Re-stamping a complete
       // profile costs nothing, and it means a row that somehow missed the
       // marker heals on the next edit instead of trapping someone in setup.
       profile_completed_at: new Date().toISOString(),
-    }).eq('id', id)
-    if (error) { get().notify('Could not save profile — check your connection', 'error'); return false }
+    }).eq('id', id).select('id')
+    if (res.error) { get().notify('Could not save profile — check your connection', 'error'); return false }
+    // The row must exist — it is the signed-in user's own profile. Zero rows
+    // means the write was filtered out, and claiming success there would send a
+    // teacher onward with an empty profile and no way back.
+    if (changedNothing(res)) { get().notify(NOT_SAVED, 'error'); return false }
 
     const wasSetup = !get().profileDone
     set({ myName: trimmed, myPhone: tel, mySubject: sub, myQualification: qual, profileDone: true })
