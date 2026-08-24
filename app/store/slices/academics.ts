@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { isoDay } from '../format'
+import { isoDay, parseDay } from '../format'
 import { LIMITS, clampText } from '../validate'
 import type { Slice } from '../slice'
 import type { AssignmentItem, BatchItem, BranchItem, SubjectItem } from '../types'
@@ -16,8 +16,12 @@ type Keys =
 export const createAcademicsSlice: Slice<Keys> = (set, get) => ({
   saveAssignment: async (title, subject, klass, dueDate, instructions) => {
     if (!title.trim()) { get().notify('Enter a title', 'error'); return false }
+    // Was `new Date(dueDate || Date.now())`: leaving the date blank silently
+    // set the homework due today and reported success. A teacher who tabbed
+    // past the field told a class their work was due in a few hours.
+    const d = parseDay(dueDate)
+    if (!d) { get().notify('Pick a due date', 'error'); return false }
     const { subjects } = get()
-    const d = new Date(dueDate || Date.now())
     const item: AssignmentItem = {
       title, klass, due: `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`,
       // Exact match, like the refresh path and the database function both use.

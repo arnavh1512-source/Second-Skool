@@ -115,14 +115,27 @@ export function FeesScreen() {
 }
 
 export function MeetingsScreen() {
-  const { back, meetingsList, saveMeeting } = useDashboard()
+  const { back, meetingsList, saveMeeting, deleteMeeting, role } = useDashboard()
   const [title, setTitle] = useState('')
   const [type, setType] = useState('Parent-teacher meeting')
   const [date, setDate] = useState('')
   const [time, setTime] = useState('11:00 AM')
+  const [confirmCancel, setConfirmCancel] = useState<{ id: string; title: string } | null>(null)
+  // Only the head can delete a meeting — meetings_head is the policy that
+  // permits it, and a button a teacher can press but RLS will refuse is worse
+  // than no button at all.
+  const isAdmin = role === 'admin'
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ConfirmDialog
+        open={!!confirmCancel}
+        title="Cancel this meeting?"
+        body={`"${confirmCancel?.title ?? ''}" is removed from every parent's home screen. They are not told it was cancelled, so let them know yourself.`}
+        confirmLabel="Cancel meeting"
+        onConfirm={() => { const t = confirmCancel; setConfirmCancel(null); if (t) deleteMeeting(t.id) }}
+        onCancel={() => setConfirmCancel(null)}
+      />
       <ScreenHeader title="Meetings" onBack={back} />
 
       <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
@@ -140,7 +153,7 @@ export function MeetingsScreen() {
         <PrimaryButton onClick={async () => { if (await saveMeeting(title, type, date, time)) { setTitle(''); setDate('') } }}>Schedule &amp; invite</PrimaryButton>
       </div>
 
-      <div className="text-[15px] font-extrabold text-td-dark mb-3">Upcoming</div>
+      <div className="text-[15px] font-extrabold text-td-dark mb-3">All meetings</div>
       {meetingsList.length === 0 ? (
         <EmptyState title="No meetings scheduled" hint="Use the form above to add one — it will appear here and on the home screen." />
       ) : (
@@ -151,10 +164,13 @@ export function MeetingsScreen() {
                 <div className="text-base font-extrabold text-td-primary leading-none">{m.day}</div>
                 <div className="text-[12px] text-td-primary font-semibold mt-0.5">{m.mon}</div>
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="text-[13.5px] font-bold text-td-dark">{m.title}</div>
                 <div className="text-xs text-td-muted mt-0.5">{m.time} · {m.kind}</div>
               </div>
+              {isAdmin && m.dbId && (
+                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Cancel</button>
+              )}
             </div>
           ))}
         </div>

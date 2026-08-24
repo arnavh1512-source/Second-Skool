@@ -7,6 +7,10 @@ import type { Slice } from '../slice'
 export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass'> = (_set, get) => ({
   saveReminder: async (type, message, targetClass, filter) => {
     const { students } = get()
+    // The composer pre-fills a template, so an empty message means the head
+    // cleared it. Nothing stopped that: a blank notification went to every
+    // parent in the centre, and the receipt below called it a success.
+    if (!message.trim()) { get().notify('Write a message before sending', 'error'); return }
     const icons: Record<string, IconName> = { Notice: 'notice', Test: 'test', Absence: 'absence', Fee: 'fees', Homework: 'homework' }
     const icon: IconName = icons[type] ?? 'reminder'
     const title = type === 'Notice' ? 'Notice' : `${type} Reminder`
@@ -21,41 +25,54 @@ export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass'> = (
     else if (filter === 'fees_due') targets = targets.filter(s => s.feeStatus !== 'Paid')
     else if (targetClass && targetClass !== 'all') targets = targets.filter(s => s.klass === targetClass)
 
+    const label = type === 'Notice' ? 'Notice' : `${type} reminder`
+
+    // A filter that matches nobody used to write a reminders row anyway and
+    // then report "sent to 0 students" in the success colour — a head chasing
+    // unpaid fees read that as done and stopped chasing.
+    if (!targets.length) {
+      get().notify(`Nobody matches that group — the ${label.toLowerCase()} was not sent`, 'error')
+      return
+    }
+
     // Awaited, not fired and forgotten. The success toast below used to appear
     // before a single row had been written, so a failed insert read to the
-    // teacher as "sent to 24 students".
+    // teacher as "sent to 24 students". It also used to carry on after the
+    // failure and still claim success at the end; it stops here now.
     const remRes = await supabase.from('reminders').insert({ type, message, target_class: targetClass })
-    dbErr('send reminder', get().notify)(remRes)
-    if (targets.length) {
-      const rows = targets.map(s => ({ student_id: s.dbId, title, detail: message, icon }))
-      const notifRes = await supabase.from('notifications').insert(rows)
-      dbErr('send notifications', get().notify)(notifRes)
-      if (notifRes.error) return
-      // Push to students who enabled notifications; report the result so it's
-      // clear whether any device actually got a lock-screen alert.
-      const codes = targets.map(s => s.id).filter(Boolean)
-      if (codes.length) await sendPush({ studentCodes: codes, title, body: message })
-        .then(r => {
-          // Always say what happened. The in-app reminder lands for everyone
-          // regardless (notifications insert above), but staying silent on 0
-          // devices is indistinguishable from "push is broken" — the teacher
-          // presses send, nothing buzzes, and there's no way to tell whether
-          // the feature failed or simply nobody has turned notifications on.
-          if (r.error) get().notify('Could not send the phone notification. It was still sent inside the app.', 'error')
-          else if (r.sent) get().notify(`Also pushed to ${r.sent} device(s)`)
-          // Subscriptions the push service refused. Distinct from "nobody
-          // subscribed": the student thinks notifications are on, so telling
-          // them to check their phone settings would send them hunting for a
-          // fault that isn't there. Name the real remedy instead.
-          else if (r.undelivered) get().notify(`${r.undelivered} device(s) need notifications re-enabled`)
-          else get().notify('Sent in-app — no student has phone notifications on yet')
-        })
-    }
+    if (remRes.error) { dbErr('send reminder', get().notify)(remRes); return }
+
+    const rows = targets.map(s => ({ student_id: s.dbId, title, detail: message, icon }))
+    const notifRes = await supabase.from('notifications').insert(rows)
+    if (notifRes.error) { dbErr('send notifications', get().notify)(notifRes); return }
+
+    // One toast, not three. notify() is a single slot with a timer: each call
+    // clobbers the last, so the push result appeared and was destroyed in the
+    // same tick by the count that followed it, and QA reported seeing no
+    // receipt at all. The receipt says both halves in one sentence — who got
+    // it in the app, and what happened on their phones.
+    const codes = targets.map(s => s.id).filter(Boolean)
+    const push = codes.length ? await sendPush({ studentCodes: codes, title, body: message }) : null
+    const to = `${label} sent to ${targets.length} student${targets.length === 1 ? '' : 's'}`
+
+    // The in-app reminder landed for everyone regardless — the notifications
+    // insert above already succeeded — so a push problem is a footnote, never
+    // a failure. But staying silent about it is indistinguishable from "push
+    // is broken": the teacher presses send, nothing buzzes, and she cannot
+    // tell whether the feature failed or nobody has turned notifications on.
+    if (!push) get().notify(to)
+    else if (push.error) get().notify(`${to}, but their phones could not be alerted`, 'error')
+    else if (push.sent) get().notify(`${to} · ${push.sent} phone${push.sent === 1 ? '' : 's'} alerted`)
+    // Subscriptions the push service refused. Distinct from "nobody
+    // subscribed": the student thinks notifications are on, so telling them to
+    // check their phone settings would send them hunting for a fault that
+    // isn't there. Name the real remedy instead.
+    else if (push.undelivered) get().notify(`${to} · ${push.undelivered} device(s) need notifications re-enabled`)
+    else get().notify(`${to} · nobody has phone notifications on yet`)
 
     // No local stuNotifications push: that array is the *student's* own feed,
     // and this code runs in a staff session. It only ever grew N duplicate
     // rows sharing one dbId inside a store slice no staff screen reads.
-    get().notify(`${type === 'Notice' ? 'Notice' : `${type} reminder`} sent to ${targets.length} students`)
   },
 
   // Auto-notify students when staff adds content (homework, results, notes,

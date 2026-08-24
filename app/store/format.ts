@@ -45,3 +45,19 @@ export const isoDay = (d: Date = new Date()) => {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
+
+// The inverse of isoDay, and it exists for the same reason isoDay does not use
+// toISOString(). `new Date('2026-08-30')` is parsed by the spec as UTC
+// midnight, but every reader here — isoDay, getDate(), toLocaleString — asks
+// for *local* components. West of UTC those disagree by a day: a head in
+// London picking 30 August stored 30 August and saw it back as 29 August, and
+// one in New York had a meeting quietly moved to the evening before.
+// Splitting the string keeps the day the user picked the day everyone sees.
+// Date-only columns only (meetings.date, assignments.due_date, fees.due_date).
+// For a timestamptz, safeDate is still the right call.
+export const parseDay = (v: string | null | undefined): Date | null => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v ?? '')
+  if (!m) return safeDate(v)
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+  return isNaN(d.getTime()) ? null : d
+}

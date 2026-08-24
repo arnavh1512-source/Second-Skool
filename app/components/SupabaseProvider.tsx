@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { readLocal, removeLocal } from '../lib/storage'
 import { totalsByStudent, countDailyRows, attendancePct, type AttendanceTotal } from '../lib/attendance'
-import { useDashboard, registerRefresh, safeDate, timeAgo, type RankRow, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type ScheduleItem } from '../store'
+import { useDashboard, registerRefresh, parseDay, timeAgo, type RankRow, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type ScheduleItem } from '../store'
 
 // Minimal shape of the Supabase rows this provider reads — the DB schema is the
 // source of truth, and existing `??` fallbacks handle nullable columns.
@@ -279,7 +279,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     // Meetings
     const meetingsList: MeetingItem[] = (meetings ?? []).map((m: Row) => {
-      const d = safeDate(m.date as string)
+      const d = parseDay(m.date as string)
       return {
         day: d ? String(d.getDate()).padStart(2, '0') : '--',
         mon: d ? d.toLocaleString('en', { month: 'short' }) : '',
@@ -290,7 +290,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
     // Assignments
     const assignmentsList: AssignmentItem[] = (assignments ?? []).map((a: Row) => {
-      const d = safeDate(a.due_date as string)
+      const d = parseDay(a.due_date as string)
       return {
         title: a.title, klass: a.class ?? '',
         due: d ? `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}` : 'No due date',

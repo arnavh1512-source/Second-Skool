@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase'
-import { dbErr } from '../db'
-import { isoDay } from '../format'
+import { changedNothing, dbErr, NOT_SAVED } from '../db'
+import { isoDay, parseDay } from '../format'
 import type { Slice } from '../slice'
 import type { MeetingItem } from '../types'
 
@@ -9,7 +9,7 @@ import type { MeetingItem } from '../types'
 // Generic so the real builder type — and with it the awaited result — survives.
 type TimetableQuery<T> = { eq: (col: string, val: string) => T; is: (col: string, val: null) => T }
 
-type Keys = 'saveMeeting' | 'addTimetableEntry' | 'updateTimetableEntry' | 'deleteTimetableEntry'
+type Keys = 'saveMeeting' | 'deleteMeeting' | 'addTimetableEntry' | 'updateTimetableEntry' | 'deleteTimetableEntry'
 
 // Every action here fired its write and announced success in the same tick.
 // The timetable is the schedule the whole centre works from, so a period that
@@ -33,8 +33,13 @@ export const createScheduleSlice: Slice<Keys> = (set, get) => ({
     if (!title.trim()) { notify('Enter a title', 'error'); return false }
     if (!get().online) { notify('No internet — the meeting has NOT been saved. Try again once you are back online.', 'error'); return false }
 
+    // Same reason as saveAssignment: an empty date used to fall back to today
+    // and be announced as scheduled, so a meeting nobody had picked a day for
+    // appeared on the parents' home screen for this afternoon.
+    const d = parseDay(date)
+    if (!d) { notify('Pick a date for the meeting', 'error'); return false }
+
     const before = get().meetingsList
-    const d = new Date(date || Date.now())
     const item: MeetingItem = {
       title, time, kind: type,
       day: String(d.getDate()).padStart(2, '0'),
@@ -50,6 +55,27 @@ export const createScheduleSlice: Slice<Keys> = (set, get) => ({
     // simply untrue, and a head who trusted it did not tell anyone in person.
     notify('Meeting scheduled')
     return true
+  },
+
+  // Meetings were the one thing the app could create and never take back. A
+  // parent-teacher meeting moved or called off stayed on every parent's home
+  // screen as though it were still happening, and the head had no way to
+  // correct it. Head-only, because that is what the meetings_head policy
+  // allows: a teacher's delete is filtered out by RLS and comes back as the
+  // silent zero-row success PostgREST gives for a row you cannot touch, which
+  // is exactly what changedNothing is here to catch.
+  deleteMeeting: async (dbId) => {
+    const notify = get().notify
+    if (!get().online) { notify('No internet - the meeting has NOT been cancelled. Try again once you are back online.', 'error'); return }
+
+    const before = get().meetingsList
+    set({ meetingsList: before.filter(m => m.dbId !== dbId) })
+
+    const res = await supabase.from('meetings').delete().eq('id', dbId).select('id')
+    if (res.error) { set({ meetingsList: before }); dbErr('cancel the meeting', notify)(res); return }
+    if (changedNothing(res)) { set({ meetingsList: before }); notify(NOT_SAVED, 'error'); return }
+
+    notify('Meeting cancelled')
   },
 
   addTimetableEntry: async (day, startTime, endTime, subject, klass, room) => {
