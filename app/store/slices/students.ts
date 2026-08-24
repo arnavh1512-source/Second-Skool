@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase'
 import { friendlyError } from '../errors'
 import { enablePush, pushSupported, sendPush } from '../../lib/push'
 import { genStudentCode } from '../codes'
+import { findStudent, indexOfStudent, studentKey } from '../../lib/student-key'
 import { dbErr } from '../db'
 import { isoDay } from '../format'
 import { LIMITS, capLength, clampText } from '../validate'
@@ -27,8 +28,14 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       ...(patch.school !== undefined && { school: capLength(patch.school, LIMITS.school) }),
       ...(patch.parent !== undefined && { parent: capLength(patch.parent, LIMITS.parent) }),
     }
-    const arr = [...s.students]; arr[s.editIndex] = { ...arr[s.editIndex], ...capped }
-    const updated = arr[s.editIndex]
+    // Resolve the student being edited by identity, not by position. The roster
+    // reorders under an open edit screen on every background refresh, and the
+    // WhatsApp share button lives on that very screen, so losing and regaining
+    // focus is the ordinary flow rather than a rare race.
+    const i = indexOfStudent(s.students, s.editId)
+    if (i === -1) return {}
+    const arr = [...s.students]; arr[i] = { ...arr[i], ...capped }
+    const updated = arr[i]
     if (updated.dbId) {
       supabase.from('students').update({
         name: updated.name, class: updated.klass, school: updated.school,
@@ -77,13 +84,14 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
   // said "Student removed" immediately, so a failed delete left the head
   // believing a student was gone while every record was still in the database.
   deleteStudent: async () => {
-    const { editIndex, students } = get()
-    const student = students[editIndex]
-    if (student?.dbId) {
+    const { editId, students } = get()
+    const student = findStudent(students, editId)
+    if (!student) { get().notify('That student is no longer on the roster', 'error'); get().back(); return }
+    if (student.dbId) {
       const { error } = await supabase.from('students').delete().eq('id', student.dbId)
       if (error) { get().notify('Could not remove student — nothing was deleted', 'error'); return }
     }
-    set((s) => ({ students: s.students.filter((_, i) => i !== editIndex), editIndex: 0 }))
+    set((s) => ({ students: s.students.filter(x => studentKey(x) !== editId), editId: '' }))
     get().notify('Student removed'); get().back()
   },
 
@@ -112,7 +120,14 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       parent_contact: ns.parent, student_code: code, fee_status: 'Due',
       address: ns.address, branch_id: branchId ?? null,
     }).select().single().then(({ data, error }) => {
-      if (error) { get().notify('Could not save student — check connection', 'error'); return }
+      if (error) {
+        // Roll the optimistic row back. Leaving it stranded gave the head a
+        // student who looked real — tappable, editable, counted in attendance —
+        // but had no dbId, so every edit silently wrote nothing. Having been
+        // told the save failed, they add the student again and now have two.
+        set((s) => ({ students: s.students.filter(x => !(x.id === code && !x.dbId)) }))
+        get().notify('Could not save student — check connection', 'error'); return
+      }
       if (data) {
         set((s) => ({ students: s.students.map(x => x.id === code && !x.dbId ? { ...x, dbId: data.id } : x) }))
         // Optional enrolment fee — creates the first fee record so the student

@@ -48,8 +48,8 @@ export type ToastKind = 'info' | 'error'
 
 export interface State {
   screen: Screen; tab: Tab; role: Role; origin: string | null
-  attClass: string; att: Record<number, string>; rankSubject: string; ttDay: string
-  toast: string; toastKind: ToastKind; editIndex: number
+  attClass: string; att: Record<string, string>; rankSubject: string; ttDay: string
+  toast: string; toastKind: ToastKind; editId: string
   // Mirrors navigator.onLine. Every write checks it before firing, so a teacher
   // on dead mobile data is told up front instead of after a failed round-trip.
   online: boolean
@@ -65,7 +65,7 @@ export interface State {
   stuPending: { name: string; code: string; centre: string } | null
   stuDenied: { name: string; centre: string } | null
   pendingStudents: PendingStudent[]
-  stuTeacherIndex: number; stuRankSubject: string
+  stuTeacherId: string; stuRankSubject: string
   supabaseUserId: string | null; authLoading: boolean; dataLoading: boolean
   // null = not asked yet. Only the server knows who the operator is; this is
   // the answer to a probe, never a client-side comparison.
@@ -112,7 +112,7 @@ export interface Actions {
   setOnline: (v: boolean) => void
   set: (partial: Partial<State>) => void
 
-  toggleAtt: (i: number) => void
+  toggleAtt: (key: string) => void
   setStudentField: (patch: Partial<Student>) => void
   setNewTeacher: (patch: Partial<State['newTeacher']>) => void
   setNewStudent: (patch: Partial<State['newStudent']>) => void

@@ -5,7 +5,7 @@ import type { State } from './types'
 export const initialState: State = {
   screen: 'home', tab: 'home', role: null, origin: null,
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
-  toast: '', toastKind: 'info', editIndex: 0,
+  toast: '', toastKind: 'info', editId: '',
   online: typeof navigator === 'undefined' ? true : navigator.onLine,
   lastSyncedAt: null,
   staffStatus: 'none', headExists: false, staffList: [], weeklyReport: null, studentReports: null, teacherActivity: null,
@@ -16,7 +16,7 @@ export const initialState: State = {
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
   stuPending: null, stuDenied: null, pendingStudents: [],
   teachers: [], students: [],
-  stuTeacherIndex: 0, stuRankSubject: '',
+  stuTeacherId: '', stuRankSubject: '',
   supabaseUserId: null, authLoading: true, dataLoading: false, devAllowed: null, devConsoleOpen: false, devSeat: null,
 
   branchesList: [], meetingsList: [], assignmentsList: [],

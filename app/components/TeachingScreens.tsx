@@ -5,6 +5,7 @@ import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWh
 import { ScreenHeader, PrimaryButton, EmptyState } from './Shell'
 import { pickAttendanceClass } from '../lib/attendance'
 import { Icon, type IconName } from './Icon'
+import { findStudent, studentKey } from '../lib/student-key'
 
 export function TimetableScreen() {
   const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, role } = useDashboard()
@@ -129,10 +130,10 @@ export function TimetableScreen() {
                 <div className="text-center text-td-subtle text-[12px] py-3">—</div>
               ) : (
                 <div className="flex flex-col gap-1.5">
-                  {ps.map((p, i) => {
+                  {ps.map((p) => {
                     const s = periodStyle(p)
                     return (
-                      <div key={i} className="rounded-[11px] border p-2" style={{ background: s.bg, borderColor: s.border }}>
+                      <div key={`${p[0]}-${p[2]}`} className="rounded-[11px] border p-2" style={{ background: s.bg, borderColor: s.border }}>
                         <div className="text-[12px] font-bold text-td-muted">{p[0]}–{p[1]}</div>
                         <div className="text-[12px] font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
                         <div className="text-[12px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
@@ -159,10 +160,10 @@ export function TimetableScreen() {
         <div className="text-center text-td-muted text-sm py-8">No periods scheduled for {dayNames[ttDay]}</div>
       ) : (
         <div className="flex flex-col">
-          {periods.map((p, i) => {
+          {periods.map((p) => {
             const s = periodStyle(p)
             return (
-              <div key={i} className="flex gap-[13px] items-stretch">
+              <div key={`${p[0]}-${p[2]}`} className="flex gap-[13px] items-stretch">
                 <div className="shrink-0 w-[58px] text-right pt-1">
                   <div className="text-[12.5px] font-extrabold text-td-dark">{p[0]}</div>
                   <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
@@ -200,8 +201,10 @@ export function AttendanceScreen() {
 
   const selClass = pickAttendanceClass(classes, attClass)
 
-  // att is keyed by the student's position in the roster, so a roster swap must
-  // clear it or yesterday's absences land on whoever now holds those indexes.
+  // att is keyed by the student, so a roster reorder can no longer move a mark
+  // onto somebody else. Still cleared on a class change: the marks belong to the
+  // class the teacher was looking at, and carrying them across is confusing even
+  // now that it is no longer dangerous.
   useEffect(() => {
     if (selClass !== attClass) set({ attClass: selClass, att: {} })
   }, [selClass, attClass, set])
@@ -210,7 +213,7 @@ export function AttendanceScreen() {
   // which needs the database id. Resolving by name broke centres with two
   // students of the same name (both mapped to the first one's record).
   const roster = students.filter(s => s.klass === selClass)
-  const absentCount = roster.reduce((a, _, i) => a + (att[i] === 'absent' ? 1 : 0), 0)
+  const absentCount = roster.reduce((a, s) => a + (att[studentKey(s)] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 
   return (
@@ -257,9 +260,10 @@ export function AttendanceScreen() {
           <div className="text-xs text-td-subtle font-semibold mb-2.5">Tap a student to toggle present / absent</div>
           <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
             {roster.map((s, i) => {
-              const absent = att[i] === 'absent'
+              const key = studentKey(s)
+              const absent = att[key] === 'absent'
               return (
-                <button key={s.dbId ?? s.id ?? i} onClick={() => toggleAtt(i)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? '#fdecea' : '#fff', borderColor: absent ? '#f4c4bc' : '#e6eaf2' }}>
+                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? '#fdecea' : '#fff', borderColor: absent ? '#f4c4bc' : '#e6eaf2' }}>
                   <div className="w-[38px] h-[38px] rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
                   <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
                   <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: absent ? '#e8553c' : '#2fa36b' }}>
@@ -283,7 +287,12 @@ export function ResultsScreen() {
   const [subject, setSubject] = useState('')
   const [testName, setTestName] = useState('Unit Test')
   const [maxMarks, setMaxMarks] = useState('50')
-  const [marks, setMarks] = useState<Record<number, string>>({})
+  // Keyed by the student, never by their slot in the roster. Index-keyed marks
+  // survived the class dropdown untouched, so numbers typed for one class sat in
+  // the inputs of the next and published under those students, to every parent
+  // in the class. Keying by student makes that structurally impossible; clearing
+  // on a class change stops half-entered marks reappearing later.
+  const [marks, setMarks] = useState<Record<string, string>>({})
   const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
   const selKlass = klass || classes[0] || ''
   const roster = students.filter(s => s.klass === selKlass)
@@ -301,11 +310,13 @@ export function ResultsScreen() {
     // straight into an int column, so 51/50 published, notified the class and
     // fed the ranking, and a stray letter became NaN. Marks are the most visible
     // thing a parent sees; a wrong one is not undone by an apology later.
-    const entered = Object.entries(marks).filter(([, m]) => m.trim() !== '')
+    // Scoped to this roster: a key belonging to a student who has since moved
+    // class or left must not slip into the publish.
+    const entered = Object.entries(marks).filter(([key, m]) => m.trim() !== '' && !!findStudent(roster, key))
     if (!entered.length) { notify('Enter at least one mark'); return }
-    for (const [idx, m] of entered) {
+    for (const [key, m] of entered) {
       if (!isWholeNumber(m, 0, max)) {
-        notify(`${roster[Number(idx)]?.name ?? 'A student'}: marks must be a whole number from 0 to ${max}`)
+        notify(`${findStudent(roster, key)?.name ?? 'A student'}: marks must be a whole number from 0 to ${max}`)
         return
       }
     }
@@ -318,8 +329,8 @@ export function ResultsScreen() {
     }).select().single()
     if (error || !test) { notify('Could not publish — try again'); return }
 
-    const resultRows = entered.map(([idx, m]) => {
-      const student = roster[Number(idx)]
+    const resultRows = entered.map(([key, m]) => {
+      const student = findStudent(roster, key)
       if (!student?.dbId) return null
       return { test_id: test.id, student_id: student.dbId, marks: Number(m) }
     }).filter((r): r is NonNullable<typeof r> => r !== null)
@@ -347,7 +358,7 @@ export function ResultsScreen() {
 
       <div className="grid grid-cols-2 gap-[11px] mb-[13px]">
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-          <select value={selKlass} onChange={e => setKlass(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+          <select value={selKlass} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
             {classes.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
@@ -376,7 +387,7 @@ export function ResultsScreen() {
             <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-white rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
               <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
               <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
-              <input value={marks[i] ?? ''} onChange={e => setMarks(m => ({ ...m, [i]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-[11px] py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
+              <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-[11px] py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
               <span className="text-[13px] text-td-subtle font-semibold">/{maxMarks}</span>
             </div>
           ))}

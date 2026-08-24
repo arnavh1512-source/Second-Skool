@@ -81,8 +81,8 @@ export function HomeScreen() {
         <div className="text-center text-td-muted text-sm py-8">No classes scheduled for today</div>
       ) : (
         <div className="flex flex-col gap-2.5 mb-[26px] lg:grid lg:grid-cols-2 xl:grid-cols-3">
-          {schedule.map((c, i) => (
-            <div key={i} className="flex items-center gap-[13px] bg-white border border-td-border rounded-[18px] py-3.5 px-[15px]">
+          {schedule.map((c) => (
+            <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}`} className="flex items-center gap-[13px] bg-white border border-td-border rounded-[18px] py-3.5 px-[15px]">
               <div className="text-center shrink-0 w-[52px]">
                 <div className="text-sm font-extrabold text-td-primary">{c.time}</div>
                 <div className="text-[12px] text-td-subtle font-semibold">{c.ampm}</div>

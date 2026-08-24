@@ -1,11 +1,16 @@
 import { supabase } from '../../lib/supabase'
 import { sendPush } from '../../lib/push'
+import { studentKey } from '../../lib/student-key'
 import { dbErr } from '../db'
 import { isoDay } from '../format'
 import type { Slice } from '../slice'
 
 export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance'> = (set, get) => ({
-  toggleAtt: (i) => set((s) => ({ att: { ...s.att, [i]: s.att[i] === 'absent' ? 'present' : 'absent' } })),
+  // Keyed by the student, not by their slot in the roster. The roster reorders
+  // on every background refresh, and an index-keyed mark then moves to whoever
+  // now holds that slot — marking the wrong child absent and pushing that to
+  // their parent, which is the one message a centre cannot take back.
+  toggleAtt: (key) => set((s) => ({ att: { ...s.att, [key]: s.att[key] === 'absent' ? 'present' : 'absent' } })),
 
   // Takes the roster as student objects, not names. Names are not unique — two
   // students called "Rahul Sharma" both resolved to the first match, so the
@@ -24,9 +29,9 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance'> = (set
     const { att, online } = get()
     const notify = get().notify
 
-    const records = roster.map((student, i) => {
+    const records = roster.map((student) => {
       if (!student?.dbId) return null
-      return { student_id: student.dbId, date: isoDay(), status: att[i] === 'absent' ? 'Absent' : 'Present' }
+      return { student_id: student.dbId, date: isoDay(), status: att[studentKey(student)] === 'absent' ? 'Absent' : 'Present' }
     }).filter((r): r is NonNullable<typeof r> => r !== null)
 
     if (!records.length) {
@@ -51,7 +56,7 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance'> = (set
 
     // Count absences within *this* roster. Reading every value in `att` also
     // counted leftover marks from a bigger class marked earlier in the session.
-    const present = roster.length - roster.filter((_, i) => att[i] === 'absent').length
+    const present = roster.length - roster.filter(s => att[studentKey(s)] === 'absent').length
     notify(already
       ? `Attendance updated · ${present} present (today was already marked)`
       : `Attendance saved · ${present} present`)
@@ -59,7 +64,7 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance'> = (set
     // Tell only the absent students (their parents watch these devices).
     // Deliberately after the toast: the attendance itself is already committed,
     // so a failed notification must not read as a failed save.
-    const absent = roster.filter((s, i) => att[i] === 'absent' && !!s?.dbId)
+    const absent = roster.filter(s => att[studentKey(s)] === 'absent' && !!s?.dbId)
     if (absent.length) {
       const rows = absent.map(s => ({ student_id: s.dbId, title: 'Marked absent today', detail: `${s.name} was marked absent. Please contact the centre if this is a mistake.`, icon: 'absence' }))
       await supabase.from('notifications').insert(rows).then(dbErr('send the absence notifications', notify))

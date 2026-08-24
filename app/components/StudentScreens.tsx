@@ -6,6 +6,7 @@ import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
+import { teacherKey } from '../lib/student-key'
 
 export function StuHomeScreen() {
   const { go, students, stuReminders, stuResults, stuAttendanceLog, stuPendingFee, currentStudentDbId, googleEmail, rankData, loadStudentByCode, stuMonthly, stuNotes, loadStudentNotes, centreName, centreLogo } = useDashboard()
@@ -402,7 +403,7 @@ export function StuTeachersScreen() {
       ) : (
         <div className="flex flex-col gap-3">
           {teachers.map((t, i) => (
-            <button key={t.name + i} onClick={() => { set({ stuTeacherIndex: i }); go('stuTeacher', 'stuTeachers') }} className="text-left bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-3.5 cursor-pointer">
+            <button key={teacherKey(t)} onClick={() => { set({ stuTeacherId: teacherKey(t) }); go('stuTeacher', 'stuTeachers') }} className="text-left bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-3.5 cursor-pointer">
               <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
               <div className="flex-1 min-w-0">
                 <div className="text-[15px] font-extrabold text-td-dark">{t.name}</div>
@@ -419,8 +420,12 @@ export function StuTeachersScreen() {
 }
 
 export function StuTeacherDetail() {
-  const { teachers, stuTeacherIndex, go } = useDashboard()
-  const t = teachers[stuTeacherIndex] || teachers[0]
+  const { teachers, stuTeacherId, go } = useDashboard()
+  // Remembered by identity. The teacher list is fetched created_at DESC and
+  // re-pulled on every background refresh, so a position captured a moment ago
+  // points at a different person as soon as anyone is added.
+  const t = teachers.find(x => teacherKey(x) === stuTeacherId) || teachers[0]
+  const gradIdx = Math.max(0, teachers.indexOf(t))
   if (!t) return <div className="text-center text-td-muted py-8">No teacher data</div>
 
   return (
@@ -428,7 +433,7 @@ export function StuTeacherDetail() {
       <ScreenHeader title="Teacher Profile" onBack={() => go('stuTeachers', 'stuTeachers')} />
 
       <div className="flex flex-col items-center mb-5">
-        <div className="w-[80px] h-[80px] rounded-3xl flex items-center justify-center text-white font-extrabold text-[28px] mb-3" style={{ background: GRADIENTS[stuTeacherIndex % GRADIENTS.length] }}>{initials(t.name)}</div>
+        <div className="w-[80px] h-[80px] rounded-3xl flex items-center justify-center text-white font-extrabold text-[28px] mb-3" style={{ background: GRADIENTS[gradIdx % GRADIENTS.length] }}>{initials(t.name)}</div>
         <div className="text-[20px] font-extrabold text-td-dark">{t.name}</div>
         <span className="text-[12px] font-bold text-td-primary bg-[#eaf1fc] py-[5px] px-3 rounded-[20px] mt-2">{t.subject}</span>
       </div>
@@ -557,10 +562,10 @@ export function StuTimetableScreen() {
         <div className="text-center text-td-muted text-sm py-10">No classes scheduled for {dayNames[day]}</div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {periods.map((p, i) => {
+          {periods.map((p) => {
             const free = p[2] === 'Free period'
             return (
-              <div key={i} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px]">
+              <div key={`${p[0]}-${p[2]}`} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px]">
                 <div className="text-center shrink-0 w-[56px]">
                   <div className="text-[12.5px] font-extrabold text-td-primary">{p[0]}</div>
                   <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
@@ -581,7 +586,7 @@ export function StuTimetableScreen() {
 
 export function StuAssignmentsScreen() {
   const { go, stuAssignments } = useDashboard()
-  const [open, setOpen] = useState<number | null>(null)
+  const [open, setOpen] = useState<string | null>(null)
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
@@ -591,19 +596,22 @@ export function StuAssignmentsScreen() {
         <div className="text-center text-td-muted text-sm py-12 leading-relaxed">No homework assigned yet.<br />New assignments from your teacher will appear here.</div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {stuAssignments.map((a, i) => (
-            <button key={i} onClick={() => setOpen(open === i ? null : i)} className="w-full text-left bg-white border border-td-border rounded-[18px] p-4 cursor-pointer">
+          {stuAssignments.map((a) => {
+            const akey = `${a.due}-${a.subject}-${a.title}`
+            return (
+            <button key={akey} onClick={() => setOpen(open === akey ? null : akey)} className="w-full text-left bg-white border border-td-border rounded-[18px] p-4 cursor-pointer">
               <div className="flex items-center gap-[13px]">
                 <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center bg-[#fcf3e3]" style={{ color: ink('#fcf3e3') }}><Icon name="homework" size={20} /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-extrabold text-td-dark">{a.title}</div>
                   <div className="text-[12px] text-td-muted mt-0.5">{a.subject}{a.due ? ` · due ${a.due}` : ''}</div>
                 </div>
-                {a.instructions && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2cad8" strokeWidth="2.4" strokeLinecap="round" className={`shrink-0 transition-transform ${open === i ? 'rotate-90' : ''}`}><path d="m9 18 6-6-6-6"/></svg>}
+                {a.instructions && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2cad8" strokeWidth="2.4" strokeLinecap="round" className={`shrink-0 transition-transform ${open === akey ? 'rotate-90' : ''}`}><path d="m9 18 6-6-6-6"/></svg>}
               </div>
-              {open === i && a.instructions && <div className="text-[13px] text-td-text leading-relaxed mt-3 pt-3 border-t border-[#f0f2f7]">{a.instructions}</div>}
+              {open === akey && a.instructions && <div className="text-[13px] text-td-text leading-relaxed mt-3 pt-3 border-t border-[#f0f2f7]">{a.instructions}</div>}
             </button>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

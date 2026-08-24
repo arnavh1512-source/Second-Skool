@@ -118,8 +118,8 @@ export function StuNotesScreen() {
         <div className="text-center text-td-muted text-sm py-12 leading-relaxed">No study material yet.<br />Notes your teacher shares will appear here.</div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {stuNotes.map((n, i) => (
-            <div key={i} className="bg-white border border-td-border rounded-[18px] p-4">
+          {stuNotes.map((n) => (
+            <div key={`${n.date}-${n.title}`} className="bg-white border border-td-border rounded-[18px] p-4">
               <div className="flex items-center gap-[11px]">
                 <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-[#eaf1fc]" style={{ color: ink('#eaf1fc') }}><Icon name="notes" size={19} /></div>
                 <div className="flex-1 min-w-0">
