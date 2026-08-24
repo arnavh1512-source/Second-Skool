@@ -46,7 +46,9 @@ Creates the centre and runs it end to end — approves staff & students, manages
 ### 🧑‍🏫 Teacher
 *The daily driver*
 
-Takes attendance, enters results, sets assignments & reminders, uploads study material — on a phone, between classes.
+Takes attendance, enters results, sets homework, sends reminders, uploads notes and books parent meetings — on a phone, between classes.
+
+Sees the timetable, the roster and every fee balance. Editing them, and anything to do with money or staff, stays with the head.
 
 </td>
 <td width="33%" valign="top">
@@ -80,14 +82,18 @@ Enters the private code their teacher gave them and instantly sees their attenda
 |:--:|---|---|
 | 📋 | **Attendance** | Per-batch daily attendance, student-visible history |
 | 📊 | **Results & rankings** | Test marks, subject-wise rankings, student report cards |
-| 💰 | **Fees** | Fee plans, due/paid tracking, automatic parent reminders |
+| 💰 | **Fees** | Per-student records with a full breakdown — what each balance is actually made of. Head can add a fee, mark it paid, or remove one entered by mistake |
 | 🗓️ | **Timetable** | Class and batch timetables for staff and students |
-| 📝 | **Assignments** | Set work and reminders per class |
+| 📝 | **Homework** | Set work per class with a due date; the class is notified |
+| 🤝 | **Parent meetings** | Book a slot with a parent, reschedule it, or cancel it |
 | 📚 | **Study material** | Upload and share notes & files (MIME-validated) |
-| 🔔 | **Notifications** | Web push + in-app bell for heads, teachers and students |
+| 📢 | **Reminders** | Send a notice to a class or one student — with a log of what has already gone out, so nobody gets chased twice |
+| 🔔 | **Notifications** | Web push to the lock screen + in-app bell for heads, teachers and students |
 | 🏢 | **Multi-branch** | Branches, subjects and batches per centre |
 | ✅ | **Approvals** | Head approves staff and student join requests |
 | 📈 | **Reports** | Centre-wide insight for the owner |
+| 👁️ | **Parent visibility** | A parent enters their child's private code and sees attendance, marks, rank, fees, timetable and notes. No account, nothing to install, nothing the child can quietly leave out |
+| 📲 | **Installs like an app** | Add to home screen, opens full screen, and every save says plainly whether it saved — no silent failures on a weak signal |
 
 ## 🏗️ How it's built
 
