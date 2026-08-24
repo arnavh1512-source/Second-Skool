@@ -12,7 +12,7 @@ import { findStudent, studentKey } from '../lib/student-key'
 const SPECIAL_PERIODS = new Set(['Test', 'Staff meeting', 'Parent meeting', 'Doubt session'])
 
 export function TimetableScreen() {
-  const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, role } = useDashboard()
+  const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, role, notify } = useDashboard()
   const isAdmin = role === 'admin'
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<string[] | null>(null) // the original period being edited
@@ -39,7 +39,11 @@ export function TimetableScreen() {
   const resetForm = () => { setStartTime('09:00'); setEndTime('10:00'); setSubject(''); setKlass(''); setRoom(''); setShowForm(false); setEditing(null) }
 
   const handleAdd = async () => {
-    if (!selKlass) return
+    // The class dropdown is empty until there are students, so this button was
+    // pressable with nothing selected — and it returned in silence. A teacher
+    // setting up a new centre tapped Save on a period she had filled in and
+    // got no period, no error, and no idea which field was at fault.
+    if (!selKlass) { notify('Add a student first — a period needs a class', 'error'); return }
     const subj = subject || subjectNames[0] || 'Free period'
     // Keep the form filled in when the write fails. Clearing it on the way out
     // meant a failed save cost her the times as well as the period.
@@ -414,7 +418,7 @@ export function ResultsScreen() {
 }
 
 export function AssignmentsScreen() {
-  const { back, assignmentsList, saveAssignment, deleteAssignment, subjects, students } = useDashboard()
+  const { back, assignmentsList, saveAssignment, deleteAssignment, subjects, students, notify } = useDashboard()
   const [title, setTitle] = useState('')
   const [subject, setSubject] = useState('')
   const [klass, setKlass] = useState('')
@@ -446,7 +450,10 @@ export function AssignmentsScreen() {
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Due date</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Instructions</label><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none resize-none focus:border-td-primary" /></div>
         <PrimaryButton onClick={async () => {
-          if (!selKlass) return
+          // Same silent swallow as the timetable: with no students on the
+          // roster the class select has nothing to offer, and Create used to
+          // do nothing at all rather than say why.
+          if (!selKlass) { notify('Add a student first — homework is set for a class', 'error'); return }
           if (await saveAssignment(title, selSubject, selKlass, dueDate, instructions)) { setTitle(''); setInstructions('') }
         }}>Create &amp; notify class</PrimaryButton>
       </div>
