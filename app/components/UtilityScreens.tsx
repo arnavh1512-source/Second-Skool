@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { indexOfStudent, studentKey } from '../lib/student-key'
 import { useBusy } from '../lib/use-busy'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, LIMITS, MIN_PASSWORD_LENGTH, clampText, type Screen, type Student } from '../store'
-import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState } from './Shell'
+import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
@@ -24,14 +24,14 @@ export function FeesScreen() {
   const rows = [...students.filter(d => d.feeStatus !== 'Paid'), ...students.filter(d => d.feeStatus === 'Paid')]
 
   const handleAdd = async () => {
-    if (!selStudent) { notify('Select a student'); return }
+    if (!selStudent) { notify('Select a student', 'error'); return }
     const amt = Number(amount)
-    if (!amt || amt <= 0) { notify('Enter a valid amount'); return }
+    if (!amt || amt <= 0) { notify('Enter a valid amount', 'error'); return }
     // fees.amount is numeric(10,2), so anything larger used to be rejected by
     // Postgres with an error the head never saw — the form just sat there.
-    if (amt > LIMITS.feeAmount) { notify(`Amount cannot exceed ₹${LIMITS.feeAmount.toLocaleString('en-IN')}`); return }
-    if (!period.trim()) { notify('Enter the fee period'); return }
-    if (!dueDate) { notify('Select a due date'); return }
+    if (amt > LIMITS.feeAmount) { notify(`Amount cannot exceed ₹${LIMITS.feeAmount.toLocaleString('en-IN')}`, 'error'); return }
+    if (!period.trim()) { notify('Enter the fee period', 'error'); return }
+    if (!dueDate) { notify('Select a due date', 'error'); return }
     if (!(await addFee(selStudent, amt, clampText(period, LIMITS.period), dueDate))) return
     setSelStudent(''); setAmount(''); setPeriod(''); setDueDate(''); setShowForm(false)
   }
@@ -79,7 +79,7 @@ export function FeesScreen() {
         </div>
       )}
 
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-white text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
+      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-white text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
 
       {rows.length === 0 ? (
         <EmptyState
@@ -236,7 +236,7 @@ export function BranchesScreen() {
   const [openBranch, setOpenBranch] = useState<string | null>(null)
 
   const handleAdd = async () => {
-    if (!name.trim()) { useDashboard.getState().notify('Enter branch name'); return }
+    if (!name.trim()) { useDashboard.getState().notify('Enter branch name', 'error'); return }
     if (!(await addBranch(name.trim(), address.trim(), isMain))) return
     setName(''); setAddress(''); setIsMain(false); setShowForm(false)
   }
@@ -300,14 +300,23 @@ export function BranchesScreen() {
 export function SubjectsScreen() {
   const { subjects, back, addSubject, deleteSubject } = useDashboard()
   const [name, setName] = useState('')
+  const [confirmSubject, setConfirmSubject] = useState<{ id: string; name: string } | null>(null)
 
   const handleAdd = async () => {
-    if (!name.trim()) { useDashboard.getState().notify('Enter subject name'); return }
+    if (!name.trim()) { useDashboard.getState().notify('Enter subject name', 'error'); return }
     if (await addSubject(name.trim())) setName('')
   }
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ConfirmDialog
+        open={!!confirmSubject}
+        title={`Remove ${confirmSubject?.name ?? ''}?`}
+        body="Its tests, results and timetable periods are deleted with it. This cannot be undone."
+        confirmLabel="Remove subject"
+        onConfirm={() => { const t = confirmSubject; setConfirmSubject(null); if (t) deleteSubject(t.id) }}
+        onCancel={() => setConfirmSubject(null)}
+      />
       <ScreenHeader title="Subjects" onBack={back} />
 
       <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
@@ -327,7 +336,7 @@ export function SubjectsScreen() {
             <div key={s.dbId} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
               <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{s.name[0]}</div>
               <div className="flex-1 text-[14px] font-bold text-td-dark">{s.name}</div>
-              {s.dbId && <button onClick={() => { if (window.confirm(`Remove "${s.name}" everywhere? Its tests, results and timetable periods will be deleted too.`)) deleteSubject(s.dbId!) }} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Remove</button>}
+              {s.dbId && <button onClick={() => setConfirmSubject({ id: s.dbId!, name: s.name })} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Remove</button>}
             </div>
           ))}
         </div>
@@ -340,14 +349,23 @@ export function BatchesScreen() {
   const { batches, students, back, addBatch, deleteBatch } = useDashboard()
   const [name, setName] = useState('')
   const [openBatch, setOpenBatch] = useState<string | null>(null)
+  const [confirmBatch, setConfirmBatch] = useState<{ id: string; name: string } | null>(null)
 
   const handleAdd = async () => {
-    if (!name.trim()) { useDashboard.getState().notify('Enter batch name'); return }
+    if (!name.trim()) { useDashboard.getState().notify('Enter batch name', 'error'); return }
     if (await addBatch(name.trim())) setName('')
   }
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ConfirmDialog
+        open={!!confirmBatch}
+        title={`Remove batch ${confirmBatch?.name ?? ''}?`}
+        body="Students keep every record — attendance, marks and fees. Only the batch label goes."
+        confirmLabel="Remove batch"
+        onConfirm={() => { const t = confirmBatch; setConfirmBatch(null); if (t) deleteBatch(t.id) }}
+        onCancel={() => setConfirmBatch(null)}
+      />
       <ScreenHeader title="Batches" onBack={back} />
 
       <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
@@ -374,7 +392,7 @@ export function BatchesScreen() {
                   <div className="text-[14px] font-bold text-td-dark truncate">{b.name}</div>
                   <div className="text-[12px] text-td-muted font-semibold">{roster.length} student{roster.length === 1 ? '' : 's'} {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
                 </button>
-                {b.dbId && <button onClick={() => { if (window.confirm(`Remove batch "${b.name}"? Students keep their records; only the batch label is deleted.`)) deleteBatch(b.dbId) }} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
+                {b.dbId && <button onClick={() => setConfirmBatch({ id: b.dbId!, name: b.name })} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
               </div>
               {open && <StudentRoster list={roster} />}
             </div>

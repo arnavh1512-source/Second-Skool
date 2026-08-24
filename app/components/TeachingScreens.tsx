@@ -307,9 +307,9 @@ export function ResultsScreen() {
   const selSubject = subject || subjectNames[0] || ''
 
   const handlePublish = async () => {
-    if (!testName.trim()) { notify('Enter test name'); return }
-    if (!selKlass) { notify('Add students first'); return }
-    if (!selSubject) { notify('Add a subject first (More → Subjects)'); return }
+    if (!testName.trim()) { notify('Enter test name', 'error'); return }
+    if (!selKlass) { notify('Add students first', 'error'); return }
+    if (!selSubject) { notify('Add a subject first (More → Subjects)', 'error'); return }
     if (!isWholeNumber(maxMarks, 1, LIMITS.maxMarks)) { notify(`Max marks must be a whole number from 1 to ${LIMITS.maxMarks}`); return }
     const max = Number(maxMarks)
 
@@ -320,7 +320,7 @@ export function ResultsScreen() {
     // Scoped to this roster: a key belonging to a student who has since moved
     // class or left must not slip into the publish.
     const entered = Object.entries(marks).filter(([key, m]) => m.trim() !== '' && !!findStudent(roster, key))
-    if (!entered.length) { notify('Enter at least one mark'); return }
+    if (!entered.length) { notify('Enter at least one mark', 'error'); return }
     for (const [key, m] of entered) {
       if (!isWholeNumber(m, 0, max)) {
         notify(`${findStudent(roster, key)?.name ?? 'A student'}: marks must be a whole number from 0 to ${max}`)
@@ -336,7 +336,7 @@ export function ResultsScreen() {
       // test entered early in the morning was filed against yesterday.
       max_marks: max, date: isoDay(),
     }).select().single()
-    if (error || !test) { notify('Could not publish — try again'); return }
+    if (error || !test) { notify('Could not publish — try again', 'error'); return }
 
     const resultRows = entered.map(([key, m]) => {
       const student = findStudent(roster, key)
@@ -352,13 +352,19 @@ export function ResultsScreen() {
     const { error: resultsError } = await supabase.from('results').insert(resultRows)
     if (resultsError) {
       await supabase.from('tests').delete().eq('id', test.id)
-      notify('Could not publish results — nothing was saved')
+      notify('Could not publish results — nothing was saved', 'error')
       return
     }
 
     useDashboard.getState().notifyClass(selKlass, 'New results published', `${testName} · ${selSubject} — check your marks in the app`, 'results')
     notify('Results published & parents notified')
     setMarks({})
+    // Rankings, the student's results screen and the reports all read from the
+    // store snapshot, which knows nothing about marks written straight to
+    // Postgres. Without this the teacher published a test and then found
+    // "No results entered for Mathematics yet" on Rankings until she happened
+    // to reload the page.
+    await useDashboard.getState().refreshData()
   }
 
   return (

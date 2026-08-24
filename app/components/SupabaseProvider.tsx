@@ -20,6 +20,17 @@ type Row = {
   icon: string; tint: string; detail: string; created_at: string
 }
 
+// How long the first dataset may take before the app gives up waiting and lets
+// the user back in. Generous — a full centre over a weak 3G connection is the
+// normal case this must not cut short — but finite, which is the whole point.
+const FIRST_LOAD_MS = 20000
+
+const withTimeout = <T,>(p: Promise<T>, ms: number): Promise<T> =>
+  new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('timeout')), ms)
+    p.then(resolve, reject).finally(() => clearTimeout(t))
+  })
+
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const { setAuth, loadTeachers, loadStudents, set } = useDashboard()
   const lastRefresh = useRef(0)
@@ -142,8 +153,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // halfway through typing, and their work went with it.
         const first = !dataLoadedOnce.current
         if (first) set({ dataLoading: true })
-        try { await fetchAllData(); dataLoadedOnce.current = true }
-        catch { useDashboard.getState().notify('Could not load data — check your connection and refresh') }
+        // Bounded, because dataLoading gates every staff screen: while it is
+        // set, page.tsx renders the spinner no matter which screen the store
+        // says we are on, so a fetch that never settles — a request left hanging
+        // on a stale token, a dead connection that never errors — leaves a head
+        // tapping sidebar items that visibly do nothing until she closes the
+        // browser. A rejection was always handled; hanging forever was not.
+        try { await withTimeout(fetchAllData(), FIRST_LOAD_MS); dataLoadedOnce.current = true }
+        catch { useDashboard.getState().notify('Could not load data — check your connection and refresh', 'error') }
         finally { if (first) set({ dataLoading: false }) }
       }
     } catch {

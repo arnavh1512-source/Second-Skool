@@ -39,8 +39,8 @@ export function LoginScreen() {
   // once from My Profile (Set password) after a Google sign-in.
   const signInWithPassword = () => run(async () => {
     const e = email.trim().toLowerCase()
-    if (!e.includes('@') || e.length < 5) { notify('Enter your email'); return }
-    if (!password) { notify('Enter your password'); return }
+    if (!e.includes('@') || e.length < 5) { notify('Enter your email', 'error'); return }
+    if (!password) { notify('Enter your password', 'error'); return }
     // On success, SupabaseProvider's onAuthStateChange picks up the session and
     // routes the head/teacher into the app.
     const { error } = await supabase.auth.signInWithPassword({ email: e, password })
@@ -475,7 +475,7 @@ export function RegisterScreen() {
         <div className="mt-7 flex flex-col gap-3">
           <label className="text-xs font-bold text-td-muted">Centre name</label>
           <input autoFocus value={centreName} onChange={e => setCentreName(e.target.value)} placeholder="e.g. Bright Future Tuition" className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary" />
-          <PrimaryButton onClick={() => run(() => centreName.trim().length >= 2 ? createCentre(centreName) : notify('Enter your centre name'))}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
+          <PrimaryButton onClick={() => run(() => centreName.trim().length >= 2 ? createCentre(centreName) : notify('Enter your centre name', 'error'))}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
           <button onClick={() => setMode('choose')} className="text-[13px] text-td-muted font-bold py-2 cursor-pointer border-none bg-transparent">Back</button>
         </div>
       )}
@@ -484,7 +484,7 @@ export function RegisterScreen() {
         <div className="mt-7 flex flex-col gap-3">
           <label className="text-xs font-bold text-td-muted">Centre join code</label>
           <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="w-full border border-td-border rounded-[14px] p-[14px] text-sm text-td-dark outline-none focus:border-td-primary text-center tracking-[0.2em] font-bold" />
-          <PrimaryButton onClick={() => run(() => code.trim().length >= 4 ? joinCentre(code) : notify('Enter the full join code'))}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
+          <PrimaryButton onClick={() => run(() => code.trim().length >= 4 ? joinCentre(code) : notify('Enter the full join code', 'error'))}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
           <div className="text-[12px] text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
           <button onClick={() => setMode('choose')} className="text-[13px] text-td-muted font-bold py-2 cursor-pointer border-none bg-transparent">Back</button>
         </div>
@@ -534,7 +534,7 @@ export function DeniedScreen() {
   const [busy, run] = useBusy()
   const submit = () => run(() => {
     // A dead button that never explains itself is the worse failure.
-    if (code.trim().length < 4) { notify('Enter the full centre code'); return }
+    if (code.trim().length < 4) { notify('Enter the full centre code', 'error'); return }
     return joinCentre(code)
   })
   return (

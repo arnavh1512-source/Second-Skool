@@ -31,8 +31,8 @@ export function NotesScreen() {
   const reset = () => { setTitle(''); setSubject(''); setBody(''); setLink(''); setFile(null); setShowForm(false) }
 
   const save = () => run(async () => {
-    if (!title.trim()) { notify('Enter a title'); return }
-    if (!selKlass) { notify('Add students first'); return }
+    if (!title.trim()) { notify('Enter a title', 'error'); return }
+    if (!selKlass) { notify('Add students first', 'error'); return }
     let fileUrl = ''
     if (file) {
       const res = await uploadNoteFile(file)

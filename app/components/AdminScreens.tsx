@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useBusy } from '../lib/use-busy'
 import { useDashboard, initials, av, fmtDate } from '../store'
-import { ScreenHeader, EmptyState } from './Shell'
+import { ScreenHeader, EmptyState, ConfirmDialog } from './Shell'
 import { supabase } from '../lib/supabase'
 import { whatsappShareUrl, weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
 import { useState } from 'react'
@@ -134,10 +134,20 @@ export function StaffApprovalsScreen() {
 export function StudentRequestsScreen() {
   const { back, pendingStudents, branchesList, batches, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
 
+  const [confirmRotate, setConfirmRotate] = useState(false)
+
   useEffect(() => { refreshData(); loadMyCentre() }, [refreshData, loadMyCentre])
 
   return (
     <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+      <ConfirmDialog
+        open={confirmRotate}
+        title="Generate a new student code?"
+        body="The current code stops working immediately. Anyone you have already given it to — students yet to register — will need the new one."
+        confirmLabel="Generate new code"
+        onConfirm={() => { setConfirmRotate(false); regenerateStudentCode() }}
+        onCancel={() => setConfirmRotate(false)}
+      />
       <ScreenHeader title="Student requests" onBack={back} />
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Students who registered themselves. Review their details, set their batch and fee, then approve — their code only works once you do.</div>
 
@@ -156,7 +166,7 @@ export function StudentRequestsScreen() {
           </div>
           {role === 'admin' && (
             <button
-              onClick={() => { if (confirm('Generate a new student code? The old one will stop working immediately.')) regenerateStudentCode() }}
+              onClick={() => setConfirmRotate(true)}
               className="text-[12px] font-bold text-td-muted underline mt-2 cursor-pointer"
             >
               Generate a new code

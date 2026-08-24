@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useState } from 'react'
+import { useRef, useCallback, useState, useEffect } from 'react'
 import { useDashboard, type Screen, type Tab } from '../store'
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
@@ -243,6 +243,54 @@ export function PrimaryButton({ onClick, children }: { onClick: () => unknown; c
       {busy && <Spinner />}
       {children}
     </button>
+  )
+}
+
+// Destructive actions used to ask with window.confirm. It is the wrong tool
+// here for a reason that has nothing to do with looks: in an installed PWA and
+// in the in-app browsers people open links from, native confirms are throttled,
+// suppressed outright, or auto-dismissed — so the guard either blocks the head
+// for no reason or waves the action through without her ever seeing a question.
+// This dialog is part of the app, so it always appears, always says what will
+// happen, and can actually be tested.
+export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCancel }: {
+  open: boolean; title: string; body: string; confirmLabel: string
+  onConfirm: () => void; onCancel: () => void
+}) {
+  // Escape cancels, and focus lands on the dialog rather than staying behind it.
+  const panel = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    panel.current?.focus()
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open, onCancel])
+
+  if (!open) return null
+  return (
+    <div
+      className="fixed inset-0 z-[70] bg-[rgba(16,24,40,.55)] flex items-center justify-center p-6"
+      onClick={onCancel}
+    >
+      <div
+        ref={panel}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        aria-describedby="confirm-body"
+        tabIndex={-1}
+        onClick={e => e.stopPropagation()}
+        className="w-full max-w-[380px] bg-white rounded-[20px] p-[21px] outline-none shadow-[0_20px_50px_rgba(16,24,40,.3)] animate-[pop_.2s_ease]"
+      >
+        <div id="confirm-title" className="text-[16px] font-extrabold text-td-dark mb-2">{title}</div>
+        <div id="confirm-body" className="text-[13.5px] text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
+        <div className="flex gap-2.5">
+          <button onClick={onCancel} className="flex-1 border border-td-border bg-white text-td-text text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-white text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
   )
 }
 
