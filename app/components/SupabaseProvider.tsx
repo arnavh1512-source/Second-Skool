@@ -189,7 +189,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     ] = await Promise.all([
       // Defensive caps: orderings put the newest rows first, so a centre that
       // outgrows a cap loses only the oldest tail, never current data.
-      supabase.from('teachers').select('*').order('created_at', { ascending: false }).limit(300),
+      supabase.from('teachers').select('id,name,subject,experience,qualification,rating,about,branch_id').order('created_at', { ascending: false }).limit(300),
       supabase.from('students').select('id,name,class,batch,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at').order('created_at', { ascending: false }).limit(2000),
       supabase.from('branches').select('*').order('is_main', { ascending: false }).limit(50),
       supabase.from('meetings').select('*').order('date', { ascending: false }).limit(200),
@@ -273,7 +273,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const branchesList: BranchItem[] = (branches ?? []).map((b: Row) => ({
       name: b.name, address: b.address ?? '', main: !!b.is_main,
       students: approvedRows.filter((s) => s.branch_id === b.id).length,
-      staff: (teachers ?? []).filter((t: Row) => t.branch_id === b.id).length,
+      staff: (teachers ?? []).filter((t) => t.branch_id === b.id).length,
       dbId: b.id,
     }))
 
@@ -382,7 +382,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     const query = new URLSearchParams(window.location.search)
     const err = query.get('error_description') || query.get('error') || hash.get('error_description') || hash.get('error')
     if (err) {
-      const msg = decodeURIComponent(err).replace(/\+/g, ' ')
+      const msg = decodeURIComponent(err).replace(/\+/g, ' ').slice(0, 120)
       console.error('OAuth callback error:', msg)
       useDashboard.getState().notify(`Sign-in failed: ${msg}`)
       // Clean the URL so a refresh doesn't re-trigger the toast.
