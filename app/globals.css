@@ -19,7 +19,7 @@
   --color-td-bg: #f4f6fb;
   --color-td-border: #e6eaf2;
   --color-td-muted: #6b7689;
-  --color-td-subtle: #9aa4b6;
+  --color-td-subtle: #7d879a;
   --color-td-text: #3a4456;
   --color-td-pink: #d94f8a;
   --color-td-teal: #3aa0c4;
@@ -31,6 +31,10 @@
   --color-td-soft: #f4f6fb;
   --color-td-line: #f0f2f7;
   --color-td-faint: #c2cad8;
+
+  /* The one surface that is dark in both themes: white text sits on it.
+     It is not td-dark — that is an ink, and an ink inverts. */
+  --color-td-ink: #1a2332;
 
   /* Icon-tile tints, and the deeper wash/edge pair a banner uses. */
   --color-td-tint-blue: #eaf1fc;
@@ -79,11 +83,12 @@
   --color-td-line: #262d3a;
   --color-td-border: #2a323f;
   --color-td-faint: #4a5364;
+  --color-td-ink: #3b4557;
 
   --color-td-dark: #e8ecf3;
   --color-td-text: #b9c2d1;
   --color-td-muted: #8a94a6;
-  --color-td-subtle: #6d7789;
+  --color-td-subtle: #818ba1;
 
   --color-td-tint-blue: #1b2b46;
   --color-td-tint-green: #163227;

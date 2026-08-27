@@ -134,7 +134,7 @@ function DesktopToast() {
     <div
       role={err ? 'alert' : 'status'}
       aria-live={err ? 'assertive' : 'polite'}
-      className={`fixed left-1/2 -translate-x-1/2 bottom-8 max-w-[440px] rounded-[14px] text-white z-50 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-dark'}`}
+      className={`fixed left-1/2 -translate-x-1/2 bottom-8 max-w-[440px] rounded-[14px] text-white z-50 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
     >
       <button
         type="button"

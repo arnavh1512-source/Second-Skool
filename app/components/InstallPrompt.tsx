@@ -128,7 +128,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-dark text-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex items-center gap-3 shadow-[0_-8px_30px_rgba(0,0,0,.24)]">
+    <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-ink text-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex items-center gap-3 shadow-[0_-8px_30px_rgba(0,0,0,.24)]">
       <div className="flex-1 min-w-0">
         <div className="text-[13.5px] font-extrabold leading-tight">Install Second Skool</div>
         <div className="text-[12px] opacity-80 leading-tight mt-0.5">Opens like an app — and reminders only work once it&apos;s installed.</div>

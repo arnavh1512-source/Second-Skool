@@ -118,7 +118,7 @@ function Toast() {
     <div
       role={err ? 'alert' : 'status'}
       aria-live={err ? 'assertive' : 'polite'}
-      className={`absolute left-5 right-5 bottom-[104px] rounded-[14px] text-white z-30 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-dark'}`}
+      className={`absolute left-5 right-5 bottom-[104px] rounded-[14px] text-white z-30 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
     >
       <button
         type="button"

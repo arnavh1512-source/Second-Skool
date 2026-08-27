@@ -465,7 +465,7 @@ export function RegisterScreen() {
       {mode === 'choose' && (
         <div className="flex flex-col gap-[13px] mt-7">
           <button onClick={() => setMode('create')} className="text-left border rounded-[20px] p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-edge-blue)' }}>
-            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-dark">
+            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-ink">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
             <div className="flex-1">
