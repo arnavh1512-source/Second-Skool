@@ -17,7 +17,7 @@ import { HomeScreen } from './components/HomeScreen'
 function ScreenLoading() {
   return (
     <div className="flex items-center justify-center min-h-[400px]">
-      <div className="w-8 h-8 border-[3px] border-td-border border-t-[#2a6fdb] rounded-full animate-spin" />
+      <div className="w-8 h-8 border-[3px] border-td-border border-t-td-primary rounded-full animate-spin" />
     </div>
   )
 }

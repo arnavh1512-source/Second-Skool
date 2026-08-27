@@ -110,7 +110,10 @@ function Sidebar() {
             <div className="text-[12px] text-td-muted truncate">{googleEmail}</div>
           </div>
         </button>
-        <button onClick={signOut} className="w-full border border-td-edge-red bg-td-wash-red text-td-red text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer flex items-center justify-center gap-2">
+        {/* On a phone this lives on More; the desktop shell has no More, so
+            without this row a laptop user has no way to report anything. */}
+        <NavRow item={{ icon: 'warning', label: 'Report a problem', screen: 'support' }} />
+        <button onClick={signOut} className="w-full border border-td-edge-red bg-td-wash-red text-td-red text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer flex items-center justify-center gap-2 mt-1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
           Sign out
         </button>
