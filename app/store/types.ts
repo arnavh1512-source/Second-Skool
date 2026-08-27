@@ -90,7 +90,6 @@ export interface State {
   // The centre the operator is currently sitting inside as head, if any. The
   // server derives this from the profile row, so it survives a reload and can
   // never disagree with what the database actually allows.
-  devSeat: { centreId: string; centreName: string } | null
 
   teachers: Teacher[]; students: Student[]
   branchesList: BranchItem[]
@@ -177,8 +176,6 @@ export interface Actions {
   checkDevAccess: () => Promise<void>
   openDevConsole: () => void
   exitDevConsole: () => void
-  devEnterCentre: (centreId: string) => Promise<void>
-  devLeaveCentre: () => Promise<void>
   devDeleteCentre: (centreId: string, confirm: string) => Promise<void>
   loadStaff: () => Promise<void>
   loadWeeklyReport: (days?: number) => Promise<void>

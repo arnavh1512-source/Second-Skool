@@ -19,7 +19,6 @@ const CAP = 10000
 // one query per table instead of two.
 const WINDOW_DAYS = 30
 
-type Seat = { centreId: string; centreName: string }
 
 type Ident = { id: string; centre_id: string | null }
 type Dated = { centre_id: string | null; created_at: string }
@@ -32,7 +31,6 @@ type ProfileRow = Ident & {
   created_at: string
 }
 type StudentRow = { centre_id: string | null; status: string; created_at: string }
-type FeeRow = { centre_id: string | null; status: string; amount: number | string | null }
 type CentreRow = {
   id: string
   name: string
@@ -46,11 +44,6 @@ type ActivityTable = (typeof ACTIVITY_TABLES)[number]
 
 const emptyCounts = (): Record<ActivityTable, number> =>
   Object.fromEntries(ACTIVITY_TABLES.map(t => [t, 0])) as Record<ActivityTable, number>
-
-const num = (v: number | string | null): number => {
-  const n = typeof v === 'string' ? parseFloat(v) : v
-  return Number.isFinite(n) ? (n as number) : 0
-}
 
 // Wrap a query so one broken table can't take the whole dashboard down: the
 // rest of the snapshot still renders and the failure is named in `errors`.
@@ -119,20 +112,6 @@ async function authorize(req: NextRequest): Promise<Auth | NextResponse> {
   return { admin, uid, allowed: verdict.operator }
 }
 
-// Which centre the operator is currently sitting inside, if any. Derived rather
-// than stored: the operator owns no centre, so a `centre_id` on their profile
-// that points at someone else's centre *is* an active session. Owning the
-// centre would make them a real head, which is not impersonation.
-async function currentSeat(admin: SupabaseClient, uid: string): Promise<Seat | null> {
-  const { data: prof } = await admin.from('profiles').select('centre_id').eq('id', uid).maybeSingle()
-  const centreId = (prof as { centre_id: string | null } | null)?.centre_id
-  if (!centreId) return null
-  const { data } = await admin.from('centres').select('id,name,owner_id').eq('id', centreId).maybeSingle()
-  const centre = data as { id: string; name: string; owner_id: string | null } | null
-  if (!centre || centre.owner_id === uid) return null
-  return { centreId: centre.id, centreName: centre.name }
-}
-
 export async function GET(req: NextRequest) {
   if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
   // `?probe=1` answers only "may I see this?" — it's what decides whether the
@@ -151,7 +130,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'too many requests' }, { status: 429 })
   if (probe)
     return NextResponse.json(
-      { allowed, seat: allowed ? await currentSeat(admin, uid) : null },
+      { allowed },
       { headers: { 'cache-control': 'no-store' } },
     )
   if (!allowed) {
@@ -164,15 +143,15 @@ export async function GET(req: NextRequest) {
   const sevenDaysAgo = now - 7 * 86_400_000
   const errors: string[] = []
 
-  const [centres, profiles, students, fees, devices, activity, authUsers] = await Promise.all([
+  const [centres, profiles, students, branches, devices, activity, authUsers] = await Promise.all([
     fetchRows<CentreRow>('centres', () =>
       admin.from('centres').select('id,name,join_code,student_join_code,owner_id,created_at').limit(CAP), errors),
     fetchRows<ProfileRow>('profiles', () =>
       admin.from('profiles').select('id,full_name,email,role,staff_status,centre_id,created_at').limit(CAP), errors),
     fetchRows<StudentRow>('students', () =>
       admin.from('students').select('centre_id,status,created_at').limit(CAP), errors),
-    fetchRows<FeeRow>('fees', () =>
-      admin.from('fees').select('centre_id,status,amount').limit(CAP), errors),
+    fetchRows<{ centre_id: string | null }>('branches', () =>
+      admin.from('branches').select('centre_id').limit(CAP), errors),
     fetchRows<{ centre_id: string | null; kind: string }>('push_subscriptions', () =>
       admin.from('push_subscriptions').select('centre_id,kind').limit(CAP), errors),
     Promise.all(ACTIVITY_TABLES.map(async table => ({
@@ -195,7 +174,12 @@ export async function GET(req: NextRequest) {
   type Bucket = {
     staff: { approved: number; pending: number; rejected: number }
     students: { approved: number; pending: number; rejected: number }
-    fees: { collected: number; outstanding: number; overdue: number }
+    // Everyone who can read this centre's students, parents and fees. Normally
+    // one; grant_head can make more, and that is worth seeing at a glance.
+    heads: number
+    branches: number
+    // Not displayed — it feeds the "students but no push devices" alert, which
+    // is the same fact in the form that actually needs acting on.
     devices: number
     d7: Record<ActivityTable, number>
     d30: Record<ActivityTable, number>
@@ -209,7 +193,8 @@ export async function GET(req: NextRequest) {
       b = {
         staff: { approved: 0, pending: 0, rejected: 0 },
         students: { approved: 0, pending: 0, rejected: 0 },
-        fees: { collected: 0, outstanding: 0, overdue: 0 },
+        heads: 0,
+        branches: 0,
         devices: 0,
         d7: emptyCounts(),
         d30: emptyCounts(),
@@ -230,21 +215,17 @@ export async function GET(req: NextRequest) {
   for (const p of profiles) {
     if (p.role === 'student') continue
     const b = bucket(p.centre_id)
-    if (b) bump(b.staff, p.staff_status)
+    if (!b) continue
+    bump(b.staff, p.staff_status)
+    if (p.role === 'admin' && p.staff_status === 'approved') b.heads++
   }
   for (const s of students) {
     const b = bucket(s.centre_id)
     if (b) bump(b.students, s.status)
   }
-  for (const f of fees) {
-    const b = bucket(f.centre_id)
-    if (!b) continue
-    const amt = num(f.amount)
-    if (f.status === 'Paid') b.fees.collected += amt
-    else {
-      b.fees.outstanding += amt
-      if (f.status === 'Overdue') b.fees.overdue += amt
-    }
+  for (const br of branches) {
+    const b = bucket(br.centre_id)
+    if (b) b.branches++
   }
   for (const d of devices) {
     const b = bucket(d.centre_id)
@@ -279,9 +260,10 @@ export async function GET(req: NextRequest) {
           }
         : null,
       staff: b.staff,
+      heads: b.heads,
       students: b.students,
+      branches: b.branches,
       devices: b.devices,
-      fees: b.fees,
       activity7d: { ...b.d7, total: sum(b.d7) },
       activity30d: { ...b.d30, total: sum(b.d30) },
       lastActive: b.lastActive,
@@ -324,13 +306,11 @@ export async function GET(req: NextRequest) {
     staffPending: staffRows.filter(s => s.status === 'pending').length,
     students: students.filter(s => s.status === 'approved').length,
     studentsPending: students.filter(s => s.status === 'pending').length,
-    devices: devices.length,
+    branches: branches.length,
     activity7d: centreRows.reduce((a, c) => a + c.activity7d.total, 0),
     activity30d: centreRows.reduce((a, c) => a + c.activity30d.total, 0),
     newStudents7d: students.filter(s => Date.parse(s.created_at) >= sevenDaysAgo).length,
     newStaff7d: staffRows.filter(s => Date.parse(s.createdAt) >= sevenDaysAgo).length,
-    feesCollected: centreRows.reduce((a, c) => a + c.fees.collected, 0),
-    feesOutstanding: centreRows.reduce((a, c) => a + c.fees.outstanding, 0),
   }
 
   return NextResponse.json(
@@ -344,15 +324,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const nostore = (body: object, status = 200) =>
   NextResponse.json(body, { status, headers: { 'cache-control': 'no-store' } })
 
-// Taking a seat inside a centre, rather than rebuilding CRUD for fourteen
-// tables in the console. The operator's own profile is pointed at the target
-// centre as an approved head, so every existing screen — students, fees,
-// attendance, timetable, results — becomes editable with the app's own
-// validation, its own RLS, and its own audit columns. Nothing here writes to
-// customer data; the only row touched is the operator's.
-//
-// These three columns are revoked from `authenticated` at the grant level, so
-// this can only happen through the service-role client behind the allowlist.
+// The console used to be able to point the operator's own profile at any
+// centre as an approved head, which made every screen in the app editable for
+// that centre's data. It was removed: the console reads aggregates, and there
+// is no longer any way for support to read a customer's students, parents,
+// fees or attendance. Deleting a centre — which the head asks for and confirms
+// by name — is the only write left here.
 export async function POST(req: NextRequest) {
   if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
 
@@ -369,62 +346,6 @@ export async function POST(req: NextRequest) {
 
   const body: unknown = await req.json().catch(() => null)
   const action = (body as { action?: unknown } | null)?.action
-
-  // Back to an unattached account: exactly the state a fresh Google sign-in
-  // lands in, so the operator stops being a member of anyone's centre.
-  if (action === 'leave') {
-    const { error } = await admin
-      .from('profiles')
-      .update({ centre_id: null, role: 'student', staff_status: 'none' })
-      .eq('id', uid)
-    if (error) {
-      logError('dev.leave_failed', { uid, message: error.message })
-      return nostore({ error: 'could not leave the centre' }, 500)
-    }
-    logWarn('dev.seat_released', { uid })
-    return nostore({ ok: true, seat: null })
-  }
-
-  if (action === 'enter') {
-    const centreId = (body as { centreId?: unknown }).centreId
-    if (typeof centreId !== 'string' || !UUID.test(centreId))
-      return nostore({ error: 'invalid centre' }, 400)
-
-    const { data, error: centreErr } = await admin
-      .from('centres').select('id,name,owner_id').eq('id', centreId).maybeSingle()
-    if (centreErr) {
-      logError('dev.centre_lookup_failed', { uid, message: centreErr.message })
-      return nostore({ error: 'could not read that centre' }, 500)
-    }
-    const centre = data as { id: string; name: string; owner_id: string | null } | null
-    if (!centre) return nostore({ error: 'centre not found' }, 404)
-    if (centre.owner_id === uid) return nostore({ error: 'you already own this centre' }, 400)
-
-    // The profile-setup gate blocks every screen until a profile is complete.
-    // Stamp it once so the operator isn't bounced into a form meant for staff,
-    // but never overwrite details they have already filled in.
-    const { data: existing } = await admin
-      .from('profiles').select('full_name,profile_completed_at').eq('id', uid).maybeSingle()
-    const prof = existing as { full_name: string | null; profile_completed_at: string | null } | null
-
-    const { error } = await admin
-      .from('profiles')
-      .update({
-        centre_id: centreId,
-        role: 'admin',
-        staff_status: 'approved',
-        ...(prof?.profile_completed_at ? {} : { profile_completed_at: new Date().toISOString() }),
-        ...(prof?.full_name ? {} : { full_name: 'Second Skool support' }),
-      })
-      .eq('id', uid)
-    if (error) {
-      logError('dev.enter_failed', { uid, centre: centreId, message: error.message })
-      return nostore({ error: 'could not enter that centre' }, 500)
-    }
-
-    logWarn('dev.seat_taken', { uid, centre: centreId })
-    return nostore({ ok: true, seat: { centreId, centreName: centre.name } })
-  }
 
   if (action === 'delete') return deleteCentre(admin, uid, body)
 
@@ -474,8 +395,7 @@ async function deleteCentre(admin: SupabaseClient, uid: string, body: unknown): 
 
   // Nothing can abort the delete from here, so release the members: once the
   // centre is gone their profiles would point at nothing, and they go back to
-  // the unregistered state a fresh sign-in lands in. This also releases the
-  // operator seat, which is why deleting a centre you are sitting inside works.
+  // the unregistered state a fresh sign-in lands in.
   const { error: detachErr } = await admin
     .from('profiles')
     .update({ centre_id: null, branch_id: null, role: 'student', staff_status: 'none' })
@@ -492,5 +412,5 @@ async function deleteCentre(admin: SupabaseClient, uid: string, body: unknown): 
   }
 
   logWarn('dev.centre_deleted', { uid, centre: centreId })
-  return nostore({ ok: true, seat: null, deleted: centre.name })
+  return nostore({ ok: true, deleted: centre.name })
 }

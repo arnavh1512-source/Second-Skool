@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useDashboard, SESSION_EXPIRED, devFetch, fmtDate, rupee } from '../store'
+import { useDashboard, SESSION_EXPIRED, devFetch, fmtDate } from '../store'
 import { ScreenHeader } from './Shell'
 
 // ---- shape of /api/dev ------------------------------------------------------
@@ -15,9 +15,9 @@ type CentreRow = {
   createdAt: string
   owner: { name: string | null; email: string | null; lastSignIn: string | null } | null
   staff: Counts
+  heads: number
   students: Counts
-  devices: number
-  fees: { collected: number; outstanding: number; overdue: number }
+  branches: number
   activity7d: Activity
   activity30d: Activity
   lastActive: string | null
@@ -36,18 +36,15 @@ type Snapshot = {
   generatedAt: string
   totals: {
     centres: number; staffApproved: number; staffPending: number
-    students: number; studentsPending: number; devices: number
+    students: number; studentsPending: number; branches: number
     activity7d: number; activity30d: number
     newStudents7d: number; newStaff7d: number
-    feesCollected: number; feesOutstanding: number
   }
   centres: CentreRow[]
   staff: StaffRow[]
   alerts: string[]
   errors: string[]
 }
-
-const inr = (n: number) => rupee(Math.round(n))
 
 // "3h ago" / "12d ago" — an absolute timestamp is noise when the only question
 // is whether someone has been here recently.
@@ -72,14 +69,11 @@ const day = (iso: string) => fmtDate(iso)
 const fetchSnapshot = (): Promise<Snapshot> => devFetch<Snapshot>('/api/dev')
 
 export function DevConsoleScreen() {
-  const { exitDevConsole, devSeat, devEnterCentre, devLeaveCentre, devDeleteCentre, signOut } = useDashboard()
+  const { exitDevConsole, devDeleteCentre, signOut } = useDashboard()
   const [data, setData] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'centres' | 'people'>('centres')
-  // Which centre is mid-request. The page reloads on success, so this only ever
-  // clears on failure — and then it must clear, or the button stays dead.
-  const [seating, setSeating] = useState<string | null>(null)
 
   // The centre whose delete confirmation is open, and what has been typed into
   // it. Held here rather than per-card so opening one closes any other.
@@ -106,16 +100,6 @@ export function DevConsoleScreen() {
       })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not delete that centre'))
       .finally(() => setDeleting(false))
-  }
-
-  const seat = (centreId: string | null) => {
-    setSeating(centreId ?? 'leave')
-    setError(null)
-    const p = centreId ? devEnterCentre(centreId) : devLeaveCentre()
-    p.catch((e: unknown) => {
-      setError(e instanceof Error ? e.message : 'Could not switch centre')
-      setSeating(null)
-    })
   }
 
   useEffect(() => {
@@ -163,23 +147,6 @@ export function DevConsoleScreen() {
         </div>
       )}
 
-      {devSeat && (
-        <div className="bg-[#fdf3f0] border border-[#f4d8cf] rounded-[14px] p-3.5 mb-4 flex items-center gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-extrabold text-td-red">Inside {devSeat.centreName}</div>
-            <div className="text-[12px] text-td-muted">
-              You are a head of this centre — every edit is real, and their staff list shows you.
-            </div>
-          </div>
-          <button
-            onClick={() => seat(null)}
-            disabled={seating !== null}
-            className="text-[12px] font-extrabold py-2 px-3 rounded-[10px] cursor-pointer border-none bg-td-red text-white shrink-0 disabled:opacity-50"
-          >
-            {seating === 'leave' ? '…' : 'Leave'}
-          </button>
-        </div>
-      )}
       {loading && !data && !error && <div className="text-center text-td-muted text-sm py-12">Loading every centre…</div>}
 
       {data && (
@@ -190,13 +157,12 @@ export function DevConsoleScreen() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-3 xl:grid-cols-5">
             <Stat label="Centres" value={data.totals.centres} />
             <Stat label="Staff" value={data.totals.staffApproved} sub={data.totals.staffPending ? `${data.totals.staffPending} pending` : undefined} />
             <Stat label="Students" value={data.totals.students} sub={data.totals.studentsPending ? `${data.totals.studentsPending} pending` : undefined} />
-            <Stat label="Push devices" value={data.totals.devices} />
+            <Stat label="Branches" value={data.totals.branches} />
             <Stat label="Actions · 7d" value={data.totals.activity7d} sub={`${data.totals.activity30d} in 30d`} />
-            <Stat label="Fees paid" value={inr(data.totals.feesCollected)} sub={data.totals.feesOutstanding ? `${inr(data.totals.feesOutstanding)} due` : undefined} />
           </div>
 
           {data.alerts.length > 0 && (
@@ -228,15 +194,12 @@ export function DevConsoleScreen() {
           {tab === 'centres'
             ? <Centres
                 rows={data.centres}
-                seatId={devSeat?.centreId ?? null}
-                seating={seating}
-                onSeat={seat}
                 onDelete={c => { setDoomed(c); setTyped(''); setError(null) }}
               />
             : <People rows={data.staff} />}
 
           <div className="text-[12px] text-td-subtle text-center mt-5">
-            Snapshot {ago(data.generatedAt)} · this view reads aggregates only. Open a centre to edit its data.
+            Snapshot {ago(data.generatedAt)} · this console reads aggregates only — it cannot open a centre or read its data.
           </div>
         </>
       )}
@@ -304,13 +267,10 @@ function Field({ label, value, sub }: { label: string; value: string; sub?: stri
 
 type CentresProps = {
   rows: CentreRow[]
-  seatId: string | null
-  seating: string | null
-  onSeat: (centreId: string | null) => void
   onDelete: (centre: CentreRow) => void
 }
 
-function Centres({ rows, seatId, seating, onSeat, onDelete }: CentresProps) {
+function Centres({ rows, onDelete }: CentresProps) {
   if (!rows.length) return <Empty>No centres yet.</Empty>
   return (
     <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
@@ -334,9 +294,9 @@ function Centres({ rows, seatId, seating, onSeat, onDelete }: CentresProps) {
 
           <div className="grid grid-cols-4 gap-2 mt-3">
             <Field label="Staff" value={`${c.staff.approved}`} sub={c.staff.pending ? `${c.staff.pending} pending` : undefined} />
+            <Field label="Heads" value={`${c.heads}`} sub={c.heads > 1 ? 'full access' : undefined} />
             <Field label="Students" value={`${c.students.approved}`} sub={c.students.pending ? `${c.students.pending} pending` : undefined} />
-            <Field label="Devices" value={`${c.devices}`} />
-            <Field label="Fees" value={inr(c.fees.collected)} sub={c.fees.outstanding ? `${inr(c.fees.outstanding)} due` : undefined} />
+            <Field label="Branches" value={`${c.branches}`} />
           </div>
 
           <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-[#f0f2f7] text-[12px] text-td-muted">
@@ -353,21 +313,13 @@ function Centres({ rows, seatId, seating, onSeat, onDelete }: CentresProps) {
             created {day(c.createdAt)} · staff code {c.joinCode ?? '—'} · student code {c.studentJoinCode ?? '—'}
           </div>
 
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => onSeat(c.id === seatId ? null : c.id)}
-              disabled={seating !== null}
-              className="flex-1 text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border-none text-white disabled:opacity-50"
-              style={{ background: c.id === seatId ? '#e8553c' : '#2a6fdb' }}
-            >
-              {seating === c.id ? 'Opening…' : c.id === seatId ? 'Leave this centre' : 'Open & edit as head'}
-            </button>
+          <div className="mt-3">
             <button
               onClick={() => onDelete(c)}
               aria-label={`Delete ${c.name}`}
-              className="text-[12.5px] font-extrabold py-2.5 px-3 rounded-[12px] cursor-pointer border border-[#f4d8cf] bg-[#fdf3f0] text-td-red shrink-0"
+              className="w-full text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border border-[#f4d8cf] bg-[#fdf3f0] text-td-red"
             >
-              Delete
+              Delete centre
             </button>
           </div>
         </div>

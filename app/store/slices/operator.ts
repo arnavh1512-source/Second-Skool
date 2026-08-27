@@ -62,8 +62,7 @@ async function devPost(body: Record<string, string>): Promise<void> {
 }
 
 type Keys =
-  | 'checkDevAccess' | 'openDevConsole' | 'exitDevConsole'
-  | 'devEnterCentre' | 'devLeaveCentre' | 'devDeleteCentre'
+  | 'checkDevAccess' | 'openDevConsole' | 'exitDevConsole' | 'devDeleteCentre'
 
 export const createOperatorSlice: Slice<Keys> = (set, get) => ({
   // Ask the server whether this account is the operator. The answer is a plain
@@ -72,35 +71,17 @@ export const createOperatorSlice: Slice<Keys> = (set, get) => ({
   checkDevAccess: async () => {
     if (get().devAllowed !== null) return
     try {
-      const json = await devFetch<{ allowed?: boolean; seat?: { centreId: string; centreName: string } | null }>('/api/dev?probe=1')
-      const allowed = json?.allowed === true
-      set({ devAllowed: allowed, devSeat: allowed ? (json?.seat ?? null) : null })
-    } catch { set({ devAllowed: false, devSeat: null }) }
+      const json = await devFetch<{ allowed?: boolean }>('/api/dev?probe=1')
+      set({ devAllowed: json?.allowed === true })
+    } catch { set({ devAllowed: false }) }
   },
 
   openDevConsole: () => set({ devConsoleOpen: true }),
   exitDevConsole: () => set({ devConsoleOpen: false }),
 
-  // Entering or leaving a centre rewrites the operator's role, centre and
-  // approval status — the three things every screen, query and RLS policy is
-  // keyed on. A full reload is the only way to guarantee no slice of state is
-  // left describing the previous seat.
-  devEnterCentre: async (centreId: string) => {
-    await devPost({ action: 'enter', centreId })
-    window.location.reload()
-  },
-
-  devLeaveCentre: async () => {
-    await devPost({ action: 'leave' })
-    window.location.reload()
-  },
-
-  // Deleting the centre you are sitting inside also releases the seat, which
-  // means this session's role and centre are now wrong — reload. Deleting any
-  // other centre changes nothing about who you are, so the console just
-  // refreshes its list and stays open.
+  // The operator belongs to no centre, so deleting one never changes who this
+  // session is — the console just refreshes its list and stays open.
   devDeleteCentre: async (centreId: string, confirm: string) => {
     await devPost({ action: 'delete', centreId, confirm })
-    if (get().devSeat?.centreId === centreId) window.location.reload()
   },
 })

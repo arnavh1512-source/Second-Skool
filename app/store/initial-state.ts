@@ -17,7 +17,7 @@ export const initialState: State = {
   stuPending: null, stuDenied: null, pendingStudents: [],
   teachers: [], students: [],
   stuTeacherId: '', stuRankSubject: '',
-  supabaseUserId: null, authLoading: true, dataLoading: false, devAllowed: null, devConsoleOpen: false, devSeat: null,
+  supabaseUserId: null, authLoading: true, dataLoading: false, devAllowed: null, devConsoleOpen: false,
 
   branchesList: [], meetingsList: [], assignmentsList: [],
   timetableData: {}, schedule: [], rankData: {}, subjects: [], batches: [],
