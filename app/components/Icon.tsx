@@ -208,7 +208,7 @@ const LEGACY_EMOJI: Record<string, IconName> = {
 // Accepts either an IconName or a legacy emoji from the database. Returns null
 // for anything unrecognised so callers can decide on a fallback rather than
 // rendering a blank square.
-export function toIconName(value: string | null | undefined): IconName | null {
+function toIconName(value: string | null | undefined): IconName | null {
   if (!value) return null
   if (value in PATHS) return value as IconName
   return LEGACY_EMOJI[value] ?? null

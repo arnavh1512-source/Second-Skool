@@ -1,10 +1,20 @@
 import { supabase } from '../../lib/supabase'
-import { feeStatusAfter } from '../../lib/fees'
 import { indexOfStudent } from '../../lib/student-key'
 import { changedNothing, dbErr, NOT_SAVED } from '../db'
 import { isoDay } from '../format'
 import type { Slice } from '../slice'
 import type { FeeRecord, FeeStatus } from '../types'
+
+// students.fee_status is a stored column, not a total, so it does not move
+// when a fee row disappears. Deleting a child's only outstanding fee left the
+// balance at zero and the badge still reading "Due" — the head had removed the
+// mistake and the roster still accused the family of owing money.
+//
+// Paid is what this app already means by "nothing outstanding": addFee sets
+// Due, and toggleFeeStatus sets Paid once the due rows are cleared. A student
+// with no fee records at all reads Paid for the same reason.
+export const feeStatusAfter = (remaining: FeeRecord[]): FeeStatus =>
+  remaining.some(f => f.status !== 'Paid') ? 'Due' : 'Paid'
 
 // Both actions here write money records, and both used to update the list and
 // toast success in the same tick they fired the write. "Fee record added" and

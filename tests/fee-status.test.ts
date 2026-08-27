@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { feeStatusAfter } from '../app/lib/fees'
+import { feeStatusAfter } from '../app/store/slices/fees'
 import type { FeeRecord } from '../app/store/types'
 
 const fee = (status: FeeRecord['status'], amount = 500): FeeRecord =>
