@@ -202,6 +202,8 @@ export interface Actions {
   openDevConsole: () => void
   exitDevConsole: () => void
   devDeleteCentre: (centreId: string, confirm: string) => Promise<void>
+  devReplyTicket: (ticketId: string, message: string) => Promise<void>
+  devResolveTicket: (ticketId: string) => Promise<void>
   loadStaff: () => Promise<void>
   loadWeeklyReport: (days?: number) => Promise<void>
   loadStudentReports: (days?: number) => Promise<void>

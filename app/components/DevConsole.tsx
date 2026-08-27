@@ -46,6 +46,26 @@ type Snapshot = {
   errors: string[]
 }
 
+// A support report as the inbox reads it: snake_case straight from PostgREST,
+// because nothing else in the console consumes it and a mapping layer for one
+// caller is a layer for nobody.
+type TicketMessage = { author: 'reporter' | 'operator'; body: string; created_at: string }
+type Ticket = {
+  id: string
+  created_at: string
+  centre_name: string
+  reporter_name: string
+  reporter_role: string
+  intent: string
+  outcome: string
+  area: string
+  frequency: string
+  diagnostics: { version?: string; viewport?: string; userAgent?: string; lastError?: string | null }
+  shot: string | null
+  status: 'open' | 'resolved'
+  support_messages: TicketMessage[]
+}
+
 // "3h ago" / "12d ago" — an absolute timestamp is noise when the only question
 // is whether someone has been here recently.
 const ago = (iso: string | null): string => {
@@ -67,19 +87,34 @@ const day = (iso: string) => fmtDate(iso)
 // Kept outside the component so the mount effect can call it without touching
 // React state synchronously — every setState below happens in a callback.
 const fetchSnapshot = (): Promise<Snapshot> => devFetch<Snapshot>('/api/dev')
+const fetchTickets = (): Promise<{ tickets: Ticket[] }> => devFetch('/api/dev?view=tickets')
+
+const FREQ_LABEL: Record<string, string> = { always: 'Every time', sometimes: 'Sometimes', first: 'First time' }
 
 export function DevConsoleScreen() {
-  const { exitDevConsole, devDeleteCentre, signOut } = useDashboard()
+  const { exitDevConsole, devDeleteCentre, devReplyTicket, devResolveTicket, signOut } = useDashboard()
   const [data, setData] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'centres' | 'people'>('centres')
+  const [tab, setTab] = useState<'centres' | 'people' | 'reports'>('centres')
+  const [tickets, setTickets] = useState<Ticket[]>([])
 
   // The centre whose delete confirmation is open, and what has been typed into
   // it. Held here rather than per-card so opening one closes any other.
   const [doomed, setDoomed] = useState<CentreRow | null>(null)
   const [typed, setTyped] = useState('')
   const [deleting, setDeleting] = useState(false)
+
+  // Reports are their own read, so a slow snapshot never holds up a reply and a
+  // failed one still shows the inbox. Open first, then newest.
+  const loadTickets = useCallback(() => {
+    fetchTickets()
+      .then(r => setTickets([...(r.tickets ?? [])].sort((a, b) =>
+        a.status === b.status ? 0 : a.status === 'open' ? -1 : 1)))
+      .catch(e => setError(e instanceof Error ? e.message : 'Could not read the reports'))
+  }, [])
+
+  const openReports = tickets.filter(t => t.status === 'open').length
 
   const settle = useCallback((p: Promise<Snapshot>, alive: () => boolean) => {
     p.then(d => { if (alive()) { setData(d); setError(null) } })
@@ -105,12 +140,14 @@ export function DevConsoleScreen() {
   useEffect(() => {
     let alive = true
     settle(fetchSnapshot(), () => alive)
+    loadTickets()
     return () => { alive = false }
-  }, [settle])
+  }, [settle, loadTickets])
 
   const refresh = () => {
     setLoading(true)
     settle(fetchSnapshot(), () => true)
+    loadTickets()
   }
 
   return (
@@ -179,24 +216,32 @@ export function DevConsoleScreen() {
           )}
 
           <div className="flex gap-2 mb-4 lg:max-w-xs">
-            {(['centres', 'people'] as const).map(t => (
+            {(['centres', 'people', 'reports'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className="flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize"
                 style={{ background: tab === t ? '#2a6fdb' : '#fff', color: tab === t ? '#fff' : '#3a4456', borderColor: tab === t ? '#2a6fdb' : '#e6eaf2' }}
               >
-                {t}
+                {t === 'reports' && openReports > 0 ? `reports (${openReports})` : t}
               </button>
             ))}
           </div>
 
-          {tab === 'centres'
-            ? <Centres
-                rows={data.centres}
-                onDelete={c => { setDoomed(c); setTyped(''); setError(null) }}
-              />
-            : <People rows={data.staff} />}
+          {tab === 'centres' && (
+            <Centres
+              rows={data.centres}
+              onDelete={c => { setDoomed(c); setTyped(''); setError(null) }}
+            />
+          )}
+          {tab === 'people' && <People rows={data.staff} />}
+          {tab === 'reports' && (
+            <Reports
+              rows={tickets}
+              onReply={(id, message) => devReplyTicket(id, message).then(loadTickets)}
+              onResolve={id => devResolveTicket(id).then(loadTickets)}
+            />
+          )}
 
           <div className="text-[12px] text-td-subtle text-center mt-5">
             Snapshot {ago(data.generatedAt)} · this console reads aggregates only — it cannot open a centre or read its data.
@@ -363,4 +408,142 @@ function People({ rows }: { rows: StaffRow[] }) {
 
 function Empty({ children }: { children: React.ReactNode }) {
   return <div className="text-center text-td-muted text-sm py-10 bg-white border border-td-border rounded-[16px]">{children}</div>
+}
+
+// The inbox. Collapsed, a report is who and what; expanded it is everything the
+// reporter's browser could tell us, because the console can no longer open a
+// centre to go and look.
+function Reports({ rows, onReply, onResolve }: {
+  rows: Ticket[]
+  onReply: (id: string, message: string) => Promise<void>
+  onResolve: (id: string) => Promise<void>
+}) {
+  const [openId, setOpenId] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  if (rows.length === 0)
+    return <div className="text-center text-td-muted text-sm py-10">No reports yet.</div>
+
+  const send = (id: string) => {
+    const text = draft.trim()
+    if (!text) return
+    setBusy(true)
+    onReply(id, text).then(() => setDraft('')).finally(() => setBusy(false))
+  }
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      {rows.map(t => {
+        const open = openId === t.id
+        const d = t.diagnostics ?? {}
+        return (
+          <div key={t.id} className="bg-white border border-td-border rounded-[16px] overflow-hidden">
+            <button
+              onClick={() => { setOpenId(open ? null : t.id); setDraft('') }}
+              className="w-full text-left bg-transparent border-none p-4 cursor-pointer"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-extrabold text-td-dark">{t.intent}</div>
+                  <div className="text-[12px] text-td-muted mt-0.5 truncate">
+                    {t.reporter_name || 'Someone'} · {t.reporter_role || 'unknown role'} · {t.centre_name || 'no centre'}
+                  </div>
+                </div>
+                <span
+                  className="text-[11px] font-extrabold rounded-full py-1 px-2.5 shrink-0"
+                  style={t.status === 'open'
+                    ? { background: '#eaf1fc', color: '#2a6fdb' }
+                    : { background: '#f2f2f2', color: '#6b7280' }}
+                >
+                  {t.status === 'open' ? 'Open' : 'Closed'}
+                </span>
+              </div>
+              <div className="flex gap-1.5 mt-2.5 flex-wrap">
+                <Chip>{t.area}</Chip>
+                <Chip>{FREQ_LABEL[t.frequency] ?? t.frequency}</Chip>
+                <Chip>{day(t.created_at)}</Chip>
+                {t.support_messages.length > 0 && <Chip>{t.support_messages.length} messages</Chip>}
+              </div>
+            </button>
+
+            {open && (
+              <div className="border-t border-[#f0f2f7] p-4 flex flex-col gap-3">
+                <div>
+                  <div className="text-[11px] font-extrabold text-td-muted mb-1">What happened instead</div>
+                  <div className="text-[13px] text-td-text leading-[1.55] whitespace-pre-wrap">{t.outcome}</div>
+                </div>
+
+                <div className="text-[11px] text-td-muted font-mono leading-[1.6] break-all">
+                  {d.version ?? '?'} · {d.viewport ?? '?'} · {d.userAgent ?? '?'}
+                </div>
+                {d.lastError && (
+                  <div className="text-td-red font-mono text-[11px] break-all bg-[#fdf3f0] rounded-[10px] p-2.5">
+                    {d.lastError}
+                  </div>
+                )}
+
+                {t.shot && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={t.shot} alt="Reporter's screenshot" className="w-full rounded-[12px] border border-td-border" />
+                )}
+
+                {t.support_messages.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    {[...t.support_messages]
+                      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                      .map((m, i) => (
+                        <div
+                          key={i}
+                          className={`text-[13px] leading-[1.5] rounded-[12px] p-2.5 px-3 whitespace-pre-wrap ${m.author === 'operator' ? 'bg-[#eaf1fc] text-td-dark' : 'bg-[#f6f7fa] text-td-text'}`}
+                        >
+                          <div className="text-[11px] font-extrabold text-td-muted mb-1">
+                            {m.author === 'operator' ? 'You' : t.reporter_name || 'Reporter'} · {day(m.created_at)}
+                          </div>
+                          {m.body}
+                        </div>
+                      ))}
+                  </div>
+                )}
+
+                <textarea
+                  value={draft}
+                  onChange={e => setDraft(e.target.value)}
+                  placeholder="Reply — they see this inside the app"
+                  rows={3}
+                  className="w-full border border-td-border rounded-[12px] p-3 text-[13px] text-td-dark outline-none focus:border-td-primary resize-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => send(t.id)}
+                    disabled={busy || !draft.trim()}
+                    className="flex-1 text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border-none bg-td-primary text-white disabled:opacity-50"
+                  >
+                    {busy ? 'Sending…' : 'Send reply'}
+                  </button>
+                  {t.status === 'open' && (
+                    <button
+                      onClick={() => onResolve(t.id)}
+                      className="text-[12.5px] font-extrabold py-2.5 px-3.5 rounded-[12px] cursor-pointer border border-td-border bg-white text-td-muted"
+                    >
+                      Close report
+                    </button>
+                  )}
+                </div>
+                {t.status === 'open' && t.shot && (
+                  <div className="text-[11px] text-td-subtle">Closing also deletes the screenshot.</div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function Chip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[11px] font-bold text-td-muted bg-[#f6f7fa] rounded-full py-1 px-2.5">{children}</span>
+  )
 }

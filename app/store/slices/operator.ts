@@ -63,6 +63,7 @@ async function devPost(body: Record<string, string>): Promise<void> {
 
 type Keys =
   | 'checkDevAccess' | 'openDevConsole' | 'exitDevConsole' | 'devDeleteCentre'
+  | 'devReplyTicket' | 'devResolveTicket'
 
 export const createOperatorSlice: Slice<Keys> = (set, get) => ({
   // Ask the server whether this account is the operator. The answer is a plain
@@ -83,5 +84,13 @@ export const createOperatorSlice: Slice<Keys> = (set, get) => ({
   // session is — the console just refreshes its list and stays open.
   devDeleteCentre: async (centreId: string, confirm: string) => {
     await devPost({ action: 'delete', centreId, confirm })
+  },
+
+  devReplyTicket: async (ticketId: string, message: string) => {
+    await devPost({ action: 'ticketReply', ticketId, message })
+  },
+
+  devResolveTicket: async (ticketId: string) => {
+    await devPost({ action: 'ticketResolve', ticketId })
   },
 })

@@ -138,6 +138,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 })
   }
 
+  // The support inbox is its own read: it is rows, not aggregates, and the
+  // snapshot below is expensive enough that replying to a report should not
+  // recompute thirty days of activity for every centre.
+  if (req.nextUrl.searchParams.get('view') === 'tickets') return ticketsInbox(admin, uid)
+
   const now = Date.now()
   const since = new Date(now - WINDOW_DAYS * 86_400_000).toISOString()
   const sevenDaysAgo = now - 7 * 86_400_000
@@ -348,10 +353,65 @@ export async function POST(req: NextRequest) {
   const action = (body as { action?: unknown } | null)?.action
 
   if (action === 'delete') return deleteCentre(admin, uid, body)
+  if (action === 'ticketReply') return ticketReply(admin, uid, body)
+  if (action === 'ticketResolve') return ticketResolve(admin, uid, body)
 
   return nostore({ error: 'unknown action' }, 400)
 }
 
+
+// Every support report with its whole thread. This is the one place in the
+// console that reads rows a person wrote — and only because they wrote them to
+// us on purpose.
+async function ticketsInbox(admin: SupabaseClient, uid: string): Promise<NextResponse> {
+  const { data, error } = await admin
+    .from('support_tickets')
+    .select('id,created_at,centre_name,reporter_name,reporter_role,intent,outcome,area,frequency,diagnostics,shot,status,support_messages(author,body,created_at)')
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) {
+    logError('dev.tickets_failed', { uid, message: error.message })
+    return nostore({ error: 'could not read the reports' }, 500)
+  }
+  return nostore({ tickets: data ?? [] })
+}
+
+function ticketIdOf(body: unknown): string | null {
+  const { ticketId } = (body ?? {}) as { ticketId?: unknown }
+  return typeof ticketId === 'string' && UUID.test(ticketId) ? ticketId : null
+}
+
+async function ticketReply(admin: SupabaseClient, uid: string, body: unknown): Promise<NextResponse> {
+  const ticketId = ticketIdOf(body)
+  if (!ticketId) return nostore({ error: 'invalid report' }, 400)
+  const { message } = (body ?? {}) as { message?: unknown }
+  const text = typeof message === 'string' ? message.trim() : ''
+  if (!text || text.length > 4000) return nostore({ error: 'write a reply first' }, 400)
+
+  const { error } = await admin
+    .from('support_messages').insert({ ticket_id: ticketId, author: 'operator', body: text })
+  if (error) {
+    logError('dev.ticket_reply_failed', { uid, ticket: ticketId, message: error.message })
+    return nostore({ error: 'could not send that reply' }, 500)
+  }
+  return nostore({ ok: true })
+}
+
+// Closing a report is also what erases its screenshot. That image is a
+// customer's students and their parents' phone numbers, lent to us to answer
+// one question — nothing else deletes it, so this has to.
+async function ticketResolve(admin: SupabaseClient, uid: string, body: unknown): Promise<NextResponse> {
+  const ticketId = ticketIdOf(body)
+  if (!ticketId) return nostore({ error: 'invalid report' }, 400)
+
+  const { error } = await admin
+    .from('support_tickets').update({ status: 'resolved', shot: null }).eq('id', ticketId)
+  if (error) {
+    logError('dev.ticket_resolve_failed', { uid, ticket: ticketId, message: error.message })
+    return nostore({ error: 'could not close that report' }, 500)
+  }
+  return nostore({ ok: true })
+}
 
 // Deleting a centre erases a real customer's entire history and cannot be
 // undone from here. Two things stand between a stray tap and that: the request
