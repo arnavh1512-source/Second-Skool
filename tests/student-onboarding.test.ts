@@ -5,10 +5,12 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 const rpc = vi.fn<(name: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>>()
 vi.mock('../app/lib/supabase', () => ({ supabase: { rpc: (...a: [string, Record<string, unknown>?]) => rpc(...a) } }))
 const sendPush = vi.fn(() => Promise.resolve())
+const sendStudentRequestPush = vi.fn(() => Promise.resolve())
 const enablePush = vi.fn(() => Promise.resolve({ ok: true }))
 const supported = { on: false }
 vi.mock('../app/lib/push', () => ({
   sendPush: (...a: unknown[]) => sendPush(...(a as [])),
+  sendStudentRequestPush: (...a: unknown[]) => sendStudentRequestPush(...(a as [])),
   enablePush: (...a: unknown[]) => enablePush(...(a as [])),
   pushSupported: () => supported.on,
 }))
@@ -25,6 +27,7 @@ const pending = (over: Partial<PendingStudent> = {}): PendingStudent => ({
 beforeEach(() => {
   rpc.mockReset()
   sendPush.mockClear()
+  sendStudentRequestPush.mockClear()
   enablePush.mockClear()
   supported.on = false
   useDashboard.setState({
@@ -80,6 +83,36 @@ describe('studentSignup validation (no network on invalid input)', () => {
     expect(S().stuPending).toEqual({ name: 'Neha', code: 'TUT-ZZZZ2345', centre: 'Bright Future' })
     // The form is cleared after a successful submit.
     expect(S().stuSignup.name).toBe('')
+  })
+
+  it('tells the head a request is waiting, keyed on the minted code', async () => {
+    // The head is the only person who can approve this, and their app is
+    // almost certainly closed. The push has to go through the code-authorised
+    // route: a self-registering student has no Supabase session, so the
+    // ordinary authenticated sender silently returned "not signed in" and the
+    // head was never told at all.
+    rpc.mockResolvedValueOnce({ data: { code: 'TUT-ZZZZ2345', name: 'Neha', centre: 'Bright Future' }, error: null })
+    fill({ name: 'Neha Sharma', parent: '+91 90000 00000', school: 'DPS' })
+    await S().studentSignup()
+    expect(sendStudentRequestPush).toHaveBeenCalledWith('TUT-ZZZZ2345')
+    expect(sendPush).not.toHaveBeenCalled()
+  })
+
+  it('does not notify anybody when the registration was refused', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { code: 'P0001', message: 'Invalid centre code' } })
+    fill({ name: 'Neha Sharma', parent: '+91 90000 00000', school: 'DPS' })
+    await S().studentSignup()
+    expect(sendStudentRequestPush).not.toHaveBeenCalled()
+  })
+
+  it('still lands the student on the pending screen if the push fails', async () => {
+    // Registration has already succeeded by then; a failed notification must
+    // never look to the student like a failed sign-up.
+    sendStudentRequestPush.mockRejectedValueOnce(new Error('offline'))
+    rpc.mockResolvedValueOnce({ data: { code: 'TUT-BBBB2345', name: 'Neha', centre: 'X' }, error: null })
+    fill({ name: 'Neha Sharma', parent: '+91 90000 00000', school: 'DPS' })
+    await S().studentSignup()
+    expect(S().screen).toBe('stuPending')
   })
 
   it('sends optional address as null when left blank', async () => {

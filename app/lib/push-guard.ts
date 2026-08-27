@@ -131,3 +131,21 @@ export function signWithCentre(centreName: string | null | undefined, title: str
   if (!centre) return { title, body }
   return { title: centre, body: body ? `${title} — ${body}` : title }
 }
+
+// ---------------------------------------------------------------------------
+// The unauthenticated student-request sender (/api/push/student-request).
+//
+// A self-registering student has no Supabase session — that is the whole point
+// of the code-access flow — so this one sender cannot present a bearer token.
+// The freshly minted student code stands in for the token: the caller can only
+// know it by having just completed the registration, and the server re-reads
+// the row it names and refuses anything that is not still pending. This guard
+// is only the cheap shape gate in front of that lookup.
+// ---------------------------------------------------------------------------
+export type StudentRequestBody = { code: string }
+
+export function validateStudentRequest(raw: unknown): { ok: true; value: StudentRequestBody } | { ok: false; error: string } {
+  const code = (raw as Record<string, unknown> | null | undefined)?.code
+  if (typeof code !== 'string' || !/^TUT-[A-Z0-9]{4,12}$/.test(code.trim().toUpperCase())) return { ok: false, error: 'bad code' }
+  return { ok: true, value: { code: code.trim().toUpperCase() } }
+}

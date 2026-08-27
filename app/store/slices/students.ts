@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase'
 import { friendlyError } from '../errors'
-import { enablePush, pushSupported, sendPush } from '../../lib/push'
+import { enablePush, pushSupported, sendPush, sendStudentRequestPush } from '../../lib/push'
 import { genStudentCode } from '../codes'
 import { writeLocal, removeLocal } from '../../lib/storage'
 import { findStudent, indexOfStudent, studentKey } from '../../lib/student-key'
@@ -119,8 +119,11 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     if (error || !data) { get().notify(friendlyError(error, 'register'), 'error'); return }
     const d = data as { code: string; name: string; centre: string }
     writeLocal('student_code', d.code)
-    // Let the head know a request is waiting (best-effort push).
-    sendPush({ notifyHead: true, title: 'New student request', body: `${d.name} has requested to join. Review and approve.` }).catch(() => {})
+    // Let the head know a request is waiting (best-effort push). This cannot go
+    // through sendPush: a self-registering student has no Supabase session, so
+    // sendPush returned `not signed in` and the head was never told — the whole
+    // point of the notification is to reach a head whose app is closed.
+    sendStudentRequestPush(d.code).catch(() => {})
     set({
       stuPending: { name: d.name, code: d.code, centre: d.centre },
       stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },

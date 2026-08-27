@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { safeLink, signWithCentre, validatePushBody, createRateLimiter, rateLimit } from '../app/lib/push-guard'
+import { safeLink, signWithCentre, validatePushBody, validateStudentRequest, createRateLimiter, rateLimit } from '../app/lib/push-guard'
 
 describe('safeLink', () => {
   it('keeps a same-app relative path', () => {
@@ -150,5 +150,33 @@ describe('signWithCentre', () => {
     // Moving it into the body is the point; dropping it would not be.
     expect(signWithCentre('Sharma Classes', 'Test on Monday', 'Chapter 4 and 5.').body)
       .toContain('Test on Monday')
+  })
+})
+
+describe('validateStudentRequest', () => {
+  it('accepts a freshly minted student code', () => {
+    const r = validateStudentRequest({ code: 'TUT-ABCDEFGH' })
+    expect(r).toEqual({ ok: true, value: { code: 'TUT-ABCDEFGH' } })
+  })
+
+  it('normalises case and padding, because the code is a lookup key', () => {
+    // The DB stores it upper-case; a lower-case send would silently find no
+    // student and the head would never be told.
+    const r = validateStudentRequest({ code: '  tut-abcdefgh  ' })
+    expect(r.ok && r.value.code).toBe('TUT-ABCDEFGH')
+  })
+
+  it('rejects anything that is not a student code', () => {
+    // This endpoint takes no bearer token — the code IS the authorisation, so
+    // the shape gate has to stay narrow. A centre join code (6 chars, no
+    // prefix) must not open it.
+    for (const code of [undefined, null, 42, '', '7X2K9Q', 'TUT-', 'TUT-ABC', 'TUT-ABCDEFGHIJKLM',
+      'TUT-ABCDEFG!', 'TUT-ABCDEFGH OR 1=1', { code: 'TUT-ABCDEFGH' }])
+      expect(validateStudentRequest({ code }).ok).toBe(false)
+  })
+
+  it('rejects a missing body', () => {
+    expect(validateStudentRequest(undefined).ok).toBe(false)
+    expect(validateStudentRequest({}).ok).toBe(false)
   })
 })

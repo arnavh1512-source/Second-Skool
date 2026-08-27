@@ -116,3 +116,21 @@ export async function sendPush(payload: { studentCodes?: string[]; notifyHead?: 
     return { error: 'request failed' }
   }
 }
+
+// Tell the centre's head that a self-registered student is waiting for
+// approval. Deliberately NOT sendPush: the student has no Supabase session, so
+// sendPush bails at `not signed in` and the head is never told. The server
+// authorises this one on the freshly minted student code instead — see
+// /api/push/student-request. Best-effort: registration has already succeeded by
+// the time this runs, so a failure here must never surface to the student.
+export async function sendStudentRequestPush(code: string): Promise<void> {
+  try {
+    await fetch('/api/push/student-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    })
+  } catch {
+    // no-op — the head still sees the request in the app
+  }
+}
