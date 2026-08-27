@@ -23,13 +23,13 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
       // Phone/subject/qualification are what the applicant typed about
       // themselves — without them an approval decision is made on a Google
       // display name alone, which is no basis for granting roster access.
-      .select('id, full_name, email, role, staff_status, head_requested, phone, subject, qualification')
+      .select('id, full_name, email, role, staff_status, phone, subject, qualification')
       .neq('staff_status', 'none')
       .order('created_at', { ascending: false })
     if (error) { logError('staff.load_failed', { message: error.message }); get().notify(friendlyError(error, 'load the staff list'), 'error'); return }
     const list: StaffMember[] = (data ?? []).map((r: Record<string, unknown>) => ({
       id: r.id as string, name: r.full_name as string, email: (r.email as string) ?? '',
-      role: r.role as string, status: r.staff_status as StaffStatus, headRequested: !!r.head_requested,
+      role: r.role as string, status: r.staff_status as StaffStatus,
       phone: (r.phone as string) ?? '', subject: (r.subject as string) ?? '', qualification: (r.qualification as string) ?? '',
     }))
     set({ staffList: list })

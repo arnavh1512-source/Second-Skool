@@ -115,7 +115,7 @@ export function StaffApprovalsScreen() {
                 {!isHead && (
                   <div className="flex gap-2.5 mt-3">
                     <button onClick={() => grantHead(s.id)} className="flex-1 border border-td-primary bg-white text-td-primary text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer">
-                      {s.headRequested ? 'Grant head (requested)' : 'Make head teacher'}
+                      Make head teacher
                     </button>
                     <button onClick={() => removeStaff(s.id)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-bold py-2.5 px-4 rounded-[12px] cursor-pointer">Remove</button>
                   </div>

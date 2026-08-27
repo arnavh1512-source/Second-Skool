@@ -375,7 +375,7 @@ export async function POST(req: NextRequest) {
   if (action === 'leave') {
     const { error } = await admin
       .from('profiles')
-      .update({ centre_id: null, role: 'student', staff_status: 'none', head_requested: false })
+      .update({ centre_id: null, role: 'student', staff_status: 'none' })
       .eq('id', uid)
     if (error) {
       logError('dev.leave_failed', { uid, message: error.message })
@@ -413,7 +413,6 @@ export async function POST(req: NextRequest) {
         centre_id: centreId,
         role: 'admin',
         staff_status: 'approved',
-        head_requested: false,
         ...(prof?.profile_completed_at ? {} : { profile_completed_at: new Date().toISOString() }),
         ...(prof?.full_name ? {} : { full_name: 'Second Skool support' }),
       })
@@ -479,7 +478,7 @@ async function deleteCentre(admin: SupabaseClient, uid: string, body: unknown): 
   // operator seat, which is why deleting a centre you are sitting inside works.
   const { error: detachErr } = await admin
     .from('profiles')
-    .update({ centre_id: null, branch_id: null, role: 'student', staff_status: 'none', head_requested: false })
+    .update({ centre_id: null, branch_id: null, role: 'student', staff_status: 'none' })
     .eq('centre_id', centreId)
   if (detachErr) {
     logError('dev.detach_failed', { uid, centre: centreId, message: detachErr.message })
