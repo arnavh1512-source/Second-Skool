@@ -28,10 +28,10 @@ function NavRow({ item }: { item: NavItem }) {
     <button
       onClick={() => go(item.screen, item.tab)}
       className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-[13px] cursor-pointer transition-colors ${
-        on ? 'bg-[#eaf1fc] text-td-primary' : 'text-td-text hover:bg-[#f4f6fb]'
+        on ? 'bg-td-tint-blue text-td-primary' : 'text-td-text hover:bg-td-soft'
       }`}
     >
-      <span className="w-[30px] h-[30px] rounded-[9px] bg-white border border-td-border flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
+      <span className="w-[30px] h-[30px] rounded-[9px] bg-td-card border border-td-border flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
       <span className={`flex-1 text-[13.5px] ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
         <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
@@ -78,7 +78,7 @@ function Sidebar() {
   ]
 
   return (
-    <aside className="w-[248px] shrink-0 h-[100dvh] sticky top-0 bg-white border-r border-td-border flex flex-col">
+    <aside className="w-[248px] shrink-0 h-[100dvh] sticky top-0 bg-td-card border-r border-td-border flex flex-col">
       <div className="flex items-center gap-2.5 px-5 pt-6 pb-4">
         {centreLogo
           // eslint-disable-next-line @next/next/no-img-element
@@ -103,15 +103,15 @@ function Sidebar() {
       </nav>
 
       <div className="border-t border-td-border p-3">
-        <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-[12px] hover:bg-[#f4f6fb] cursor-pointer mb-1">
+        <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-[12px] hover:bg-td-soft cursor-pointer mb-1">
           <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-bold text-[13px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{initials(name)}</div>
           <div className="min-w-0 flex-1">
             <div className="text-[13px] font-extrabold text-td-dark truncate">{name}</div>
             <div className="text-[12px] text-td-muted truncate">{googleEmail}</div>
           </div>
         </button>
-        <button onClick={signOut} className="w-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer flex items-center justify-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e8553c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+        <button onClick={signOut} className="w-full border border-td-edge-red bg-td-wash-red text-td-red text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer flex items-center justify-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
           Sign out
         </button>
       </div>
@@ -152,7 +152,7 @@ function DesktopToast() {
 
 export function DesktopShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-[100dvh] bg-[#f6f8fc]">
+    <div className="flex min-h-[100dvh] bg-td-soft">
       <Sidebar />
       <main className="flex-1 min-w-0 overflow-y-auto h-[100dvh]">
         <div className="max-w-[1180px] mx-auto w-full px-8 py-7 td-desktop">{children}</div>
@@ -173,7 +173,7 @@ const AUTH_FEATURES = [
 
 export function DesktopAuthShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-[100dvh] bg-white overflow-hidden">
+    <div className="flex h-[100dvh] bg-td-card overflow-hidden">
       <aside className="hidden lg:flex flex-col justify-between w-[46%] max-w-[640px] p-14 text-white relative overflow-hidden" style={{ background: 'linear-gradient(150deg,#2a6fdb 0%,#1f56ad 58%,#173f88 100%)' }}>
         <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-2xl" />
         <div className="absolute bottom-[-6rem] left-[-4rem] w-72 h-72 rounded-full bg-white/10 blur-2xl" />
@@ -202,8 +202,8 @@ export function DesktopAuthShell({ children }: { children: React.ReactNode }) {
         <div className="relative text-[12.5px] text-white/60">Built for tuition centres to stay organised every day.</div>
       </aside>
 
-      <main className="flex-1 flex items-center justify-center overflow-y-auto h-[100dvh] bg-[#f6f8fc] lg:bg-white px-5 py-8">
-        <div className="w-full max-w-[440px] bg-white rounded-[28px] shadow-[0_18px_50px_-24px_rgba(20,30,60,.28)] lg:shadow-none lg:rounded-none">
+      <main className="flex-1 flex items-center justify-center overflow-y-auto h-[100dvh] bg-td-soft lg:bg-td-card px-5 py-8">
+        <div className="w-full max-w-[440px] bg-td-card rounded-[28px] shadow-[0_18px_50px_-24px_rgba(20,30,60,.28)] lg:shadow-none lg:rounded-none">
           {children}
         </div>
       </main>

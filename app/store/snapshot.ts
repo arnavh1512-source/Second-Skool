@@ -7,9 +7,9 @@ import type {
 } from './types'
 
 const STATUS_ICONS: Record<string, { icon: IconName; tint: string; color: string }> = {
-  Present: { icon: 'attendance', tint: '#e7f5ee', color: '#2fa36b' },
-  Absent: { icon: 'absent', tint: '#fdecea', color: '#e8553c' },
-  Leave: { icon: 'leave', tint: '#fcf3e3', color: '#e0962f' },
+  Present: { icon: 'attendance', tint: 'var(--color-td-tint-green)', color: 'var(--color-td-green)' },
+  Absent: { icon: 'absent', tint: 'var(--color-td-tint-red)', color: 'var(--color-td-red)' },
+  Leave: { icon: 'leave', tint: 'var(--color-td-tint-amber)', color: 'var(--color-td-amber)' },
 }
 
 // Shape of the get_student_snapshot RPC payload — keys mirror the SQL
@@ -90,7 +90,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   // remembers the newest one the student has opened), but it is not unique on
   // its own, so render keys pair it with the row index.
   const stuNotifications: NotifItem[] = (snap.notifications ?? []).map((n: SnapRow) => ({
-    icon: n.icon ?? 'notice', tint: '#eaf1fc', title: n.title ?? '', detail: n.detail ?? '',
+    icon: n.icon ?? 'notice', tint: 'var(--color-td-tint-blue)', title: n.title ?? '', detail: n.detail ?? '',
     when: timeAgo(n.createdAt ?? ''), dbId: n.createdAt ?? '',
   }))
   // Home surfaces only the last 2 days of notifications so the feed stays short;

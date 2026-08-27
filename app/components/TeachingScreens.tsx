@@ -65,13 +65,13 @@ export function TimetableScreen() {
     // one-off event on the timetable.
     const special = SPECIAL_PERIODS.has(p[2])
     return {
-      dot: free ? '#c2cad8' : special ? '#e0962f' : '#2a6fdb',
-      bg: free ? '#f4f6fb' : '#fff',
-      border: free ? '#e6eaf2' : special ? '#f0e2c4' : '#dbe6fa',
-      titleColor: free ? '#9aa4b6' : '#1a2332',
+      dot: free ? 'var(--color-td-faint)' : special ? 'var(--color-td-amber)' : 'var(--color-td-primary)',
+      bg: free ? 'var(--color-td-soft)' : '#fff',
+      border: free ? 'var(--color-td-border)' : special ? 'var(--color-td-edge-amber)' : 'var(--color-td-edge-blue)',
+      titleColor: free ? 'var(--color-td-subtle)' : 'var(--color-td-dark)',
       tag: free ? 'Free' : special ? 'Special' : 'Class',
-      pillColor: free ? '#9aa4b6' : special ? '#e0962f' : '#2a6fdb',
-      pillBg: free ? '#eef1f7' : special ? '#fcf3e3' : '#eaf1fc',
+      pillColor: free ? 'var(--color-td-subtle)' : special ? 'var(--color-td-amber)' : 'var(--color-td-primary)',
+      pillBg: free ? 'var(--color-td-soft)' : special ? 'var(--color-td-tint-amber)' : 'var(--color-td-tint-blue)',
     }
   }
 
@@ -87,16 +87,16 @@ export function TimetableScreen() {
         {days.map(d => {
           const active = d.s === ttDay
           return (
-            <button key={d.s} onClick={() => set({ ttDay: d.s })} className="shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-1.5 cursor-pointer text-center" style={{ background: active ? '#2a6fdb' : '#fff', borderColor: active ? '#2a6fdb' : '#e6eaf2' }}>
-              <div className="text-[12px] font-bold" style={{ color: active ? '#fff' : '#3a4456' }}>{d.s}</div>
-              <div className="text-sm font-extrabold mt-0.5" style={{ color: active ? '#fff' : '#3a4456' }}>{d.d}</div>
+            <button key={d.s} onClick={() => set({ ttDay: d.s })} className="shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-1.5 cursor-pointer text-center" style={{ background: active ? 'var(--color-td-primary)' : '#fff', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
+              <div className="text-[12px] font-bold" style={{ color: active ? '#fff' : 'var(--color-td-text)' }}>{d.s}</div>
+              <div className="text-sm font-extrabold mt-0.5" style={{ color: active ? '#fff' : 'var(--color-td-text)' }}>{d.d}</div>
             </button>
           )
         })}
       </div>
 
       {isAdmin && showForm && (
-        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
+        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
           <div className="text-sm font-extrabold text-td-dark">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Start</label>
@@ -107,14 +107,14 @@ export function TimetableScreen() {
             </div>
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
               {subjectNames.map(s => <option key={s}>{s}</option>)}
               <option>Free period</option>
             </select>
           </div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none disabled:opacity-60">
+              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
                 {classes.length ? classes.map(c => <option key={c}>{c}</option>) : <option value="">Add students first</option>}
               </select>
             </div>
@@ -132,7 +132,7 @@ export function TimetableScreen() {
         {days.map(d => {
           const ps = timetableData[d.s] || []
           return (
-            <div key={d.s} className={`rounded-2xl border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-[#f7faff]' : 'border-td-border bg-white'}`}>
+            <div key={d.s} className={`rounded-2xl border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
               <button onClick={() => set({ ttDay: d.s })} className="w-full text-center mb-2 cursor-pointer bg-transparent border-none">
                 <div className="text-[12px] font-bold text-td-muted">{d.s}</div>
                 <div className="text-[15px] font-extrabold text-td-dark">{d.d}</div>
@@ -150,8 +150,8 @@ export function TimetableScreen() {
                         <div className="text-[12px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
                         {isAdmin && (
                           <div className="flex gap-1 mt-1.5">
-                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-[#dbe6fa] bg-[#eaf1fc] text-td-primary text-[12px] cursor-pointer">✎</button>
-                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] cursor-pointer">×</button>
+                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-td-edge-blue bg-td-tint-blue text-td-primary text-[12px] cursor-pointer">✎</button>
+                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg border border-td-edge-red bg-td-wash-red text-td-red text-[12px] cursor-pointer">×</button>
                           </div>
                         )}
                       </div>
@@ -180,7 +180,7 @@ export function TimetableScreen() {
                   <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
                 </div>
                 <div className="shrink-0 flex flex-col items-center">
-                  <div className="w-[11px] h-[11px] rounded-full border-2 border-white" style={{ background: s.dot, boxShadow: `0 0 0 2px ${s.dot}` }} />
+                  <div className="w-[11px] h-[11px] rounded-full border-2 border-td-card" style={{ background: s.dot, boxShadow: `0 0 0 2px ${s.dot}` }} />
                   <div className="flex-1 w-0.5 bg-td-border" />
                 </div>
                 <div className="flex-1 pb-3.5">
@@ -189,8 +189,8 @@ export function TimetableScreen() {
                       <div className="text-sm font-extrabold" style={{ color: s.titleColor }}>{p[2]}</div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-[12px] font-bold py-1 px-[9px] rounded-[20px]" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
-                        {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-[#dbe6fa] bg-[#eaf1fc] text-td-primary flex items-center justify-center cursor-pointer text-[12px] leading-none">✎</button>}
-                        {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red flex items-center justify-center cursor-pointer text-[15px] leading-none">×</button>}
+                        {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-[12px] leading-none">✎</button>}
+                        {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full border border-td-edge-red bg-td-wash-red text-td-red flex items-center justify-center cursor-pointer text-[15px] leading-none">×</button>}
                       </div>
                     </div>
                     <div className="text-xs text-td-muted mt-1">{p[3]} · {p[4]}</div>
@@ -230,8 +230,8 @@ export function AttendanceScreen() {
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 td-wide">
       <div className="flex items-center gap-3.5 mb-[18px]">
-        <button onClick={back} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center cursor-pointer shrink-0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+        <button onClick={back} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
         <div>
           <div className="text-xl font-extrabold text-td-dark">Mark Attendance</div>
@@ -252,19 +252,19 @@ export function AttendanceScreen() {
             {classes.map(name => {
               const active = name === selClass
               return (
-                <button key={name} onClick={() => set({ attClass: name, att: {} })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? '#2a6fdb' : '#fff', color: active ? '#fff' : '#3a4456', borderColor: active ? '#2a6fdb' : '#e6eaf2' }}>{name}</button>
+                <button key={name} onClick={() => set({ attClass: name, att: {} })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? 'var(--color-td-primary)' : '#fff', color: active ? '#fff' : 'var(--color-td-text)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>{name}</button>
               )
             })}
           </div>
 
           <div className="flex gap-2.5 mb-4">
-            <div className="flex-1 bg-[#e7f5ee] rounded-[14px] p-3 text-center">
+            <div className="flex-1 bg-td-tint-green rounded-[14px] p-3 text-center">
               <div className="text-[22px] font-extrabold text-td-green">{presentCount}</div>
-              <div className="text-[12px] text-[#5a8a72] font-semibold">Present</div>
+              <div className="text-[12px] text-td-on-green font-semibold">Present</div>
             </div>
-            <div className="flex-1 bg-[#fdecea] rounded-[14px] p-3 text-center">
+            <div className="flex-1 bg-td-tint-red rounded-[14px] p-3 text-center">
               <div className="text-[22px] font-extrabold text-td-red">{absentCount}</div>
-              <div className="text-[12px] text-[#a35545] font-semibold">Absent</div>
+              <div className="text-[12px] text-td-on-red font-semibold">Absent</div>
             </div>
           </div>
 
@@ -274,11 +274,11 @@ export function AttendanceScreen() {
               const key = studentKey(s)
               const absent = att[key] === 'absent'
               return (
-                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? '#fdecea' : '#fff', borderColor: absent ? '#f4c4bc' : '#e6eaf2' }}>
+                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? 'var(--color-td-tint-red)' : '#fff', borderColor: absent ? 'var(--color-td-edge-red)' : 'var(--color-td-border)' }}>
                   <div className="w-[38px] h-[38px] rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
                   <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
-                  <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: absent ? '#e8553c' : '#2fa36b' }}>
-                    <span className="w-[9px] h-[9px] rounded-full" style={{ background: absent ? '#e8553c' : '#2fa36b' }} />
+                  <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: absent ? 'var(--color-td-red)' : 'var(--color-td-green)' }}>
+                    <span className="w-[9px] h-[9px] rounded-full" style={{ background: absent ? 'var(--color-td-red)' : 'var(--color-td-green)' }} />
                     {absent ? 'Absent' : 'Present'}
                   </span>
                 </button>
@@ -377,12 +377,12 @@ export function ResultsScreen() {
 
       <div className="grid grid-cols-2 gap-[11px] mb-[13px]">
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-          <select value={selKlass} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+          <select value={selKlass} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
             {classes.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none disabled:opacity-60">
+          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
             {subjectNames.length ? subjectNames.map(s => <option key={s}>{s}</option>) : <option value="">Add subjects first</option>}
           </select>
         </div>
@@ -403,7 +403,7 @@ export function ResultsScreen() {
       ) : (
         <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {roster.map((s, i) => (
-            <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-white rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
+            <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
               <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
               <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
               <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-[11px] py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
@@ -433,16 +433,16 @@ export function AssignmentsScreen() {
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title="New Assignment" onBack={back} />
 
-      <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
+      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none disabled:opacity-60">
+            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
               {subjectNames.length ? subjectNames.map(s => <option key={s}>{s}</option>) : <option value="">Add subjects first</option>}
             </select>
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none disabled:opacity-60">
+            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
               {classes.length ? classes.map(c => <option key={c}>{c}</option>) : <option value="">Add students first</option>}
             </select>
           </div>
@@ -464,11 +464,11 @@ export function AssignmentsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {assignmentsList.map((a, i) => (
-            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="bg-white border border-td-border rounded-2xl p-3.5">
+            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="bg-td-card border border-td-border rounded-2xl p-3.5">
               <div className="flex justify-between items-start gap-2">
                 <div className="text-[13.5px] font-bold text-td-dark">{a.title}</div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[12px] font-bold text-td-amber bg-[#fcf3e3] py-1 px-[9px] rounded-[20px] whitespace-nowrap">Due {a.due}</span>
+                  <span className="text-[12px] font-bold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-[20px] whitespace-nowrap">Due {a.due}</span>
                   {a.dbId && (
                     <button
                       onClick={() => deleteAssignment(a.dbId!)}
@@ -512,16 +512,16 @@ export function RemindersScreen() {
         {types.map(r => {
           const active = r.key === reminderType
           return (
-            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-2xl p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? '#eaf1fc' : '#fff', borderColor: active ? '#2a6fdb' : '#e6eaf2' }}>
-              <Icon name={r.icon} size={21} className="shrink-0" style={{ color: active ? '#2a6fdb' : '#6b7689' }} />
-              <span className="text-[13.5px] font-bold" style={{ color: active ? '#2a6fdb' : '#3a4456' }}>{r.label}</span>
+            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-2xl p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : '#fff', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
+              <Icon name={r.icon} size={21} className="shrink-0" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-muted)' }} />
+              <span className="text-[13.5px] font-bold" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-text)' }}>{r.label}</span>
             </button>
           )
         })}
       </div>
 
       <label className="text-xs font-bold text-td-muted mb-[7px] block">Send to</label>
-      <select value={filter} onChange={e => setFilter(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none mb-4">
+      <select value={filter} onChange={e => setFilter(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none mb-4">
         <option value="all">All students</option>
         <option value="absentees">Absentees only</option>
         <option value="fees_due">Students with fees due</option>
@@ -538,9 +538,9 @@ export function RemindersScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {reminderHistory.map(r => (
-            <div key={r.dbId} className="bg-white border border-td-border rounded-2xl p-3.5">
+            <div key={r.dbId} className="bg-td-card border border-td-border rounded-2xl p-3.5">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[11.5px] font-extrabold text-td-primary bg-[#eaf1fc] rounded-full py-[3px] px-2.5">{r.type}</span>
+                <span className="text-[11.5px] font-extrabold text-td-primary bg-td-tint-blue rounded-full py-[3px] px-2.5">{r.type}</span>
                 <span className="text-[11.5px] text-td-muted">{r.when}</span>
               </div>
               <div className="text-[13px] text-td-dark leading-snug">{r.message}</div>

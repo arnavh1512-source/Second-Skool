@@ -28,8 +28,8 @@ export function StudentsScreen() {
         )}
       </div>
 
-      <div className="flex items-center gap-2.5 bg-white border border-td-border rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9aa4b6" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      <div className="flex items-center gap-2.5 bg-td-card border border-td-border rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
 
@@ -53,7 +53,7 @@ export function StudentsScreen() {
             const idx = students.indexOf(s)
             const f = feeColor(s.feeStatus)
             return (
-              <button key={studentKey(s) || i} disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`text-left bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
+              <button key={studentKey(s) || i} disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`text-left bg-td-card border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
                 <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(idx) }}>{initials(s.name)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-extrabold text-td-dark">{s.name}</div>
@@ -83,7 +83,7 @@ export function EditStudentScreen() {
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <ScreenHeader title="Edit Student" onBack={() => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')} right={
-        <button onClick={deleteStudent} className="border-none bg-[#fdecea] text-td-red text-[12.5px] font-bold py-[9px] px-[13px] rounded-[13px] cursor-pointer">Remove</button>
+        <button onClick={deleteStudent} className="border-none bg-td-tint-red text-td-red text-[12.5px] font-bold py-[9px] px-[13px] rounded-[13px] cursor-pointer">Remove</button>
       } />
 
       <div className="flex items-center gap-3.5 mb-3">
@@ -94,13 +94,13 @@ export function EditStudentScreen() {
         </div>
       </div>
 
-      <button onClick={() => copyText(st.id, notify, 'Code copied!')} className="w-full border border-dashed border-td-primary bg-[#eaf1fc] rounded-[14px] p-3 mb-2.5 cursor-pointer flex items-center justify-between">
+      <button onClick={() => copyText(st.id, notify, 'Code copied!')} className="w-full border border-dashed border-td-primary bg-td-tint-blue rounded-[14px] p-3 mb-2.5 cursor-pointer flex items-center justify-between">
         <div>
           <div className="text-[12px] font-bold text-td-muted">STUDENT LINK CODE</div>
           <div className="text-[18px] font-extrabold text-td-primary tracking-wider">{st.id}</div>
         </div>
         <div className="text-[12px] font-bold text-td-primary flex items-center gap-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy
         </div>
       </button>
@@ -122,7 +122,7 @@ export function EditStudentScreen() {
             <label htmlFor="stu-attendance" className="text-xs font-bold text-td-muted mb-[7px] block">Attendance %</label>
             <output
               id="stu-attendance"
-              className="w-full block border border-td-border bg-[#f7f9fc] rounded-[14px] p-[13px] text-sm text-td-muted"
+              className="w-full block border border-td-border bg-td-soft rounded-[14px] p-[13px] text-sm text-td-muted"
             >{st.attendance}% · from the register</output>
           </div>
         </div>
@@ -135,7 +135,7 @@ export function EditStudentScreen() {
               const active = label === st.feeStatus
               const fc = feeColor(label)
               return (
-                <button key={label} onClick={() => setStudentField({ feeStatus: label })} className="flex-1 border text-[13px] font-bold p-[11px] rounded-[13px] cursor-pointer" style={{ background: active ? fc.b : '#fff', color: active ? fc.c : '#9aa4b6', borderColor: active ? fc.c : '#e6eaf2' }}>{label}</button>
+                <button key={label} onClick={() => setStudentField({ feeStatus: label })} className="flex-1 border text-[13px] font-bold p-[11px] rounded-[13px] cursor-pointer" style={{ background: active ? fc.b : '#fff', color: active ? fc.c : 'var(--color-td-subtle)', borderColor: active ? fc.c : 'var(--color-td-border)' }}>{label}</button>
               )
             })}
           </div>
@@ -158,12 +158,12 @@ export function AddStudentScreen() {
   if (lastAdded) {
     return (
       <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 flex flex-col items-center justify-center min-h-[450px]">
-        <div className="w-[72px] h-[72px] rounded-[22px] bg-[#e7f5ee] flex items-center justify-center mb-5">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2fa36b" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-green flex items-center justify-center mb-5">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
         <div className="text-[18px] font-extrabold text-td-dark mb-2">Student added!</div>
         <div className="text-[13px] text-td-muted text-center leading-relaxed mb-5 max-w-[280px]">Share this code with the parent so the student can log in.</div>
-        <div className="w-full max-w-[280px] border-2 border-dashed border-td-primary bg-[#eaf1fc] rounded-[16px] p-4 text-center mb-5">
+        <div className="w-full max-w-[280px] border-2 border-dashed border-td-primary bg-td-tint-blue rounded-[16px] p-4 text-center mb-5">
           <div className="text-[12px] font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
           <div className="text-[24px] font-extrabold text-td-primary tracking-[0.15em]">{lastAdded.code}</div>
         </div>
@@ -171,8 +171,8 @@ export function AddStudentScreen() {
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
           Send on WhatsApp
         </button>
-        <button onClick={() => copyText(lastAdded.code, notify, 'Code copied!')} className="w-full max-w-[280px] border border-td-primary bg-white text-td-primary text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer mb-3 flex items-center justify-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <button onClick={() => copyText(lastAdded.code, notify, 'Code copied!')} className="w-full max-w-[280px] border border-td-primary bg-td-card text-td-primary text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer mb-3 flex items-center justify-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           Copy code
         </button>
         <button onClick={() => { set({ lastAdded: null }); backToList() }} className="w-full max-w-[280px] border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer">Done</button>
@@ -189,20 +189,20 @@ export function AddStudentScreen() {
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">School</label><input value={newStudent.school} onChange={e => setNewStudent({ school: e.target.value })} placeholder="School" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Standard</label>
-            <select value={newStudent.klass} onChange={e => setNewStudent({ klass: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+            <select value={newStudent.klass} onChange={e => setNewStudent({ klass: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
               {STANDARDS.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Batch</label>
-            <select value={newStudent.batch} onChange={e => setNewStudent({ batch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+            <select value={newStudent.batch} onChange={e => setNewStudent({ batch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
               <option value="">No batch</option>
               {batches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Branch</label>
-            <select value={newStudent.branch} onChange={e => setNewStudent({ branch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+            <select value={newStudent.branch} onChange={e => setNewStudent({ branch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
               {branchesList.length ? branchesList.map(b => <option key={b.name}>{b.name}</option>) : <option>No branches</option>}
             </select>
           </div>
@@ -213,8 +213,8 @@ export function AddStudentScreen() {
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Monthly fee (&#8377;) <span className="text-td-subtle font-semibold">· optional</span></label><input type="number" value={newStudent.fee} onChange={e => setNewStudent({ fee: e.target.value })} placeholder="e.g. 2000" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Fee due date</label><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         </div>
-        <div className="flex items-center gap-2.5 bg-[#eaf1fc] border border-[#dbe6fa] rounded-[14px] p-3">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span className="text-[12px] text-td-primary font-semibold">A secure login code is generated automatically and shown after you save.</span>
         </div>
       </div>
@@ -239,8 +239,8 @@ export function StaffScreen() {
         </button>
       </div>
 
-      <div className="flex items-center gap-[11px] bg-white border border-td-border rounded-2xl p-[11px] px-[15px] mb-4 lg:max-w-md">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9aa4b6" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <div className="flex items-center gap-[11px] bg-td-card border border-td-border rounded-2xl p-[11px] px-[15px] mb-4 lg:max-w-md">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search staff..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
 
@@ -249,7 +249,7 @@ export function StaffScreen() {
       ) : (
         <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {filtered.map((t, i) => (
-            <div key={t.name + i} className="bg-white border border-td-border rounded-[18px] p-3.5 flex items-center gap-3.5">
+            <div key={t.name + i} className="bg-td-card border border-td-border rounded-[18px] p-3.5 flex items-center gap-3.5">
               <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
               <div className="flex-1 min-w-0">
                 <div className="text-[15px] font-extrabold text-td-dark">{t.name}</div>
@@ -276,7 +276,7 @@ export function AddTeacherScreen() {
       <div className="flex flex-col gap-3.5 mb-[22px]">
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Full name</label><input value={nt.name} onChange={e => setNewTeacher({ name: e.target.value })} placeholder="Teacher name" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-          <select value={nt.subject || subjectNames[0] || ''} onChange={e => setNewTeacher({ subject: e.target.value })} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none disabled:opacity-60">
+          <select value={nt.subject || subjectNames[0] || ''} onChange={e => setNewTeacher({ subject: e.target.value })} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
             {subjectNames.length ? subjectNames.map(s => <option key={s}>{s}</option>) : <option value="">Add subjects first</option>}
           </select>
         </div>
@@ -284,7 +284,7 @@ export function AddTeacherScreen() {
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Years of exp.</label><input value={nt.experience} onChange={e => setNewTeacher({ experience: e.target.value })} placeholder="0" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Branch</label>
-            <select value={nt.branch} onChange={e => setNewTeacher({ branch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+            <select value={nt.branch} onChange={e => setNewTeacher({ branch: e.target.value })} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
               <option value="">All branches</option>
               {branchesList.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>

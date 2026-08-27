@@ -59,21 +59,21 @@ export function FeesScreen() {
       } />
 
       <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
-        <div className="flex-1 bg-[#e7f5ee] rounded-2xl p-3.5">
+        <div className="flex-1 bg-td-tint-green rounded-2xl p-3.5">
           <div className="text-[21px] font-extrabold text-td-green leading-tight">{rupee(totalCollected)}</div>
-          <div className="text-[12px] text-[#5a8a72] font-semibold mt-[3px]">Collected · {paidCount} paid</div>
+          <div className="text-[12px] text-td-on-green font-semibold mt-[3px]">Collected · {paidCount} paid</div>
         </div>
-        <div className="flex-1 bg-[#fdecea] rounded-2xl p-3.5">
+        <div className="flex-1 bg-td-tint-red rounded-2xl p-3.5">
           <div className="text-[21px] font-extrabold text-td-red leading-tight">{rupee(totalRemaining)}</div>
-          <div className="text-[12px] text-[#a35545] font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
+          <div className="text-[12px] text-td-on-red font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
         </div>
       </div>
 
       {showForm && (
-        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
+        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
           <div className="text-sm font-extrabold text-td-dark">Add fee record</div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Student</label>
-            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
               <option value="">Select student</option>
               {students.map(s => <option key={s.dbId ?? s.id} value={s.dbId ?? ''}>{s.name} — {s.klass}</option>)}
             </select>
@@ -93,7 +93,7 @@ export function FeesScreen() {
         </div>
       )}
 
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-white text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
+      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
 
       {rows.length === 0 ? (
         <EmptyState
@@ -110,7 +110,7 @@ export function FeesScreen() {
             const open = !!d.dbId && openFees === d.dbId
             const records = d.dbId ? feeRecords[d.dbId] : undefined
             return (
-              <div key={d.id} className="bg-white border border-td-border rounded-2xl p-[13px] px-3.5">
+              <div key={d.id} className="bg-td-card border border-td-border rounded-2xl p-[13px] px-3.5">
                 <div className="flex items-center gap-[13px]">
                   <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(realIdx) }}>{initials(d.name)}</div>
                   {/* The balance was a total with nothing behind it. Tapping the
@@ -146,7 +146,7 @@ export function FeesScreen() {
                             </div>
                           </div>
                           {isAdmin && (
-                            <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[11.5px] font-bold py-1 px-2.5 rounded-[10px] cursor-pointer">Remove</button>
+                            <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 border border-td-edge-red bg-td-wash-red text-td-red text-[11.5px] font-bold py-1 px-2.5 rounded-[10px] cursor-pointer">Remove</button>
                           )}
                         </div>
                       )
@@ -186,11 +186,11 @@ export function MeetingsScreen() {
       />
       <ScreenHeader title="Meetings" onBack={back} />
 
-      <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
+      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
         <div className="text-sm font-extrabold text-td-dark">Schedule new</div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
         <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Type</label>
-          <select value={type} onChange={e => setType(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+          <select value={type} onChange={e => setType(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
             <option>Parent-teacher meeting</option><option>Staff meeting</option>
           </select>
         </div>
@@ -207,8 +207,8 @@ export function MeetingsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {meetingsList.map((m, i) => (
-            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="bg-white border border-td-border rounded-2xl p-3.5 flex items-center gap-[13px]">
-              <div className="w-[46px] text-center shrink-0 bg-[#eaf1fc] rounded-xl py-2">
+            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="bg-td-card border border-td-border rounded-2xl p-3.5 flex items-center gap-[13px]">
+              <div className="w-[46px] text-center shrink-0 bg-td-tint-blue rounded-xl py-2">
                 <div className="text-base font-extrabold text-td-primary leading-none">{m.day}</div>
                 <div className="text-[12px] text-td-primary font-semibold mt-0.5">{m.mon}</div>
               </div>
@@ -217,7 +217,7 @@ export function MeetingsScreen() {
                 <div className="text-xs text-td-muted mt-0.5">{m.time} · {m.kind}</div>
               </div>
               {isAdmin && m.dbId && (
-                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Cancel</button>
+                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Cancel</button>
               )}
             </div>
           ))}
@@ -237,14 +237,14 @@ export function RankingsScreen() {
       <ScreenHeader title="Rankings" onBack={back} />
 
       {subjectNames.length === 0 && (
-        <button onClick={() => go('subjects', 'more')} className="w-full text-left bg-[#eaf1fc] border border-[#dbe6fa] rounded-[14px] p-3.5 cursor-pointer text-[12.5px] text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
+        <button onClick={() => go('subjects', 'more')} className="w-full text-left bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3.5 cursor-pointer text-[12.5px] text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
       )}
 
       <div className="flex gap-[9px] overflow-x-auto mb-[18px] scrollbar-hide">
         {subjectNames.map(name => {
           const active = name === rankSubject
           return (
-            <button key={name} onClick={() => set({ rankSubject: name })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? '#2a6fdb' : '#fff', color: active ? '#fff' : '#3a4456', borderColor: active ? '#2a6fdb' : '#e6eaf2' }}>{name}</button>
+            <button key={name} onClick={() => set({ rankSubject: name })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? 'var(--color-td-primary)' : '#fff', color: active ? '#fff' : 'var(--color-td-text)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>{name}</button>
           )
         })}
       </div>
@@ -254,8 +254,8 @@ export function RankingsScreen() {
       ) : (
         <div className="flex flex-col gap-[9px] mb-5">
           {rows.map((r, i) => (
-            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] bg-white border border-td-border rounded-2xl p-3 px-3.5">
-              <div className="w-[26px] text-center text-sm font-extrabold" style={{ color: i < 3 ? '#e0962f' : '#9aa4b6' }}>{r.rank}</div>
+            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] bg-td-card border border-td-border rounded-2xl p-3 px-3.5">
+              <div className="w-[26px] text-center text-sm font-extrabold" style={{ color: i < 3 ? 'var(--color-td-amber)' : 'var(--color-td-subtle)' }}>{r.rank}</div>
               <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(r.name)}</div>
               <div className="flex-1 text-[13.5px] font-bold text-td-dark">{r.name}</div>
               <div className="text-sm font-extrabold text-td-dark">{r.score}%</div>
@@ -263,8 +263,8 @@ export function RankingsScreen() {
           ))}
         </div>
       )}
-      <div className="flex items-center gap-2.5 bg-[#eaf1fc] border border-[#dbe6fa] rounded-[14px] p-3.5 mt-1">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+      <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3.5 mt-1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
         <span className="text-[12.5px] text-td-primary font-semibold">Rankings update automatically — students always see the latest.</span>
       </div>
     </div>
@@ -314,7 +314,7 @@ export function BranchesScreen() {
       } />
 
       {showForm && (
-        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
           <div className="text-sm font-extrabold text-td-dark">New branch</div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Branch name</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
@@ -323,7 +323,7 @@ export function BranchesScreen() {
             <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-[#2a6fdb] rounded" />
+            <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-td-primary rounded" />
             <span className="text-[13px] font-bold text-td-dark">Set as main branch</span>
           </label>
           <PrimaryButton onClick={handleAdd}>Add branch</PrimaryButton>
@@ -338,10 +338,10 @@ export function BranchesScreen() {
             const roster = students.filter(s => s.branch === b.name)
             const open = openBranch === b.name
             return (
-            <div key={b.dbId ?? b.name} className="bg-white border border-td-border rounded-[18px] p-4">
+            <div key={b.dbId ?? b.name} className="bg-td-card border border-td-border rounded-[18px] p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="text-[15px] font-extrabold text-td-dark">{b.name}</div>
-                {b.main && <span className="text-[12px] font-bold text-td-primary bg-[#eaf1fc] py-1 px-[9px] rounded-[20px]">Main</span>}
+                {b.main && <span className="text-[12px] font-bold text-td-primary bg-td-tint-blue py-1 px-[9px] rounded-[20px]">Main</span>}
               </div>
               <div className="text-[12.5px] text-td-muted mb-3">{b.address}</div>
               <div className="flex items-center justify-between">
@@ -349,7 +349,7 @@ export function BranchesScreen() {
                   <div><div className="text-base font-extrabold text-td-dark">{roster.length}</div><div className="text-[12px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
                   <div><div className="text-base font-extrabold text-td-dark">{b.staff}</div><div className="text-[12px] text-td-subtle font-semibold">Staff</div></div>
                 </button>
-                {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-2 px-3.5 rounded-[12px] cursor-pointer">Remove</button>}
+                {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-2 px-3.5 rounded-[12px] cursor-pointer">Remove</button>}
               </div>
               {open && <StudentRoster list={roster} />}
             </div>
@@ -383,7 +383,7 @@ export function SubjectsScreen() {
       />
       <ScreenHeader title="Subjects" onBack={back} />
 
-      <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
         <div className="text-sm font-extrabold text-td-dark">Add subject</div>
         <div className="flex gap-[11px]">
           <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Mathematics" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
@@ -397,10 +397,10 @@ export function SubjectsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {subjects.map((s, i) => (
-            <div key={s.dbId} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
+            <div key={s.dbId} className="bg-td-card border border-td-border rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
               <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{s.name[0]}</div>
               <div className="flex-1 text-[14px] font-bold text-td-dark">{s.name}</div>
-              {s.dbId && <button onClick={() => setConfirmSubject({ id: s.dbId!, name: s.name })} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Remove</button>}
+              {s.dbId && <button onClick={() => setConfirmSubject({ id: s.dbId!, name: s.name })} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Remove</button>}
             </div>
           ))}
         </div>
@@ -432,7 +432,7 @@ export function BatchesScreen() {
       />
       <ScreenHeader title="Batches" onBack={back} />
 
-      <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
         <div className="text-sm font-extrabold text-td-dark">Add batch</div>
         <div className="flex gap-[11px]">
           <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Morning 10-A" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
@@ -449,14 +449,14 @@ export function BatchesScreen() {
             const roster = students.filter(s => s.batch === b.name)
             const open = openBatch === b.name
             return (
-            <div key={b.dbId} className="bg-white border border-td-border rounded-2xl p-[13px] px-[15px]">
+            <div key={b.dbId} className="bg-td-card border border-td-border rounded-2xl p-[13px] px-[15px]">
               <div className="flex items-center gap-[13px]">
                 <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{b.name[0]}</div>
                 <button onClick={() => setOpenBatch(open ? null : b.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
                   <div className="text-[14px] font-bold text-td-dark truncate">{b.name}</div>
                   <div className="text-[12px] text-td-muted font-semibold">{roster.length} student{roster.length === 1 ? '' : 's'} {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
                 </button>
-                {b.dbId && <button onClick={() => setConfirmBatch({ id: b.dbId!, name: b.name })} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
+                {b.dbId && <button onClick={() => setConfirmBatch({ id: b.dbId!, name: b.name })} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
               </div>
               {open && <StudentRoster list={roster} />}
             </div>
@@ -481,28 +481,28 @@ export function MoreScreen() {
   const studentRequestCount = pendingStudents.length
 
   const daily: MoreItem[] = [
-    { icon: 'requests', label: 'Student requests', tint: '#e7f5ee', screen: 'studentRequests', badge: studentRequestCount },
-    { icon: 'attendance', label: 'Mark attendance', tint: '#e7f5ee', screen: 'attendance' },
-    { icon: 'results', label: 'Enter results', tint: '#eaf1fc', screen: 'results' },
-    { icon: 'homework', label: 'Assignments', tint: '#fcf3e3', screen: 'assign' },
-    { icon: 'notes', label: 'Study material', tint: '#eef0fc', screen: 'notes' },
-    { icon: 'reminder', label: 'Send reminders', tint: '#fdecea', screen: 'reminder' },
+    { icon: 'requests', label: 'Student requests', tint: 'var(--color-td-tint-green)', screen: 'studentRequests', badge: studentRequestCount },
+    { icon: 'attendance', label: 'Mark attendance', tint: 'var(--color-td-tint-green)', screen: 'attendance' },
+    { icon: 'results', label: 'Enter results', tint: 'var(--color-td-tint-blue)', screen: 'results' },
+    { icon: 'homework', label: 'Assignments', tint: 'var(--color-td-tint-amber)', screen: 'assign' },
+    { icon: 'notes', label: 'Study material', tint: 'var(--color-td-tint-indigo)', screen: 'notes' },
+    { icon: 'reminder', label: 'Send reminders', tint: 'var(--color-td-tint-red)', screen: 'reminder' },
   ]
   const management: MoreItem[] = [
-    { icon: 'approvals', label: 'Staff access & approvals', tint: '#eef0fc', screen: 'staffApprovals', badge: pendingCount },
-    { icon: 'reports', label: 'Weekly report', tint: '#e7f5ee', screen: 'reports' },
-    { icon: 'fees', label: 'Fees & alerts', tint: '#e7f5ee', screen: 'fees' },
-    { icon: 'rankings', label: 'Rankings', tint: '#fcf3e3', screen: 'rankings' },
-    { icon: 'meetings', label: 'Meetings', tint: '#eaf1fc', screen: 'meetings' },
-    { icon: 'branches', label: 'Branches', tint: '#eef0fc', screen: 'branches' },
-    { icon: 'subjects', label: 'Subjects', tint: '#eaf1fc', screen: 'subjects' },
-    { icon: 'batches', label: 'Batches', tint: '#e7f5ee', screen: 'batches' },
+    { icon: 'approvals', label: 'Staff access & approvals', tint: 'var(--color-td-tint-indigo)', screen: 'staffApprovals', badge: pendingCount },
+    { icon: 'reports', label: 'Weekly report', tint: 'var(--color-td-tint-green)', screen: 'reports' },
+    { icon: 'fees', label: 'Fees & alerts', tint: 'var(--color-td-tint-green)', screen: 'fees' },
+    { icon: 'rankings', label: 'Rankings', tint: 'var(--color-td-tint-amber)', screen: 'rankings' },
+    { icon: 'meetings', label: 'Meetings', tint: 'var(--color-td-tint-blue)', screen: 'meetings' },
+    { icon: 'branches', label: 'Branches', tint: 'var(--color-td-tint-indigo)', screen: 'branches' },
+    { icon: 'subjects', label: 'Subjects', tint: 'var(--color-td-tint-blue)', screen: 'subjects' },
+    { icon: 'batches', label: 'Batches', tint: 'var(--color-td-tint-green)', screen: 'batches' },
   ]
 
   const card = (list: MoreItem[]) => (
-    <div className="bg-white border border-td-border rounded-[20px] overflow-hidden">
+    <div className="bg-td-card border border-td-border rounded-[20px] overflow-hidden">
       {list.map(m => (
-        <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
+        <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
           {!!m.badge && m.badge > 0 && <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
@@ -516,7 +516,7 @@ export function MoreScreen() {
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-[18px]">More tools</div>
 
-      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left bg-white border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
+      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left bg-td-card border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
         <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(0) }}>{initials(profileName)}</div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-extrabold text-td-dark truncate">{profileName}</div>
@@ -536,11 +536,11 @@ export function MoreScreen() {
 
 
       <div className="mt-4">
-        {card([{ icon: 'warning', label: 'Report a problem', tint: '#fdecea', screen: 'support' }])}
+        {card([{ icon: 'warning', label: 'Report a problem', tint: 'var(--color-td-tint-red)', screen: 'support' }])}
       </div>
 
-      <button onClick={signOut} className="w-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-4 flex items-center justify-center gap-[9px]">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e8553c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      <button onClick={signOut} className="w-full border border-td-edge-red bg-td-wash-red text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-4 flex items-center justify-center gap-[9px]">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
         Sign out
       </button>
     </div>
@@ -571,7 +571,7 @@ export function NotificationsScreen() {
   })
 
   const row = (icon: IconName, tint: string, label: string, count: number, screen: Screen) => (
-    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none bg-white border border-td-border rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
+    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none bg-td-card border border-td-border rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
       <div className="w-11 h-11 rounded-[13px] shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
       <div className="flex-1 min-w-0">
         <div className="text-sm font-extrabold text-td-dark">{label}</div>
@@ -588,22 +588,22 @@ export function NotificationsScreen() {
 
       {empty ? (
         <div className="flex flex-col items-center text-center py-14">
-          <div className="w-16 h-16 rounded-[20px] bg-[#e7f5ee] flex items-center justify-center mb-4">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2fa36b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <div className="w-16 h-16 rounded-[20px] bg-td-tint-green flex items-center justify-center mb-4">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           </div>
           <div className="text-[16px] font-extrabold text-td-dark">You&apos;re all caught up</div>
           <div className="text-[13px] text-td-muted mt-1 max-w-[240px]">New student and staff requests will show up here.</div>
         </div>
       ) : (
         <>
-          {studentCount > 0 && row('requests', '#e7f5ee', 'Student join requests', studentCount, 'studentRequests')}
-          {staffCount > 0 && row('approvals', '#eef0fc', 'Staff access requests', staffCount, 'staffApprovals')}
+          {studentCount > 0 && row('requests', 'var(--color-td-tint-green)', 'Student join requests', studentCount, 'studentRequests')}
+          {staffCount > 0 && row('approvals', 'var(--color-td-tint-indigo)', 'Staff access requests', staffCount, 'staffApprovals')}
         </>
       )}
 
       {pushSupported() && (
-        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           {pushOn ? 'Notifications enabled' : pushBusy ? 'Enabling…' : 'Enable notifications on this device'}
         </button>
       )}
@@ -671,7 +671,7 @@ export function StaffProfileScreen() {
         <div className="w-[76px] h-[76px] rounded-[24px] flex items-center justify-center text-white font-extrabold text-[26px] mb-3" style={{ background: av(0) }}>{initials(displayName)}</div>
         <div className="text-[18px] font-extrabold text-td-dark">{displayName}</div>
         <div className="text-[12.5px] text-td-muted mt-0.5">{googleEmail}</div>
-        <div className="inline-flex items-center gap-[6px] bg-[#e7f5ee] rounded-[20px] py-[5px] px-[11px] mt-2.5">
+        <div className="inline-flex items-center gap-[6px] bg-td-tint-green rounded-[20px] py-[5px] px-[11px] mt-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-td-green" />
           <span className="text-[12px] font-bold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
         </div>
@@ -689,7 +689,7 @@ export function StaffProfileScreen() {
           <div>
             <label className="text-xs font-bold text-td-muted mb-[7px] block">Centre logo</label>
             <div className="flex items-center gap-3.5 border border-td-border rounded-[14px] p-3">
-              <div className="w-14 h-14 rounded-[14px] overflow-hidden shrink-0 flex items-center justify-center bg-[#f4f6fb] border border-td-border">
+              <div className="w-14 h-14 rounded-[14px] overflow-hidden shrink-0 flex items-center justify-center bg-td-soft border border-td-border">
                 {centreLogo
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={centreLogo} alt="Centre logo" className="w-full h-full object-cover" />
@@ -697,9 +697,9 @@ export function StaffProfileScreen() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex gap-2">
-                  <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-white text-td-dark text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
+                  <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-td-card text-td-dark text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
                   {centreLogo && !logoBusy && (
-                    <button onClick={() => saveCentreLogo('')} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer">Remove</button>
+                    <button onClick={() => saveCentreLogo('')} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer">Remove</button>
                   )}
                 </div>
                 <p className="text-[12px] text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
@@ -708,8 +708,8 @@ export function StaffProfileScreen() {
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2.5 bg-[#f4f6fb] border border-[#e6eaf2] rounded-[14px] p-3">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa4b6" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div className="flex items-center gap-2.5 bg-td-soft border border-td-border rounded-[14px] p-3">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
           <span className="text-[12px] text-td-muted">Your email is managed by Google and can&apos;t be changed here.</span>
         </div>
       </div>
@@ -717,15 +717,15 @@ export function StaffProfileScreen() {
       <PrimaryButton onClick={save}>{busy ? 'Saving…' : 'Save changes'}</PrimaryButton>
 
       {pushSupported() && (
-        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           {pushOn ? 'Notifications enabled' : 'Enable notifications'}
         </button>
       )}
 
       {!pwOpen ? (
-        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-white text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           Set password for phone login
         </button>
       ) : (
@@ -736,13 +736,13 @@ export function StaffProfileScreen() {
           <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-2.5" />
           <div className="flex gap-2 mt-3">
             <button onClick={savePassword} disabled={pwBusy} className="flex-1 border-none bg-td-primary text-white text-[13.5px] font-extrabold py-[12px] rounded-[12px] cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
-            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-white text-td-muted text-[13.5px] font-bold py-[12px] px-4 rounded-[12px] cursor-pointer">Cancel</button>
+            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-[13.5px] font-bold py-[12px] px-4 rounded-[12px] cursor-pointer">Cancel</button>
           </div>
         </div>
       )}
 
-      <button onClick={signOut} className="w-full border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-[9px]">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#e8553c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+      <button onClick={signOut} className="w-full border border-td-edge-red bg-td-wash-red text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-[9px]">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
         Sign out
       </button>
     </div>

@@ -6,7 +6,7 @@ import { useDashboard, type Screen, type Tab } from '../store'
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
     // Mobile: fills the screen (no bezel). md+: framed phone mockup.
-    <div className="min-h-[var(--app-h)] w-full flex md:items-center md:justify-center md:bg-[#dfe4ee] md:p-10">
+    <div className="min-h-[var(--app-h)] w-full flex md:items-center md:justify-center md:bg-td-line md:p-10">
       <div className="w-full flex md:max-w-[402px] md:bg-[#0b0d12] md:rounded-[56px] md:p-[13px] md:shadow-[0_40px_90px_-20px_rgba(20,30,60,.45)]">
         <div className="relative w-full app-frame md:aspect-[376/812] bg-td-bg md:rounded-[44px] overflow-hidden flex flex-col">
           <StatusBar />
@@ -26,8 +26,8 @@ function StatusBar() {
       <span>9:41</span>
       <div className="absolute left-1/2 top-2 -translate-x-1/2 w-[118px] h-[30px] bg-[#0b0d12] rounded-[18px]" />
       <div className="flex items-center gap-1.5">
-        <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="#1a2332"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="#1a2332"/><rect x="9" y="2" width="3" height="10" rx="1" fill="#1a2332"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="#1a2332"/></svg>
-        <svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="#1a2332" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="1.5" fill="#1a2332"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#1a2332" opacity="0.4"/></svg>
+        <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="var(--color-td-dark)"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="var(--color-td-dark)"/><rect x="9" y="2" width="3" height="10" rx="1" fill="var(--color-td-dark)"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="var(--color-td-dark)"/></svg>
+        <svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="var(--color-td-dark)" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="1.5" fill="var(--color-td-dark)"/><rect x="24" y="4" width="2" height="5" rx="1" fill="var(--color-td-dark)" opacity="0.4"/></svg>
       </div>
     </div>
   )
@@ -41,7 +41,7 @@ function BottomTabBar() {
 
   if (role === 'student') {
     if (!currentStudentDbId) return null
-    const color = (t: Tab) => tab === t ? '#2a6fdb' : '#9aa4b6'
+    const color = (t: Tab) => tab === t ? 'var(--color-td-primary)' : 'var(--color-td-subtle)'
     const stuTabs: { key: Tab; label: string; screen: Screen; icon: (c: string) => React.ReactNode }[] = [
       { key: 'stuHome', label: 'Home', screen: 'stuHome', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg> },
       { key: 'stuResults', label: 'Results', screen: 'stuResults', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V9"/><path d="M12 21V4"/><path d="M19 21v-7"/></svg> },
@@ -50,7 +50,7 @@ function BottomTabBar() {
       { key: 'stuProfile', label: 'Profile', screen: 'stuProfile', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg> },
     ]
     return (
-      <div className="shrink-0 flex justify-around items-center pt-3 px-2.5 bg-white border-t border-[#eef1f7] pb-[max(env(safe-area-inset-bottom),16px)] md:pb-[26px]">
+      <div className="shrink-0 flex justify-around items-center pt-3 px-2.5 bg-td-card border-t border-td-line pb-[max(env(safe-area-inset-bottom),16px)] md:pb-[26px]">
         {stuTabs.map(t => (
           <button key={t.key} onClick={() => go(t.screen, t.key)} className="border-none bg-transparent cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
             {t.icon(color(t.key))}
@@ -61,7 +61,7 @@ function BottomTabBar() {
     )
   }
 
-  const color = (t: Tab) => tab === t ? '#2a6fdb' : '#9aa4b6'
+  const color = (t: Tab) => tab === t ? 'var(--color-td-primary)' : 'var(--color-td-subtle)'
   const allTabs: { key: Tab; label: string; headOnly?: boolean; icon: (c: string) => React.ReactNode }[] = [
     { key: 'home', label: 'Home', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg> },
     { key: 'timetable', label: 'Timetable', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> },
@@ -77,13 +77,13 @@ function BottomTabBar() {
   const moreAlert = pendingStudents.length > 0 || pendingStaff > 0
 
   return (
-    <div className="shrink-0 flex justify-around items-center pt-3 pb-[26px] px-2.5 bg-white border-t border-[#eef1f7]">
+    <div className="shrink-0 flex justify-around items-center pt-3 pb-[26px] px-2.5 bg-td-card border-t border-td-line">
       {tabs.map(t => (
         <button key={t.key} onClick={() => go(t.key === 'timetable' ? 'timetable' : t.key as Screen, t.key)} className="border-none bg-transparent cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
           <span className="relative">
             {t.icon(color(t.key))}
             {t.key === 'more' && moreAlert && (
-              <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-white" />
+              <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-td-card" />
             )}
           </span>
           <span className="text-[12px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
@@ -150,7 +150,7 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
   onAction?: () => void
 }) {
   return (
-    <div className="text-center bg-white border border-td-border rounded-[16px] py-9 px-6">
+    <div className="text-center bg-td-card border border-td-border rounded-[16px] py-9 px-6">
       <div className="text-[15px] font-extrabold text-td-dark mb-1.5">{title}</div>
       {hint && <p className="text-[13px] text-td-muted leading-relaxed max-w-[290px] mx-auto mb-0">{hint}</p>}
       {actionLabel && onAction && (
@@ -168,8 +168,8 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
 
 export function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center cursor-pointer shrink-0">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a2332" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+    <button onClick={onClick} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
     </button>
   )
 }
@@ -281,12 +281,12 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
         aria-describedby="confirm-body"
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-[380px] bg-white rounded-[20px] p-[21px] outline-none shadow-[0_20px_50px_rgba(16,24,40,.3)] animate-[pop_.2s_ease]"
+        className="w-full max-w-[380px] bg-td-card rounded-[20px] p-[21px] outline-none shadow-[0_20px_50px_rgba(16,24,40,.3)] animate-[pop_.2s_ease]"
       >
         <div id="confirm-title" className="text-[16px] font-extrabold text-td-dark mb-2">{title}</div>
         <div id="confirm-body" className="text-[13.5px] text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
         <div className="flex gap-2.5">
-          <button onClick={onCancel} className="flex-1 border border-td-border bg-white text-td-text text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">Cancel</button>
+          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">Cancel</button>
           <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-white text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">{confirmLabel}</button>
         </div>
       </div>
@@ -295,5 +295,5 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
 }
 
 export function ChevronRight() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c2cad8" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-faint)" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
 }

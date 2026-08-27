@@ -62,13 +62,13 @@ export function LastUpdated() {
     >
       <svg
         width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"
-        stroke={stale ? '#8a6414' : '#6b7689'} strokeWidth="2.4" strokeLinecap="round"
+        stroke={stale ? 'var(--color-td-on-amber)' : 'var(--color-td-muted)'} strokeWidth="2.4" strokeLinecap="round"
         className={busy ? 'animate-spin' : undefined}
       >
         <path d="M20 12a8 8 0 1 1-2.3-5.6" />
         <path d="M20 4v4.5h-4.5" />
       </svg>
-      <span className={`text-[12px] font-semibold ${stale ? 'text-[#8a6414]' : 'text-td-muted'}`}>
+      <span className={`text-[12px] font-semibold ${stale ? 'text-td-on-amber' : 'text-td-muted'}`}>
         {busy ? 'Refreshing…' : label(lastSyncedAt, now)}
       </span>
     </button>

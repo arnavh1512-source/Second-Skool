@@ -9,7 +9,7 @@ import { writeLocal } from '../lib/storage'
 import { useBusy } from '../lib/use-busy'
 
 const FileIcon = ({ url }: { url: string }) => (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={url ? '#2a6fdb' : '#c2cad8'} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={url ? 'var(--color-td-primary)' : 'var(--color-td-faint)'} strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
 )
 
 // --- Staff: create & manage class notes ------------------------------------
@@ -52,24 +52,24 @@ export function NotesScreen() {
       } />
 
       {showForm && (
-        <div className="bg-white border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-              <select value={subject} onChange={e => setSubject(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none">
+              <select value={subject} onChange={e => setSubject(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
                 <option value="">General</option>
                 {subjects.map(s => <option key={s.name}>{s.name}</option>)}
               </select>
             </div>
             <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-white text-td-dark outline-none disabled:opacity-60">
+              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
                 {classes.length ? classes.map(c => <option key={c}>{c}</option>) : <option value="">Add students first</option>}
               </select>
             </div>
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Note <span className="text-td-subtle font-semibold">· type here (free)</span></label><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none resize-none focus:border-td-primary" /></div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></label>
-            <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-[12.5px] text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-[10px] file:border-none file:bg-[#eaf1fc] file:text-td-primary file:font-bold file:text-[12px]" />
+            <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-[12.5px] text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-[10px] file:border-none file:bg-td-tint-blue file:text-td-primary file:font-bold file:text-[12px]" />
           </div>
           <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></label><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
           <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
@@ -81,13 +81,13 @@ export function NotesScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {notesList.map(n => (
-            <div key={n.dbId} className="bg-white border border-td-border rounded-[18px] p-4">
+            <div key={n.dbId} className="bg-td-card border border-td-border rounded-[18px] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-extrabold text-td-dark">{n.title}</div>
                   <div className="text-[12px] text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
                 </div>
-                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="border border-[#f4d8cf] bg-[#fdf3f0] text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>
+                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>
               </div>
               {n.body && <div className="text-[13px] text-td-text leading-relaxed mt-2">{n.body}</div>}
               <div className="flex gap-2 mt-2.5">
@@ -120,9 +120,9 @@ export function StuNotesScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {stuNotes.map((n, i) => (
-            <div key={`${n.date}-${n.title}-${i}`} className="bg-white border border-td-border rounded-[18px] p-4">
+            <div key={`${n.date}-${n.title}-${i}`} className="bg-td-card border border-td-border rounded-[18px] p-4">
               <div className="flex items-center gap-[11px]">
-                <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-[#eaf1fc]" style={{ color: ink('#eaf1fc') }}><Icon name="notes" size={19} /></div>
+                <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-td-tint-blue" style={{ color: ink('var(--color-td-tint-blue)') }}><Icon name="notes" size={19} /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[14px] font-extrabold text-td-dark">{n.title}</div>
                   {n.subject && <div className="text-[12px] text-td-muted mt-0.5">{n.subject}</div>}
@@ -131,7 +131,7 @@ export function StuNotesScreen() {
               {n.body && <div className="text-[13px] text-td-text leading-relaxed mt-2.5">{n.body}</div>}
               <div className="flex gap-2.5 mt-2.5">
                 {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border border-td-primary text-td-primary text-[12.5px] font-bold py-2 rounded-[12px]">Open file</a>}
-                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-[#e8553c] text-white text-[12.5px] font-bold py-2 rounded-[12px] flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
+                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-td-red text-white text-[12.5px] font-bold py-2 rounded-[12px] flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
               </div>
             </div>
           ))}

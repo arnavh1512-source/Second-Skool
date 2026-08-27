@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* `dark:` follows our own stamp, not the OS. The stamp already resolves the
+   OS preference at boot, so this covers both — and it keeps the toggle able to
+   disagree with the OS, which the default media-query variant cannot. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Every colour in the app comes from this block. Nothing else in the tree may
+   hardcode a surface, a line or an ink — a literal is a pixel that cannot
+   follow the theme, and this app has two. Brand colours that always sit under
+   white text (gradients, toast backgrounds, the WhatsApp green, Google's four)
+   stay literal on purpose: they are the same colour in both themes. */
 @theme {
   --color-td-primary: #2a6fdb;
   --color-td-dark: #1a2332;
@@ -13,6 +23,83 @@
   --color-td-text: #3a4456;
   --color-td-pink: #d94f8a;
   --color-td-teal: #3aa0c4;
+
+  /* Surfaces. td-card is what `bg-white` used to be: the raised sheet a list,
+     a form or a stat sits on. td-soft is a fill *on* that sheet; td-line is the
+     hairline between two rows of one, always lighter than td-border. */
+  --color-td-card: #ffffff;
+  --color-td-soft: #f4f6fb;
+  --color-td-line: #f0f2f7;
+  --color-td-faint: #c2cad8;
+
+  /* Icon-tile tints, and the deeper wash/edge pair a banner uses. */
+  --color-td-tint-blue: #eaf1fc;
+  --color-td-tint-green: #e7f5ee;
+  --color-td-tint-red: #fdecea;
+  --color-td-tint-amber: #fcf3e3;
+  --color-td-tint-indigo: #eef0fc;
+  --color-td-indigo: #5a63c9;
+  --color-td-wash-red: #fdf3f0;
+  --color-td-edge-red: #f4d8cf;
+  --color-td-edge-blue: #dbe6fa;
+  --color-td-wash-amber: #fdf7ea;
+  --color-td-edge-amber: #f2e2c0;
+
+  /* Ink for text that sits on one of those tints — a muted sibling of the
+     brand colour, dark enough to read on a pale wash. */
+  --color-td-on-red: #a35545;
+  --color-td-on-green: #5a8a72;
+  --color-td-on-amber: #8a6414;
+}
+
+/* Dark. Only the tokens change; not one component knows which theme it is in.
+   The blues, greens and reds are lifted rather than reused — the brand blue is
+   4.9:1 on white and 2.4:1 on a dark card, so carrying it across unchanged
+   would have made every link and every rupee figure unreadable. The values
+   below trade a little contrast under white button text to buy a lot back for
+   the text, which is where these colours are used three times as often.
+
+   Stamped by the inline script in layout.tsx, so the first paint is already
+   the right theme. `data-theme` is always set: the OS preference is resolved
+   to a literal light/dark at boot rather than left to a media query, so the
+   toggle can override it in both directions. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-td-primary: #4b8bee;
+  --color-td-green: #38b27e;
+  --color-td-red: #f0705a;
+  --color-td-amber: #e8a33d;
+  --color-td-pink: #e173a6;
+  --color-td-teal: #5bb8d8;
+
+  --color-td-bg: #0e1219;
+  --color-td-card: #171c26;
+  --color-td-soft: #1f2531;
+  --color-td-line: #262d3a;
+  --color-td-border: #2a323f;
+  --color-td-faint: #4a5364;
+
+  --color-td-dark: #e8ecf3;
+  --color-td-text: #b9c2d1;
+  --color-td-muted: #8a94a6;
+  --color-td-subtle: #6d7789;
+
+  --color-td-tint-blue: #1b2b46;
+  --color-td-tint-green: #163227;
+  --color-td-tint-red: #362220;
+  --color-td-tint-amber: #34291a;
+  --color-td-tint-indigo: #232748;
+  --color-td-indigo: #8b93e8;
+  --color-td-wash-red: #2b1e1b;
+  --color-td-edge-red: #4a2f28;
+  --color-td-edge-blue: #2c3f61;
+  --color-td-wash-amber: #2e2617;
+  --color-td-edge-amber: #4a3c1e;
+
+  --color-td-on-red: #e0917f;
+  --color-td-on-green: #7fc4a4;
+  --color-td-on-amber: #d9b165;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -20,7 +107,7 @@
    fallback. Android Chrome updates dvh unreliably when the URL bar toggles on a
    refresh, so the shell height is driven by --app-h instead (see layout.tsx). */
 :root { --app-h: 100dvh; }
-html, body { margin: 0; padding: 0; height: 100%; }
+html, body { margin: 0; padding: 0; height: 100%; background: var(--color-td-bg); }
 body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 /* Mobile: lock the document so ONLY the app shell's inner area scrolls. Stops the
    URL bar show/hide — and the browser's reload scroll-restoration — from pushing

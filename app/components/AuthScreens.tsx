@@ -83,32 +83,32 @@ export function LoginScreen() {
         <>
           <div className="text-sm text-td-muted mt-2 leading-relaxed">Teachers sign in with Google. Students tap below and enter the code their teacher gave them — no account needed.</div>
 
-          <button onClick={signInWithGoogle} className="w-full border border-[#dfe3ea] bg-white rounded-[14px] p-3.5 mt-8 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
+          <button onClick={signInWithGoogle} className="w-full border border-td-line bg-td-card rounded-[14px] p-3.5 mt-8 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
             <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.3 2.2 20.6 2.2 24s.8 6.7 2.3 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>
             <span className="text-[14.5px] font-bold text-td-text">Teacher — continue with Google</span>
           </button>
 
-          <button onClick={() => setMode('email')} className="w-full border border-[#dfe3ea] bg-white rounded-[14px] p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <button onClick={() => setMode('email')} className="w-full border border-td-line bg-td-card rounded-[14px] p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
             <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with password</span>
           </button>
           <div className="text-[12px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
 
           <div className="flex items-center gap-3 mt-5">
-            <div className="flex-1 h-px bg-[#e6eaf2]" />
+            <div className="flex-1 h-px bg-td-border" />
             <span className="text-[12px] text-td-subtle font-semibold">or</span>
-            <div className="flex-1 h-px bg-[#e6eaf2]" />
+            <div className="flex-1 h-px bg-td-border" />
           </div>
 
-          <button onClick={() => setMode('student')} className="w-full text-left border border-td-border rounded-[18px] p-[18px] mt-5 flex items-center gap-[15px] cursor-pointer bg-white">
-            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-[#e7f5ee]">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2fa36b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+          <button onClick={() => setMode('student')} className="w-full text-left border border-td-border rounded-[18px] p-[18px] mt-5 flex items-center gap-[15px] cursor-pointer bg-td-card">
+            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-tint-green">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
             </div>
             <div className="flex-1">
               <div className="text-base font-extrabold text-td-dark">I&apos;m a student</div>
               <div className="text-[12.5px] text-td-muted mt-[3px]">Enter your code to see your updates</div>
             </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2cad8" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-faint)" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
 
           <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">Your tuition centre sets up teacher access. Students only ever need their code.</div>
@@ -128,7 +128,7 @@ export function LoginScreen() {
           <button onClick={submitCode} disabled={busy} className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">
             {busy ? 'Checking…' : 'View my updates'}
           </button>
-          <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-white text-[13.5px] font-bold text-td-primary mt-3">New here? Register yourself</button>
+          <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-td-card text-[13.5px] font-bold text-td-primary mt-3">New here? Register yourself</button>
           <button onClick={() => { setMode('choose'); setCode('') }} className="w-full border-none bg-transparent text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
           <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
         </>
@@ -161,27 +161,27 @@ export function LoginScreen() {
           <div className="text-sm text-td-muted mt-2 leading-relaxed">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
           <div className="flex flex-col gap-3 mt-6">
             <div>
-              <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-[#e8553c]">*</span></label>
+              <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-td-red">*</span></label>
               <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 tracking-[0.15em] font-bold text-center" />
               <div id="reg-code-hint" className="text-[12px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
-              <label htmlFor="reg-name" className="text-xs font-bold text-td-muted">Full name <span className="text-[#e8553c]">*</span></label>
+              <label htmlFor="reg-name" className="text-xs font-bold text-td-muted">Full name <span className="text-td-red">*</span></label>
               <input id="reg-name" required aria-required="true" autoComplete="name" value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
             </div>
             <div>
-              <label htmlFor="reg-parent" className="text-xs font-bold text-td-muted">Parent&apos;s phone <span className="text-[#e8553c]">*</span></label>
+              <label htmlFor="reg-parent" className="text-xs font-bold text-td-muted">Parent&apos;s phone <span className="text-td-red">*</span></label>
               <input id="reg-parent" required aria-required="true" type="tel" autoComplete="tel" value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label htmlFor="reg-class" className="text-xs font-bold text-td-muted">Class <span className="text-[#e8553c]">*</span></label>
-                <select id="reg-class" required aria-required="true" value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 bg-white">
+                <label htmlFor="reg-class" className="text-xs font-bold text-td-muted">Class <span className="text-td-red">*</span></label>
+                <select id="reg-class" required aria-required="true" value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5 bg-td-card">
                   {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="flex-1">
-                <label htmlFor="reg-school" className="text-xs font-bold text-td-muted">School <span className="text-[#e8553c]">*</span></label>
+                <label htmlFor="reg-school" className="text-xs font-bold text-td-muted">School <span className="text-td-red">*</span></label>
                 <input id="reg-school" required aria-required="true" value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-1.5" />
               </div>
             </div>
@@ -287,8 +287,8 @@ export function NotificationGateScreen() {
   const blocked = perm === 'denied'
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
-      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#eaf1fc] flex items-center justify-center mb-5">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-blue flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       </div>
       <div className="text-[20px] font-extrabold text-td-dark">{blocked ? 'Reminders are blocked' : 'Turn on reminders'}</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">
@@ -298,7 +298,7 @@ export function NotificationGateScreen() {
       </div>
 
       {blocked ? (
-        <div className="mt-6 w-full max-w-[320px] bg-white border border-td-border rounded-[16px] p-4 text-left">
+        <div className="mt-6 w-full max-w-[320px] bg-td-card border border-td-border rounded-[16px] p-4 text-left">
           <div className="text-[12px] font-extrabold text-td-dark mb-2">How to allow them</div>
           <ol className="text-[12.5px] text-td-muted leading-relaxed list-decimal pl-4 flex flex-col gap-1">
             <li>Tap the lock or ⓘ icon next to the web address</li>
@@ -321,7 +321,7 @@ export function NotificationGateScreen() {
       )}
 
       {code && (
-        <div className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-white">
+        <div className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-td-card">
           <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
           <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
         </div>
@@ -360,14 +360,14 @@ export function StuPendingScreen() {
 
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
-      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fcf3e3] flex items-center justify-center mb-5">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e0962f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-amber flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-amber)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </div>
       <div className="text-[20px] font-extrabold text-td-dark">You&apos;re on the list{stuPending?.name ? `, ${stuPending.name.split(' ')[0]}` : ''}!</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your teacher{stuPending?.centre ? ` at ${stuPending.centre}` : ''} is reviewing your details. You&apos;ll get in the moment they approve you.</div>
 
       {code && (
-        <button onClick={copyCode} className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-white cursor-pointer">
+        <button onClick={copyCode} className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-td-card cursor-pointer">
           <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
           <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
         </button>
@@ -387,8 +387,8 @@ export function StuDeniedScreen() {
   const first = stuDenied?.name ? `, ${stuDenied.name.split(' ')[0]}` : ''
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
-      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fdecea] flex items-center justify-center mb-5">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e0533c" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-red flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
       </div>
       <div className="text-[20px] font-extrabold text-td-dark">Registration not approved</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your teacher{stuDenied?.centre ? ` at ${stuDenied.centre}` : ''} didn&apos;t approve this request{first}. If you think this is a mistake, reach out to them directly — or register again with the correct details.</div>
@@ -464,7 +464,7 @@ export function RegisterScreen() {
 
       {mode === 'choose' && (
         <div className="flex flex-col gap-[13px] mt-7">
-          <button onClick={() => setMode('create')} className="text-left border rounded-[20px] p-[18px] flex items-center gap-[15px] cursor-pointer bg-white" style={{ borderColor: '#dbe6fa' }}>
+          <button onClick={() => setMode('create')} className="text-left border rounded-[20px] p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-edge-blue)' }}>
             <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-dark">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
@@ -473,9 +473,9 @@ export function RegisterScreen() {
               <div className="text-[12.5px] text-td-muted mt-[3px]">Start your own — you&apos;ll be the head teacher.</div>
             </div>
           </button>
-          <button onClick={() => setMode('join')} className="text-left border rounded-[20px] p-[18px] flex items-center gap-[15px] cursor-pointer bg-white" style={{ borderColor: '#e6eaf2' }}>
-            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-[#eaf1fc]">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          <button onClick={() => setMode('join')} className="text-left border rounded-[20px] p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-border)' }}>
+            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-tint-blue">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             </div>
             <div className="flex-1">
               <div className="text-base font-extrabold text-td-dark">Join a centre</div>
@@ -533,8 +533,8 @@ export function PendingScreen() {
 
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
-      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fcf3e3] flex items-center justify-center mb-5">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e0962f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-amber flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-amber)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </div>
       <div className="text-[20px] font-extrabold text-td-dark">Waiting for approval</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your head teacher needs to approve <span className="font-bold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</div>
@@ -557,8 +557,8 @@ export function DeniedScreen() {
   })
   return (
     <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
-      <div className="w-[72px] h-[72px] rounded-[22px] bg-[#fdecea] flex items-center justify-center mb-5">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#e8553c" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+      <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-red flex items-center justify-center mb-5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
       </div>
       <div className="text-[20px] font-extrabold text-td-dark">Access not granted</div>
 

@@ -27,10 +27,12 @@ describe('initials', () => {
 })
 
 describe('feeColor', () => {
+  // Tokens, not hex: these colours differ between light and dark, and the only
+  // thing worth pinning is that each status still gets its own one.
   it('maps each fee status to its colour', () => {
-    expect(feeColor('Paid').c).toBe('#2fa36b')
-    expect(feeColor('Due').c).toBe('#e0962f')
-    expect(feeColor('Overdue').c).toBe('#e8553c')
+    expect(feeColor('Paid').c).toBe('var(--color-td-green)')
+    expect(feeColor('Due').c).toBe('var(--color-td-amber)')
+    expect(feeColor('Overdue').c).toBe('var(--color-td-red)')
   })
 })
 

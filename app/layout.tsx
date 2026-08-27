@@ -71,6 +71,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "(function(){function s(){document.documentElement.style.setProperty('--app-h',window.innerHeight+'px')}s();addEventListener('resize',s);addEventListener('orientationchange',s);window.visualViewport&&visualViewport.addEventListener('resize',s)})()",
           }}
         />
+        {/* Stamp the theme before anything paints. A saved choice wins; with
+            none, the OS preference is resolved to a literal light/dark here
+            rather than left to a media query, so the toggle can override the
+            OS in both directions instead of only ever agreeing with it. Doing
+            this after hydration would show every dark-mode user a white flash
+            on every single load. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){var t;try{t=localStorage.getItem('td-theme')}catch(e){}if(t!=='light'&&t!=='dark')t=window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})()",
+          }}
+        />
       </head>
       <body className={jakarta.className}>{children}</body>
     </html>

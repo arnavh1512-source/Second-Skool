@@ -159,7 +159,7 @@ export function DevConsoleScreen() {
           <button
             onClick={refresh}
             disabled={loading}
-            className="text-[12px] font-bold py-[7px] px-3 rounded-[10px] cursor-pointer border border-td-border bg-white text-td-primary disabled:opacity-50"
+            className="text-[12px] font-bold py-[7px] px-3 rounded-[10px] cursor-pointer border border-td-border bg-td-card text-td-primary disabled:opacity-50"
           >
             {loading ? '…' : 'Refresh'}
           </button>
@@ -171,7 +171,7 @@ export function DevConsoleScreen() {
           because the console sits outside the router and nothing here could
           reach the sign-in screen. Say what to do and provide the way to do it. */}
       {error && (
-        <div className="bg-[#fdf3f0] border border-[#f4d8cf] text-td-red text-[13px] rounded-[14px] p-3.5 mb-4 flex items-center gap-3">
+        <div className="bg-td-wash-red border border-td-edge-red text-td-red text-[13px] rounded-[14px] p-3.5 mb-4 flex items-center gap-3">
           <span className="flex-1 min-w-0">{error}</span>
           {error === SESSION_EXPIRED && (
             <button
@@ -189,7 +189,7 @@ export function DevConsoleScreen() {
       {data && (
         <>
           {data.errors.length > 0 && (
-            <div className="bg-[#fdf7ea] border border-[#f2e2c0] text-[#8a6320] text-[12px] rounded-[14px] p-3 mb-4">
+            <div className="bg-td-wash-amber border border-td-edge-amber text-td-on-amber text-[12px] rounded-[14px] p-3 mb-4">
               Partial data — could not read: {data.errors.join(', ')}
             </div>
           )}
@@ -203,7 +203,7 @@ export function DevConsoleScreen() {
           </div>
 
           {data.alerts.length > 0 && (
-            <div className="bg-white border border-td-border rounded-[16px] p-4 mb-4">
+            <div className="bg-td-card border border-td-border rounded-[16px] p-4 mb-4">
               <div className="text-[13px] font-extrabold text-td-dark mb-2">Needs attention</div>
               <ul className="flex flex-col gap-1.5">
                 {data.alerts.map(a => (
@@ -221,7 +221,7 @@ export function DevConsoleScreen() {
                 key={t}
                 onClick={() => setTab(t)}
                 className="flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize"
-                style={{ background: tab === t ? '#2a6fdb' : '#fff', color: tab === t ? '#fff' : '#3a4456', borderColor: tab === t ? '#2a6fdb' : '#e6eaf2' }}
+                style={{ background: tab === t ? 'var(--color-td-primary)' : '#fff', color: tab === t ? '#fff' : 'var(--color-td-text)', borderColor: tab === t ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}
               >
                 {t === 'reports' && openReports > 0 ? `reports (${openReports})` : t}
               </button>
@@ -251,7 +251,7 @@ export function DevConsoleScreen() {
 
       {doomed && (
         <div className="fixed inset-0 z-[80] bg-black/45 flex items-end md:items-center justify-center p-4">
-          <div className="bg-white rounded-[18px] p-5 w-full max-w-sm">
+          <div className="bg-td-card rounded-[18px] p-5 w-full max-w-sm">
             <div className="text-[16px] font-extrabold text-td-dark">Delete {doomed.name}?</div>
             <p className="text-[12.5px] text-td-text mt-2 leading-relaxed">
               This erases {doomed.students.approved} students, {doomed.staff.approved} staff memberships and every
@@ -271,7 +271,7 @@ export function DevConsoleScreen() {
               <button
                 onClick={() => { setDoomed(null); setTyped('') }}
                 disabled={deleting}
-                className="flex-1 text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer border border-td-border bg-white text-td-text disabled:opacity-50"
+                className="flex-1 text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer border border-td-border bg-td-card text-td-text disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -292,7 +292,7 @@ export function DevConsoleScreen() {
 
 function Stat({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
   return (
-    <div className="bg-white border border-td-border rounded-[16px] p-3.5">
+    <div className="bg-td-card border border-td-border rounded-[16px] p-3.5">
       <div className="text-[12px] font-bold text-td-muted">{label}</div>
       <div className="text-[20px] font-extrabold text-td-dark mt-0.5 leading-tight">{value}</div>
       {sub && <div className="text-[12px] text-td-amber mt-0.5">{sub}</div>}
@@ -320,7 +320,7 @@ function Centres({ rows, onDelete }: CentresProps) {
   return (
     <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
       {rows.map(c => (
-        <div key={c.id} className="bg-white border border-td-border rounded-[16px] p-4">
+        <div key={c.id} className="bg-td-card border border-td-border rounded-[16px] p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="text-[15px] font-extrabold text-td-dark truncate">{c.name}</div>
@@ -344,7 +344,7 @@ function Centres({ rows, onDelete }: CentresProps) {
             <Field label="Branches" value={`${c.branches}`} />
           </div>
 
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-[#f0f2f7] text-[12px] text-td-muted">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-td-line text-[12px] text-td-muted">
             <span>attendance {c.activity30d.attendance}</span>
             <span>results {c.activity30d.results}</span>
             <span>assignments {c.activity30d.assignments}</span>
@@ -362,7 +362,7 @@ function Centres({ rows, onDelete }: CentresProps) {
             <button
               onClick={() => onDelete(c)}
               aria-label={`Delete ${c.name}`}
-              className="w-full text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border border-[#f4d8cf] bg-[#fdf3f0] text-td-red"
+              className="w-full text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border border-td-edge-red bg-td-wash-red text-td-red"
             >
               Delete centre
             </button>
@@ -378,7 +378,7 @@ function People({ rows }: { rows: StaffRow[] }) {
   return (
     <div className="flex flex-col gap-2.5">
       {rows.map(s => (
-        <div key={s.id} className="bg-white border border-td-border rounded-[16px] p-3.5 flex items-center gap-3">
+        <div key={s.id} className="bg-td-card border border-td-border rounded-[16px] p-3.5 flex items-center gap-3">
           <div className="flex-1 min-w-0">
             <div className="text-[13.5px] font-extrabold text-td-dark truncate">{s.name ?? '—'}</div>
             <div className="text-[12px] text-td-muted truncate">{s.email ?? '—'}</div>
@@ -390,10 +390,10 @@ function People({ rows }: { rows: StaffRow[] }) {
             <span
               className="text-[12px] font-extrabold rounded-md px-2 py-0.5 inline-block"
               style={
-                s.status === 'approved' ? { background: '#e7f5ee', color: '#2fa36b' }
-                  : s.status === 'pending' ? { background: '#fcf3e3', color: '#e0962f' }
-                  : s.status === 'rejected' ? { background: '#fdecea', color: '#e8553c' }
-                  : { background: '#f0f2f7', color: '#6b7689' }
+                s.status === 'approved' ? { background: 'var(--color-td-tint-green)', color: 'var(--color-td-green)' }
+                  : s.status === 'pending' ? { background: 'var(--color-td-tint-amber)', color: 'var(--color-td-amber)' }
+                  : s.status === 'rejected' ? { background: 'var(--color-td-tint-red)', color: 'var(--color-td-red)' }
+                  : { background: 'var(--color-td-soft)', color: 'var(--color-td-muted)' }
               }
             >
               {s.status}
@@ -407,7 +407,7 @@ function People({ rows }: { rows: StaffRow[] }) {
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="text-center text-td-muted text-sm py-10 bg-white border border-td-border rounded-[16px]">{children}</div>
+  return <div className="text-center text-td-muted text-sm py-10 bg-td-card border border-td-border rounded-[16px]">{children}</div>
 }
 
 // The inbox. Collapsed, a report is who and what; expanded it is everything the
@@ -438,7 +438,7 @@ function Reports({ rows, onReply, onResolve }: {
         const open = openId === t.id
         const d = t.diagnostics ?? {}
         return (
-          <div key={t.id} className="bg-white border border-td-border rounded-[16px] overflow-hidden">
+          <div key={t.id} className="bg-td-card border border-td-border rounded-[16px] overflow-hidden">
             <button
               onClick={() => { setOpenId(open ? null : t.id); setDraft('') }}
               className="w-full text-left bg-transparent border-none p-4 cursor-pointer"
@@ -453,8 +453,8 @@ function Reports({ rows, onReply, onResolve }: {
                 <span
                   className="text-[11px] font-extrabold rounded-full py-1 px-2.5 shrink-0"
                   style={t.status === 'open'
-                    ? { background: '#eaf1fc', color: '#2a6fdb' }
-                    : { background: '#f2f2f2', color: '#6b7280' }}
+                    ? { background: 'var(--color-td-tint-blue)', color: 'var(--color-td-primary)' }
+                    : { background: 'var(--color-td-soft)', color: 'var(--color-td-muted)' }}
                 >
                   {t.status === 'open' ? 'Open' : 'Closed'}
                 </span>
@@ -468,7 +468,7 @@ function Reports({ rows, onReply, onResolve }: {
             </button>
 
             {open && (
-              <div className="border-t border-[#f0f2f7] p-4 flex flex-col gap-3">
+              <div className="border-t border-td-line p-4 flex flex-col gap-3">
                 <div>
                   <div className="text-[11px] font-extrabold text-td-muted mb-1">What happened instead</div>
                   <div className="text-[13px] text-td-text leading-[1.55] whitespace-pre-wrap">{t.outcome}</div>
@@ -478,7 +478,7 @@ function Reports({ rows, onReply, onResolve }: {
                   {d.version ?? '?'} · {d.viewport ?? '?'} · {d.userAgent ?? '?'}
                 </div>
                 {d.lastError && (
-                  <div className="text-td-red font-mono text-[11px] break-all bg-[#fdf3f0] rounded-[10px] p-2.5">
+                  <div className="text-td-red font-mono text-[11px] break-all bg-td-wash-red rounded-[10px] p-2.5">
                     {d.lastError}
                   </div>
                 )}
@@ -495,7 +495,7 @@ function Reports({ rows, onReply, onResolve }: {
                       .map((m, i) => (
                         <div
                           key={i}
-                          className={`text-[13px] leading-[1.5] rounded-[12px] p-2.5 px-3 whitespace-pre-wrap ${m.author === 'operator' ? 'bg-[#eaf1fc] text-td-dark' : 'bg-[#f6f7fa] text-td-text'}`}
+                          className={`text-[13px] leading-[1.5] rounded-[12px] p-2.5 px-3 whitespace-pre-wrap ${m.author === 'operator' ? 'bg-td-tint-blue text-td-dark' : 'bg-td-soft text-td-text'}`}
                         >
                           <div className="text-[11px] font-extrabold text-td-muted mb-1">
                             {m.author === 'operator' ? 'You' : t.reporter_name || 'Reporter'} · {day(m.created_at)}
@@ -524,7 +524,7 @@ function Reports({ rows, onReply, onResolve }: {
                   {t.status === 'open' && (
                     <button
                       onClick={() => onResolve(t.id)}
-                      className="text-[12.5px] font-extrabold py-2.5 px-3.5 rounded-[12px] cursor-pointer border border-td-border bg-white text-td-muted"
+                      className="text-[12.5px] font-extrabold py-2.5 px-3.5 rounded-[12px] cursor-pointer border border-td-border bg-td-card text-td-muted"
                     >
                       Close report
                     </button>
@@ -544,6 +544,6 @@ function Reports({ rows, onReply, onResolve }: {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] font-bold text-td-muted bg-[#f6f7fa] rounded-full py-1 px-2.5">{children}</span>
+    <span className="text-[11px] font-bold text-td-muted bg-td-soft rounded-full py-1 px-2.5">{children}</span>
   )
 }

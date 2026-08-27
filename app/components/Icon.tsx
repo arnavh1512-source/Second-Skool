@@ -219,14 +219,14 @@ function toIconName(value: string | null | undefined): IconName | null {
 // every tile would come out the same slate grey. Kept here so the pairing is
 // defined once instead of at each of the tiles.
 const TINT_INK: Record<string, string> = {
-  '#e7f5ee': '#2fa36b', // green
-  '#eaf1fc': '#2a6fdb', // primary blue
-  '#fcf3e3': '#e0962f', // amber
-  '#fdecea': '#e8553c', // red
-  '#eef0fc': '#5a63c9', // indigo
+  'var(--color-td-tint-green)': 'var(--color-td-green)', // green
+  'var(--color-td-tint-blue)': 'var(--color-td-primary)', // primary blue
+  'var(--color-td-tint-amber)': 'var(--color-td-amber)', // amber
+  'var(--color-td-tint-red)': 'var(--color-td-red)', // red
+  'var(--color-td-tint-indigo)': 'var(--color-td-indigo)', // indigo
 }
 
-export const ink = (tint: string) => TINT_INK[tint] ?? '#2a6fdb'
+export const ink = (tint: string) => TINT_INK[tint] ?? 'var(--color-td-primary)'
 
 type IconProps = {
   name: IconName

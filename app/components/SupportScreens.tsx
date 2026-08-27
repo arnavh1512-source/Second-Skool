@@ -13,8 +13,8 @@ const INPUT = 'w-full border border-td-border rounded-[14px] p-[13px] text-sm te
 const LABEL = 'text-xs font-bold text-td-muted mb-[7px] block'
 
 const STATUS: Record<SupportTicket['status'], { bg: string; fg: string; label: string }> = {
-  open: { bg: '#eaf1fc', fg: '#2a6fdb', label: 'Open' },
-  resolved: { bg: '#f2f2f2', fg: '#6b7280', label: 'Closed' },
+  open: { bg: 'var(--color-td-tint-blue)', fg: 'var(--color-td-primary)', label: 'Open' },
+  resolved: { bg: 'var(--color-td-soft)', fg: 'var(--color-td-muted)', label: 'Closed' },
 }
 
 function StatusPill({ status }: { status: SupportTicket['status'] }) {
@@ -45,7 +45,7 @@ export function SupportScreen() {
         you are using — you do not need to explain that part.
       </div>
 
-      <div className="bg-white border border-td-border rounded-[20px] p-4 grid gap-3.5">
+      <div className="bg-td-card border border-td-border rounded-[20px] p-4 grid gap-3.5">
         <div>
           <label className={LABEL}>What were you trying to do?</label>
           <input
@@ -88,7 +88,7 @@ export function SupportScreen() {
                 <button
                   key={f.value}
                   onClick={() => setReportDraft({ frequency: f.value as Frequency })}
-                  className={`flex-1 text-[13px] font-extrabold rounded-[14px] py-2.5 cursor-pointer border ${on ? 'bg-td-primary text-white border-td-primary' : 'bg-white text-td-dark border-td-border'}`}
+                  className={`flex-1 text-[13px] font-extrabold rounded-[14px] py-2.5 cursor-pointer border ${on ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-dark border-td-border'}`}
                 >
                   {f.label}
                 </button>
@@ -138,7 +138,7 @@ export function SupportScreen() {
       {myTickets.length > 0 && (
         <>
           <div className="text-[13px] font-extrabold text-td-muted mt-5 mb-[11px] px-1">Your reports</div>
-          <div className="bg-white border border-td-border rounded-[20px] overflow-hidden">
+          <div className="bg-td-card border border-td-border rounded-[20px] overflow-hidden">
             {myTickets.map(t => {
               const last = t.messages[t.messages.length - 1]
               const unread = last?.author === 'operator'
@@ -146,7 +146,7 @@ export function SupportScreen() {
                 <button
                   key={t.id}
                   onClick={() => openReport(t.id)}
-                  className="w-full text-left border-none bg-transparent border-b border-[#f0f2f7] p-[15px] px-[17px] flex items-center gap-3 cursor-pointer last:border-b-0"
+                  className="w-full text-left border-none bg-transparent border-b border-td-line p-[15px] px-[17px] flex items-center gap-3 cursor-pointer last:border-b-0"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-td-dark truncate">{t.intent}</div>
@@ -191,7 +191,7 @@ export function SupportThreadScreen() {
         {ticket.messages.map((m, i) => {
           const ours = m.author === 'operator'
           return (
-            <div key={i} className={`max-w-[85%] rounded-[16px] p-3 px-3.5 ${ours ? 'bg-white border border-td-border self-start' : 'bg-td-primary text-white self-end'}`}>
+            <div key={i} className={`max-w-[85%] rounded-[16px] p-3 px-3.5 ${ours ? 'bg-td-card border border-td-border self-start' : 'bg-td-primary text-white self-end'}`}>
               {ours && <div className="text-[11px] font-extrabold text-td-muted mb-1">Second Skool</div>}
               <div className="text-sm leading-[1.5] whitespace-pre-wrap">{m.body}</div>
               <div className={`text-[11px] mt-1 ${ours ? 'text-td-muted' : 'text-white/70'}`}>{fmtDate(m.createdAt)}</div>

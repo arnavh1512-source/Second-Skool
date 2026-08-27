@@ -3,6 +3,7 @@
 import { useDashboard, initials, type Screen } from '../store'
 import { Icon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
+import { ThemeToggle } from './ThemeToggle'
 
 export function HomeScreen() {
   const { role, go, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
@@ -17,10 +18,10 @@ export function HomeScreen() {
   // grid). Timetable is a bottom tab; Study material + all management (fees,
   // rankings, meetings, branches, subjects, reports, staff) live in More.
   const quickActions: { icon: IconName; label: string; tint: string; screen: Screen; tab?: string }[] = [
-    { icon: 'attendance', label: 'Attendance', tint: '#e7f5ee', screen: 'attendance' },
-    { icon: 'results', label: 'Results', tint: '#eaf1fc', screen: 'results' },
-    { icon: 'homework', label: 'Assignment', tint: '#fcf3e3', screen: 'assign' },
-    { icon: 'reminder', label: 'Reminder', tint: '#fdecea', screen: 'reminder' },
+    { icon: 'attendance', label: 'Attendance', tint: 'var(--color-td-tint-green)', screen: 'attendance' },
+    { icon: 'results', label: 'Results', tint: 'var(--color-td-tint-blue)', screen: 'results' },
+    { icon: 'homework', label: 'Assignment', tint: 'var(--color-td-tint-amber)', screen: 'assign' },
+    { icon: 'reminder', label: 'Reminder', tint: 'var(--color-td-tint-red)', screen: 'reminder' },
   ]
 
   return (
@@ -33,22 +34,25 @@ export function HomeScreen() {
             <div className="text-[17px] font-extrabold text-td-dark">{displayName}</div>
           </div>
         </button>
-        <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-[14px] border border-td-border bg-white flex items-center justify-center cursor-pointer">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a2332" strokeWidth="2" strokeLinecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
-          {hasAlerts && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-white" />}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <ThemeToggle />
+          <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2" strokeLinecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            {hasAlerts && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-td-card" />}
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-3 mb-[18px]">
         {isAdmin ? (
-          <button onClick={() => go('branches')} className="inline-flex items-center gap-[7px] bg-white border border-td-border rounded-[20px] py-[7px] px-[13px] cursor-pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+          <button onClick={() => go('branches')} className="inline-flex items-center gap-[7px] bg-td-card border border-td-border rounded-[20px] py-[7px] px-[13px] cursor-pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
             <span className="text-[12.5px] font-semibold text-td-text">{mainBranch?.name ?? 'No branch'}</span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9aa4b6" strokeWidth="2.4" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.4" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
           </button>
         ) : mainBranch ? (
-          <div className="inline-flex items-center gap-[7px] bg-white border border-td-border rounded-[20px] py-[7px] px-[13px]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a6fdb" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+          <div className="inline-flex items-center gap-[7px] bg-td-card border border-td-border rounded-[20px] py-[7px] px-[13px]">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
             <span className="text-[12.5px] font-semibold text-td-text">{mainBranch.name}</span>
           </div>
         ) : <span />}
@@ -60,7 +64,7 @@ export function HomeScreen() {
           <div className="text-2xl font-extrabold leading-none">{schedule.length}</div>
           <div className="text-[12px] opacity-85 mt-1.5 font-semibold">Classes today</div>
         </div>
-        <div className="bg-white border border-td-border rounded-[18px] p-3.5">
+        <div className="bg-td-card border border-td-border rounded-[18px] p-3.5">
           <div className="text-2xl font-extrabold leading-none text-td-dark">{students.length}</div>
           <div className="text-[12px] text-td-muted mt-1.5 font-semibold">Students</div>
         </div>
@@ -69,7 +73,7 @@ export function HomeScreen() {
       <div className="text-base font-extrabold text-td-dark mb-[13px]">Quick actions</div>
       <div className="grid grid-cols-4 gap-2 mb-[26px] lg:max-w-2xl">
         {quickActions.map(a => (
-          <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-white rounded-[18px] py-3 px-0.5 cursor-pointer flex flex-col items-center gap-[7px]">
+          <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-td-card rounded-[18px] py-3 px-0.5 cursor-pointer flex flex-col items-center gap-[7px]">
             <div className="w-[42px] h-[42px] rounded-[13px] flex items-center justify-center" style={{ background: a.tint, color: ink(a.tint) }}><Icon name={a.icon} size={21} /></div>
             <span className="text-[12px] font-bold text-td-text text-center leading-tight tracking-tight">{a.label}</span>
           </button>
@@ -82,12 +86,12 @@ export function HomeScreen() {
       ) : (
         <div className="flex flex-col gap-2.5 mb-[26px] lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {schedule.map((c, i) => (
-            <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="flex items-center gap-[13px] bg-white border border-td-border rounded-[18px] py-3.5 px-[15px]">
+            <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="flex items-center gap-[13px] bg-td-card border border-td-border rounded-[18px] py-3.5 px-[15px]">
               <div className="text-center shrink-0 w-[52px]">
                 <div className="text-sm font-extrabold text-td-primary">{c.time}</div>
                 <div className="text-[12px] text-td-subtle font-semibold">{c.ampm}</div>
               </div>
-              <div className="w-px h-[34px] bg-[#eef1f7]" />
+              <div className="w-px h-[34px] bg-td-soft" />
               <div className="flex-1">
                 <div className="text-[13.5px] font-bold text-td-dark">{c.subject}</div>
                 <div className="text-xs text-td-muted mt-0.5">{c.klass} · {c.room}</div>
