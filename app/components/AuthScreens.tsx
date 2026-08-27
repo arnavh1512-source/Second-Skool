@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { copyText } from '../lib/share'
+import { copyText, whatsappShareUrl } from '../lib/share'
 import { useDashboard } from '../store'
 import { supabase } from '../lib/supabase'
 import { PrimaryButton } from './Shell'
@@ -15,6 +15,20 @@ const LOGO = (
 )
 
 const CLASS_OPTIONS = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12']
+
+// Anyone stuck on these screens cannot reach the in-app report — they are not
+// inside the app yet. This is the one place a direct line is worth its cost.
+function HelpLine() {
+  return (
+    <a
+      href={whatsappShareUrl('918140081461', 'Hi, I need help with Second Skool.')}
+      target="_blank" rel="noreferrer"
+      className="text-[12.5px] font-bold text-td-primary py-3 no-underline"
+    >
+      Stuck? Message us on WhatsApp
+    </a>
+  )
+}
 
 export function LoginScreen() {
   const { authLoading, notify, loadStudentByCode, stuSignup, setStuSignup, studentSignup } = useDashboard()
@@ -490,7 +504,10 @@ export function RegisterScreen() {
         </div>
       )}
 
-      <button onClick={signOut} className="mt-auto text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent">Sign out</button>
+      <div className="mt-auto pt-6 flex flex-col items-center">
+        <HelpLine />
+        <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent">Sign out</button>
+      </div>
     </div>
   )
 }
@@ -522,6 +539,7 @@ export function PendingScreen() {
       <div className="text-[20px] font-extrabold text-td-dark">Waiting for approval</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your head teacher needs to approve <span className="font-bold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</div>
       <button onClick={() => window.location.reload()} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Check again</button>
+      <HelpLine />
       <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent mt-2">Sign out</button>
     </div>
   )
@@ -548,6 +566,7 @@ export function DeniedScreen() {
         <>
           <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
           <button onClick={() => setMode('join')} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Enter a join code</button>
+          <HelpLine />
           <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent mt-2">Sign out</button>
         </>
       )}

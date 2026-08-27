@@ -31,7 +31,11 @@ export const SPINE_TABLES = ['tests', 'students', 'teachers', 'subjects', 'branc
 //   profiles — members are detached (centre_id set to null), never deleted;
 //              erasing a centre must not erase the people who were in it.
 //   centres  — the parent row itself, removed last by the caller.
-export const CENTRE_DELETE_EXEMPT = ['profiles', 'centres'] as const
+//   support_tickets — a bug report has to outlive the centre it came from, or
+//              deleting a centre erases the only record of what went wrong in
+//              it. Its centre_id is `on delete set null`, so it never blocks
+//              the parent, and centre_name is stored as text for exactly this.
+export const CENTRE_DELETE_EXEMPT = ['profiles', 'centres', 'support_tickets'] as const
 
 // What counts as a centre being used. This drives the operator console's
 // "no activity in N days (never used)" flag, which is the prompt to delete a

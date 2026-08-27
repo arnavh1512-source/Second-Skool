@@ -648,7 +648,7 @@ export function StuAssignmentsScreen() {
 }
 
 export function StuProfileScreen() {
-  const { signOut, students, currentStudentDbId, stuResults, googleEmail, notify } = useDashboard()
+  const { signOut, students, currentStudentDbId, stuResults, googleEmail, notify, goFrom } = useDashboard()
   const me = students.find(s => s.dbId === currentStudentDbId)
   const displayName = me?.name ?? googleEmail?.split('@')[0] ?? 'Student'
   const ini = initials(displayName)
@@ -717,6 +717,14 @@ export function StuProfileScreen() {
           </div>
         ))}
       </div>
+
+      <button
+        onClick={() => goFrom('support', 'stuProfile', 'stuProfile')}
+        className="w-full text-left bg-white border border-td-border rounded-[18px] p-3.5 mb-5 flex items-center gap-[13px] cursor-pointer"
+      >
+        <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center bg-[#fdecea]"><Icon name="warning" size={20} /></div>
+        <div className="flex-1 text-sm font-bold text-td-dark">Report a problem</div>
+      </button>
 
       <div className="text-[12px] text-td-subtle text-center leading-relaxed">Your details are managed by your tuition centre and can&apos;t be changed here. Ask your teacher if something needs updating.</div>
     </div>

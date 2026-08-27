@@ -52,6 +52,9 @@ const MoreScreen = dyn(() => import('./components/UtilityScreens'), 'MoreScreen'
 const StaffProfileScreen = dyn(() => import('./components/UtilityScreens'), 'StaffProfileScreen')
 const NotificationsScreen = dyn(() => import('./components/UtilityScreens'), 'NotificationsScreen')
 
+const SupportScreen = dyn(() => import('./components/SupportScreens'), 'SupportScreen')
+const SupportThreadScreen = dyn(() => import('./components/SupportScreens'), 'SupportThreadScreen')
+
 const StuHomeScreen = dyn(() => import('./components/StudentScreens'), 'StuHomeScreen')
 const StuAttendanceScreen = dyn(() => import('./components/StudentScreens'), 'StuAttendanceScreen')
 const StuResultsScreen = dyn(() => import('./components/StudentScreens'), 'StuResultsScreen')
@@ -148,6 +151,7 @@ const SCREEN_TITLES: Partial<Record<Screen, string>> = {
   stuRanking: 'Ranking', stuTeachers: 'Teachers', stuTeacher: 'Teacher', stuFees: 'Fees',
   stuNotif: 'Notifications', stuProfile: 'Profile', stuTimetable: 'Timetable',
   stuAssignments: 'Assignments', stuNotes: 'Study material',
+  support: 'Report a problem', supportThread: 'Your report',
 }
 
 function ScreenRouter() {
@@ -232,6 +236,8 @@ function ScreenRouter() {
     case 'stuTimetable': return <StuTimetableScreen />
     case 'stuAssignments': return <StuAssignmentsScreen />
     case 'stuNotes': return <StuNotesScreen />
+    case 'support': return <SupportScreen />
+    case 'supportThread': return <SupportThreadScreen />
     default: return <HomeScreen />
   }
 }
