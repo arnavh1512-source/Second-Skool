@@ -27,8 +27,10 @@ create table if not exists public.support_tickets (
   reporter_student_id uuid references public.students(id) on delete set null,
 
   -- Denormalised so the operator can read a ticket without a join, and so it
-  -- survives the reporter's account being deleted.
-  centre_id           uuid references public.centres(id) on delete set null,
+  -- survives the reporter's account being deleted. Staff let the default fill
+  -- centre_id, exactly as students does; the student RPC passes it explicitly
+  -- because there is no session for current_centre() to read.
+  centre_id           uuid references public.centres(id) on delete set null default public.current_centre(),
   centre_name         text not null default '',
   reporter_name       text not null default '',
   reporter_role       text not null default '',

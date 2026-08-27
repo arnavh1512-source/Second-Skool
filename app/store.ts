@@ -13,6 +13,7 @@ import { createCentreSlice } from './store/slices/centre'
 import { createDataSlice } from './store/slices/data'
 import { createFeesSlice } from './store/slices/fees'
 import { createNavSlice } from './store/slices/nav'
+import { createSupportSlice } from './store/slices/support'
 import { createNotesSlice } from './store/slices/notes'
 import { createNotificationsSlice } from './store/slices/notifications'
 import { createOperatorSlice } from './store/slices/operator'
@@ -25,6 +26,7 @@ import { createTeachersSlice } from './store/slices/teachers'
 export const useDashboard = create<Store>()((...a) => ({
   ...initialState,
   ...createNavSlice(...a),
+  ...createSupportSlice(...a),
   ...createDataSlice(...a),
   ...createStudentsSlice(...a),
   ...createTeachersSlice(...a),

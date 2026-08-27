@@ -1,6 +1,7 @@
 // Every shape the dashboard store deals in. Kept apart from the slices so a
 // screen can import a type without pulling the whole store graph with it.
 import type { IconName } from '../components/Icon'
+import type { ReportDraft } from '../lib/support'
 
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
@@ -10,6 +11,7 @@ export type Screen =
   | 'stuSignup' | 'stuPending' | 'stuDenied'
   | 'stuHome' | 'stuAttendance' | 'stuResults' | 'stuRanking' | 'stuTeachers'
   | 'stuTeacher' | 'stuFees' | 'stuNotif' | 'stuProfile' | 'stuTimetable' | 'stuAssignments' | 'stuNotes'
+  | 'support' | 'supportThread'
 
 export type Tab = 'home' | 'timetable' | 'students' | 'teachers' | 'more'
   | 'stuHome' | 'stuResults' | 'stuRanking' | 'stuTeachers' | 'stuProfile'
@@ -58,6 +60,17 @@ export interface TeacherActivity { name: string; email: string; is_head: boolean
 export interface StaffProfile { name: string; phone: string; subject: string; qualification: string }
 
 export type ToastKind = 'info' | 'error'
+
+export type SupportMessage = { author: 'reporter' | 'operator'; body: string; createdAt: string }
+// `intent` is the title - see app/lib/support.ts for why there is no subject.
+export interface SupportTicket {
+  id: string
+  intent: string
+  outcome: string
+  status: 'open' | 'resolved'
+  createdAt: string
+  messages: SupportMessage[]
+}
 
 export interface State {
   screen: Screen; tab: Tab; role: Role; origin: string | null
@@ -118,6 +131,12 @@ export interface State {
   stuPendingFee: { amount: string; period: string; dueDate: string } | null
   searchQuery: string
   lastAdded: { code: string; name: string; parent: string } | null
+  myTickets: SupportTicket[]
+  openTicketId: string | null
+  reportDraft: ReportDraft
+  // The screenshot as a data URL, already downscaled. Held apart from the
+  // draft because it is the one field a reporter attaches rather than types.
+  reportShot: string | null
 }
 
 export interface Actions {
@@ -125,6 +144,12 @@ export interface Actions {
   goFrom: (screen: Screen, tab: Tab, origin: string) => void
   back: () => void
   notify: (msg: string, kind?: ToastKind) => void
+  setReportDraft: (patch: Partial<ReportDraft>) => void
+  setReportShot: (file: File | null) => Promise<void>
+  loadMyTickets: () => Promise<void>
+  fileReport: () => Promise<void>
+  openReport: (id: string) => void
+  replyToReport: (body: string) => Promise<void>
   dismissToast: () => void
   setOnline: (v: boolean) => void
   set: (partial: Partial<State>) => void
