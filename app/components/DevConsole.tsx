@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useDashboard, SESSION_EXPIRED, devFetch, fmtDate } from '../store'
+import { useDashboard, SESSION_EXPIRED, devFetch, fmtDate, rupee } from '../store'
 import { ScreenHeader } from './Shell'
 
 // ---- shape of /api/dev ------------------------------------------------------
@@ -47,7 +47,7 @@ type Snapshot = {
   errors: string[]
 }
 
-const inr = (n: number) => '₹' + Math.round(n).toLocaleString('en-IN')
+const inr = (n: number) => rupee(Math.round(n))
 
 // "3h ago" / "12d ago" — an absolute timestamp is noise when the only question
 // is whether someone has been here recently.

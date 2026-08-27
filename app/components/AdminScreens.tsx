@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useBusy } from '../lib/use-busy'
-import { useDashboard, initials, av, fmtDate } from '../store'
+import { useDashboard, initials, av, fmtDate, rupee } from '../store'
 import { ScreenHeader, EmptyState, ConfirmDialog } from './Shell'
 import { supabase } from '../lib/supabase'
 import { whatsappShareUrl, weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
@@ -282,7 +282,6 @@ export function ReportsScreen() {
   const [tab, setTab] = useState<'branches' | 'students' | 'teachers'>('branches')
   const [period, setPeriod] = useState<7 | 30>(7)
   useEffect(() => { loadWeeklyReport(period); loadStudentReports(period); loadTeacherActivity(period); loadMyCentre() }, [period, loadWeeklyReport, loadStudentReports, loadTeacherActivity, loadMyCentre])
-  const inr = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`
 
   return (
     <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
@@ -386,8 +385,8 @@ export function ReportsScreen() {
                       { label: 'Students', value: `${b.students}${b.new_students ? ` (+${b.new_students})` : ''}` },
                       { label: 'Staff', value: String(b.staff) },
                       { label: 'Attendance', value: `${b.att_pct}%` },
-                      { label: 'Fees collected', value: inr(b.fees_collected) },
-                      { label: 'Fees pending', value: inr(b.fees_pending) },
+                      { label: 'Fees collected', value: rupee(b.fees_collected) },
+                      { label: 'Fees pending', value: rupee(b.fees_pending) },
                     ].map(s => (
                       <div key={s.label}>
                         <div className="text-[17px] font-extrabold text-td-dark leading-none">{s.value}</div>

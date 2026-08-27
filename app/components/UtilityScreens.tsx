@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { indexOfStudent, studentKey } from '../lib/student-key'
 import { useBusy } from '../lib/use-busy'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, parseDay, LIMITS, MIN_PASSWORD_LENGTH, clampText, type Screen, type Student } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, parseDay, rupee, LIMITS, MIN_PASSWORD_LENGTH, clampText, type Screen, type Student } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
@@ -27,7 +27,6 @@ export function FeesScreen() {
   const pendingCount = students.filter(s => s.feeStatus !== 'Paid').length
   const totalCollected = students.reduce((n, s) => n + (s.feeCollected ?? 0), 0)
   const totalRemaining = students.reduce((n, s) => n + (s.feeDue ?? 0), 0)
-  const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
   const rows = [...students.filter(d => d.feeStatus !== 'Paid'), ...students.filter(d => d.feeStatus === 'Paid')]
 
   const handleAdd = async () => {
@@ -61,11 +60,11 @@ export function FeesScreen() {
 
       <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
         <div className="flex-1 bg-[#e7f5ee] rounded-2xl p-3.5">
-          <div className="text-[21px] font-extrabold text-td-green leading-tight">{inr(totalCollected)}</div>
+          <div className="text-[21px] font-extrabold text-td-green leading-tight">{rupee(totalCollected)}</div>
           <div className="text-[12px] text-[#5a8a72] font-semibold mt-[3px]">Collected · {paidCount} paid</div>
         </div>
         <div className="flex-1 bg-[#fdecea] rounded-2xl p-3.5">
-          <div className="text-[21px] font-extrabold text-td-red leading-tight">{inr(totalRemaining)}</div>
+          <div className="text-[21px] font-extrabold text-td-red leading-tight">{rupee(totalRemaining)}</div>
           <div className="text-[12px] text-[#a35545] font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
         </div>
       </div>
@@ -121,8 +120,8 @@ export function FeesScreen() {
                     <div className="text-[13.5px] font-bold text-td-dark truncate">{d.name}</div>
                     <div className="text-xs text-td-muted mt-0.5">
                       {d.klass}
-                      {(d.feeDue ?? 0) > 0 && <span className="text-td-red font-semibold"> · {inr(d.feeDue!)} due</span>}
-                      {(d.feeDue ?? 0) === 0 && (d.feeCollected ?? 0) > 0 && <span className="text-td-green font-semibold"> · {inr(d.feeCollected!)} paid</span>}
+                      {(d.feeDue ?? 0) > 0 && <span className="text-td-red font-semibold"> · {rupee(d.feeDue!)} due</span>}
+                      {(d.feeDue ?? 0) === 0 && (d.feeCollected ?? 0) > 0 && <span className="text-td-green font-semibold"> · {rupee(d.feeCollected!)} paid</span>}
                     </div>
                   </button>
                   <button onClick={() => toggleFeeStatus(studentKey(d))} className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
@@ -136,7 +135,7 @@ export function FeesScreen() {
                       <div className="text-xs text-td-muted">No fee records for {d.name} yet.</div>
                     ) : records.map(r => {
                       const due = parseDay(r.dueDate)
-                      const label = `${inr(r.amount)} · ${r.period}`
+                      const label = `${rupee(r.amount)} · ${r.period}`
                       return (
                         <div key={r.dbId} className="flex items-center gap-2.5">
                           <div className="flex-1 min-w-0">

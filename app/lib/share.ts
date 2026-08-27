@@ -2,7 +2,7 @@
 // Students never sign in with Google — they enter a per-student code — so the
 // teacher needs a frictionless way to deliver that code to the parent.
 
-import { fmtDate } from '../store/format'
+import { fmtDate, rupee } from '../store/format'
 
 const FALLBACK_ORIGIN = 'https://tution-management-taupe.vercel.app'
 
@@ -25,8 +25,6 @@ export function studentCodeMessage(name: string, code: string): string {
 
 import type { WeeklyReport, StudentReport } from '../store'
 
-const inr = (n: number) => `₹${(n ?? 0).toLocaleString('en-IN')}`
-
 // Formats the weekly branch report as a WhatsApp-friendly message (*bold* via
 // asterisks, • bullets). Sent by the head to themselves or a co-owner.
 export function weeklyReportMessage(r: WeeklyReport, centreName = 'Second Skool', days = 7): string {
@@ -39,8 +37,8 @@ export function weeklyReportMessage(r: WeeklyReport, centreName = 'Second Skool'
     lines.push(`• Students: ${b.students}${b.new_students ? ` (+${b.new_students} new this ${period})` : ''}`)
     lines.push(`• Staff: ${b.staff}`)
     lines.push(`• Attendance (${days}d): ${b.att_pct}%`)
-    lines.push(`• Fees collected (${days}d): ${inr(b.fees_collected)}`)
-    lines.push(`• Fees pending: ${inr(b.fees_pending)}`)
+    lines.push(`• Fees collected (${days}d): ${rupee(b.fees_collected)}`)
+    lines.push(`• Fees pending: ${rupee(b.fees_pending)}`)
     lines.push('')
   }
   if (r.unassigned_students) lines.push(`Unassigned students: ${r.unassigned_students}`)
