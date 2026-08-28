@@ -2,12 +2,13 @@
 
 import { useDashboard, initials, type Screen } from '../store'
 import { reachSummary } from '../lib/reach'
+import { ChevronRight } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { ThemeToggle } from './ThemeToggle'
 
 export function HomeScreen() {
-  const { role, go, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
+  const { role, go, goFrom, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
   const isAdmin = role === 'admin'
   const pendingStaff = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
   const hasAlerts = pendingStudents.length > 0 || pendingStaff > 0
@@ -76,16 +77,22 @@ export function HomeScreen() {
         </div>
       </div>
 
+      {/* Tapping through is the point: the head learns the number here and the
+          names on the other side. origin='reach' is what carries the filter,
+          and any later go() clears it, so the roster never stays half-hidden. */}
       {reach && (
-        <div className="bg-td-card border border-td-border rounded-[18px] p-4 mb-3.5 lg:max-w-md">
+        <button onClick={() => goFrom('students', 'students', 'reach')} className="block text-left bg-td-card border border-td-border rounded-[18px] p-4 mb-3.5 lg:max-w-md cursor-pointer">
           <div className="text-[11px] font-bold text-td-muted uppercase tracking-[.06em]">Parent reach &middot; this week</div>
           <div className="text-2xl font-extrabold text-td-dark leading-none mt-2">{reach.active} of {students.length}</div>
           <div className="text-[12px] text-td-muted font-semibold mt-1.5">families opened the app</div>
           <div role="progressbar" aria-label="Families who opened the app this week" aria-valuenow={reach.percent} className="h-1.5 rounded-full bg-td-soft mt-3 overflow-hidden">
             <div className="h-full rounded-full bg-td-primary" style={{ width: `${reach.percent}%` }} />
           </div>
-          <div className="text-[11.5px] text-td-subtle font-semibold mt-2">{reach.missed ? `${reach.missed} did not open this week` : 'Every family looked this week'}</div>
-        </div>
+          <div className="flex items-center justify-between gap-2 mt-2">
+            <span className="text-[11.5px] text-td-subtle font-semibold">{reach.missed ? `${reach.missed} did not open this week` : 'Every family looked this week'}</span>
+            <ChevronRight />
+          </div>
+        </button>
       )}
 
       <div className="text-base font-extrabold text-td-dark mb-[13px]">Quick actions</div>

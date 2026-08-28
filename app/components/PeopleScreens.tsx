@@ -4,6 +4,7 @@ import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
 import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState } from './Shell'
 import { whatsappShareUrl, studentCodeMessage, copyText } from '../lib/share'
 import { findStudent, indexOfStudent, studentKey } from '../lib/student-key'
+import { opened } from '../lib/reach'
 import { useBusy } from '../lib/use-busy'
 
 // Full school range so any tuition centre can pick the right standard.
@@ -12,7 +13,10 @@ const STANDARDS = ['Class 12', 'Class 11', 'Class 10', 'Class 9', 'Class 8', 'Cl
 export function StudentsScreen() {
   const { students, role, origin, back, go, goFrom, set, searchQuery } = useDashboard()
   const isAdmin = role === 'admin'
-  const filtered = searchQuery ? students.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) : students
+  // Arrived from the parent-reach card on Home, which asked "which families?".
+  const missedOnly = origin === 'reach'
+  const roster = missedOnly ? students.filter(s => !opened(s)) : students
+  const filtered = searchQuery ? roster.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) : roster
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 td-wide">
@@ -28,13 +32,25 @@ export function StudentsScreen() {
         )}
       </div>
 
+      {missedOnly && (
+        <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
+          <span className="text-[12.5px] font-bold text-td-dark">Did not open the app this week</span>
+          <button onClick={() => go('students', 'students')} className="border-none bg-transparent text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2.5 bg-td-card border border-td-border rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
-        students.length === 0 ? (
+        missedOnly && !searchQuery ? (
+          <EmptyState
+            title="Every family opened the app"
+            hint="All of them looked at least once this week. Nothing to chase."
+          />
+        ) : students.length === 0 ? (
           <EmptyState
             title="No students yet"
             hint="Add your students once, and attendance, marks, fees and rankings all work from that list."

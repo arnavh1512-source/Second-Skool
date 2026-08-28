@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { reachSummary, ACTIVE_DAYS } from '../app/lib/reach'
+import { reachSummary, opened, ACTIVE_DAYS } from '../app/lib/reach'
 
 // The head reads this number and decides whether the app is worth renewing, so
 // the boundary between "looking" and "gone" has to be the same boundary every
@@ -38,5 +38,18 @@ describe('reachSummary', () => {
 
   it('rounds the percentage to a whole number the head can say out loud', () => {
     expect(reachSummary([{ lastSeenAt: ago(1) }, { lastSeenAt: ago(2) }, {}], NOW).percent).toBe(67)
+  })
+})
+
+// The roster filter on the Students screen is the negation of this, so a family
+// that never opened must never test as opened.
+describe('opened', () => {
+  it('is true inside the window and false outside it', () => {
+    expect(opened({ lastSeenAt: ago(ACTIVE_DAYS) }, NOW)).toBe(true)
+    expect(opened({ lastSeenAt: ago(ACTIVE_DAYS + 1) }, NOW)).toBe(false)
+  })
+
+  it('is false for a family with no timestamp at all', () => {
+    expect(opened({}, NOW)).toBe(false)
   })
 })

@@ -28,13 +28,16 @@ export interface ReachSummary {
   percent: number
 }
 
+/** Did this family open the app inside the window? */
+export function opened(student: { lastSeenAt?: string }, now = Date.now()): boolean {
+  // A missing or unreadable timestamp is not evidence anyone looked.
+  const at = student.lastSeenAt ? Date.parse(student.lastSeenAt) : NaN
+  return !Number.isNaN(at) && now - at <= ACTIVE_DAYS * DAY
+}
+
 export function reachSummary(students: readonly { lastSeenAt?: string }[], now = Date.now()): ReachSummary {
   let active = 0
-  for (const s of students) {
-    // A missing or unreadable timestamp is not evidence anyone looked.
-    const at = s.lastSeenAt ? Date.parse(s.lastSeenAt) : NaN
-    if (!Number.isNaN(at) && now - at <= ACTIVE_DAYS * DAY) active++
-  }
+  for (const s of students) if (opened(s, now)) active++
   const total = students.length
   return { active, missed: total - active, percent: total ? Math.round((active / total) * 100) : 0 }
 }
