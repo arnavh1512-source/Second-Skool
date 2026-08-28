@@ -190,7 +190,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       // Defensive caps: orderings put the newest rows first, so a centre that
       // outgrows a cap loses only the oldest tail, never current data.
       supabase.from('teachers').select('id,name,subject,experience,qualification,rating,about,branch_id').order('created_at', { ascending: false }).limit(300),
-      supabase.from('students').select('id,name,class,batch,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at').order('created_at', { ascending: false }).limit(2000),
+      supabase.from('students').select('id,name,class,batch,school,parent_contact,student_code,fee_status,address,branch_id,profile_id,status,created_at,last_seen_at').order('created_at', { ascending: false }).limit(2000),
       supabase.from('branches').select('*').order('is_main', { ascending: false }).limit(50),
       supabase.from('meetings').select('*').order('date', { ascending: false }).limit(200),
       supabase.from('assignments').select('*').order('due_date', { ascending: false }).limit(500),
@@ -485,6 +485,7 @@ function mapStudent(s: Record<string, unknown>): Student {
     id: (s.student_code as string) ?? '', address: (s.address as string) ?? '',
     dbId: s.id as string, status: (s.status as string) ?? 'approved',
     batch: (s.batch as string) ?? undefined,
+    lastSeenAt: (s.last_seen_at as string) ?? undefined,
   }
 }
 
