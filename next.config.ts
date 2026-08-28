@@ -25,6 +25,8 @@ const csp = [
   "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.supabase.in",
   "worker-src 'self'",
   "manifest-src 'self'",
+  // Also covers what X-Frame-Options used to: every browser that reads a
+  // CSP ignores that header in favour of this directive.
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
@@ -38,7 +40,6 @@ const nextConfig: NextConfig = {
       headers: [
         { key: "Content-Security-Policy", value: csp },
         { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
-        { key: "X-Frame-Options", value: "DENY" },
         { key: "X-Content-Type-Options", value: "nosniff" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },

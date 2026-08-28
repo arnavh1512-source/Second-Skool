@@ -32,7 +32,7 @@ export function HomeScreen() {
   ]
 
   return (
-    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide td-screen">
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => go('staffProfile')} aria-label="Open my profile" className="flex items-center gap-3 border-none bg-transparent p-0 cursor-pointer text-left">
           <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
@@ -95,7 +95,7 @@ export function HomeScreen() {
         </button>
       )}
 
-      <div className="text-base font-extrabold text-td-dark mb-[13px]">Quick actions</div>
+      <div className="td-h2">Quick actions</div>
       <div className="grid grid-cols-4 gap-2 mb-[26px] lg:max-w-2xl">
         {quickActions.map(a => (
           <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-td-card rounded-[18px] py-3 px-0.5 cursor-pointer flex flex-col items-center gap-[7px]">
@@ -105,7 +105,7 @@ export function HomeScreen() {
         ))}
       </div>
 
-      <div className="text-base font-extrabold text-td-dark mb-[13px]">Today&apos;s schedule</div>
+      <div className="td-h2">Today&apos;s schedule</div>
       {schedule.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No classes scheduled for today</div>
       ) : (

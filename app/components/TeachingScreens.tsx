@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { isoDay } from '../store/format'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
-import { ScreenHeader, PrimaryButton, EmptyState } from './Shell'
+import { ScreenHeader, PrimaryButton, EmptyState, options, classesOf } from './Shell'
 import { pickAttendanceClass } from '../lib/attendance'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
@@ -25,7 +25,7 @@ export function TimetableScreen() {
   // this existed has no teacher, and the parent-facing screen falls back to
   // the branch directory rather than showing a gap.
   const [teacherId, setTeacherId] = useState('')
-  const classes = [...new Set([...students.map(s => s.klass), ...(klass ? [klass] : [])])].filter(Boolean)
+  const classes = classesOf(klass ? [...students, { klass }] : students)
   const selKlass = klass || classes[0] || ''
   const days = (() => {
     const today = new Date()
@@ -81,7 +81,7 @@ export function TimetableScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 td-wide">
+    <div className="td-screen td-wide">
       <ScreenHeader title="Timetable" onBack={back} right={isAdmin ? (
         <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
@@ -104,31 +104,31 @@ export function TimetableScreen() {
         <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
           <div className="text-sm font-extrabold text-td-dark">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Start</label>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+            <div><label className="td-label">Start</label>
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field text-sm focus:border-td-primary" />
             </div>
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">End</label>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+            <div><label className="td-label">End</label>
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="td-field text-sm focus:border-td-primary" />
             </div>
           </div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
+          <div><label className="td-label">Subject</label>
+            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="td-field text-[13.5px] bg-td-card">
               {subjectNames.map(s => <option key={s}>{s}</option>)}
               <option>Free period</option>
             </select>
           </div>
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
-                {classes.length ? classes.map(c => <option key={c}>{c}</option>) : <option value="">Add students first</option>}
+            <div><label className="td-label">Class</label>
+              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+                {options(classes, 'Add students first')}
               </select>
             </div>
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Room</label>
-              <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+            <div><label className="td-label">Room</label>
+              <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="td-field text-sm focus:border-td-primary" />
             </div>
           </div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Teacher</label>
-            <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
+          <div><label className="td-label">Teacher</label>
+            <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="td-field text-[13.5px] bg-td-card">
               <option value="">Not set</option>
               {teachers.map(t => <option key={t.dbId} value={t.dbId}>{t.name} &middot; {t.subject}</option>)}
             </select>
@@ -220,7 +220,7 @@ export function TimetableScreen() {
 
 export function AttendanceScreen() {
   const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role } = useDashboard()
-  const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
+  const classes = classesOf(students)
 
   const selClass = pickAttendanceClass(classes, attClass)
 
@@ -240,7 +240,7 @@ export function AttendanceScreen() {
   const presentCount = roster.length - absentCount
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 td-wide">
+    <div className="td-screen td-wide">
       <div className="flex items-center gap-3.5 mb-[18px]">
         <button onClick={back} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -316,7 +316,7 @@ export function ResultsScreen() {
   // in the class. Keying by student makes that structurally impossible; clearing
   // on a class change stops half-entered marks reappearing later.
   const [marks, setMarks] = useState<Record<string, string>>({})
-  const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
+  const classes = classesOf(students)
   const selKlass = klass || classes[0] || ''
   const roster = students.filter(s => s.klass === selKlass)
   const subjectNames = subjects.map(s => s.name)
@@ -384,27 +384,27 @@ export function ResultsScreen() {
   }
 
   return (
-    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide td-screen">
       <ScreenHeader title="Enter Results" onBack={back} />
 
       <div className="grid grid-cols-2 gap-[11px] mb-[13px]">
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-          <select value={selKlass} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
+        <div><label className="td-label">Class</label>
+          <select value={selKlass} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field text-[13.5px] bg-td-card">
             {classes.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
-            {subjectNames.length ? subjectNames.map(s => <option key={s}>{s}</option>) : <option value="">Add subjects first</option>}
+        <div><label className="td-label">Subject</label>
+          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+            {options(subjectNames, 'Add subjects first')}
           </select>
         </div>
       </div>
       <div className="grid grid-cols-[2fr_1fr] gap-[11px] mb-[18px]">
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Test name</label><input value={testName} onChange={e => setTestName(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] text-td-dark outline-none focus:border-td-primary" /></div>
+        <div><label className="td-label">Test name</label><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-[13.5px] focus:border-td-primary" /></div>
+        <div><label className="td-label">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-[13.5px] focus:border-td-primary" /></div>
       </div>
 
-      <div className="text-sm font-extrabold text-td-dark mb-3">Enter marks</div>
+      <div className="td-h2">Enter marks</div>
       {roster.length === 0 ? (
         <EmptyState
           title={selKlass ? `No students in ${selKlass}` : 'No students in this class'}
@@ -438,29 +438,29 @@ export function AssignmentsScreen() {
   const [instructions, setInstructions] = useState('')
   const subjectNames = subjects.map(s => s.name)
   const selSubject = subject || subjectNames[0] || ''
-  const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
+  const classes = classesOf(students)
   const selKlass = klass || classes[0] || ''
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="New Assignment" onBack={back} />
 
       <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm focus:border-td-primary" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
-              {subjectNames.length ? subjectNames.map(s => <option key={s}>{s}</option>) : <option value="">Add subjects first</option>}
+          <div><label className="td-label">Subject</label>
+            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+              {options(subjectNames, 'Add subjects first')}
             </select>
           </div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
-              {classes.length ? classes.map(c => <option key={c}>{c}</option>) : <option value="">Add students first</option>}
+          <div><label className="td-label">Class</label>
+            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+              {options(classes, 'Add students first')}
             </select>
           </div>
         </div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Due date</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Instructions</label><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none resize-none focus:border-td-primary" /></div>
+        <div><label className="td-label">Due date</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Instructions</label><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="td-field text-sm resize-none focus:border-td-primary" /></div>
         <PrimaryButton onClick={async () => {
           // Same silent swallow as the timetable: with no students on the
           // roster the class select has nothing to offer, and Create used to
@@ -470,7 +470,7 @@ export function AssignmentsScreen() {
         }}>Create &amp; notify class</PrimaryButton>
       </div>
 
-      <div className="text-[15px] font-extrabold text-td-dark mb-3">Active assignments</div>
+      <div className="td-h2">Active assignments</div>
       {assignmentsList.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-4">No assignments yet</div>
       ) : (
@@ -516,7 +516,7 @@ export function RemindersScreen() {
   ]
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Send Reminder" onBack={back} />
 
       <label className="text-xs font-bold text-td-muted mb-2.5 block">Type</label>
@@ -532,15 +532,15 @@ export function RemindersScreen() {
         })}
       </div>
 
-      <label className="text-xs font-bold text-td-muted mb-[7px] block">Send to</label>
-      <select value={filter} onChange={e => setFilter(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none mb-4">
+      <label className="td-label">Send to</label>
+      <select value={filter} onChange={e => setFilter(e.target.value)} className="td-field text-[13.5px] bg-td-card mb-4">
         <option value="all">All students</option>
         <option value="absentees">Absentees only</option>
         <option value="fees_due">Students with fees due</option>
       </select>
 
-      <label className="text-xs font-bold text-td-muted mb-[7px] block">Message</label>
-      <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none resize-none mb-[18px] focus:border-td-primary" />
+      <label className="td-label">Message</label>
+      <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field text-sm resize-none mb-[18px] focus:border-td-primary" />
 
       <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>
 

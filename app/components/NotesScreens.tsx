@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useDashboard } from '../store'
-import { ScreenHeader, PrimaryButton } from './Shell'
+import { ScreenHeader, PrimaryButton, options, classesOf } from './Shell'
 import { Icon, ink } from './Icon'
 import { uploadNoteFile } from '../lib/upload'
 import { writeLocal } from '../lib/storage'
@@ -19,7 +19,7 @@ export function NotesScreen() {
   const [title, setTitle] = useState('')
   const [subject, setSubject] = useState('')
   const [klass, setKlass] = useState('')
-  const classes = [...new Set(students.map(s => s.klass))].filter(Boolean)
+  const classes = classesOf(students)
   const selKlass = klass || classes[0] || ''
   const [body, setBody] = useState('')
   const [link, setLink] = useState('')
@@ -44,7 +44,7 @@ export function NotesScreen() {
   })
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Study Material" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Share'}
@@ -53,25 +53,25 @@ export function NotesScreen() {
 
       {showForm && (
         <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+          <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field text-sm focus:border-td-primary" /></div>
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject</label>
-              <select value={subject} onChange={e => setSubject(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
+            <div><label className="td-label">Subject</label>
+              <select value={subject} onChange={e => setSubject(e.target.value)} className="td-field text-[13.5px] bg-td-card">
                 <option value="">General</option>
                 {subjects.map(s => <option key={s.name}>{s.name}</option>)}
               </select>
             </div>
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Class</label>
-              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none disabled:opacity-60">
-                {classes.length ? classes.map(c => <option key={c}>{c}</option>) : <option value="">Add students first</option>}
+            <div><label className="td-label">Class</label>
+              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+                {options(classes, 'Add students first')}
               </select>
             </div>
           </div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Note <span className="text-td-subtle font-semibold">· type here (free)</span></label><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none resize-none focus:border-td-primary" /></div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></label>
+          <div><label className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></label><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field text-sm resize-none focus:border-td-primary" /></div>
+          <div><label className="td-label">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></label>
             <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-[12.5px] text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-[10px] file:border-none file:bg-td-tint-blue file:text-td-primary file:font-bold file:text-[12px]" />
           </div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></label><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+          <div><label className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></label><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field text-sm focus:border-td-primary" /></div>
           <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
         </div>
       )}
@@ -112,7 +112,7 @@ export function StuNotesScreen() {
   }, [loadStudentNotes])
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Study Material" onBack={() => go('stuHome', 'stuHome')} />
 
       {stuNotes.length === 0 ? (

@@ -27,7 +27,7 @@ export function StaffApprovalsScreen() {
   const active = staffList.filter(s => s.status === 'approved')
 
   return (
-    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide td-screen">
       <ScreenHeader title="Staff access" onBack={back} />
 
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
@@ -46,7 +46,7 @@ export function StaffApprovalsScreen() {
         </button>
       )}
 
-      <div className="text-sm font-extrabold text-td-dark mb-3">Pending approval {pending.length > 0 && <span className="text-td-red">· {pending.length}</span>}</div>
+      <div className="td-h2">Pending approval {pending.length > 0 && <span className="text-td-red">· {pending.length}</span>}</div>
       {pending.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-4 bg-td-card border border-td-border rounded-[16px] mb-6">No one waiting</div>
       ) : (
@@ -94,7 +94,7 @@ export function StaffApprovalsScreen() {
         </div>
       )}
 
-      <div className="text-sm font-extrabold text-td-dark mb-3">Active staff</div>
+      <div className="td-h2">Active staff</div>
       {active.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-4 bg-td-card border border-td-border rounded-[16px]">No active staff yet</div>
       ) : (
@@ -139,7 +139,7 @@ export function StudentRequestsScreen() {
   useEffect(() => { refreshData(); loadMyCentre() }, [refreshData, loadMyCentre])
 
   return (
-    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide td-screen">
       <ConfirmDialog
         open={confirmRotate}
         title="Generate a new student code?"
@@ -175,7 +175,7 @@ export function StudentRequestsScreen() {
         </div>
       )}
 
-      <div className="text-sm font-extrabold text-td-dark mb-3">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
+      <div className="td-h2">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
       {pendingStudents.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-6 bg-td-card border border-td-border rounded-[16px]">No requests waiting</div>
       ) : (
@@ -284,7 +284,7 @@ export function ReportsScreen() {
   useEffect(() => { loadWeeklyReport(period); loadStudentReports(period); loadTeacherActivity(period); loadMyCentre() }, [period, loadWeeklyReport, loadStudentReports, loadTeacherActivity, loadMyCentre])
 
   return (
-    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide td-screen">
       <ScreenHeader title={period === 7 ? 'Weekly Report' : 'Monthly Report'} onBack={back} right={
         <div className="flex bg-td-soft rounded-[12px] p-[3px]">
           {([7, 30] as const).map(d => (
@@ -379,7 +379,7 @@ export function ReportsScreen() {
             <div className="flex flex-col gap-3 mb-4 lg:grid lg:grid-cols-2 xl:grid-cols-3">
               {r.branches.map((b, i) => (
                 <div key={`${b.name}-${i}`} className="bg-td-card border border-td-border rounded-[18px] p-4">
-                  <div className="text-[15px] font-extrabold text-td-dark mb-3">{b.name}</div>
+                  <div className="td-h2">{b.name}</div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { label: 'Students', value: `${b.students}${b.new_students ? ` (+${b.new_students})` : ''}` },

@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { adminClient, adminConfigured, adminEnvShape } from '@/app/lib/supabase-admin'
 import { safeLink, signWithCentre, validatePushBody, rateLimit } from '@/app/lib/push-guard'
 import { deliver, headSubs, pushConfigured, type Sub } from '@/app/lib/push-send'
 import { logError } from '@/app/lib/log'
 
 export const runtime = 'nodejs'
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 
 // Per-caller rate limit: 30 sends/min. Shared across serverless instances when
 // Upstash is configured; falls back to per-instance in-memory otherwise.
 const RATE = { limit: 30, windowMs: 60_000 }
 
 export async function POST(req: NextRequest) {
-  if (!url || !serviceKey || !pushConfigured()) return NextResponse.json({ error: 'not configured' }, { status: 500 })
+  if (!adminConfigured() || !pushConfigured()) return NextResponse.json({ error: 'not configured' }, { status: 500 })
 
   // Authenticate the caller (any signed-in user) and read their centre.
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
@@ -22,7 +20,7 @@ export async function POST(req: NextRequest) {
     logError('push.unauthorized', { reason: 'no_token' })
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
-  const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
+  const admin = adminClient()
   const { data: userData, error: authErr } = await admin.auth.getUser(token)
   const uid = userData.user?.id
   if (!uid) {
@@ -33,16 +31,7 @@ export async function POST(req: NextRequest) {
       reason: 'token_rejected',
       authError: authErr?.message ?? null,
       status: authErr?.status ?? null,
-      // Which project the server thinks it's talking to — a mismatch against
-      // the client's project is the usual cause. Host only, never the key.
-      supabaseHost: (() => { try { return new URL(url).host } catch { return null } })(),
-      // Shape checks for the two env vars involved. Lengths and prefixes only —
-      // never the values. A quoted or newline-padded paste in the Vercel UI is
-      // the usual culprit and is invisible in every other symptom.
-      urlLen: url.length,
-      urlClean: url === url.trim() && url.startsWith('https://'),
-      keyLen: serviceKey.length,
-      keyClean: serviceKey === serviceKey.trim() && serviceKey.startsWith('eyJ'),
+      ...adminEnvShape(),
       tokenLen: token.length,
     })
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })

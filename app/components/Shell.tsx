@@ -303,3 +303,18 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
 export function ChevronRight() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-faint)" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
 }
+
+/**
+ * A select's options - or, when there is nothing to choose from yet, the one
+ * line telling the head what to go and add. Six selects wrote this same ternary
+ * out by hand.
+ */
+export function options(names: string[], nothingYet: string) {
+  return names.length
+    ? names.map(n => <option key={n}>{n}</option>)
+    : <option value="">{nothingYet}</option>
+}
+
+/** Every class that currently has a student in it, in the order they appear. */
+export const classesOf = (students: { klass: string }[]): string[] =>
+  [...new Set(students.map(s => s.klass))].filter(Boolean)

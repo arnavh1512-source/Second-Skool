@@ -11,10 +11,14 @@ import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { teacherKey } from '../lib/student-key'
 import { readLocal, writeLocal } from '../lib/storage'
 
+// The signed-in child. No student screen is handed one, so each of them
+// found it the same way; this is that lookup, once.
+const useMe = () => useDashboard(s => s.students.find(x => x.dbId === s.currentStudentDbId))
+
 export function StuHomeScreen() {
-  const { go, students, stuReminders, stuNotifications, stuResults, stuPendingFee, currentStudentDbId, googleEmail, rankData, loadStudentByCode, stuMonthly, stuNotes, loadStudentNotes, centreName, centreLogo } = useDashboard()
+  const { go, stuReminders, stuNotifications, stuResults, stuPendingFee, currentStudentDbId, googleEmail, rankData, loadStudentByCode, stuMonthly, stuNotes, loadStudentNotes, centreName, centreLogo } = useDashboard()
   const [linkCode, setLinkCode] = useState('')
-  const me = students.find(s => s.dbId === currentStudentDbId)
+  const me = useMe()
 
   // Cheap metadata load (no file bytes) so we can badge unseen study material.
   useEffect(() => { loadStudentNotes() }, [loadStudentNotes])
@@ -28,7 +32,7 @@ export function StuHomeScreen() {
 
   if (!currentStudentDbId) {
     return (
-      <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6 flex flex-col items-center justify-center min-h-[450px]">
+      <div className="td-screen flex flex-col items-center justify-center min-h-[450px]">
         <button onClick={() => { useDashboard.getState().signOut() }} className="self-start border-none bg-transparent cursor-pointer flex items-center gap-1.5 text-td-muted text-[13px] font-bold mb-6">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-muted)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           Back
@@ -69,7 +73,7 @@ export function StuHomeScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3 min-w-0">
           {centreLogo
@@ -186,7 +190,7 @@ export function StuHomeScreen() {
 
       {stuReminders.length > 0 && (
         <>
-          <div className="text-base font-extrabold text-td-dark mb-[13px]">Reminders</div>
+          <div className="td-h2">Reminders</div>
           <div className="flex flex-col gap-2.5 mb-[22px]">
             {stuReminders.map((r, i) => (
               <button key={`${r.dbId ?? ''}-${i}`} onClick={() => go('stuNotif', 'stuHome')} className="w-full text-left bg-td-card border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px] cursor-pointer">
@@ -205,7 +209,7 @@ export function StuHomeScreen() {
 
       {recentResults.length > 0 && (
         <>
-          <div className="text-base font-extrabold text-td-dark mb-[13px]">Recent results</div>
+          <div className="td-h2">Recent results</div>
           <div className="flex flex-col gap-2.5">
             {recentResults.map((r, i) => {
               // A test with no max marks recorded divides to NaN, and "NaN%"
@@ -235,8 +239,8 @@ export function StuHomeScreen() {
 }
 
 export function StuAttendanceScreen() {
-  const { go, stuAttendanceLog, students, currentStudentDbId } = useDashboard()
-  const me = students.find(s => s.dbId === currentStudentDbId)
+  const { go, stuAttendanceLog } = useDashboard()
+  const me = useMe()
   // The ring is the lifetime figure. It used to be computed from
   // stuAttendanceLog, which the snapshot caps at the last 15 marked days, so
   // this said "Present this term" over a number that covered three weeks — and
@@ -253,7 +257,7 @@ export function StuAttendanceScreen() {
   const offset = circ * (1 - pct / 100)
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Attendance" onBack={() => go('stuHome', 'stuHome')} />
 
       <div className="rounded-[22px] p-5 text-white mb-5 flex items-center gap-5" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
@@ -271,7 +275,7 @@ export function StuAttendanceScreen() {
         </div>
       </div>
 
-      <div className="text-base font-extrabold text-td-dark mb-[13px]">Recent days</div>
+      <div className="td-h2">Recent days</div>
       {stuAttendanceLog.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No attendance records yet</div>
       ) : (
@@ -293,15 +297,15 @@ export function StuAttendanceScreen() {
 }
 
 export function StuResultsScreen() {
-  const { stuResults, students, currentStudentDbId } = useDashboard()
-  const me = students.find(s => s.dbId === currentStudentDbId)
+  const { stuResults } = useDashboard()
+  const me = useMe()
   const totalMarks = stuResults.reduce((a, r) => a + r.marks, 0)
   const totalMax = stuResults.reduce((a, r) => a + r.total, 0)
   const avg = totalMax > 0 ? Math.round((totalMarks / totalMax) * 100) : 0
   const overall = stuGrade(avg)
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-1">Test Results</div>
       <div className="text-[12.5px] text-td-muted mb-[18px]">{me?.klass ?? ''} · {me?.school ?? ''}</div>
 
@@ -320,7 +324,7 @@ export function StuResultsScreen() {
             </div>
           </div>
 
-          <div className="text-base font-extrabold text-td-dark mb-[13px]">All subjects</div>
+          <div className="td-h2">All subjects</div>
           <div className="flex flex-col gap-2.5">
             {stuResults.map((r, i) => {
               const pct = r.total > 0 ? Math.round((r.marks / r.total) * 100) : 0
@@ -349,8 +353,8 @@ export function StuResultsScreen() {
 }
 
 export function StuRankingScreen() {
-  const { stuRankSubject, rankData, subjects: subjectsList, students, currentStudentDbId, set } = useDashboard()
-  const me = students.find(s => s.dbId === currentStudentDbId)
+  const { stuRankSubject, rankData, subjects: subjectsList, currentStudentDbId, set } = useDashboard()
+  const me = useMe()
   const subjectNames = subjectsList.length ? subjectsList.map(s => s.name) : Object.keys(rankData)
   const rows = (rankData[stuRankSubject] || []).map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, score: r.score }))
   const top3 = rows.slice(0, 3)
@@ -363,7 +367,7 @@ export function StuRankingScreen() {
   const MEDAL_INK = ['#8f9bb3', 'var(--color-td-amber)', '#b06a3a']
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-1">Ranking</div>
       <div className="text-[12.5px] text-td-muted mb-[18px]">{me?.klass ?? ''}{stuRankSubject ? ` · ${stuRankSubject}` : ''}</div>
 
@@ -450,7 +454,7 @@ export function StuTeachersScreen() {
   )
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-1">Teachers</div>
       <div className="text-[12.5px] text-td-muted mb-[18px]">{teachers.length} faculty at your branch</div>
 
@@ -482,7 +486,7 @@ export function StuTeacherDetail() {
   if (!t) return <div className="text-center text-td-muted py-8">No teacher data</div>
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Teacher Profile" onBack={() => go('stuTeachers', 'stuTeachers')} />
 
       <div className="flex flex-col items-center mb-5">
@@ -521,7 +525,7 @@ export function StuFeesScreen() {
   const { go, notify, stuFeeHistory, stuPendingFee } = useDashboard()
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Fees" onBack={() => go('stuHome', 'stuHome')} />
 
       {stuPendingFee ? (
@@ -538,7 +542,7 @@ export function StuFeesScreen() {
         </div>
       )}
 
-      <div className="text-base font-extrabold text-td-dark mb-[13px]">Payment history</div>
+      <div className="td-h2">Payment history</div>
       {stuFeeHistory.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No payment history yet</div>
       ) : (
@@ -569,7 +573,7 @@ export function StuNotifScreen() {
   useEffect(() => { if (newest) writeLocal('notif_seen_top', newest) }, [newest])
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Notifications" onBack={() => go('stuHome', 'stuHome')} />
 
       {stuNotifications.length === 0 ? (
@@ -599,7 +603,7 @@ export function StuTimetableScreen() {
   const periods = timetableData[day] || []
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="My Timetable" onBack={() => go('stuHome', 'stuHome')} />
 
       <div className="flex gap-2 overflow-x-auto mb-[18px] scrollbar-hide">
@@ -646,7 +650,7 @@ export function StuAssignmentsScreen() {
   const [open, setOpen] = useState<string | null>(null)
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Homework" onBack={() => go('stuHome', 'stuHome')} />
 
       {stuAssignments.length === 0 ? (
@@ -676,8 +680,8 @@ export function StuAssignmentsScreen() {
 }
 
 export function StuProfileScreen() {
-  const { signOut, students, currentStudentDbId, stuResults, googleEmail, notify, goFrom } = useDashboard()
-  const me = students.find(s => s.dbId === currentStudentDbId)
+  const { signOut, stuResults, googleEmail, notify, goFrom } = useDashboard()
+  const me = useMe()
   const displayName = me?.name ?? googleEmail?.split('@')[0] ?? 'Student'
   const ini = initials(displayName)
   const totalMarks = stuResults.reduce((a, r) => a + r.marks, 0)
@@ -695,7 +699,7 @@ export function StuProfileScreen() {
   ]
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
         <div className="text-2xl font-extrabold text-td-dark">My Profile</div>
         <button onClick={signOut} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Sign out</button>

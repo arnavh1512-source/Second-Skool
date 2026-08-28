@@ -151,7 +151,7 @@ export function DevConsoleScreen() {
   }
 
   return (
-    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide td-screen">
       <ScreenHeader
         title="Developer console"
         onBack={exitDevConsole}

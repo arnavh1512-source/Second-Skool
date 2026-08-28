@@ -9,8 +9,8 @@ import type { SupportTicket } from '../store/types'
 // students go through anon RPCs, staff through RLS — so nothing here needs to
 // know which kind of user is looking at it.
 
-const INPUT = 'w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary'
-const LABEL = 'text-xs font-bold text-td-muted mb-[7px] block'
+const INPUT = 'td-field text-sm focus:border-td-primary'
+const LABEL = 'td-label'
 
 const STATUS: Record<SupportTicket['status'], { bg: string; fg: string; label: string }> = {
   open: { bg: 'var(--color-td-tint-blue)', fg: 'var(--color-td-primary)', label: 'Open' },
@@ -38,7 +38,7 @@ export function SupportScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-1.5">Report a problem</div>
       <div className="text-[13px] text-td-muted leading-[1.5] mb-4">
         Four quick questions. We can already see which version of the app you are on and what device
@@ -180,7 +180,7 @@ export function SupportThreadScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="flex items-start gap-3 mt-1.5 mb-1.5">
         <div className="flex-1 text-2xl font-extrabold text-td-dark">{ticket.intent}</div>
         <StatusPill status={ticket.status} />

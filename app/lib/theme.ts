@@ -8,7 +8,9 @@ import { writeLocal } from './storage'
 
 export type Theme = 'light' | 'dark'
 
-export const THEME_KEY = 'td-theme'
+// Kept in step by hand with the pre-paint script in layout.tsx, which runs
+// before any module exists and so cannot import this.
+const THEME_KEY = 'td-theme'
 
 export const currentTheme = (): Theme =>
   document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'

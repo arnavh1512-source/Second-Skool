@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { adminClient, adminConfigured } from '@/app/lib/supabase-admin'
 import { rateLimit, validateStudentRequest } from '@/app/lib/push-guard'
 import { deliver, headSubs, pushConfigured } from '@/app/lib/push-send'
 
 export const runtime = 'nodejs'
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 
 // Two limits, because they stop different things. Per code: a registration
 // happens once, so anything past a couple of sends is a replay. Per centre: a
@@ -25,7 +23,7 @@ const PER_CENTRE = { limit: 30, windowMs: 60_000 }
 // instead: it is unguessable, it is re-read server-side, and it stops working
 // the moment the request is approved or rejected.
 export async function POST(req: NextRequest) {
-  if (!url || !serviceKey || !pushConfigured()) return NextResponse.json({ error: 'not configured' }, { status: 500 })
+  if (!adminConfigured() || !pushConfigured()) return NextResponse.json({ error: 'not configured' }, { status: 500 })
 
   const parsed = validateStudentRequest(await req.json().catch(() => ({})))
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
@@ -35,7 +33,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'too many requests — slow down' }, { status: 429 })
   }
 
-  const admin = createClient(url, serviceKey, { auth: { persistSession: false } })
+  const admin = adminClient()
   const { data: student } = await admin.from('students')
     .select('name, centre_id, status').eq('student_code', code).single()
 

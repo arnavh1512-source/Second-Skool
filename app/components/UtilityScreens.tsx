@@ -43,7 +43,7 @@ export function FeesScreen() {
   }
 
   return (
-    <div className="td-wide animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-wide td-screen">
       <ConfirmDialog
         open={!!confirmFee}
         title="Remove this fee record?"
@@ -72,22 +72,22 @@ export function FeesScreen() {
       {showForm && (
         <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
           <div className="text-sm font-extrabold text-td-dark">Add fee record</div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Student</label>
-            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
+          <div><label className="td-label">Student</label>
+            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field text-[13.5px] bg-td-card">
               <option value="">Select student</option>
               {students.map(s => <option key={s.dbId ?? s.id} value={s.dbId ?? ''}>{s.name} — {s.klass}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Amount (&#8377;)</label>
-              <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+            <div><label className="td-label">Amount (&#8377;)</label>
+              <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field text-sm focus:border-td-primary" />
             </div>
-            <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Period</label>
-              <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+            <div><label className="td-label">Period</label>
+              <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field text-sm focus:border-td-primary" />
             </div>
           </div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Due date</label>
-            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+          <div><label className="td-label">Due date</label>
+            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm focus:border-td-primary" />
           </div>
           <PrimaryButton onClick={handleAdd}>Add fee record</PrimaryButton>
         </div>
@@ -175,7 +175,7 @@ export function MeetingsScreen() {
   const isAdmin = role === 'admin'
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ConfirmDialog
         open={!!confirmCancel}
         title="Cancel this meeting?"
@@ -188,20 +188,20 @@ export function MeetingsScreen() {
 
       <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
         <div className="text-sm font-extrabold text-td-dark">Schedule new</div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Type</label>
-          <select value={type} onChange={e => setType(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
+        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Type</label>
+          <select value={type} onChange={e => setType(e.target.value)} className="td-field text-[13.5px] bg-td-card">
             <option>Parent-teacher meeting</option><option>Staff meeting</option>
           </select>
         </div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Time</label><input value={time} onChange={e => setTime(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+          <div><label className="td-label">Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">Time</label><input value={time} onChange={e => setTime(e.target.value)} className="td-field text-sm focus:border-td-primary" /></div>
         </div>
         <PrimaryButton onClick={async () => { if (await saveMeeting(title, type, date, time)) { setTitle(''); setDate('') } }}>Schedule &amp; invite</PrimaryButton>
       </div>
 
-      <div className="text-[15px] font-extrabold text-td-dark mb-3">All meetings</div>
+      <div className="td-h2">All meetings</div>
       {meetingsList.length === 0 ? (
         <EmptyState title="No meetings scheduled" hint="Use the form above to add one — it will appear here and on the home screen." />
       ) : (
@@ -233,7 +233,7 @@ export function RankingsScreen() {
   const rows = (rankData[rankSubject] || []).map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, score: r.score }))
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Rankings" onBack={back} />
 
       {subjectNames.length === 0 && (
@@ -306,7 +306,7 @@ export function BranchesScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Branches" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
@@ -316,11 +316,11 @@ export function BranchesScreen() {
       {showForm && (
         <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
           <div className="text-sm font-extrabold text-td-dark">New branch</div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Branch name</label>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+          <div><label className="td-label">Branch name</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="td-field text-sm focus:border-td-primary" />
           </div>
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Address</label>
-            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
+          <div><label className="td-label">Address</label>
+            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="td-field text-sm focus:border-td-primary" />
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-td-primary rounded" />
@@ -372,7 +372,7 @@ export function SubjectsScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ConfirmDialog
         open={!!confirmSubject}
         title={`Remove ${confirmSubject?.name ?? ''}?`}
@@ -391,7 +391,7 @@ export function SubjectsScreen() {
         </div>
       </div>
 
-      <div className="text-[15px] font-extrabold text-td-dark mb-3">All subjects ({subjects.length})</div>
+      <div className="td-h2">All subjects ({subjects.length})</div>
       {subjects.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No subjects added yet</div>
       ) : (
@@ -421,7 +421,7 @@ export function BatchesScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ConfirmDialog
         open={!!confirmBatch}
         title={`Remove batch ${confirmBatch?.name ?? ''}?`}
@@ -440,7 +440,7 @@ export function BatchesScreen() {
         </div>
       </div>
 
-      <div className="text-[15px] font-extrabold text-td-dark mb-3">All batches ({batches.length})</div>
+      <div className="td-h2">All batches ({batches.length})</div>
       {batches.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No batches added yet</div>
       ) : (
@@ -513,7 +513,7 @@ export function MoreScreen() {
   )
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-[18px]">More tools</div>
 
       <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left bg-td-card border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
@@ -583,7 +583,7 @@ export function NotificationsScreen() {
   )
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="Notifications" onBack={() => go('home', 'home')} />
 
       {empty ? (
@@ -664,7 +664,7 @@ export function StaffProfileScreen() {
   })
 
   return (
-    <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
+    <div className="td-screen">
       <ScreenHeader title="My Profile" onBack={() => go('more', 'more')} />
 
       <div className="flex flex-col items-center text-center mb-6">
@@ -678,16 +678,16 @@ export function StaffProfileScreen() {
       </div>
 
       <div className="flex flex-col gap-3.5 mb-[18px]">
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Full name</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Subject you teach</label><input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Mathematics, Physics" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
-        <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Qualification</label><input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="e.g. M.Sc. Mathematics" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+        <div><label className="td-label">Full name</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Subject you teach</label><input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Mathematics, Physics" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Qualification</label><input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="e.g. M.Sc. Mathematics" className="td-field text-sm focus:border-td-primary" /></div>
         {isAdmin && (
-          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Centre name</label><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" /></div>
+          <div><label className="td-label">Centre name</label><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field text-sm focus:border-td-primary" /></div>
         )}
         {isAdmin && (
           <div>
-            <label className="text-xs font-bold text-td-muted mb-[7px] block">Centre logo</label>
+            <label className="td-label">Centre logo</label>
             <div className="flex items-center gap-3.5 border border-td-border rounded-[14px] p-3">
               <div className="w-14 h-14 rounded-[14px] overflow-hidden shrink-0 flex items-center justify-center bg-td-soft border border-td-border">
                 {centreLogo

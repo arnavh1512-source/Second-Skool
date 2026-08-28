@@ -67,7 +67,7 @@ export function LoginScreen() {
 
   if (authLoading) {
     return (
-      <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center">
+      <div className="td-auth-screen flex flex-col items-center justify-center">
         <div className="animate-pulse mb-4">{LOGO}</div>
         <div className="text-sm text-td-muted font-semibold">Loading...</div>
       </div>
@@ -75,7 +75,7 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col">
+    <div className="td-auth-screen flex flex-col">
       {LOGO}
       <div className="text-[26px] font-extrabold text-td-dark tracking-tight mt-[22px]">Second Skool</div>
 
@@ -286,7 +286,7 @@ export function NotificationGateScreen() {
 
   const blocked = perm === 'denied'
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+    <div className="td-auth-screen flex flex-col items-center justify-center text-center">
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-blue flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       </div>
@@ -359,7 +359,7 @@ export function StuPendingScreen() {
   }
 
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+    <div className="td-auth-screen flex flex-col items-center justify-center text-center">
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-amber flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-amber)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </div>
@@ -386,7 +386,7 @@ export function StuDeniedScreen() {
   const { stuDenied, signOut } = useDashboard()
   const first = stuDenied?.name ? `, ${stuDenied.name.split(' ')[0]}` : ''
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+    <div className="td-auth-screen flex flex-col items-center justify-center text-center">
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-red flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
       </div>
@@ -416,18 +416,18 @@ export function ProfileSetupScreen() {
 
   const field = (label: string, value: string, onChange: (v: string) => void, placeholder: string, hint?: string) => (
     <div>
-      <label className="text-xs font-bold text-td-muted mb-[7px] block">{label}</label>
+      <label className="td-label">{label}</label>
       <input
         value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         onKeyDown={e => e.key === 'Enter' && submit()}
-        className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary"
+        className="td-field text-sm focus:border-td-primary"
       />
       {hint && <div className="text-[12px] text-td-subtle mt-1.5">{hint}</div>}
     </div>
   )
 
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col">
+    <div className="td-auth-screen flex flex-col">
       {LOGO}
       <div className="text-[24px] font-extrabold text-td-dark tracking-tight mt-[22px]">Tell us about you</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed">
@@ -457,7 +457,7 @@ export function RegisterScreen() {
 
 
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col">
+    <div className="td-auth-screen flex flex-col">
       {LOGO}
       <div className="text-[24px] font-extrabold text-td-dark tracking-tight mt-[22px]">Set up your access</div>
       <div className="text-sm text-td-muted mt-2 leading-relaxed">Signed in as <span className="font-bold text-td-text">{googleEmail}</span>.</div>
@@ -532,7 +532,7 @@ export function PendingScreen() {
   }, [])
 
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+    <div className="td-auth-screen flex flex-col items-center justify-center text-center">
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-amber flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-amber)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </div>
@@ -556,7 +556,7 @@ export function DeniedScreen() {
     return joinCentre(code)
   })
   return (
-    <div className="animate-[pop_.35s_ease] px-6 pt-10 pb-6 min-h-[700px] flex flex-col items-center justify-center text-center">
+    <div className="td-auth-screen flex flex-col items-center justify-center text-center">
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-red flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
       </div>

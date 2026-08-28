@@ -149,3 +149,19 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    the student app are never touched. */
 .td-desktop > * { max-width: 760px; margin-inline: auto; }
 .td-desktop > .td-wide { max-width: none; }
+
+/* Every screen body is the same shell: the mount animation and the page
+   gutter. .td-auth-screen is the pre-login one, which is taller. */
+.td-screen { animation: pop .35s ease; padding: 6px 20px 24px; }
+.td-auth-screen { animation: pop .35s ease; padding: 40px 24px 24px; min-height: 700px; }
+
+/* The one section heading in the app: the label above a list or a card group.
+   It used to be three sizes that meant the same thing. */
+.td-h2 { font-size: 15px; font-weight: 800; color: var(--color-td-dark); margin-bottom: 12px; }
+
+/* The two halves of every form row in the app, written out 120-odd times
+   before this. Each carries only what all of its sites agree on - the font
+   size, the fill and the focus ring stay utilities on the element, so a
+   `td-field text-[13.5px]` still says 13.5px and nothing here can override it. */
+.td-label { display: block; font-size: .75rem; line-height: 1rem; font-weight: 700; color: var(--color-td-muted); margin-bottom: 7px; }
+.td-field { width: 100%; border: 1px solid var(--color-td-border); border-radius: 14px; padding: 13px; color: var(--color-td-dark); outline: none; }

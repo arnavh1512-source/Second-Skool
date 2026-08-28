@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { adminClient, adminConfigured } from '@/app/lib/supabase-admin'
 import { rateLimit } from '@/app/lib/push-guard'
 import { logError, logWarn } from '@/app/lib/log'
 import { verifyOperator } from '@/app/lib/operator'
@@ -9,8 +10,6 @@ export const runtime = 'nodejs'
 // Every response is a live snapshot of the database — never prerender or cache it.
 export const dynamic = 'force-dynamic'
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 
 // PostgREST caps rows per request; ask for a generous page and report honestly
 // when a table hits the ceiling rather than quietly under-counting.
@@ -97,7 +96,7 @@ async function authorize(req: NextRequest): Promise<Auth | NextResponse> {
   const token = req.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-  const admin: SupabaseClient = createClient(url, serviceKey, { auth: { persistSession: false } })
+  const admin: SupabaseClient = adminClient()
   const { data: userData } = await admin.auth.getUser(token)
   const uid = userData.user?.id
   if (!uid) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
@@ -113,7 +112,7 @@ async function authorize(req: NextRequest): Promise<Auth | NextResponse> {
 }
 
 export async function GET(req: NextRequest) {
-  if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
+  if (!adminConfigured()) return NextResponse.json({ error: 'not configured' }, { status: 500 })
   // `?probe=1` answers only "may I see this?" — it's what decides whether the
   // console entry appears at all. Keeping it a server round-trip means the
   // allowlist itself never reaches the browser.
@@ -336,7 +335,7 @@ const nostore = (body: object, status = 200) =>
 // fees or attendance. Deleting a centre — which the head asks for and confirms
 // by name — is the only write left here.
 export async function POST(req: NextRequest) {
-  if (!url || !serviceKey) return NextResponse.json({ error: 'not configured' }, { status: 500 })
+  if (!adminConfigured()) return NextResponse.json({ error: 'not configured' }, { status: 500 })
 
   const auth = await authorize(req)
   if (auth instanceof NextResponse) return auth
