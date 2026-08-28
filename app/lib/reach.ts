@@ -7,6 +7,10 @@
 //
 // The signal is students.last_seen_at, stamped by get_student_snapshot on the
 // household's own app-open path (see 0024_parent_reach.sql). Nobody types it.
+//
+// Two buckets, not three. A family that last opened the app in June and one
+// that has never opened it at all are the same conversation for the head, and
+// a number nobody acts on is not worth the pixels.
 
 // A week, because the centre's rhythm is a week: marks go up, attendance
 // settles, the head looks on a Sunday. A parent who opened the app inside that
@@ -16,31 +20,21 @@ export const ACTIVE_DAYS = 7
 const DAY = 86_400_000
 
 export interface ReachSummary {
+  /** Opened the app inside the window. */
   active: number
-  quiet: number
-  /** Never opened the app at all — the list worth chasing. */
-  never: number
-  total: number
+  /** Everyone else — the list worth chasing. */
+  missed: number
   /** Active as a whole percentage of the roster. 0 when the roster is empty. */
   percent: number
 }
 
-export function bucketFor(lastSeenAt: string | undefined, now: number): 'active' | 'quiet' | 'never' {
-  if (!lastSeenAt) return 'never'
-  const at = Date.parse(lastSeenAt)
-  // An unparseable timestamp is not evidence anyone looked.
-  if (Number.isNaN(at)) return 'never'
-  return now - at <= ACTIVE_DAYS * DAY ? 'active' : 'quiet'
-}
-
 export function reachSummary(students: readonly { lastSeenAt?: string }[], now = Date.now()): ReachSummary {
-  const total = students.length
   let active = 0
-  let quiet = 0
   for (const s of students) {
-    const b = bucketFor(s.lastSeenAt, now)
-    if (b === 'active') active++
-    else if (b === 'quiet') quiet++
+    // A missing or unreadable timestamp is not evidence anyone looked.
+    const at = s.lastSeenAt ? Date.parse(s.lastSeenAt) : NaN
+    if (!Number.isNaN(at) && now - at <= ACTIVE_DAYS * DAY) active++
   }
-  return { active, quiet, never: total - active - quiet, total, percent: total ? Math.round((active / total) * 100) : 0 }
+  const total = students.length
+  return { active, missed: total - active, percent: total ? Math.round((active / total) * 100) : 0 }
 }

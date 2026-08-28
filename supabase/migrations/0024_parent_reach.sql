@@ -26,7 +26,7 @@
 --
 -- ── Why the write is throttled to an hour ───────────────────────────────────
 -- This is a read path, and public.students carries an updated_at trigger, so
--- every bump is two writes and an index update. The number this feeds is
+-- every bump also rewrites updated_at. The number this feeds is
 -- "opened in the last seven days". Hour resolution is already far finer than
 -- that question needs, and it collapses a household refreshing the app six
 -- times over breakfast into one write.
@@ -36,12 +36,6 @@
 -- ============================================================================
 
 alter table public.students add column if not exists last_seen_at timestamptz;
-
--- The head's roster read filters by centre and buckets by recency, which is
--- exactly this pair. Nulls are in the index too — "never opened" is the
--- bucket she most needs to act on.
-create index if not exists students_centre_last_seen_idx
-  on public.students (centre_id, last_seen_at);
 
 -- Reproduced whole from 0021 — plpgsql has no partial replace. The only change
 -- is the parent-reach block, marked below.

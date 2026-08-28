@@ -19,9 +19,6 @@ export function HomeScreen() {
   // on this screen tells her whether the families are actually looking, and
   // that is the only number that decides whether the app was worth it.
   const reach = isAdmin && students.length > 0 ? reachSummary(students) : null
-  const reachTail = reach
-    ? [reach.quiet ? `${reach.quiet} quiet` : '', reach.never ? `${reach.never} never opened` : ''].filter(Boolean).join(' · ')
-    : ''
 
   // Home = the four quick daily shortcuts (same for head and teacher, clean
   // grid). Timetable is a bottom tab; Study material + all management (fees,
@@ -82,12 +79,12 @@ export function HomeScreen() {
       {reach && (
         <div className="bg-td-card border border-td-border rounded-[18px] p-4 mb-3.5 lg:max-w-md">
           <div className="text-[11px] font-bold text-td-muted uppercase tracking-[.06em]">Parent reach &middot; this week</div>
-          <div className="text-2xl font-extrabold text-td-dark leading-none mt-2">{reach.active} of {reach.total}</div>
+          <div className="text-2xl font-extrabold text-td-dark leading-none mt-2">{reach.active} of {students.length}</div>
           <div className="text-[12px] text-td-muted font-semibold mt-1.5">families opened the app</div>
-          <div role="progressbar" aria-label="Families who opened the app this week" aria-valuenow={reach.percent} aria-valuemin={0} aria-valuemax={100} className="h-1.5 rounded-full bg-td-soft mt-3 overflow-hidden">
+          <div role="progressbar" aria-label="Families who opened the app this week" aria-valuenow={reach.percent} className="h-1.5 rounded-full bg-td-soft mt-3 overflow-hidden">
             <div className="h-full rounded-full bg-td-primary" style={{ width: `${reach.percent}%` }} />
           </div>
-          <div className="text-[11.5px] text-td-subtle font-semibold mt-2">{reachTail || 'Every family looked this week'}</div>
+          <div className="text-[11.5px] text-td-subtle font-semibold mt-2">{reach.missed ? `${reach.missed} did not open this week` : 'Every family looked this week'}</div>
         </div>
       )}
 
