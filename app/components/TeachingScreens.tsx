@@ -12,7 +12,7 @@ import { findStudent, studentKey } from '../lib/student-key'
 const SPECIAL_PERIODS = new Set(['Test', 'Staff meeting', 'Parent meeting', 'Doubt session'])
 
 export function TimetableScreen() {
-  const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, role, notify } = useDashboard()
+  const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, teachers, role, notify } = useDashboard()
   const isAdmin = role === 'admin'
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<string[] | null>(null) // the original period being edited
@@ -21,6 +21,10 @@ export function TimetableScreen() {
   const [subject, setSubject] = useState('')
   const [klass, setKlass] = useState('')
   const [room, setRoom] = useState('')
+  // Who takes this period. Optional on purpose: every period entered before
+  // this existed has no teacher, and the parent-facing screen falls back to
+  // the branch directory rather than showing a gap.
+  const [teacherId, setTeacherId] = useState('')
   const classes = [...new Set([...students.map(s => s.klass), ...(klass ? [klass] : [])])].filter(Boolean)
   const selKlass = klass || classes[0] || ''
   const days = (() => {
@@ -36,7 +40,7 @@ export function TimetableScreen() {
   const periods = timetableData[ttDay] || []
   const subjectNames = subjects.map(s => s.name)
 
-  const resetForm = () => { setStartTime('09:00'); setEndTime('10:00'); setSubject(''); setKlass(''); setRoom(''); setShowForm(false); setEditing(null) }
+  const resetForm = () => { setStartTime('09:00'); setEndTime('10:00'); setSubject(''); setKlass(''); setRoom(''); setTeacherId(''); setShowForm(false); setEditing(null) }
 
   const handleAdd = async () => {
     // The class dropdown is empty until there are students, so this button was
@@ -48,13 +52,14 @@ export function TimetableScreen() {
     // Keep the form filled in when the write fails. Clearing it on the way out
     // meant a failed save cost her the times as well as the period.
     const ok = editing
-      ? await updateTimetableEntry(ttDay, editing, startTime, endTime, subj, selKlass, room)
-      : await addTimetableEntry(ttDay, startTime, endTime, subj, selKlass, room)
+      ? await updateTimetableEntry(ttDay, editing, startTime, endTime, subj, selKlass, room, teacherId)
+      : await addTimetableEntry(ttDay, startTime, endTime, subj, selKlass, room, teacherId)
     if (ok) resetForm()
   }
 
   const startEdit = (p: string[]) => {
     setStartTime(p[0]); setEndTime(p[1]); setSubject(p[2]); setKlass(p[3]); setRoom(p[4] ?? '')
+    setTeacherId(teachers.find(t => t.name === p[5])?.dbId ?? '')
     setEditing(p); setShowForm(true)
   }
 
@@ -122,6 +127,12 @@ export function TimetableScreen() {
               <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="w-full border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" />
             </div>
           </div>
+          <div><label className="text-xs font-bold text-td-muted mb-[7px] block">Teacher</label>
+            <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="w-full border border-td-border rounded-[14px] p-[13px] text-[13.5px] bg-td-card text-td-dark outline-none">
+              <option value="">Not set</option>
+              {teachers.map(t => <option key={t.dbId} value={t.dbId}>{t.name} &middot; {t.subject}</option>)}
+            </select>
+          </div>
           <PrimaryButton onClick={handleAdd}>{editing ? 'Save changes' : 'Add period'}</PrimaryButton>
         </div>
       )}
@@ -148,6 +159,7 @@ export function TimetableScreen() {
                         <div className="text-[12px] font-bold text-td-muted">{p[0]}–{p[1]}</div>
                         <div className="text-[12px] font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
                         <div className="text-[12px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
+                        {p[5] && <div className="text-[12px] text-td-primary font-semibold mt-0.5 truncate">{p[5]}</div>}
                         {isAdmin && (
                           <div className="flex gap-1 mt-1.5">
                             <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-td-edge-blue bg-td-tint-blue text-td-primary text-[12px] cursor-pointer">✎</button>
@@ -193,7 +205,7 @@ export function TimetableScreen() {
                         {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full border border-td-edge-red bg-td-wash-red text-td-red flex items-center justify-center cursor-pointer text-[15px] leading-none">×</button>}
                       </div>
                     </div>
-                    <div className="text-xs text-td-muted mt-1">{p[3]} · {p[4]}</div>
+                    <div className="text-xs text-td-muted mt-1">{p[3]} · {p[4]}{p[5] ? ` · ${p[5]}` : ''}</div>
                   </div>
                 </div>
               </div>

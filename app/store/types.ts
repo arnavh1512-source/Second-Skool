@@ -178,9 +178,9 @@ export interface Actions {
   deleteFee: (feeId: string, studentDbId: string) => Promise<void>
   loadReminderHistory: () => Promise<void>
   toggleFeeStatus: (key: string) => Promise<void>
-  addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string) => Promise<boolean>
+  addTimetableEntry: (day: string, startTime: string, endTime: string, subject: string, klass: string, room: string, teacherId: string) => Promise<boolean>
   deleteTimetableEntry: (day: string, p: string[]) => Promise<void>
-  updateTimetableEntry: (day: string, oldP: string[], startTime: string, endTime: string, subject: string, klass: string, room: string) => Promise<boolean>
+  updateTimetableEntry: (day: string, oldP: string[], startTime: string, endTime: string, subject: string, klass: string, room: string, teacherId: string) => Promise<boolean>
   addBranch: (name: string, address: string, isMain: boolean) => Promise<boolean>
   deleteBranch: (dbId: string) => Promise<void>
   addSubject: (name: string) => Promise<boolean>

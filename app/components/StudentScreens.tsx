@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { copyText } from '../lib/share'
-import { useDashboard, GRADIENTS, initials, av, stuGrade } from '../store'
+import { useDashboard, GRADIENTS, initials, av, stuGrade, type Teacher } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
@@ -420,7 +420,34 @@ export function StuRankingScreen() {
 }
 
 export function StuTeachersScreen() {
-  const { teachers, set, go } = useDashboard()
+  const { teachers, timetableData, set, go } = useDashboard()
+
+  // Who teaches *this child*, and what for. The child's timetable is already
+  // filtered to their own class, so every period on it is theirs; the teacher's
+  // name rides along at index 5. A period with no teacher set is skipped, which
+  // is every period entered before the head had a teacher dropdown — those
+  // students just see the branch directory, exactly as they do today.
+  const mine = (() => {
+    const subjects = new Map<string, Set<string>>()
+    for (const periods of Object.values(timetableData))
+      for (const p of periods)
+        if (p[5]) subjects.set(p[5], (subjects.get(p[5]) ?? new Set()).add(p[2]))
+    return teachers
+      .filter(t => subjects.has(t.name))
+      .map(t => ({ t, caption: [...subjects.get(t.name)!].sort().join(' · ') }))
+  })()
+
+  const row = (t: Teacher, caption: string) => (
+    <button key={teacherKey(t)} onClick={() => { set({ stuTeacherId: teacherKey(t) }); go('stuTeacher', 'stuTeachers') }} className="text-left bg-td-card border border-td-border rounded-[18px] p-3.5 flex items-center gap-3.5 cursor-pointer">
+      <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: GRADIENTS[teachers.indexOf(t) % GRADIENTS.length] }}>{initials(t.name)}</div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[15px] font-extrabold text-td-dark">{t.name}</div>
+        <div className="text-[12.5px] text-td-primary font-bold mt-0.5">{caption}</div>
+        <div className="text-[12px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
+      </div>
+      <ChevronRight />
+    </button>
+  )
 
   return (
     <div className="animate-[pop_.35s_ease] px-5 pt-1.5 pb-6">
@@ -430,19 +457,16 @@ export function StuTeachersScreen() {
       {teachers.length === 0 ? (
         <div className="text-center text-td-muted text-sm py-8">No teachers listed yet</div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {teachers.map((t, i) => (
-            <button key={teacherKey(t)} onClick={() => { set({ stuTeacherId: teacherKey(t) }); go('stuTeacher', 'stuTeachers') }} className="text-left bg-td-card border border-td-border rounded-[18px] p-3.5 flex items-center gap-3.5 cursor-pointer">
-              <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[15px] font-extrabold text-td-dark">{t.name}</div>
-                <div className="text-[12.5px] text-td-primary font-bold mt-0.5">{t.subject}</div>
-                <div className="text-[12px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
-              </div>
-              <ChevronRight />
-            </button>
-          ))}
-        </div>
+        <>
+          {mine.length > 0 && (
+            <>
+              <div className="text-[13px] font-extrabold text-td-dark mb-2.5">Your teachers</div>
+              <div className="flex flex-col gap-3 mb-6">{mine.map(m => row(m.t, m.caption))}</div>
+              <div className="text-[13px] font-extrabold text-td-dark mb-2.5">Everyone at your branch</div>
+            </>
+          )}
+          <div className="flex flex-col gap-3">{teachers.map(t => row(t, t.subject))}</div>
+        </>
       )}
     </div>
   )

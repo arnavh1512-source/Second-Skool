@@ -24,6 +24,12 @@ const matchPeriod = <T extends TimetableQuery<T>>(q: T, day: string, p: readonly
   return p[4] ? withCols.eq('room', p[4]) : withCols.is('room', null)
 }
 
+// The teacher's name, for the row that is already on screen. The write
+// stores an id; the local period array carries the label beside it so an
+// optimistic row reads the same as the one that comes back on refresh.
+const teacherName = (teachers: readonly { name: string; dbId?: string }[], id: string) =>
+  id ? (teachers.find(t => t.dbId === id)?.name ?? '') : ''
+
 const samePeriod = (a: readonly string[], b: readonly string[]) =>
   a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && (a[4] ?? '') === (b[4] ?? '')
 
@@ -78,18 +84,18 @@ export const createScheduleSlice: Slice<Keys> = (set, get) => ({
     notify('Meeting cancelled')
   },
 
-  addTimetableEntry: async (day, startTime, endTime, subject, klass, room) => {
+  addTimetableEntry: async (day, startTime, endTime, subject, klass, room, teacherId) => {
     const notify = get().notify
     if (!get().online) { notify('No internet — the period has NOT been added. Try again once you are back online.', 'error'); return false }
 
     const before = get().timetableData
     const updated = { ...before }
-    updated[day] = [...(updated[day] ?? []), [startTime, endTime, subject, klass, room]].sort((a, b) => a[0].localeCompare(b[0]))
+    updated[day] = [...(updated[day] ?? []), [startTime, endTime, subject, klass, room, teacherName(get().teachers, teacherId)]].sort((a, b) => a[0].localeCompare(b[0]))
     set({ timetableData: updated })
 
     const res = await supabase.from('timetable').insert({
       day, start_time: startTime, end_time: endTime,
-      subject, class: klass, room: room || null,
+      subject, class: klass, room: room || null, teacher_id: teacherId || null,
     })
     if (res.error) { set({ timetableData: before }); dbErr('add the period', notify)(res); return false }
 
@@ -97,18 +103,18 @@ export const createScheduleSlice: Slice<Keys> = (set, get) => ({
     return true
   },
 
-  updateTimetableEntry: async (day, oldP, startTime, endTime, subject, klass, room) => {
+  updateTimetableEntry: async (day, oldP, startTime, endTime, subject, klass, room, teacherId) => {
     const notify = get().notify
     if (!get().online) { notify('No internet — the period has NOT been changed. Try again once you are back online.', 'error'); return false }
 
     const before = get().timetableData
-    const entry = [startTime, endTime, subject, klass, room]
+    const entry = [startTime, endTime, subject, klass, room, teacherName(get().teachers, teacherId)]
     set((s) => ({ timetableData: { ...s.timetableData, [day]: (s.timetableData[day] ?? [])
       .map(x => samePeriod(x, oldP) ? entry : x)
       .sort((a, b) => a[0].localeCompare(b[0])) } }))
 
     const res = await matchPeriod(supabase.from('timetable')
-      .update({ start_time: startTime, end_time: endTime, subject, class: klass, room: room || null }), day, oldP).select('id')
+      .update({ start_time: startTime, end_time: endTime, subject, class: klass, room: room || null, teacher_id: teacherId || null }), day, oldP).select('id')
     if (res.error) { set({ timetableData: before }); dbErr('update the period', notify)(res); return false }
     // The period being edited was on screen a moment ago, so it must match. If
     // it does not, another device changed or removed it first — and without

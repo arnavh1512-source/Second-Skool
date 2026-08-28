@@ -304,7 +304,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     for (const t of (timetable ?? []) as Row[]) {
       const day = t.day as string
       if (!timetableData[day]) timetableData[day] = []
-      timetableData[day].push([t.start_time, t.end_time, t.subject ?? '', t.class ?? '', t.room ?? ''])
+      timetableData[day].push([t.start_time, t.end_time, t.subject ?? '', t.class ?? '', t.room ?? '',
+        mappedTeachers.find(x => x.dbId === t.teacher_id)?.name ?? ''])
     }
 
     // Today's schedule

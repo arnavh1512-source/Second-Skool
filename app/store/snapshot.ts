@@ -25,7 +25,7 @@ type SnapRow = {
   icon?: string | null; title?: string | null; detail?: string | null; createdAt?: string | null
   name?: string | null; experience?: number | null; qualification?: string | null
   rating?: number | null; about?: string | null
-  day?: string | null; start?: string | null; end?: string | null; room?: string | null
+  day?: string | null; start?: string | null; end?: string | null; room?: string | null; teacher?: string | null
   due?: string | null; instructions?: string | null
 }
 
@@ -122,7 +122,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   for (const t of (snap.timetable ?? []) as SnapRow[]) {
     const day = t.day as string
     if (!timetableData[day]) timetableData[day] = []
-    timetableData[day].push([t.start ?? '', t.end ?? '', t.subject ?? '', student.klass ?? '', t.room ?? ''])
+    timetableData[day].push([t.start ?? '', t.end ?? '', t.subject ?? '', student.klass ?? '', t.room ?? '', t.teacher ?? ''])
   }
 
   const stuAssignments: StuAssignmentItem[] = (snap.assignments ?? []).map((a: SnapRow) => ({
