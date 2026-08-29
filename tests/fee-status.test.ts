@@ -3,7 +3,7 @@ import { feeStatusAfter } from '../app/store/slices/fees'
 import type { FeeRecord } from '../app/store/types'
 
 const fee = (status: FeeRecord['status'], amount = 500): FeeRecord =>
-  ({ dbId: crypto.randomUUID(), period: 'July 2026', amount, dueDate: '2026-07-05', status })
+  ({ dbId: crypto.randomUUID(), period: 'July 2026', amount, dueDate: '2026-07-05', status, planId: null })
 
 // Deleting a fee is the first thing in this app that can *reduce* what a
 // family owes, and students.fee_status is a stored column that no amount of

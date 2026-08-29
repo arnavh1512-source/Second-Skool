@@ -26,7 +26,7 @@ export const feeStatusAfter = (remaining: FeeRecord[]): FeeStatus =>
 // it is now rolled back when the write fails, and success is only claimed once
 // the write lands. This is the same fix f601d39 applied to nine actions; this
 // file was never opened by that pass or the one after it.
-export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus' | 'loadStudentFees' | 'deleteFee'> = (set, get) => ({
+export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 'toggleFeeStatus' | 'loadStudentFees' | 'deleteFee'> = (set, get) => ({
   addFee: async (studentDbId, amount, period, dueDate) => {
     const notify = get().notify
     if (!studentDbId) { notify('Choose a student before adding a fee', 'error'); return false }
@@ -54,6 +54,79 @@ export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus' | 'loadStudentF
     notify('Fee record added')
     await get().refreshData()
     return true
+  },
+
+  // A plan is written as ordinary fee rows sharing one plan_id. Six installments
+  // are one insert, not six round trips — a partial plan (three rows in, three
+  // lost to a dropped connection) would be worse than no plan, and Postgres
+  // gives us all-or-nothing for free on a single statement.
+  addFeePlan: async (studentDbId, installments) => {
+    const notify = get().notify
+    if (!studentDbId) { notify('Choose a student before setting up a plan', 'error'); return false }
+    if (installments.length === 0) { notify('That plan has no installments', 'error'); return false }
+    if (!get().online) { notify('No internet — the plan has NOT been created. Try again once you are back online.', 'error'); return false }
+
+    const planId = crypto.randomUUID()
+    const total = installments.reduce((n, i) => n + i.amount, 0)
+
+    const before = get().students
+    const idx = before.findIndex(s => s.dbId === studentDbId)
+    if (idx >= 0) {
+      const arr = [...before]
+      arr[idx] = { ...arr[idx], feeStatus: 'Due', feeDue: (arr[idx].feeDue ?? 0) + total }
+      set({ students: arr })
+    }
+
+    const r1 = await supabase.from('fees').insert(installments.map(i => ({
+      student_id: studentDbId, plan_id: planId,
+      amount: i.amount, period: i.period, due_date: i.dueDate, status: 'Due',
+    })))
+    if (r1.error) { set({ students: before }); dbErr('create the fee plan', notify)(r1); return false }
+
+    // The rows are committed by here, so a failure below is a stale badge and
+    // not a lost plan — say so, but do not roll the plan back.
+    const r2 = await supabase.from('students').update({ fee_status: 'Due' }).eq('id', studentDbId).select('id')
+    if (r2.error) { dbErr('update the fee status', notify)(r2); await get().refreshData(); return true }
+    if (changedNothing(r2)) { notify('Plan saved, but the status badge did not update — refresh to see it', 'error'); await get().refreshData(); return true }
+
+    // The open breakdown was fetched before these rows existed. Without this the
+    // head watches a success toast and an unchanged list.
+    if (get().feeRecords[studentDbId]) await get().loadStudentFees(studentDbId)
+    notify(`${installments.length} installments added`)
+    await get().refreshData()
+    return true
+  },
+
+  // The one thing plan_id buys: a plan set up against the wrong child, or with
+  // the wrong total, comes off in a single confirmation. Only the unpaid rows
+  // go — an installment already collected is money that changed hands, and
+  // deleting it would quietly erase it from the fees-collected report.
+  deleteFeePlan: async (planId, studentDbId) => {
+    const notify = get().notify
+    if (!get().online) { notify('No internet — the plan has NOT been removed. Try again once you are back online.', 'error'); return }
+
+    const before = get().feeRecords[studentDbId] ?? []
+    const doomed = before.filter(f => f.planId === planId && f.status !== 'Paid')
+    if (doomed.length === 0) { notify('Every installment in that plan is already paid', 'error'); return }
+    set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before.filter(f => !doomed.includes(f)) } }))
+
+    const res = await supabase.from('fees').delete()
+      .eq('plan_id', planId).eq('student_id', studentDbId).neq('status', 'Paid').select('id')
+    if (res.error) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); dbErr('remove the fee plan', notify)(res); return }
+    if (changedNothing(res)) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); notify(NOT_SAVED, 'error'); return }
+
+    // Same reason as deleteFee: fee_status is a stored column, so it has to be
+    // recomputed from what is actually left or the family keeps the Due badge.
+    const status = feeStatusAfter(get().feeRecords[studentDbId] ?? [])
+    const upd = await supabase.from('students').update({ fee_status: status }).eq('id', studentDbId).select('id')
+    if (upd.error || changedNothing(upd)) {
+      notify('Plan removed, but the status badge did not update — refresh to see it', 'error')
+      await get().refreshData()
+      return
+    }
+
+    notify(`${doomed.length} unpaid installments removed`)
+    await get().refreshData()
   },
 
   // Keyed on the student, not their slot. The badge is rendered from a
@@ -112,7 +185,7 @@ export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus' | 'loadStudentF
   // student, on open.
   loadStudentFees: async (studentDbId) => {
     const { data, error } = await supabase.from('fees')
-      .select('id, period, amount, due_date, status')
+      .select('id, period, amount, due_date, status, plan_id')
       .eq('student_id', studentDbId).order('due_date', { ascending: false }).limit(100)
     if (error) { dbErr('load the fee records', get().notify)({ error }); return }
     const rows: FeeRecord[] = (data ?? []).map(f => ({
@@ -121,6 +194,7 @@ export const createFeesSlice: Slice<'addFee' | 'toggleFeeStatus' | 'loadStudentF
       amount: Number(f.amount) || 0,
       dueDate: (f.due_date as string) ?? '',
       status: ((f.status as FeeStatus) ?? 'Due'),
+      planId: (f.plan_id as string) ?? null,
     }))
     set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: rows } }))
   },

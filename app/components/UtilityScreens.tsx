@@ -3,25 +3,43 @@
 import { useState, useEffect, useRef } from 'react'
 import { indexOfStudent, studentKey } from '../lib/student-key'
 import { useBusy } from '../lib/use-busy'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, parseDay, rupee, LIMITS, MIN_PASSWORD_LENGTH, clampText, type Screen, type Student } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, parseDay, rupee, isoDay, LIMITS, MIN_PASSWORD_LENGTH, clampText, type Screen, type Student } from '../store'
+import { PLAN_INTERVALS, isOverdue, splitPlan, summariseFees, validatePlan, type PlanInterval } from '../lib/fee-plan'
 import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
 
+// Due dates are parsed as calendar parts, not as instants: "5 Oct" is a day on
+// a wall calendar and must not slide to the 4th because of a timezone.
+const fmtDue = (iso: string) => {
+  const d = parseDay(iso)
+  return d ? `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })} ${d.getFullYear()}` : ''
+}
+
 export function FeesScreen() {
-  const { students, back, notify, addFee, toggleFeeStatus, saveReminder, go, role, feeRecords, loadStudentFees, deleteFee } = useDashboard()
+  const { students, back, notify, addFee, addFeePlan, deleteFeePlan, toggleFeeStatus, saveReminder, go, role, feeRecords, loadStudentFees, deleteFee } = useDashboard()
   const [showForm, setShowForm] = useState(false)
   const [selStudent, setSelStudent] = useState('')
   const [amount, setAmount] = useState('')
   const [period, setPeriod] = useState('')
   const [dueDate, setDueDate] = useState('')
+  // One fee or a whole year of them. The plan side asks for five numbers once
+  // instead of five numbers a month, which is the only reason it is here.
+  const [planMode, setPlanMode] = useState(false)
+  const [planTotal, setPlanTotal] = useState('')
+  const [planDiscount, setPlanDiscount] = useState('')
+  const [planCount, setPlanCount] = useState('6')
+  const [planFirstDue, setPlanFirstDue] = useState('')
+  const [planInterval, setPlanInterval] = useState<PlanInterval>('monthly')
   // Which student's fee breakdown is open, and which single fee is one
   // confirmation away from being removed. One at a time: this is a list of
   // balances, not a ledger, and expanding everything would fetch the whole
   // centre's fee history to answer a question about one child.
   const [openFees, setOpenFees] = useState<string | null>(null)
   const [confirmFee, setConfirmFee] = useState<{ id: string; studentId: string; student: string; label: string } | null>(null)
+  const [confirmPlan, setConfirmPlan] = useState<{ planId: string; studentId: string; student: string; count: number } | null>(null)
+  const today = isoDay()
   const isAdmin = role === 'admin'
   const paidCount = students.filter(s => s.feeStatus === 'Paid').length
   const pendingCount = students.filter(s => s.feeStatus !== 'Paid').length
@@ -42,6 +60,23 @@ export function FeesScreen() {
     setSelStudent(''); setAmount(''); setPeriod(''); setDueDate(''); setShowForm(false)
   }
 
+  const planDraft = {
+    total: Number(planTotal), discount: Number(planDiscount) || 0,
+    count: Number(planCount), firstDue: planFirstDue, interval: planInterval,
+  }
+  // The head is committing to a year of demands on a family from four inputs,
+  // so the exact rupees and the exact months are on screen before Save is
+  // pressed, not discovered afterwards in the breakdown.
+  const planPreview = splitPlan(planDraft)
+
+  const handleAddPlan = async () => {
+    if (!selStudent) { notify('Select a student', 'error'); return }
+    const problem = validatePlan(planDraft, LIMITS.feeAmount)
+    if (problem) { notify(problem, 'error'); return }
+    if (!(await addFeePlan(selStudent, planPreview))) return
+    setSelStudent(''); setPlanTotal(''); setPlanDiscount(''); setPlanCount('6'); setPlanFirstDue(''); setShowForm(false)
+  }
+
   return (
     <div className="td-wide td-screen">
       <ConfirmDialog
@@ -51,6 +86,14 @@ export function FeesScreen() {
         confirmLabel="Remove fee"
         onConfirm={() => { const t = confirmFee; setConfirmFee(null); if (t) deleteFee(t.id, t.studentId) }}
         onCancel={() => setConfirmFee(null)}
+      />
+      <ConfirmDialog
+        open={!!confirmPlan}
+        title="Remove the rest of this plan?"
+        body={`${confirmPlan?.count ?? 0} unpaid installments come off ${confirmPlan?.student ?? ''}'s balance for good. Installments already marked Paid stay — that money was collected, and removing it would erase it from your fees report.`}
+        confirmLabel="Remove installments"
+        onConfirm={() => { const t = confirmPlan; setConfirmPlan(null); if (t) deleteFeePlan(t.planId, t.studentId) }}
+        onCancel={() => setConfirmPlan(null)}
       />
       <ScreenHeader title="Fees" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
@@ -71,25 +114,70 @@ export function FeesScreen() {
 
       {showForm && (
         <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
-          <div className="text-sm td-strong">Add fee record</div>
+          <div className="flex gap-1.5 p-1 bg-td-soft rounded-[14px]">
+            {[{ on: false, label: 'One fee' }, { on: true, label: 'Installment plan' }].map(t => (
+              <button key={t.label} onClick={() => setPlanMode(t.on)}
+                className={`flex-1 text-[12.5px] font-bold py-2 rounded-[10px] border-none cursor-pointer ${planMode === t.on ? 'bg-td-card text-td-dark' : 'bg-transparent text-td-muted'}`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
           <div><label className="td-label">Student</label>
             <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field text-[13.5px] bg-td-card">
               <option value="">Select student</option>
               {students.map(s => <option key={s.dbId ?? s.id} value={s.dbId ?? ''}>{s.name} — {s.klass}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="td-label">Amount (&#8377;)</label>
-              <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field text-sm focus:border-td-primary" />
-            </div>
-            <div><label className="td-label">Period</label>
-              <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field text-sm focus:border-td-primary" />
-            </div>
-          </div>
-          <div><label className="td-label">Due date</label>
-            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm focus:border-td-primary" />
-          </div>
-          <PrimaryButton onClick={handleAdd}>Add fee record</PrimaryButton>
+          {!planMode ? (
+            <>
+              <div className="grid grid-cols-2 gap-[11px]">
+                <div><label className="td-label">Amount (&#8377;)</label>
+                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field text-sm focus:border-td-primary" />
+                </div>
+                <div><label className="td-label">Period</label>
+                  <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field text-sm focus:border-td-primary" />
+                </div>
+              </div>
+              <div><label className="td-label">Due date</label>
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm focus:border-td-primary" />
+              </div>
+              <PrimaryButton onClick={handleAdd}>Add fee record</PrimaryButton>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-[11px]">
+                <div><label className="td-label">Total for the year (&#8377;)</label>
+                  <input type="number" value={planTotal} onChange={e => setPlanTotal(e.target.value)} placeholder="e.g. 12000" className="td-field text-sm focus:border-td-primary" />
+                </div>
+                <div><label className="td-label">Discount (&#8377;)</label>
+                  <input type="number" value={planDiscount} onChange={e => setPlanDiscount(e.target.value)} placeholder="0" className="td-field text-sm focus:border-td-primary" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-[11px]">
+                <div><label className="td-label">Installments</label>
+                  <input type="number" value={planCount} onChange={e => setPlanCount(e.target.value)} placeholder="6" className="td-field text-sm focus:border-td-primary" />
+                </div>
+                <div><label className="td-label">Every</label>
+                  <select value={planInterval} onChange={e => setPlanInterval(e.target.value as PlanInterval)} className="td-field text-[13.5px] bg-td-card">
+                    {PLAN_INTERVALS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div><label className="td-label">First due date</label>
+                <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field text-sm focus:border-td-primary" />
+              </div>
+              {planPreview.length > 0 && (
+                <div className="bg-td-soft rounded-[14px] p-3 text-[12px] text-td-muted leading-relaxed">
+                  <span className="td-strong text-td-dark">{planPreview.length} installments</span>
+                  {' · '}{planPreview[0].period} to {planPreview[planPreview.length - 1].period}
+                  <div className="mt-1">
+                    First {rupee(planPreview[0].amount)}, then {rupee(planPreview[planPreview.length - 1].amount)} each.
+                  </div>
+                </div>
+              )}
+              <PrimaryButton onClick={handleAddPlan}>Create plan</PrimaryButton>
+            </>
+          )}
         </div>
       )}
 
@@ -133,24 +221,54 @@ export function FeesScreen() {
                       <div className="text-xs text-td-muted">Loading fee records...</div>
                     ) : records.length === 0 ? (
                       <div className="text-xs text-td-muted">No fee records for {d.name} yet.</div>
-                    ) : records.map(r => {
-                      const due = parseDay(r.dueDate)
-                      const label = `${rupee(r.amount)} · ${r.period}`
+                    ) : (() => {
+                      const sum = summariseFees(records, today)
+                      // Distinct plans with something still unpaid. Almost always
+                      // one; the list is here because a child can be moved onto a
+                      // new plan mid-year without the old one being cleared first.
+                      const openPlans = [...new Set(records.filter(r => r.planId && r.status !== 'Paid').map(r => r.planId!))]
                       return (
-                        <div key={r.dbId} className="flex items-center gap-2.5">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-[12.5px] font-bold text-td-dark truncate">{label}</div>
-                            <div className="text-[11.5px] text-td-muted mt-px">
-                              {r.status === 'Paid' ? 'Paid' : 'Due'}
-                              {due && ` · ${due.getDate()} ${due.toLocaleString('en', { month: 'short' })} ${due.getFullYear()}`}
+                        <>
+                          {/* A column of rows never answered "how far through is
+                              this family?" — the question every fee conversation
+                              actually starts with. */}
+                          {records.length > 1 && (
+                            <div className="text-[11.5px] text-td-muted leading-relaxed pb-1">
+                              <span className="td-strong text-td-dark">{rupee(sum.total)}</span>
+                              {` · ${sum.paidCount} of ${sum.count} paid`}
+                              {sum.outstanding > 0 && ` · ${rupee(sum.outstanding)} outstanding`}
+                              {sum.next?.dueDate && ` · next ${rupee(sum.next.amount)} due ${fmtDue(sum.next.dueDate)}`}
+                              {sum.overdueCount > 0 && <span className="text-td-red font-semibold"> · {sum.overdueCount} overdue</span>}
                             </div>
-                          </div>
-                          {isAdmin && (
-                            <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 border border-td-edge-red bg-td-wash-red text-td-red text-[11.5px] font-bold py-1 px-2.5 rounded-[10px] cursor-pointer">Remove</button>
                           )}
-                        </div>
+                          {records.map(r => {
+                            const late = isOverdue(r, today)
+                            const label = `${rupee(r.amount)} · ${r.period}`
+                            return (
+                              <div key={r.dbId} className="flex items-center gap-2.5">
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-[12.5px] font-bold text-td-dark truncate">{label}</div>
+                                  <div className={`text-[11.5px] mt-px ${late ? 'text-td-red font-semibold' : 'text-td-muted'}`}>
+                                    {r.status === 'Paid' ? 'Paid' : late ? 'Overdue' : 'Due'}
+                                    {r.dueDate && ` · ${fmtDue(r.dueDate)}`}
+                                  </div>
+                                </div>
+                                {isAdmin && (
+                                  <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 border border-td-edge-red bg-td-wash-red text-td-red text-[11.5px] font-bold py-1 px-2.5 rounded-[10px] cursor-pointer">Remove</button>
+                                )}
+                              </div>
+                            )
+                          })}
+                          {isAdmin && openPlans.map(planId => (
+                            <button key={planId}
+                              onClick={() => setConfirmPlan({ planId, studentId: d.dbId!, student: d.name, count: records.filter(r => r.planId === planId && r.status !== 'Paid').length })}
+                              className="mt-1 self-start border border-td-edge-red bg-td-wash-red text-td-red text-[11.5px] font-bold py-1 px-2.5 rounded-[10px] cursor-pointer">
+                              Remove the rest of this plan
+                            </button>
+                          ))}
+                        </>
                       )
-                    })}
+                    })()}
                   </div>
                 )}
               </div>

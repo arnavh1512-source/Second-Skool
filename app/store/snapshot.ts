@@ -1,6 +1,7 @@
 // Student snapshot mapping (from the get_student_snapshot RPC).
 import type { IconName } from '../components/Icon'
-import { fmtDate, rupee, timeAgo } from './format'
+import { isOverdue, summariseFees } from '../lib/fee-plan'
+import { fmtDate, isoDay, rupee, timeAgo } from './format'
 import type {
   AttLogItem, FeeHistoryItem, FeeStatus, NotifItem, State,
   RankRow, StuAssignmentItem, StuResultItem, Student, Teacher,
@@ -81,8 +82,27 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   const stuFeeHistory: FeeHistoryItem[] = fees.filter(f => f.status === 'Paid').map((f: SnapRow) => ({
     period: f.period ?? '', date: fmtDate(f.paidDate ?? ''), amount: rupee(f.amount ?? 0),
   }))
-  const pending = fees.find(f => f.status !== 'Paid')
-  const stuPendingFee = pending ? { amount: rupee(pending.amount ?? 0), period: pending.period ?? '', dueDate: fmtDate(pending.dueDate ?? '') } : null
+  // The RPC hands these back newest-first, so "the first unpaid one" is the
+  // installment furthest in the future — harmless when a child has a single
+  // ad-hoc fee, and exactly the wrong number to put in front of a parent once
+  // a six-month plan exists. summariseFees picks the soonest one instead.
+  const today = isoDay()
+  const summary = summariseFees(
+    fees.map(f => ({ amount: f.amount ?? 0, dueDate: f.dueDate ?? '', status: f.status ?? 'Due', period: f.period ?? '' })),
+    today,
+  )
+  const pending = summary.next
+  const stuPendingFee = pending
+    ? {
+        amount: rupee(pending.amount), period: pending.period ?? '',
+        dueDate: fmtDate(pending.dueDate), overdue: isOverdue(pending, today),
+      }
+    : null
+  // Only the counts a plan makes worth saying. A single fee is not a plan, and
+  // "1 of 1 paid" under a balance is noise, so the screen hides this below two.
+  const stuFeeSummary = {
+    outstanding: summary.outstanding, count: summary.count, paidCount: summary.paidCount,
+  }
 
   // dbId here is the creation timestamp, not a row id — the snapshot RPC does
   // not return one. It is an identity for "which notification is this" (the
@@ -146,7 +166,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   return {
     students: [student], currentStudentDbId: student.dbId ?? null,
     centreName: snap.centre?.name ?? '', centreLogo: snap.centre?.logo_url ?? '',
-    stuAttendanceLog, stuResults, stuFeeHistory, stuPendingFee,
+    stuAttendanceLog, stuResults, stuFeeHistory, stuPendingFee, stuFeeSummary,
     stuNotifications, stuReminders,
     teachers, rankData, timetableData, stuAssignments, stuMonthly,
   }

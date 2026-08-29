@@ -2,6 +2,7 @@
 // screen can import a type without pulling the whole store graph with it.
 import type { IconName } from '../components/Icon'
 import type { ReportDraft } from '../lib/support'
+import type { Installment } from '../lib/fee-plan'
 
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
@@ -39,7 +40,10 @@ export interface FeeHistoryItem { period: string; date: string; amount: string }
 // The head's view of a single fee row. FeeHistoryItem is the parent's version
 // and carries no id, because a parent can only ever read theirs — the head
 // needs the id to be able to take a wrong one back off the child's balance.
-export interface FeeRecord { dbId: string; period: string; amount: number; dueDate: string; status: FeeStatus }
+// planId groups the rows one installment plan created, and is null for the
+// ad-hoc fees a head types in one at a time. It exists so a plan set up wrong
+// can be taken back in one confirmation instead of six.
+export interface FeeRecord { dbId: string; period: string; amount: number; dueDate: string; status: FeeStatus; planId: string | null }
 // One line of the sent-reminder log. `when` is pre-formatted by timeAgo at
 // fetch time, the same way NotifItem does it.
 export interface ReminderLogItem { dbId: string; type: string; message: string; targetClass: string | null; when: string }
@@ -128,7 +132,10 @@ export interface State {
   notesList: NoteItem[]
   stuNotes: StuNoteItem[]
   currentStudentDbId: string | null
-  stuPendingFee: { amount: string; period: string; dueDate: string } | null
+  stuPendingFee: { amount: string; period: string; dueDate: string; overdue: boolean } | null
+  // Counts, not money strings: the fee screen decides whether a student has
+  // enough installments for a breakdown to mean anything.
+  stuFeeSummary: { outstanding: number; count: number; paidCount: number } | null
   searchQuery: string
   lastAdded: { code: string; name: string; parent: string } | null
   myTickets: SupportTicket[]
@@ -174,6 +181,8 @@ export interface Actions {
   saveReminder: (type: string, message: string, targetClass: string, filter?: string) => Promise<void>
   notifyClass: (klass: string, title: string, detail: string, icon: IconName) => Promise<void>
   addFee: (studentDbId: string, amount: number, period: string, dueDate: string) => Promise<boolean>
+  addFeePlan: (studentDbId: string, installments: readonly Installment[]) => Promise<boolean>
+  deleteFeePlan: (planId: string, studentDbId: string) => Promise<void>
   loadStudentFees: (studentDbId: string) => Promise<void>
   deleteFee: (feeId: string, studentDbId: string) => Promise<void>
   loadReminderHistory: () => Promise<void>

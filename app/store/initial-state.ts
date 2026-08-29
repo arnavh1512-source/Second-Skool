@@ -24,7 +24,7 @@ export const initialState: State = {
   stuReminders: [], stuNotifications: [], stuAttendanceLog: [],
   stuFeeHistory: [], stuResults: [], stuAssignments: [], stuMonthly: null,
   notesList: [], stuNotes: [], feeRecords: {}, reminderHistory: [],
-  currentStudentDbId: null, stuPendingFee: null, searchQuery: '', lastAdded: null,
+  currentStudentDbId: null, stuPendingFee: null, stuFeeSummary: null, searchQuery: '', lastAdded: null,
   myTickets: [], openTicketId: null, reportShot: null,
   reportDraft: { intent: '', outcome: '', area: '', frequency: 'always' },
 }

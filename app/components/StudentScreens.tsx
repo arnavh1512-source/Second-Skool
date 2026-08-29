@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { copyText } from '../lib/share'
-import { useDashboard, GRADIENTS, initials, av, stuGrade, type Teacher } from '../store'
+import { useDashboard, GRADIENTS, initials, av, rupee, stuGrade, type Teacher } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight } from './Shell'
 import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
@@ -181,8 +181,8 @@ export function StuHomeScreen() {
             <Icon name="fees" size={21} className="text-white" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-extrabold text-white">{stuPendingFee.amount} fee due</div>
-            <div className="text-xs text-white/70 mt-0.5">Due by {stuPendingFee.dueDate}</div>
+            <div className="text-sm font-extrabold text-white">{stuPendingFee.amount} fee {stuPendingFee.overdue ? 'overdue' : 'due'}</div>
+            <div className="text-xs text-white/70 mt-0.5">{stuPendingFee.overdue ? 'Was due' : 'Due by'} {stuPendingFee.dueDate}</div>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
         </button>
@@ -522,7 +522,11 @@ export function StuTeacherDetail() {
 }
 
 export function StuFeesScreen() {
-  const { go, notify, stuFeeHistory, stuPendingFee } = useDashboard()
+  const { go, notify, stuFeeHistory, stuPendingFee, stuFeeSummary } = useDashboard()
+  // Only worth saying when there is more than one installment behind the
+  // number. "1 of 1 paid" under a single fee is a sentence that tells a parent
+  // nothing they cannot already see.
+  const plan = stuFeeSummary && stuFeeSummary.count > 1 ? stuFeeSummary : null
 
   return (
     <div className="td-screen">
@@ -530,9 +534,16 @@ export function StuFeesScreen() {
 
       {stuPendingFee ? (
         <div className="rounded-[22px] p-5 text-white mb-5" style={{ background: 'linear-gradient(135deg,#e8553c,#ef7a64)' }}>
-          <div className="text-xs opacity-70 font-semibold">Amount due</div>
+          <div className="text-xs opacity-70 font-semibold">{plan ? 'Next installment' : 'Amount due'}</div>
           <div className="text-[28px] font-extrabold mt-1">{stuPendingFee.amount}</div>
-          <div className="text-[12.5px] opacity-80 mt-1">{stuPendingFee.period} · Due {stuPendingFee.dueDate}</div>
+          <div className="text-[12.5px] opacity-80 mt-1">
+            {stuPendingFee.period} · {stuPendingFee.overdue ? 'Was due' : 'Due'} {stuPendingFee.dueDate}
+          </div>
+          {plan && (
+            <div className="text-[12px] opacity-80 mt-2 pt-2 border-t border-white/25">
+              {plan.paidCount} of {plan.count} paid · {rupee(plan.outstanding)} left in total
+            </div>
+          )}
           <button onClick={() => notify('Contact your teacher to arrange payment')} className="w-full mt-4 border-none bg-td-card text-td-red text-sm font-extrabold py-3.5 rounded-[14px] cursor-pointer">Pay now</button>
         </div>
       ) : (
