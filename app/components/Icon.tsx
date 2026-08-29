@@ -1,9 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react'
 
 // The app's icon set. Hand-drawn on a 24×24 grid at a single stroke weight so
-// every glyph reads as one family, and painted in `currentColor` so an icon
-// picks up whatever td-* token its container already sets — no per-icon colour
-// prop, and no icon library dependency.
+// every glyph reads as one family, and painted in `currentColor` by default so
+// an icon picks up whatever td-* token its container already sets — no icon
+// library dependency. Where the container's colour is not the icon's colour
+// (a red glyph inside a card of dark text, say) `color` overrides it; that is
+// the case for about forty of the tiles and chips.
 //
 // Emoji were what these used to be. They render differently on every platform
 // (Windows vs Android vs iOS), they can't inherit colour, and they sit on the
@@ -19,7 +21,8 @@ export type IconName =
   | 'notice' | 'test' | 'absence'
   | 'standard' | 'school' | 'phone' | 'address' | 'star'
   | 'gold' | 'silver' | 'bronze'
-  | 'warning' | 'console' | 'next'
+  | 'warning' | 'console' | 'next' | 'back'
+  | 'check' | 'clock' | 'copy' | 'info' | 'lock' | 'person' | 'search' | 'signOut'
 
 // A medal disc with the rank struck through the middle. The three ranks share
 // one drawing and differ only by numeral, so they stay a set at any size.
@@ -77,16 +80,16 @@ const PATHS: Record<IconName, ReactNode> = {
     <path d="m15.6 6.4 3.5 1-2.9 12.4-3.5-1" />
   </>,
   notes: <>
-    <path d="M6.2 3.4h7.4L19 8.8v11.8H6.2z" strokeLinejoin="round" />
+    <path d="M6.2 3.4h7.4L19 8.8v11.8H6.2z" />
     <path d="M13.4 3.4v5.4H19" />
     <path d="M9.2 13.4h6M9.2 16.8h4" />
   </>,
   reminder: <>
-    <path d="M6.6 16.2v-5.6a5.4 5.4 0 1 1 10.8 0v5.6l1.8 2.4H4.8z" strokeLinejoin="round" />
+    <path d="M6.6 16.2v-5.6a5.4 5.4 0 1 1 10.8 0v5.6l1.8 2.4H4.8z" />
     <path d="M9.9 20.6a2.2 2.2 0 0 0 4.2 0" />
   </>,
   approvals: <>
-    <path d="M12 3.2 19 6v5.6c0 4.3-2.9 7.6-7 9.5-4.1-1.9-7-5.2-7-9.5V6z" strokeLinejoin="round" />
+    <path d="M12 3.2 19 6v5.6c0 4.3-2.9 7.6-7 9.5-4.1-1.9-7-5.2-7-9.5V6z" />
     <path d="m9.1 12 2.2 2.2 3.9-4" />
   </>,
   requests: <>
@@ -105,7 +108,7 @@ const PATHS: Record<IconName, ReactNode> = {
     <path d="M6.4 14.8h3.4" />
   </>,
   rankings: <>
-    <path d="M8 3.6h8v5.2a4 4 0 0 1-8 0z" strokeLinejoin="round" />
+    <path d="M8 3.6h8v5.2a4 4 0 0 1-8 0z" />
     <path d="M8 5.4H5.4a2.6 2.6 0 0 0 2.8 4.9" />
     <path d="M16 5.4h2.6a2.6 2.6 0 0 1-2.8 4.9" />
     <path d="M12 12.9v3.6" />
@@ -138,12 +141,12 @@ const PATHS: Record<IconName, ReactNode> = {
     <path d="M9 12.2h6M9 16h4" />
   </>,
   notice: <>
-    <path d="M4 10.6v2.8A1.6 1.6 0 0 0 5.6 15h2.6l7.4 4.4V4.6L8.2 9H5.6A1.6 1.6 0 0 0 4 10.6z" strokeLinejoin="round" />
+    <path d="M4 10.6v2.8A1.6 1.6 0 0 0 5.6 15h2.6l7.4 4.4V4.6L8.2 9H5.6A1.6 1.6 0 0 0 4 10.6z" />
     <path d="M18.4 9.4a3.6 3.6 0 0 1 0 5.2" />
     <path d="M8.6 15.4V20" />
   </>,
   test: <>
-    <path d="m4 20.4 1.1-4.1L15.5 5.8a2.1 2.1 0 0 1 3 3L8.1 19.3z" strokeLinejoin="round" />
+    <path d="m4 20.4 1.1-4.1L15.5 5.8a2.1 2.1 0 0 1 3 3L8.1 19.3z" />
     <path d="m13.6 7.7 3 3" />
   </>,
   absence: <>
@@ -152,12 +155,12 @@ const PATHS: Record<IconName, ReactNode> = {
     <path d="m15.8 16 4.6 4.6M20.4 16l-4.6 4.6" />
   </>,
   standard: <>
-    <path d="M2.6 9.4 12 5.4l9.4 4-9.4 4z" strokeLinejoin="round" />
+    <path d="M2.6 9.4 12 5.4l9.4 4-9.4 4z" />
     <path d="M6.4 11.4v4.4c0 1.4 2.5 2.5 5.6 2.5s5.6-1.1 5.6-2.5v-4.4" />
     <path d="M21.4 9.4v4.6" />
   </>,
   school: <>
-    <path d="M12 3 20.4 7.2v2H3.6v-2z" strokeLinejoin="round" />
+    <path d="M12 3 20.4 7.2v2H3.6v-2z" />
     <path d="M5.4 9.2v11.4h13.2V9.2" />
     <path d="M10 20.6v-4.6h4v4.6" />
     <path d="M8.2 12.4h1.4M14.4 12.4h1.4" />
@@ -167,15 +170,15 @@ const PATHS: Record<IconName, ReactNode> = {
     <path d="M10.4 18.6h3.2" />
   </>,
   address: <>
-    <path d="M12 21.2s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11z" strokeLinejoin="round" />
+    <path d="M12 21.2s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11z" />
     <circle cx="12" cy="10" r="2.6" />
   </>,
-  star: <path d="m12 3.6 2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 10l6-.9z" strokeLinejoin="round" />,
+  star: <path d="m12 3.6 2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 10l6-.9z" />,
   gold: medal(1),
   silver: medal(2),
   bronze: medal(3),
   warning: <>
-    <path d="M12 4.2 21.2 20H2.8z" strokeLinejoin="round" />
+    <path d="M12 4.2 21.2 20H2.8z" />
     <path d="M12 10.2v4.2" />
     <circle cx="12" cy="17.3" r=".9" fill="currentColor" stroke="none" />
   </>,
@@ -186,6 +189,38 @@ const PATHS: Record<IconName, ReactNode> = {
     <circle cx="9.8" cy="16" r="2.2" />
   </>,
   next: <path d="m9.6 5.6 6.6 6.4-6.6 6.4" />,
+  back: <path d="m14.4 5.6-6.6 6.4 6.6 6.4" />,
+  check: <path d="m4.4 12.6 4.4 4.4 10.8-10.8" />,
+  clock: <>
+    <circle cx="12" cy="12" r="8.8" />
+    <path d="M12 6.8v5.4l3.2 2.1" />
+  </>,
+  copy: <>
+    <rect x="8.8" y="8.8" width="12.4" height="12.4" rx="2.6" />
+    <path d="M5.4 15.2H4.4a2 2 0 0 1-2-2V4.8a2 2 0 0 1 2-2h8.4a2 2 0 0 1 2 2v1" />
+  </>,
+  info: <>
+    <circle cx="12" cy="12" r="8.8" />
+    <path d="M12 11v5.6" />
+    <circle cx="12" cy="7.6" r=".9" fill="currentColor" stroke="none" />
+  </>,
+  lock: <>
+    <rect x="3.4" y="10.6" width="17.2" height="10.4" rx="2.6" />
+    <path d="M7.4 10.6V7a4.6 4.6 0 0 1 9.2 0v3.6" />
+  </>,
+  person: <>
+    <circle cx="12" cy="8" r="3.9" />
+    <path d="M4.4 20.8v-1a7.6 7.6 0 0 1 15.2 0v1" />
+  </>,
+  search: <>
+    <circle cx="10.9" cy="10.9" r="7.1" />
+    <path d="m21 21-5-5" />
+  </>,
+  signOut: <>
+    <path d="M9.4 20.8H5.2a2 2 0 0 1-2-2V5.2a2 2 0 0 1 2-2h4.2" />
+    <path d="m16 17 5-5-5-5" />
+    <path d="M21 12H9.4" />
+  </>,
 }
 
 // notifications.icon is a persisted column: every row written before this icon
@@ -234,13 +269,14 @@ type IconProps = {
   className?: string
   style?: CSSProperties
   strokeWidth?: number
+  color?: string
 }
 
-export function Icon({ name, size = 22, className, style, strokeWidth = 1.8 }: IconProps) {
+export function Icon({ name, size = 22, className, style, strokeWidth = 1.8, color = 'currentColor' }: IconProps) {
   return (
     <svg
       width={size} height={size} viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round"
+      stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
       className={className} style={style} aria-hidden="true" focusable="false"
     >
       {PATHS[name]}

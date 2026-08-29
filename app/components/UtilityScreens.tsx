@@ -113,7 +113,7 @@ export function FeesScreen() {
       </div>
 
       {showForm && (
-        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
+        <div className="td-form-card mb-[18px] lg:max-w-lg">
           <div className="flex gap-1.5 p-1 bg-td-soft rounded-[14px]">
             {[{ on: false, label: 'One fee' }, { on: true, label: 'Installment plan' }].map(t => (
               <button key={t.label} onClick={() => setPlanMode(t.on)}
@@ -132,14 +132,14 @@ export function FeesScreen() {
             <>
               <div className="grid grid-cols-2 gap-[11px]">
                 <div><label className="td-label">Amount (&#8377;)</label>
-                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field text-sm focus:border-td-primary" />
+                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field text-sm" />
                 </div>
                 <div><label className="td-label">Period</label>
-                  <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field text-sm focus:border-td-primary" />
+                  <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field text-sm" />
                 </div>
               </div>
               <div><label className="td-label">Due date</label>
-                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm focus:border-td-primary" />
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm" />
               </div>
               <PrimaryButton onClick={handleAdd}>Add fee record</PrimaryButton>
             </>
@@ -147,15 +147,15 @@ export function FeesScreen() {
             <>
               <div className="grid grid-cols-2 gap-[11px]">
                 <div><label className="td-label">Total for the year (&#8377;)</label>
-                  <input type="number" value={planTotal} onChange={e => setPlanTotal(e.target.value)} placeholder="e.g. 12000" className="td-field text-sm focus:border-td-primary" />
+                  <input type="number" value={planTotal} onChange={e => setPlanTotal(e.target.value)} placeholder="e.g. 12000" className="td-field text-sm" />
                 </div>
                 <div><label className="td-label">Discount (&#8377;)</label>
-                  <input type="number" value={planDiscount} onChange={e => setPlanDiscount(e.target.value)} placeholder="0" className="td-field text-sm focus:border-td-primary" />
+                  <input type="number" value={planDiscount} onChange={e => setPlanDiscount(e.target.value)} placeholder="0" className="td-field text-sm" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-[11px]">
                 <div><label className="td-label">Installments</label>
-                  <input type="number" value={planCount} onChange={e => setPlanCount(e.target.value)} placeholder="6" className="td-field text-sm focus:border-td-primary" />
+                  <input type="number" value={planCount} onChange={e => setPlanCount(e.target.value)} placeholder="6" className="td-field text-sm" />
                 </div>
                 <div><label className="td-label">Every</label>
                   <select value={planInterval} onChange={e => setPlanInterval(e.target.value as PlanInterval)} className="td-field text-[13.5px] bg-td-card">
@@ -164,7 +164,7 @@ export function FeesScreen() {
                 </div>
               </div>
               <div><label className="td-label">First due date</label>
-                <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field text-sm focus:border-td-primary" />
+                <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field text-sm" />
               </div>
               {planPreview.length > 0 && (
                 <div className="bg-td-soft rounded-[14px] p-3 text-[12px] text-td-muted leading-relaxed">
@@ -191,7 +191,7 @@ export function FeesScreen() {
           onAction={role === 'admin' ? () => go('addStudent', 'students') : undefined}
         />
       ) : (
-        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-2.5">
           {rows.map(d => {
             const realIdx = indexOfStudent(students, studentKey(d))
             const f = feeColor(d.feeStatus)
@@ -204,7 +204,7 @@ export function FeesScreen() {
                   {/* The balance was a total with nothing behind it. Tapping the
                       name now opens what it is made of — which is also the only
                       place a fee can be taken back off it. */}
-                  <button onClick={() => { if (!d.dbId) return; const next = open ? null : d.dbId; setOpenFees(next); if (next && !feeRecords[next]) loadStudentFees(next) }} className="flex-1 min-w-0 text-left bg-transparent border-none p-0 cursor-pointer">
+                  <button onClick={() => { if (!d.dbId) return; const next = open ? null : d.dbId; setOpenFees(next); if (next && !feeRecords[next]) loadStudentFees(next) }} className="td-plain flex-1 min-w-0 text-left p-0 cursor-pointer">
                     <div className="text-[13.5px] font-bold text-td-dark truncate">{d.name}</div>
                     <div className="text-xs text-td-muted mt-0.5">
                       {d.klass}
@@ -304,17 +304,17 @@ export function MeetingsScreen() {
       />
       <ScreenHeader title="Meetings" onBack={back} />
 
-      <div className="td-card rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
+      <div className="td-form-card mb-[22px]">
         <div className="text-sm td-strong">Schedule new</div>
-        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field text-sm" /></div>
         <div><label className="td-label">Type</label>
           <select value={type} onChange={e => setType(e.target.value)} className="td-field text-[13.5px] bg-td-card">
             <option>Parent-teacher meeting</option><option>Staff meeting</option>
           </select>
         </div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="td-field text-sm focus:border-td-primary" /></div>
-          <div><label className="td-label">Time</label><input value={time} onChange={e => setTime(e.target.value)} className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="td-field text-sm" /></div>
+          <div><label className="td-label">Time</label><input value={time} onChange={e => setTime(e.target.value)} className="td-field text-sm" /></div>
         </div>
         <PrimaryButton onClick={async () => { if (await saveMeeting(title, type, date, time)) { setTitle(''); setDate('') } }}>Schedule &amp; invite</PrimaryButton>
       </div>
@@ -432,13 +432,13 @@ export function BranchesScreen() {
       } />
 
       {showForm && (
-        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="td-form-card mb-[18px]">
           <div className="text-sm td-strong">New branch</div>
           <div><label className="td-label">Branch name</label>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="td-field text-sm focus:border-td-primary" />
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="td-field text-sm" />
           </div>
           <div><label className="td-label">Address</label>
-            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="td-field text-sm focus:border-td-primary" />
+            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="td-field text-sm" />
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-td-primary rounded" />
@@ -463,7 +463,7 @@ export function BranchesScreen() {
               </div>
               <div className="text-[12.5px] text-td-muted mb-3">{b.address}</div>
               <div className="flex items-center justify-between">
-                <button onClick={() => setOpenBranch(open ? null : b.name)} className="flex gap-[18px] bg-transparent border-none p-0 cursor-pointer text-left">
+                <button onClick={() => setOpenBranch(open ? null : b.name)} className="td-plain flex gap-[18px] p-0 cursor-pointer text-left">
                   <div><div className="text-base td-strong">{roster.length}</div><div className="text-[12px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
                   <div><div className="text-base td-strong">{b.staff}</div><div className="text-[12px] text-td-subtle font-semibold">Staff</div></div>
                 </button>
@@ -516,11 +516,11 @@ function NameListScreen({ noun, plural, placeholder, rows, add, remove, confirmB
       />
       <ScreenHeader title={plural[0].toUpperCase() + plural.slice(1)} onBack={back} />
 
-      <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+      <div className="td-form-card mb-[18px]">
         <div className="text-sm td-strong">Add {noun}</div>
         <div className="flex gap-[11px]">
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
-          <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="td-field flex-1 text-sm" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          <button onClick={handleAdd} className="td-pill text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
         </div>
       </div>
 
@@ -537,7 +537,7 @@ function NameListScreen({ noun, plural, placeholder, rows, add, remove, confirmB
                 <div className="flex items-center gap-[13px]">
                   <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{r.name[0]}</div>
                   {list ? (
-                    <button onClick={() => setOpenRow(open ? null : r.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
+                    <button onClick={() => setOpenRow(open ? null : r.name)} className="td-plain flex-1 min-w-0 p-0 cursor-pointer text-left">
                       <div className="text-[14px] font-bold text-td-dark truncate">{r.name}</div>
                       <div className="text-[12px] text-td-muted font-semibold">{list.length} student{list.length === 1 ? '' : 's'} {list.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
                     </button>
@@ -603,7 +603,7 @@ export function MoreScreen() {
   const card = (list: MoreItem[]) => (
     <div className="td-card rounded-[20px] overflow-hidden">
       {list.map(m => (
-        <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
+        <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="td-plain w-full text-left border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
           {!!m.badge && m.badge > 0 && <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
@@ -641,7 +641,7 @@ export function MoreScreen() {
       </div>
 
       <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-2xl mt-4 flex items-center justify-center gap-[9px]">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+        <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>
     </div>
@@ -690,7 +690,7 @@ export function NotificationsScreen() {
       {empty ? (
         <div className="flex flex-col items-center text-center py-14">
           <div className="w-16 h-16 rounded-[20px] bg-td-tint-green flex items-center justify-center mb-4">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            <Icon name="reminder" size={30} color="var(--color-td-green)" />
           </div>
           <div className="text-[16px] td-strong">You&apos;re all caught up</div>
           <div className="text-[13px] text-td-muted mt-1 max-w-[240px]">New student and staff requests will show up here.</div>
@@ -704,7 +704,7 @@ export function NotificationsScreen() {
 
       {pushSupported() && (
         <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <Icon name="reminder" size={17} color="var(--color-td-primary)" />
           {pushOn ? 'Notifications enabled' : pushBusy ? 'Enabling…' : 'Enable notifications on this device'}
         </button>
       )}
@@ -779,12 +779,12 @@ export function StaffProfileScreen() {
       </div>
 
       <div className="flex flex-col gap-3.5 mb-[18px]">
-        <div><label className="td-label">Full name</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="td-field text-sm focus:border-td-primary" /></div>
-        <div><label className="td-label">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="td-field text-sm focus:border-td-primary" /></div>
-        <div><label className="td-label">Subject you teach</label><input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Mathematics, Physics" className="td-field text-sm focus:border-td-primary" /></div>
-        <div><label className="td-label">Qualification</label><input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="e.g. M.Sc. Mathematics" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Full name</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="td-field text-sm" /></div>
+        <div><label className="td-label">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="td-field text-sm" /></div>
+        <div><label className="td-label">Subject you teach</label><input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Mathematics, Physics" className="td-field text-sm" /></div>
+        <div><label className="td-label">Qualification</label><input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="e.g. M.Sc. Mathematics" className="td-field text-sm" /></div>
         {isAdmin && (
-          <div><label className="td-label">Centre name</label><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">Centre name</label><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field text-sm" /></div>
         )}
         {isAdmin && (
           <div>
@@ -810,7 +810,7 @@ export function StaffProfileScreen() {
           </div>
         )}
         <div className="flex items-center gap-2.5 bg-td-soft border border-td-border rounded-[14px] p-3">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <Icon name="info" size={15} color="var(--color-td-subtle)" />
           <span className="text-[12px] text-td-muted">Your email is managed by Google and can&apos;t be changed here.</span>
         </div>
       </div>
@@ -819,31 +819,31 @@ export function StaffProfileScreen() {
 
       {pushSupported() && (
         <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+          <Icon name="reminder" size={17} color="var(--color-td-primary)" />
           {pushOn ? 'Notifications enabled' : 'Enable notifications'}
         </button>
       )}
 
       {!pwOpen ? (
         <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <Icon name="lock" size={17} color="var(--color-td-primary)" />
           Set password for phone login
         </button>
       ) : (
         <div className="border border-td-border rounded-2xl p-4 mt-3">
           <div className="text-sm td-strong">Set a password</div>
           <p className="text-[12px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
-          <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-3" />
-          <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-2.5" />
+          <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="td-field text-sm mt-3" />
+          <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="td-field text-sm mt-2.5" />
           <div className="flex gap-2 mt-3">
-            <button onClick={savePassword} disabled={pwBusy} className="flex-1 border-none bg-td-primary text-white text-[13.5px] font-extrabold py-[12px] rounded-[12px] cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
+            <button onClick={savePassword} disabled={pwBusy} className="td-pill flex-1 text-[13.5px] font-extrabold py-[12px] rounded-[12px] cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
             <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-[13.5px] font-bold py-[12px] px-4 rounded-[12px] cursor-pointer">Cancel</button>
           </div>
         </div>
       )}
 
       <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-2xl mt-3 flex items-center justify-center gap-[9px]">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+        <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>
     </div>

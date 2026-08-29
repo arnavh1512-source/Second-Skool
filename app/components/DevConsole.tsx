@@ -265,7 +265,7 @@ export function DevConsoleScreen() {
               value={typed}
               onChange={e => setTyped(e.target.value)}
               autoFocus
-              className="w-full text-[13.5px] py-2.5 px-3 rounded-[12px] border border-td-border outline-none focus:border-td-primary"
+              className="td-field text-[13.5px]"
             />
             <div className="flex gap-2 mt-4">
               <button
@@ -441,7 +441,7 @@ function Reports({ rows, onReply, onResolve }: {
           <div key={t.id} className="td-card rounded-[16px] overflow-hidden">
             <button
               onClick={() => { setOpenId(open ? null : t.id); setDraft('') }}
-              className="w-full text-left bg-transparent border-none p-4 cursor-pointer"
+              className="td-plain w-full text-left p-4 cursor-pointer"
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
@@ -511,13 +511,13 @@ function Reports({ rows, onReply, onResolve }: {
                   onChange={e => setDraft(e.target.value)}
                   placeholder="Reply — they see this inside the app"
                   rows={3}
-                  className="w-full border border-td-border rounded-[12px] p-3 text-[13px] text-td-dark outline-none focus:border-td-primary resize-none"
+                  className="td-field text-[13px] resize-none"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => send(t.id)}
                     disabled={busy || !draft.trim()}
-                    className="flex-1 text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border-none bg-td-primary text-white disabled:opacity-50"
+                    className="td-pill flex-1 text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer disabled:opacity-50"
                   >
                     {busy ? 'Sending…' : 'Send reply'}
                   </button>

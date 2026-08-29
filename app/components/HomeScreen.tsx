@@ -7,6 +7,14 @@ import { Icon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { ThemeToggle } from './ThemeToggle'
 
+const CHIP = 'inline-flex items-center gap-[7px] td-card rounded-[20px] py-[7px] px-[13px]'
+const chip = (name: string) => (
+  <>
+    <Icon name="branches" size={14} color="var(--color-td-primary)" />
+    <span className="text-[12.5px] font-semibold text-td-text">{name}</span>
+  </>
+)
+
 export function HomeScreen() {
   const { role, go, goFrom, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
   const isAdmin = role === 'admin'
@@ -34,7 +42,7 @@ export function HomeScreen() {
   return (
     <div className="td-wide td-screen">
       <div className="flex items-center justify-between mb-5">
-        <button onClick={() => go('staffProfile')} aria-label="Open my profile" className="flex items-center gap-3 border-none bg-transparent p-0 cursor-pointer text-left">
+        <button onClick={() => go('staffProfile')} aria-label="Open my profile" className="td-plain flex items-center gap-3 p-0 cursor-pointer text-left">
           <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
           <div>
             <div className="text-xs text-td-muted font-semibold">{isAdmin ? 'Head Teacher' : 'Teacher'}</div>
@@ -44,24 +52,22 @@ export function HomeScreen() {
         <div className="flex items-center gap-2 shrink-0">
           <ThemeToggle />
           <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2" strokeLinecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+            <Icon name="reminder" size={20} color="var(--color-td-dark)" />
             {hasAlerts && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-td-card" />}
           </button>
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-3 mb-[18px]">
+        {/* Same chip either way, but only the head's is tappable - a plain div
+            for everyone else, so it does not offer a screen they cannot open. */}
         {isAdmin ? (
-          <button onClick={() => go('branches')} className="inline-flex items-center gap-[7px] td-card rounded-[20px] py-[7px] px-[13px] cursor-pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
-            <span className="text-[12.5px] font-semibold text-td-text">{mainBranch?.name ?? 'No branch'}</span>
+          <button onClick={() => go('branches')} className={`${CHIP} cursor-pointer`}>
+            {chip(mainBranch?.name ?? 'No branch')}
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.4" strokeLinecap="round"><path d="m6 9 6 6 6-6"/></svg>
           </button>
         ) : mainBranch ? (
-          <div className="inline-flex items-center gap-[7px] td-card rounded-[20px] py-[7px] px-[13px]">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
-            <span className="text-[12.5px] font-semibold text-td-text">{mainBranch.name}</span>
-          </div>
+          <div className={CHIP}>{chip(mainBranch.name)}</div>
         ) : <span />}
         <LastUpdated />
       </div>
@@ -109,7 +115,7 @@ export function HomeScreen() {
       {schedule.length === 0 ? (
         <div className="td-none">No classes scheduled for today</div>
       ) : (
-        <div className="flex flex-col gap-2.5 mb-[26px] lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-2.5 mb-[26px]">
           {schedule.map((c, i) => (
             <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="flex items-center gap-[13px] td-card rounded-[18px] py-3.5 px-[15px]">
               <div className="text-center shrink-0 w-[52px]">

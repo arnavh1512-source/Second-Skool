@@ -52,8 +52,8 @@ export function NotesScreen() {
       } />
 
       {showForm && (
-        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
-          <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field text-sm focus:border-td-primary" /></div>
+        <div className="td-form-card mb-[18px]">
+          <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field text-sm" /></div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="td-label">Subject</label>
               <select value={subject} onChange={e => setSubject(e.target.value)} className="td-field text-[13.5px] bg-td-card">
@@ -67,11 +67,11 @@ export function NotesScreen() {
               </select>
             </div>
           </div>
-          <div><label className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></label><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field text-sm resize-none focus:border-td-primary" /></div>
+          <div><label className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></label><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field text-sm resize-none" /></div>
           <div><label className="td-label">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></label>
             <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-[12.5px] text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-[10px] file:border-none file:bg-td-tint-blue file:text-td-primary file:font-bold file:text-[12px]" />
           </div>
-          <div><label className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></label><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></label><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field text-sm" /></div>
           <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
         </div>
       )}

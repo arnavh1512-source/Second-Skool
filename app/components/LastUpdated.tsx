@@ -58,7 +58,7 @@ export function LastUpdated() {
       disabled={busy || !online}
       aria-live="polite"
       aria-label={`${label(lastSyncedAt, now)}. Tap to refresh.`}
-      className="inline-flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer disabled:cursor-default"
+      className="td-plain inline-flex items-center gap-1.5 p-0 cursor-pointer disabled:cursor-default"
     >
       <svg
         width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"

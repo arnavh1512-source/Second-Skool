@@ -101,14 +101,14 @@ export function TimetableScreen() {
       </div>
 
       {isAdmin && showForm && (
-        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
+        <div className="td-form-card mb-[18px] lg:max-w-lg">
           <div className="text-sm td-strong">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="td-label">Start</label>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field text-sm focus:border-td-primary" />
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field text-sm" />
             </div>
             <div><label className="td-label">End</label>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="td-field text-sm focus:border-td-primary" />
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="td-field text-sm" />
             </div>
           </div>
           <div><label className="td-label">Subject</label>
@@ -124,7 +124,7 @@ export function TimetableScreen() {
               </select>
             </div>
             <div><label className="td-label">Room</label>
-              <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="td-field text-sm focus:border-td-primary" />
+              <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="td-field text-sm" />
             </div>
           </div>
           <div><label className="td-label">Teacher</label>
@@ -144,7 +144,7 @@ export function TimetableScreen() {
           const ps = timetableData[d.s] || []
           return (
             <div key={d.s} className={`rounded-2xl border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
-              <button onClick={() => set({ ttDay: d.s })} className="w-full text-center mb-2 cursor-pointer bg-transparent border-none">
+              <button onClick={() => set({ ttDay: d.s })} className="td-plain w-full text-center mb-2 cursor-pointer">
                 <div className="text-[12px] font-bold text-td-muted">{d.s}</div>
                 <div className="text-[15px] td-strong">{d.d}</div>
               </button>
@@ -243,7 +243,7 @@ export function AttendanceScreen() {
     <div className="td-screen td-wide">
       <div className="flex items-center gap-3.5 mb-[18px]">
         <button onClick={back} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+          <Icon name="back" size={18} color="var(--color-td-dark)" />
         </button>
         <div>
           <div className="text-xl td-strong">Mark Attendance</div>
@@ -281,7 +281,7 @@ export function AttendanceScreen() {
           </div>
 
           <div className="text-xs text-td-subtle font-semibold mb-2.5">Tap a student to toggle present / absent</div>
-          <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+          <div className="td-list gap-[9px] mb-5">
             {roster.map((s, i) => {
               const key = studentKey(s)
               const absent = att[key] === 'absent'
@@ -400,8 +400,8 @@ export function ResultsScreen() {
         </div>
       </div>
       <div className="grid grid-cols-[2fr_1fr] gap-[11px] mb-[18px]">
-        <div><label className="td-label">Test name</label><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-[13.5px] focus:border-td-primary" /></div>
-        <div><label className="td-label">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-[13.5px] focus:border-td-primary" /></div>
+        <div><label className="td-label">Test name</label><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-[13.5px]" /></div>
+        <div><label className="td-label">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-[13.5px]" /></div>
       </div>
 
       <div className="td-h2">Enter marks</div>
@@ -413,7 +413,7 @@ export function ResultsScreen() {
           onAction={role === 'admin' ? () => go('addStudent', 'students') : undefined}
         />
       ) : (
-        <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-[9px] mb-5">
           {roster.map((s, i) => (
             <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
               <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
@@ -445,8 +445,8 @@ export function AssignmentsScreen() {
     <div className="td-screen">
       <ScreenHeader title="New Assignment" onBack={back} />
 
-      <div className="td-card rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
-        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm focus:border-td-primary" /></div>
+      <div className="td-form-card mb-[22px]">
+        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="td-label">Subject</label>
             <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
@@ -459,8 +459,8 @@ export function AssignmentsScreen() {
             </select>
           </div>
         </div>
-        <div><label className="td-label">Due date</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm focus:border-td-primary" /></div>
-        <div><label className="td-label">Instructions</label><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="td-field text-sm resize-none focus:border-td-primary" /></div>
+        <div><label className="td-label">Due date</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm" /></div>
+        <div><label className="td-label">Instructions</label><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="td-field text-sm resize-none" /></div>
         <PrimaryButton onClick={async () => {
           // Same silent swallow as the timetable: with no students on the
           // roster the class select has nothing to offer, and Create used to
@@ -485,7 +485,7 @@ export function AssignmentsScreen() {
                     <button
                       onClick={() => deleteAssignment(a.dbId!)}
                       aria-label={`Delete assignment ${a.title}`}
-                      className="border-none bg-transparent text-td-muted hover:text-td-red cursor-pointer p-1 leading-none text-base"
+                      className="td-plain text-td-muted hover:text-td-red cursor-pointer p-1 leading-none text-base"
                     >×</button>
                   )}
                 </div>
@@ -540,7 +540,7 @@ export function RemindersScreen() {
       </select>
 
       <label className="td-label">Message</label>
-      <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field text-sm resize-none mb-[18px] focus:border-td-primary" />
+      <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field text-sm resize-none mb-[18px]" />
 
       <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>
 

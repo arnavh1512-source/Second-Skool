@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, EState> {
             <div className="text-sm text-td-muted mb-5 leading-relaxed">This screen failed to load. Your data is safe — try again, and if it keeps happening, close and reopen the app.</div>
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="bg-td-primary text-white text-sm font-bold py-3 px-8 rounded-2xl border-none cursor-pointer"
+              className="td-pill text-sm font-bold py-3 px-8 rounded-2xl cursor-pointer"
             >
               Try again
             </button>

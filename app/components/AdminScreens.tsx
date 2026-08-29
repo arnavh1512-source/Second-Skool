@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useBusy } from '../lib/use-busy'
 import { useDashboard, initials, av, fmtDate, rupee } from '../store'
-import { ScreenHeader, EmptyState, ConfirmDialog, WhatsAppIcon } from './Shell'
+import { ScreenHeader, EmptyState, ConfirmDialog, WhatsAppIcon, CodeCard } from './Shell'
 import { supabase } from '../lib/supabase'
 import { whatsappShareUrl, weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
 import { useState } from 'react'
@@ -33,24 +33,20 @@ export function StaffApprovalsScreen() {
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
 
       {joinCode && (
-        <button onClick={() => copyText(joinCode, notify, 'Join code copied!')} className="w-full lg:max-w-md text-left border-2 border-dashed border-td-primary bg-td-tint-blue rounded-[16px] p-3.5 mb-5 cursor-pointer flex items-center justify-between">
-          <div>
-            <div className="text-[12px] font-bold text-td-muted">{centreName || 'Your centre'} · JOIN CODE</div>
-            <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{joinCode}</div>
-            <div className="text-[12px] text-td-muted mt-0.5">Share with teachers so they can join your centre.</div>
-          </div>
-          <div className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy
-          </div>
-        </button>
+        <CodeCard
+          className="lg:max-w-md rounded-[16px] mb-5"
+          label={`${centreName || 'Your centre'} · JOIN CODE`}
+          code={joinCode}
+          hint="Share with teachers so they can join your centre."
+          onCopy={() => copyText(joinCode, notify, 'Join code copied!')}
+        />
       )}
 
       <div className="td-h2">Pending approval {pending.length > 0 && <span className="text-td-red">· {pending.length}</span>}</div>
       {pending.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-4 td-card rounded-[16px] mb-6">No one waiting</div>
       ) : (
-        <div className="flex flex-col gap-2.5 mb-6 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-2.5 mb-6">
           {pending.map((s, i) => (
             <div key={s.id} className="td-card rounded-[16px] p-3.5">
               <div className="flex items-center gap-3 mb-3">
@@ -98,7 +94,7 @@ export function StaffApprovalsScreen() {
       {active.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-4 td-card rounded-[16px]">No active staff yet</div>
       ) : (
-        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-2.5">
           {active.map((s, i) => {
             const isHead = s.role === 'admin'
             const isSelf = s.id === supabaseUserId
@@ -152,18 +148,13 @@ export function StudentRequestsScreen() {
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Students who registered themselves. Review their details, set their batch and fee, then approve — their code only works once you do.</div>
 
       {studentJoinCode && (
-        <div className="w-full lg:max-w-md border-2 border-dashed border-td-primary bg-td-tint-blue rounded-[16px] p-3.5 mb-5">
-          <div className="flex items-start justify-between gap-3">
-            <button onClick={() => copyText(studentJoinCode, notify, 'Student code copied!')} className="text-left flex-1 min-w-0 cursor-pointer">
-              <div className="text-[12px] font-bold text-td-muted">{centreName || 'Your centre'} · STUDENT CODE</div>
-              <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em]">{studentJoinCode}</div>
-              <div className="text-[12px] text-td-muted mt-0.5">Share with students so they can register themselves.</div>
-            </button>
-            <button onClick={() => copyText(studentJoinCode, notify, 'Student code copied!')} className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0 cursor-pointer">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
-            </button>
-          </div>
+        <CodeCard
+          className="lg:max-w-md rounded-[16px] mb-5"
+          label={`${centreName || 'Your centre'} · STUDENT CODE`}
+          code={studentJoinCode}
+          hint="Share with students so they can register themselves."
+          onCopy={() => copyText(studentJoinCode, notify, 'Student code copied!')}
+        >
           {role === 'admin' && (
             <button
               onClick={() => setConfirmRotate(true)}
@@ -172,14 +163,14 @@ export function StudentRequestsScreen() {
               Generate a new code
             </button>
           )}
-        </div>
+        </CodeCard>
       )}
 
       <div className="td-h2">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
       {pendingStudents.length === 0 ? (
         <div className="text-center text-td-muted text-[13px] py-6 td-card rounded-[16px]">No requests waiting</div>
       ) : (
-        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-2.5">
           {pendingStudents.map((s, i) => (
             <StudentRequestCard key={s.dbId} s={s} idx={i} branches={branchesList} batchList={batches} onApprove={approveStudent} onReject={rejectStudent} />
           ))}
@@ -236,12 +227,12 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           <div className="flex gap-2.5">
             <div className="flex-1">
               <label className="text-[12px] font-bold text-td-muted">Batch / class</label>
-              <input value={klass} onChange={e => setKlass(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
+              <input value={klass} onChange={e => setKlass(e.target.value)} className="td-field text-[13px] mt-1" />
             </div>
             {branches.length > 0 && (
               <div className="flex-1">
                 <label className="text-[12px] font-bold text-td-muted">Branch</label>
-                <select value={branch} onChange={e => setBranch(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1 bg-td-card">
+                <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field text-[13px] mt-1 bg-td-card">
                   <option value="">—</option>
                   {branches.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
                 </select>
@@ -251,7 +242,7 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           {batchList.length > 0 && (
             <div>
               <label className="text-[12px] font-bold text-td-muted">Batch</label>
-              <select value={batch} onChange={e => setBatch(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1 bg-td-card">
+              <select value={batch} onChange={e => setBatch(e.target.value)} className="td-field text-[13px] mt-1 bg-td-card">
                 <option value="">No batch</option>
                 {batchList.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
               </select>
@@ -260,11 +251,11 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           <div className="flex gap-2.5">
             <div className="flex-1">
               <label className="text-[12px] font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
-              <input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="e.g. 800" className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
+              <input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="e.g. 800" className="td-field text-[13px] mt-1" />
             </div>
             <div className="flex-1">
               <label className="text-[12px] font-bold text-td-muted">Due date</label>
-              <input type="date" value={feeDue} onChange={e => setFeeDue(e.target.value)} className="w-full border border-td-border rounded-[10px] p-2.5 text-[13px] text-td-dark outline-none focus:border-td-primary mt-1" />
+              <input type="date" value={feeDue} onChange={e => setFeeDue(e.target.value)} className="td-field text-[13px] mt-1" />
             </div>
           </div>
           <div className="flex gap-2.5 mt-0.5">
@@ -305,7 +296,7 @@ export function ReportsScreen() {
         ) : teacherActivity.length === 0 ? (
           <div className="text-center text-td-muted text-sm py-10 td-card rounded-[16px]">No approved staff yet.</div>
         ) : (
-          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+          <div className="td-list gap-3">
             <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">What each staff member logged in the last {period} days.</div>
             {teacherActivity.map((t, i) => (
               <div key={`${t.email}-${i}`} className="td-card rounded-[18px] p-4">
@@ -344,7 +335,7 @@ export function ReportsScreen() {
             onAction={() => go('addStudent', 'students')}
           />
         ) : (
-          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+          <div className="td-list gap-3">
             <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">Send each parent their child&apos;s weekly progress.</div>
             {studentReports.map((s, i) => {
               const attPct = s.att_total > 0 ? Math.round((s.att_present / s.att_total) * 100) : null
@@ -376,7 +367,7 @@ export function ReportsScreen() {
           {r.branches.length === 0 ? (
             <div className="td-none td-card rounded-[16px] mb-4">No branches configured yet — add branches and assign students to see per-branch numbers.</div>
           ) : (
-            <div className="flex flex-col gap-3 mb-4 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+            <div className="td-list gap-3 mb-4">
               {r.branches.map((b, i) => (
                 <div key={`${b.name}-${i}`} className="td-card rounded-[18px] p-4">
                   <div className="td-h2">{b.name}</div>

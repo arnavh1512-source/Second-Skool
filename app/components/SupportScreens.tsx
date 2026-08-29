@@ -9,7 +9,7 @@ import type { SupportTicket } from '../store/types'
 // students go through anon RPCs, staff through RLS — so nothing here needs to
 // know which kind of user is looking at it.
 
-const INPUT = 'td-field text-sm focus:border-td-primary'
+const INPUT = 'td-field text-sm'
 const LABEL = 'td-label'
 
 const STATUS: Record<SupportTicket['status'], { bg: string; fg: string; label: string }> = {
@@ -111,7 +111,7 @@ export function SupportScreen() {
               <img src={reportShot} alt="Attached screenshot" className="max-h-40 rounded-[12px] border border-td-border" />
               <button
                 onClick={() => setReportShot(null)}
-                className="text-[12.5px] font-extrabold text-td-red bg-transparent border-none p-0 cursor-pointer"
+                className="td-plain text-[12.5px] font-extrabold text-td-red p-0 cursor-pointer"
               >
                 Remove
               </button>
@@ -129,7 +129,7 @@ export function SupportScreen() {
         <button
           onClick={send}
           disabled={busy}
-          className="w-full bg-td-primary text-white text-sm font-extrabold p-[15px] rounded-2xl border-none cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send report'}
         </button>
@@ -146,7 +146,7 @@ export function SupportScreen() {
                 <button
                   key={t.id}
                   onClick={() => openReport(t.id)}
-                  className="w-full text-left border-none bg-transparent border-b border-td-line p-[15px] px-[17px] flex items-center gap-3 cursor-pointer last:border-b-0"
+                  className="td-plain w-full text-left border-b border-td-line p-[15px] px-[17px] flex items-center gap-3 cursor-pointer last:border-b-0"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-td-dark truncate">{t.intent}</div>
@@ -214,7 +214,7 @@ export function SupportThreadScreen() {
         <button
           onClick={send}
           disabled={busy || !draft.trim()}
-          className="w-full bg-td-primary text-white text-sm font-extrabold p-[15px] rounded-2xl border-none cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send message'}
         </button>

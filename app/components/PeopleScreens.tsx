@@ -1,8 +1,9 @@
 'use client'
 
 import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
-import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, options } from './Shell'
+import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, options, CodeCard } from './Shell'
 import { whatsappShareUrl, studentCodeMessage, copyText } from '../lib/share'
+import { Icon } from './Icon'
 import { findStudent, indexOfStudent, studentKey } from '../lib/student-key'
 import { opened } from '../lib/reach'
 import { useBusy } from '../lib/use-busy'
@@ -35,12 +36,12 @@ export function StudentsScreen() {
       {missedOnly && (
         <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
           <span className="text-[12.5px] font-bold text-td-dark">Did not open the app this week</span>
-          <button onClick={() => go('students', 'students')} className="border-none bg-transparent text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+          <button onClick={() => go('students', 'students')} className="td-plain text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
         </div>
       )}
 
       <div className="flex items-center gap-2.5 td-card rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+        <Icon name="search" size={17} color="var(--color-td-subtle)" />
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
 
@@ -61,7 +62,7 @@ export function StudentsScreen() {
           <EmptyState title="No matches" hint={`Nothing matches "${searchQuery}". Check the spelling, or clear the search.`} />
         )
       ) : (
-        <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-2.5">
           {filtered.map((s, i) => {
             // The avatar colour is the only thing that wants a position; which
             // student was tapped is remembered by key, so a roster reorder
@@ -120,25 +121,21 @@ export function EditStudentScreen() {
         </div>
       </div>
 
-      <button onClick={() => copyText(st.id, notify, 'Code copied!')} className="w-full border border-dashed border-td-primary bg-td-tint-blue rounded-[14px] p-3 mb-2.5 cursor-pointer flex items-center justify-between">
-        <div>
-          <div className="text-[12px] font-bold text-td-muted">STUDENT LINK CODE</div>
-          <div className="text-[18px] font-extrabold text-td-primary tracking-wider">{st.id}</div>
-        </div>
-        <div className="text-[12px] font-bold text-td-primary flex items-center gap-1">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copy
-        </div>
-      </button>
+      <CodeCard
+        className="rounded-[14px] mb-2.5"
+        label="STUDENT LINK CODE"
+        code={st.id}
+        onCopy={() => copyText(st.id, notify, 'Code copied!')}
+      />
       <button onClick={() => window.open(whatsappShareUrl(st.parent, studentCodeMessage(st.name, st.id)), '_blank', 'noopener,noreferrer')} className="w-full border-none bg-[#25D366] text-white text-[13px] font-extrabold py-3 rounded-[14px] mb-[22px] cursor-pointer flex items-center justify-center gap-2">
         <WhatsAppIcon />
         Send code on WhatsApp
       </button>
 
       <div className="flex flex-col gap-3.5 mb-[18px]">
-        <div><label className="td-label">Full name</label><input value={st.name} onChange={e => setStudentField({ name: e.target.value })} className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Full name</label><input value={st.name} onChange={e => setStudentField({ name: e.target.value })} className="td-field text-sm" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Class / batch</label><input value={st.klass} onChange={e => setStudentField({ klass: e.target.value })} className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">Class / batch</label><input value={st.klass} onChange={e => setStudentField({ klass: e.target.value })} className="td-field text-sm" /></div>
           {/* Attendance is computed from the attendance register, not stored on
               the student. It used to be an editable box that wrote to nothing:
               setStudentField never persisted it and the next refresh recomputed
@@ -152,8 +149,8 @@ export function EditStudentScreen() {
             >{st.attendance}% · from the register</output>
           </div>
         </div>
-        <div><label className="td-label">School</label><input value={st.school} onChange={e => setStudentField({ school: e.target.value })} className="td-field text-sm focus:border-td-primary" /></div>
-        <div><label className="td-label">Parent contact</label><input value={st.parent} onChange={e => setStudentField({ parent: e.target.value })} className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">School</label><input value={st.school} onChange={e => setStudentField({ school: e.target.value })} className="td-field text-sm" /></div>
+        <div><label className="td-label">Parent contact</label><input value={st.parent} onChange={e => setStudentField({ parent: e.target.value })} className="td-field text-sm" /></div>
         <div>
           <label className="td-label">Fee status</label>
           <div className="flex gap-[9px]">
@@ -185,7 +182,7 @@ export function AddStudentScreen() {
     return (
       <div className="td-screen flex flex-col items-center justify-center min-h-[450px]">
         <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-green flex items-center justify-center mb-5">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <Icon name="check" size={32} color="var(--color-td-green)" />
         </div>
         <div className="text-[18px] td-strong mb-2">Student added!</div>
         <div className="text-[13px] text-td-muted text-center leading-relaxed mb-5 max-w-[280px]">Share this code with the parent so the student can log in.</div>
@@ -198,10 +195,10 @@ export function AddStudentScreen() {
           Send on WhatsApp
         </button>
         <button onClick={() => copyText(lastAdded.code, notify, 'Code copied!')} className="w-full max-w-[280px] border border-td-primary bg-td-card text-td-primary text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer mb-3 flex items-center justify-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <Icon name="copy" size={16} color="var(--color-td-primary)" />
           Copy code
         </button>
-        <button onClick={() => { set({ lastAdded: null }); backToList() }} className="w-full max-w-[280px] border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer">Done</button>
+        <button onClick={() => { set({ lastAdded: null }); backToList() }} className="td-pill w-full max-w-[280px] text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer">Done</button>
       </div>
     )
   }
@@ -211,9 +208,9 @@ export function AddStudentScreen() {
       <ScreenHeader title="Add Student" onBack={backToList} />
 
       <div className="flex flex-col gap-3.5 mb-[22px]">
-        <div><label className="td-label">Full name</label><input value={newStudent.name} onChange={e => setNewStudent({ name: e.target.value })} placeholder="Student name" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Full name</label><input value={newStudent.name} onChange={e => setNewStudent({ name: e.target.value })} placeholder="Student name" className="td-field text-sm" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">School</label><input value={newStudent.school} onChange={e => setNewStudent({ school: e.target.value })} placeholder="School" className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">School</label><input value={newStudent.school} onChange={e => setNewStudent({ school: e.target.value })} placeholder="School" className="td-field text-sm" /></div>
           <div><label className="td-label">Standard</label>
             <select value={newStudent.klass} onChange={e => setNewStudent({ klass: e.target.value })} className="td-field text-[13.5px] bg-td-card">
               {STANDARDS.map(c => <option key={c}>{c}</option>)}
@@ -233,14 +230,14 @@ export function AddStudentScreen() {
             </select>
           </div>
         </div>
-        <div><label className="td-label">Parent contact</label><input value={newStudent.parent} onChange={e => setNewStudent({ parent: e.target.value })} placeholder="+91" className="td-field text-sm focus:border-td-primary" /></div>
-        <div><label className="td-label">Address</label><input value={newStudent.address} onChange={e => setNewStudent({ address: e.target.value })} placeholder="Address" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Parent contact</label><input value={newStudent.parent} onChange={e => setNewStudent({ parent: e.target.value })} placeholder="+91" className="td-field text-sm" /></div>
+        <div><label className="td-label">Address</label><input value={newStudent.address} onChange={e => setNewStudent({ address: e.target.value })} placeholder="Address" className="td-field text-sm" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Monthly fee (&#8377;) <span className="text-td-subtle font-semibold">· optional</span></label><input type="number" value={newStudent.fee} onChange={e => setNewStudent({ fee: e.target.value })} placeholder="e.g. 2000" className="td-field text-sm focus:border-td-primary" /></div>
-          <div><label className="td-label">Fee due date</label><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">Monthly fee (&#8377;) <span className="text-td-subtle font-semibold">· optional</span></label><input type="number" value={newStudent.fee} onChange={e => setNewStudent({ fee: e.target.value })} placeholder="e.g. 2000" className="td-field text-sm" /></div>
+          <div><label className="td-label">Fee due date</label><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="td-field text-sm" /></div>
         </div>
         <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <Icon name="lock" size={16} color="var(--color-td-primary)" />
           <span className="text-[12px] text-td-primary font-semibold">A secure login code is generated automatically and shown after you save.</span>
         </div>
       </div>
@@ -266,14 +263,14 @@ export function StaffScreen() {
       </div>
 
       <div className="flex items-center gap-[11px] td-card rounded-2xl p-[11px] px-[15px] mb-4 lg:max-w-md">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <Icon name="search" size={17} color="var(--color-td-subtle)" />
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search staff..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
         <div className="td-none">{searchQuery ? 'No matches' : 'No teachers added yet'}</div>
       ) : (
-        <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
+        <div className="td-list gap-3">
           {filtered.map((t, i) => (
             <div key={t.name + i} className="td-card rounded-[18px] p-3.5 flex items-center gap-3.5">
               <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
@@ -300,15 +297,15 @@ export function AddTeacherScreen() {
       <ScreenHeader title="Add Teacher" onBack={backToList} />
 
       <div className="flex flex-col gap-3.5 mb-[22px]">
-        <div><label className="td-label">Full name</label><input value={nt.name} onChange={e => setNewTeacher({ name: e.target.value })} placeholder="Teacher name" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Full name</label><input value={nt.name} onChange={e => setNewTeacher({ name: e.target.value })} placeholder="Teacher name" className="td-field text-sm" /></div>
         <div><label className="td-label">Subject</label>
           <select value={nt.subject || subjectNames[0] || ''} onChange={e => setNewTeacher({ subject: e.target.value })} disabled={subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
             {options(subjectNames, 'Add subjects first')}
           </select>
         </div>
-        <div><label className="td-label">Qualification</label><input value={nt.qualification} onChange={e => setNewTeacher({ qualification: e.target.value })} placeholder="e.g. M.Sc, B.Ed" className="td-field text-sm focus:border-td-primary" /></div>
+        <div><label className="td-label">Qualification</label><input value={nt.qualification} onChange={e => setNewTeacher({ qualification: e.target.value })} placeholder="e.g. M.Sc, B.Ed" className="td-field text-sm" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Years of exp.</label><input value={nt.experience} onChange={e => setNewTeacher({ experience: e.target.value })} placeholder="0" className="td-field text-sm focus:border-td-primary" /></div>
+          <div><label className="td-label">Years of exp.</label><input value={nt.experience} onChange={e => setNewTeacher({ experience: e.target.value })} placeholder="0" className="td-field text-sm" /></div>
           <div><label className="td-label">Branch</label>
             <select value={nt.branch} onChange={e => setNewTeacher({ branch: e.target.value })} className="td-field text-[13.5px] bg-td-card">
               <option value="">All branches</option>

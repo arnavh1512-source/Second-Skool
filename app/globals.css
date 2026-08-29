@@ -149,7 +149,7 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 /* Every screen body is the same shell: the mount animation and the page
    gutter. .td-auth-screen is the pre-login one, which is taller. */
 .td-screen { animation: pop .35s ease; padding: 6px 20px 24px; }
-.td-auth-screen { animation: pop .35s ease; padding: 40px 24px 24px; min-height: 700px; }
+.td-auth-screen { animation: pop .35s ease; padding: 40px 24px 24px; min-height: 700px; display: flex; flex-direction: column; }
 
 /* The one section heading in the app: the label above a list or a card group.
    It used to be three sizes that meant the same thing. */
@@ -161,6 +161,12 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    `td-field text-[13.5px]` still says 13.5px and nothing here can override it. */
 .td-label { display: block; font-size: .75rem; line-height: 1rem; font-weight: 700; color: var(--color-td-muted); margin-bottom: 7px; }
 .td-field { width: 100%; border: 1px solid var(--color-td-border); border-radius: 14px; padding: 13px; color: var(--color-td-dark); outline: none; }
+/* The focus line belongs to the field, not to every site that uses one. Sixty-odd
+   elements carried a `focus:border-td-primary` utility that never fired: a rule
+   outside a cascade layer beats one inside Tailwind's, so .td-field's own border
+   won every time and no field in the app ever showed focus. This is the rule
+   those sixty-odd meant to write. */
+.td-field:focus { border-color: var(--color-td-primary); }
 
 /* The card: a filled panel with a hairline round it, written out 74 times as
    three utilities before this. Radius and padding stay on the element - the app
@@ -190,3 +196,33 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    read twice. Only the colours and the pointer are here - these come in five
    sizes and three radii, so size, weight and radius stay on the element. */
 .td-danger { border: 1px solid var(--color-td-edge-red); background: var(--color-td-wash-red); color: var(--color-td-red); cursor: pointer; }
+
+/* Every list of cards in the staff console: one column on a phone, two on a
+   laptop, three on a wide screen. Twelve lists made that decision separately,
+   which meant the desktop breakpoint was twelve decisions instead of one. The
+   gap is not here - three lists are deliberately tighter than the rest. */
+.td-list { display: flex; flex-direction: column; }
+@media (min-width: 64rem) { .td-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 80rem) { .td-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* The card a form sits in: a stack of label-and-field pairs on one sheet. All
+   seven agree on the radius, the padding and the spacing between rows, so those
+   are here; the margin below, and the desktop width cap two of them want, stay
+   on the element. */
+.td-form-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: 20px; padding: 17px; display: flex; flex-direction: column; gap: 14px; }
+
+/* The card a single row sits in: an icon or avatar, then text, laid out in a
+   line. The student app is built almost entirely out of these. */
+.td-row { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: 18px; padding: 14px; display: flex; align-items: center; gap: 13px; }
+
+/* A button that is not shaped like a button: a text link, a tappable row, a nav
+   tab. Only the chrome the browser adds is taken away - the type, the colour,
+   the padding and the cursor are the element's own, because no two of these
+   agree on them and one of them turns the cursor off when disabled. */
+.td-plain { border: none; background: transparent; }
+
+/* The one button on a screen that carries the action: solid brand blue, white
+   type, no border. Seventeen of them wrote that out by hand. Only those three
+   things are here - the seventeen disagree on width, padding, radius and type
+   size, and one of them turns the pointer off while it is working. */
+.td-pill { border: none; background: var(--color-td-primary); color: #fff; }

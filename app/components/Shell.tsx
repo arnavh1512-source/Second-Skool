@@ -2,6 +2,7 @@
 
 import { useRef, useCallback, useState, useEffect } from 'react'
 import { useDashboard, type Screen, type Tab } from '../store'
+import { Icon } from './Icon'
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
@@ -43,16 +44,16 @@ function BottomTabBar() {
     if (!currentStudentDbId) return null
     const color = (t: Tab) => tab === t ? 'var(--color-td-primary)' : 'var(--color-td-subtle)'
     const stuTabs: { key: Tab; label: string; screen: Screen; icon: (c: string) => React.ReactNode }[] = [
-      { key: 'stuHome', label: 'Home', screen: 'stuHome', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg> },
+      { key: 'stuHome', label: 'Home', screen: 'stuHome', icon: (c) => <Icon name="home" size={23} color={c} /> },
       { key: 'stuResults', label: 'Results', screen: 'stuResults', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V9"/><path d="M12 21V4"/><path d="M19 21v-7"/></svg> },
       { key: 'stuRanking', label: 'Ranking', screen: 'stuRanking', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg> },
-      { key: 'stuTeachers', label: 'Teachers', screen: 'stuTeachers', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13A4 4 0 0 1 16 11"/></svg> },
-      { key: 'stuProfile', label: 'Profile', screen: 'stuProfile', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg> },
+      { key: 'stuTeachers', label: 'Teachers', screen: 'stuTeachers', icon: (c) => <Icon name="students" size={23} color={c} /> },
+      { key: 'stuProfile', label: 'Profile', screen: 'stuProfile', icon: (c) => <Icon name="person" size={23} color={c} /> },
     ]
     return (
       <div className="shrink-0 flex justify-around items-center pt-3 px-2.5 bg-td-card border-t border-td-line pb-[max(env(safe-area-inset-bottom),16px)] md:pb-[26px]">
         {stuTabs.map(t => (
-          <button key={t.key} onClick={() => go(t.screen, t.key)} className="border-none bg-transparent cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
+          <button key={t.key} onClick={() => go(t.screen, t.key)} className="td-plain cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
             {t.icon(color(t.key))}
             <span className="text-[12px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
           </button>
@@ -63,10 +64,10 @@ function BottomTabBar() {
 
   const color = (t: Tab) => tab === t ? 'var(--color-td-primary)' : 'var(--color-td-subtle)'
   const allTabs: { key: Tab; label: string; headOnly?: boolean; icon: (c: string) => React.ReactNode }[] = [
-    { key: 'home', label: 'Home', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg> },
+    { key: 'home', label: 'Home', icon: (c) => <Icon name="home" size={23} color={c} /> },
     { key: 'timetable', label: 'Timetable', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> },
-    { key: 'students', label: 'Students', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13A4 4 0 0 1 16 11"/></svg> },
-    { key: 'teachers', label: 'Staff', headOnly: true, icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg> },
+    { key: 'students', label: 'Students', icon: (c) => <Icon name="students" size={23} color={c} /> },
+    { key: 'teachers', label: 'Staff', headOnly: true, icon: (c) => <Icon name="person" size={23} color={c} /> },
     { key: 'more', label: 'More', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg> },
   ]
   const tabs = allTabs.filter(t => role === 'admin' || !t.headOnly)
@@ -79,7 +80,7 @@ function BottomTabBar() {
   return (
     <div className="shrink-0 flex justify-around items-center pt-3 pb-[26px] px-2.5 bg-td-card border-t border-td-line">
       {tabs.map(t => (
-        <button key={t.key} onClick={() => go(t.key === 'timetable' ? 'timetable' : t.key as Screen, t.key)} className="border-none bg-transparent cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
+        <button key={t.key} onClick={() => go(t.key === 'timetable' ? 'timetable' : t.key as Screen, t.key)} className="td-plain cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
           <span className="relative">
             {t.icon(color(t.key))}
             {t.key === 'more' && moreAlert && (
@@ -127,9 +128,7 @@ function Toast() {
         className={`w-full flex items-start gap-2.5 py-3.5 px-4 cursor-pointer ${err ? 'text-left' : 'justify-center text-center'}`}
       >
         {err && (
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="shrink-0 mt-px" aria-hidden="true">
-            <circle cx="12" cy="12" r="9" /><path d="M12 7.5v5.5" /><path d="M12 16.5h.01" />
-          </svg>
+          <Icon name="info" size={17} className="shrink-0 mt-px" />
         )}
         <span className="text-[13.5px] font-semibold leading-snug">{toast}</span>
       </button>
@@ -163,7 +162,7 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
         <button
           type="button"
           onClick={onAction}
-          className="mt-4 bg-td-primary text-white text-[13.5px] font-extrabold px-5 py-2.5 rounded-[12px] border-none cursor-pointer"
+          className="td-pill mt-4 text-[13.5px] font-extrabold px-5 py-2.5 rounded-[12px] cursor-pointer"
         >
           {actionLabel}
         </button>
@@ -175,7 +174,7 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
 export function BackButton({ onClick }: { onClick: () => void }) {
   return (
     <button onClick={onClick} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
+      <Icon name="back" size={18} color="var(--color-td-dark)" />
     </button>
   )
 }
@@ -244,7 +243,7 @@ export function PrimaryButton({ onClick, children }: { onClick: () => unknown; c
       onClick={guard}
       disabled={busy}
       aria-busy={busy}
-      className="w-full border-none bg-td-primary text-white text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
+      className="td-pill w-full text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
     >
       {busy && <Spinner />}
       {children}
@@ -300,8 +299,40 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
   )
 }
 
+/**
+ * The dashed card holding a code someone is meant to pass on - a join code, a
+ * student's link code. Four screens drew one by hand; they agree on everything
+ * but the corner radius and the room around them, so those come in on
+ * className. Anything below the code itself is children.
+ */
+export function CodeCard({ label, code, hint, onCopy, className = '', children }: {
+  label: React.ReactNode
+  code: string
+  hint?: string
+  onCopy: () => void
+  className?: string
+  children?: React.ReactNode
+}) {
+  return (
+    <div className={`w-full border-2 border-dashed border-td-primary bg-td-tint-blue p-3.5 ${className}`}>
+      <button onClick={onCopy} className="w-full text-left cursor-pointer flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-[12px] font-bold text-td-muted">{label}</div>
+          <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em] truncate">{code}</div>
+          {hint && <div className="text-[12px] text-td-muted mt-0.5">{hint}</div>}
+        </div>
+        <div className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0">
+          <Icon name="copy" size={14} color="var(--color-td-primary)" />
+          Copy
+        </div>
+      </button>
+      {children}
+    </div>
+  )
+}
+
 export function ChevronRight() {
-  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-faint)" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
+  return <Icon name="next" size={18} color="var(--color-td-faint)" />
 }
 
 /**
