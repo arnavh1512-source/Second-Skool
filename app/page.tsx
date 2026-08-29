@@ -31,6 +31,8 @@ const admin = () => import('./components/AdminScreens')
 const teaching = () => import('./components/TeachingScreens')
 const people = () => import('./components/PeopleScreens')
 const utility = () => import('./components/UtilityScreens')
+const fees = () => import('./components/FeesScreens')
+const setup = () => import('./components/SetupScreens')
 const support = () => import('./components/SupportScreens')
 const student = () => import('./components/StudentScreens')
 const notes = () => import('./components/NotesScreens')
@@ -55,12 +57,12 @@ const SCREENS: Record<Screen, { view: ComponentType; title?: string }> = {
   addStudent: { view: dyn(people, 'AddStudentScreen'), title: 'Add student' },
   teachers: { view: dyn(people, 'StaffScreen'), title: 'Staff' },
   addTeacher: { view: dyn(people, 'AddTeacherScreen'), title: 'Add teacher' },
-  fees: { view: dyn(utility, 'FeesScreen'), title: 'Fees' },
+  fees: { view: dyn(fees, 'FeesScreen'), title: 'Fees' },
   meetings: { view: dyn(utility, 'MeetingsScreen'), title: 'Meetings' },
   rankings: { view: dyn(utility, 'RankingsScreen'), title: 'Rankings' },
-  branches: { view: dyn(utility, 'BranchesScreen'), title: 'Branches' },
-  subjects: { view: dyn(utility, 'SubjectsScreen'), title: 'Subjects' },
-  batches: { view: dyn(utility, 'BatchesScreen'), title: 'Batches' },
+  branches: { view: dyn(setup, 'BranchesScreen'), title: 'Branches' },
+  subjects: { view: dyn(setup, 'SubjectsScreen'), title: 'Subjects' },
+  batches: { view: dyn(setup, 'BatchesScreen'), title: 'Batches' },
   notes: { view: dyn(notes, 'NotesScreen'), title: 'Study material' },
   more: { view: dyn(utility, 'MoreScreen'), title: 'More' },
   staffProfile: { view: dyn(utility, 'StaffProfileScreen'), title: 'Profile' },
