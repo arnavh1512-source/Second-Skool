@@ -254,7 +254,7 @@ export function FeesScreen() {
                                   </div>
                                 </div>
                                 {isAdmin && (
-                                  <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 border border-td-edge-red bg-td-wash-red text-td-red text-[11.5px] font-bold py-1 px-2.5 rounded-[10px] cursor-pointer">Remove</button>
+                                  <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 td-danger text-[11.5px] font-bold py-1 px-2.5 rounded-[10px]">Remove</button>
                                 )}
                               </div>
                             )
@@ -262,7 +262,7 @@ export function FeesScreen() {
                           {isAdmin && openPlans.map(planId => (
                             <button key={planId}
                               onClick={() => setConfirmPlan({ planId, studentId: d.dbId!, student: d.name, count: records.filter(r => r.planId === planId && r.status !== 'Paid').length })}
-                              className="mt-1 self-start border border-td-edge-red bg-td-wash-red text-td-red text-[11.5px] font-bold py-1 px-2.5 rounded-[10px] cursor-pointer">
+                              className="mt-1 self-start td-danger text-[11.5px] font-bold py-1 px-2.5 rounded-[10px]">
                               Remove the rest of this plan
                             </button>
                           ))}
@@ -335,7 +335,7 @@ export function MeetingsScreen() {
                 <div className="text-xs text-td-muted mt-0.5">{m.time} · {m.kind}</div>
               </div>
               {isAdmin && m.dbId && (
-                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Cancel</button>
+                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 td-danger text-[12px] font-bold py-1.5 px-3 rounded-[11px]">Cancel</button>
               )}
             </div>
           ))}
@@ -467,10 +467,87 @@ export function BranchesScreen() {
                   <div><div className="text-base td-strong">{roster.length}</div><div className="text-[12px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
                   <div><div className="text-base td-strong">{b.staff}</div><div className="text-[12px] text-td-subtle font-semibold">Staff</div></div>
                 </button>
-                {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-2 px-3.5 rounded-[12px] cursor-pointer">Remove</button>}
+                {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="td-danger text-[12px] font-bold py-2 px-3.5 rounded-[12px]">Remove</button>}
               </div>
               {open && <StudentRoster list={roster} />}
             </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* Subjects and batches are the same screen: a name, an add box, a list of what
+   was added, a Remove on each. The only real difference is that a batch can be
+   opened to show the students in it, and a subject has nobody to show. */
+type NamedRow = { dbId?: string; name: string }
+
+function NameListScreen({ noun, plural, placeholder, rows, add, remove, confirmBody, roster }: {
+  noun: string
+  plural: string
+  placeholder: string
+  rows: readonly NamedRow[]
+  add: (name: string) => Promise<boolean>
+  remove: (dbId: string) => void
+  confirmBody: string
+  roster?: (name: string) => Student[]
+}) {
+  const back = useDashboard(s => s.back)
+  const [name, setName] = useState('')
+  const [openRow, setOpenRow] = useState<string | null>(null)
+  const [confirm, setConfirm] = useState<{ id: string; name: string } | null>(null)
+
+  const handleAdd = async () => {
+    if (!name.trim()) { useDashboard.getState().notify(`Enter ${noun} name`, 'error'); return }
+    if (await add(name.trim())) setName('')
+  }
+
+  return (
+    <div className="td-screen">
+      <ConfirmDialog
+        open={!!confirm}
+        title={`Remove ${noun} ${confirm?.name ?? ''}?`}
+        body={confirmBody}
+        confirmLabel={`Remove ${noun}`}
+        onConfirm={() => { const t = confirm; setConfirm(null); if (t) remove(t.id) }}
+        onCancel={() => setConfirm(null)}
+      />
+      <ScreenHeader title={plural[0].toUpperCase() + plural.slice(1)} onBack={back} />
+
+      <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="text-sm td-strong">Add {noun}</div>
+        <div className="flex gap-[11px]">
+          <input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
+        </div>
+      </div>
+
+      <div className="td-h2">All {plural} ({rows.length})</div>
+      {rows.length === 0 ? (
+        <div className="td-none">No {plural} added yet</div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {rows.map((r, i) => {
+            const list = roster?.(r.name)
+            const open = openRow === r.name
+            return (
+              <div key={r.dbId ?? r.name} className="td-card rounded-2xl p-[13px] px-[15px]">
+                <div className="flex items-center gap-[13px]">
+                  <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{r.name[0]}</div>
+                  {list ? (
+                    <button onClick={() => setOpenRow(open ? null : r.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
+                      <div className="text-[14px] font-bold text-td-dark truncate">{r.name}</div>
+                      <div className="text-[12px] text-td-muted font-semibold">{list.length} student{list.length === 1 ? '' : 's'} {list.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
+                    </button>
+                  ) : (
+                    <div className="flex-1 text-[14px] font-bold text-td-dark truncate">{r.name}</div>
+                  )}
+                  {r.dbId && <button onClick={() => setConfirm({ id: r.dbId!, name: r.name })} className="td-danger text-[12px] font-bold py-1.5 px-3 rounded-[11px] shrink-0">Remove</button>}
+                </div>
+                {list && open && <StudentRoster list={list} />}
+              </div>
             )
           })}
         </div>
@@ -480,110 +557,16 @@ export function BranchesScreen() {
 }
 
 export function SubjectsScreen() {
-  const { subjects, back, addSubject, deleteSubject } = useDashboard()
-  const [name, setName] = useState('')
-  const [confirmSubject, setConfirmSubject] = useState<{ id: string; name: string } | null>(null)
-
-  const handleAdd = async () => {
-    if (!name.trim()) { useDashboard.getState().notify('Enter subject name', 'error'); return }
-    if (await addSubject(name.trim())) setName('')
-  }
-
-  return (
-    <div className="td-screen">
-      <ConfirmDialog
-        open={!!confirmSubject}
-        title={`Remove ${confirmSubject?.name ?? ''}?`}
-        body="Its tests, results and timetable periods are deleted with it. This cannot be undone."
-        confirmLabel="Remove subject"
-        onConfirm={() => { const t = confirmSubject; setConfirmSubject(null); if (t) deleteSubject(t.id) }}
-        onCancel={() => setConfirmSubject(null)}
-      />
-      <ScreenHeader title="Subjects" onBack={back} />
-
-      <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
-        <div className="text-sm td-strong">Add subject</div>
-        <div className="flex gap-[11px]">
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Mathematics" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
-          <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
-        </div>
-      </div>
-
-      <div className="td-h2">All subjects ({subjects.length})</div>
-      {subjects.length === 0 ? (
-        <div className="td-none">No subjects added yet</div>
-      ) : (
-        <div className="flex flex-col gap-2.5">
-          {subjects.map((s, i) => (
-            <div key={s.dbId} className="td-card rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
-              <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{s.name[0]}</div>
-              <div className="flex-1 text-[14px] font-bold text-td-dark">{s.name}</div>
-              {s.dbId && <button onClick={() => setConfirmSubject({ id: s.dbId!, name: s.name })} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Remove</button>}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  const { subjects, addSubject, deleteSubject } = useDashboard()
+  return <NameListScreen noun="subject" plural="subjects" placeholder="e.g. Mathematics" rows={subjects} add={addSubject} remove={deleteSubject}
+    confirmBody="Its tests, results and timetable periods are deleted with it. This cannot be undone." />
 }
 
 export function BatchesScreen() {
-  const { batches, students, back, addBatch, deleteBatch } = useDashboard()
-  const [name, setName] = useState('')
-  const [openBatch, setOpenBatch] = useState<string | null>(null)
-  const [confirmBatch, setConfirmBatch] = useState<{ id: string; name: string } | null>(null)
-
-  const handleAdd = async () => {
-    if (!name.trim()) { useDashboard.getState().notify('Enter batch name', 'error'); return }
-    if (await addBatch(name.trim())) setName('')
-  }
-
-  return (
-    <div className="td-screen">
-      <ConfirmDialog
-        open={!!confirmBatch}
-        title={`Remove batch ${confirmBatch?.name ?? ''}?`}
-        body="Students keep every record — attendance, marks and fees. Only the batch label goes."
-        confirmLabel="Remove batch"
-        onConfirm={() => { const t = confirmBatch; setConfirmBatch(null); if (t) deleteBatch(t.id) }}
-        onCancel={() => setConfirmBatch(null)}
-      />
-      <ScreenHeader title="Batches" onBack={back} />
-
-      <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
-        <div className="text-sm td-strong">Add batch</div>
-        <div className="flex gap-[11px]">
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Morning 10-A" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
-          <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
-        </div>
-      </div>
-
-      <div className="td-h2">All batches ({batches.length})</div>
-      {batches.length === 0 ? (
-        <div className="td-none">No batches added yet</div>
-      ) : (
-        <div className="flex flex-col gap-2.5">
-          {batches.map((b, i) => {
-            const roster = students.filter(s => s.batch === b.name)
-            const open = openBatch === b.name
-            return (
-            <div key={b.dbId} className="td-card rounded-2xl p-[13px] px-[15px]">
-              <div className="flex items-center gap-[13px]">
-                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{b.name[0]}</div>
-                <button onClick={() => setOpenBatch(open ? null : b.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
-                  <div className="text-[14px] font-bold text-td-dark truncate">{b.name}</div>
-                  <div className="text-[12px] text-td-muted font-semibold">{roster.length} student{roster.length === 1 ? '' : 's'} {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div>
-                </button>
-                {b.dbId && <button onClick={() => setConfirmBatch({ id: b.dbId!, name: b.name })} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>}
-              </div>
-              {open && <StudentRoster list={roster} />}
-            </div>
-            )
-          })}
-        </div>
-      )}
-    </div>
-  )
+  const { batches, students, addBatch, deleteBatch } = useDashboard()
+  return <NameListScreen noun="batch" plural="batches" placeholder="e.g. Morning 10-A" rows={batches} add={addBatch} remove={deleteBatch}
+    confirmBody="Students keep every record — attendance, marks and fees. Only the batch label goes."
+    roster={name => students.filter(s => s.batch === name)} />
 }
 
 type MoreItem = { icon: IconName; label: string; tint: string; screen: Screen; badge?: number }
@@ -657,7 +640,7 @@ export function MoreScreen() {
         {card([{ icon: 'warning', label: 'Report a problem', tint: 'var(--color-td-tint-red)', screen: 'support' }])}
       </div>
 
-      <button onClick={signOut} className="w-full border border-td-edge-red bg-td-wash-red text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-4 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-2xl mt-4 flex items-center justify-center gap-[9px]">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
         Sign out
       </button>
@@ -817,7 +800,7 @@ export function StaffProfileScreen() {
                 <div className="flex gap-2">
                   <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-td-card text-td-dark text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
                   {centreLogo && !logoBusy && (
-                    <button onClick={() => saveCentreLogo('')} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer">Remove</button>
+                    <button onClick={() => saveCentreLogo('')} className="td-danger text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px]">Remove</button>
                   )}
                 </div>
                 <p className="text-[12px] text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
@@ -859,7 +842,7 @@ export function StaffProfileScreen() {
         </div>
       )}
 
-      <button onClick={signOut} className="w-full border border-td-edge-red bg-td-wash-red text-td-red text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-2xl mt-3 flex items-center justify-center gap-[9px]">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
         Sign out
       </button>

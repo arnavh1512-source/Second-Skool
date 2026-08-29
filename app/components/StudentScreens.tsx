@@ -713,7 +713,7 @@ export function StuProfileScreen() {
     <div className="td-screen">
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
         <div className="text-2xl td-strong">My Profile</div>
-        <button onClick={signOut} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12.5px] font-bold py-2 px-3 rounded-[12px] cursor-pointer">Sign out</button>
+        <button onClick={signOut} className="td-danger text-[12.5px] font-bold py-2 px-3 rounded-[12px]">Sign out</button>
       </div>
 
       <div className="rounded-[22px] p-5 text-white flex items-center gap-4 mb-5" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>

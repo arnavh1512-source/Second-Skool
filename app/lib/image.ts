@@ -1,36 +1,45 @@
-// Client-side logo processing. Centre logos are stored as small data-URLs in
-// the DB (no storage bucket needed for the pilot), so the source image is
-// downscaled to a square and re-encoded to keep the payload tiny.
+// Client-side image processing. Centre logos and support screenshots are both
+// stored as data-URLs in the DB (no storage bucket needed for the pilot), so a
+// source image is downscaled and re-encoded to keep the payload tiny.
 
 const MAX_SOURCE_BYTES = 5 * 1024 * 1024 // reject > 5MB uploads before decoding
 const OUT_SIZE = 256 // final logo edge, px
 
-// Decode an image File, center-crop to a square, downscale to OUT_SIZE, and
-// return a PNG data-URL (PNG keeps logo transparency). Rejects non-images and
-// oversized files with a user-friendly message.
-export async function fileToLogoDataUrl(file: File): Promise<string> {
+// What to draw: the output size, and which rectangle of the source fills it.
+// Omitting the source rectangle means the whole image.
+type Plan = { width: number; height: number; sx?: number; sy?: number; sw?: number; sh?: number }
+
+// Both callers do the same five things — reject a non-image, decode it, draw it
+// onto a sized canvas, encode, release the object URL. Only the sizing and the
+// encoding differ, so those are what they pass in.
+async function render<T>(file: File, plan: (img: HTMLImageElement) => Plan, encode: (canvas: HTMLCanvasElement) => T): Promise<T> {
   if (!file.type.startsWith('image/')) throw new Error('Please choose an image file')
-  if (file.size > MAX_SOURCE_BYTES) throw new Error('Image is too large — pick one under 5MB')
+  if (file.size > MAX_SOURCE_BYTES) throw new Error('That image is too large — pick one under 5MB')
 
   const url = URL.createObjectURL(file)
   try {
     const img = await loadImage(url)
-    const side = Math.min(img.naturalWidth, img.naturalHeight)
-    const sx = (img.naturalWidth - side) / 2
-    const sy = (img.naturalHeight - side) / 2
-
+    const { width, height, sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight } = plan(img)
     const canvas = document.createElement('canvas')
-    canvas.width = OUT_SIZE
-    canvas.height = OUT_SIZE
+    canvas.width = width
+    canvas.height = height
     const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('Could not process the image')
+    if (!ctx) throw new Error('Could not process that image')
     ctx.imageSmoothingQuality = 'high'
-    ctx.drawImage(img, sx, sy, side, side, 0, 0, OUT_SIZE, OUT_SIZE)
-    return canvas.toDataURL('image/png')
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height)
+    return encode(canvas)
   } finally {
     URL.revokeObjectURL(url)
   }
 }
+
+// A centre logo: centre-cropped to a square and re-encoded as PNG, which is the
+// one format here that keeps transparency.
+export const fileToLogoDataUrl = (file: File): Promise<string> =>
+  render(file, img => {
+    const side = Math.min(img.naturalWidth, img.naturalHeight)
+    return { width: OUT_SIZE, height: OUT_SIZE, sx: (img.naturalWidth - side) / 2, sy: (img.naturalHeight - side) / 2, sw: side, sh: side }
+  }, canvas => canvas.toDataURL('image/png'))
 
 // A support screenshot. Long edge capped and re-encoded as JPEG, which drops
 // EXIF (location, device serial) for free and keeps the data URL inside the
@@ -41,31 +50,17 @@ export async function fileToLogoDataUrl(file: File): Promise<string> {
 const SHOT_MAX_EDGE = 1000
 const SHOT_MAX_CHARS = 400_000
 
-export async function fileToScreenshotDataUrl(file: File): Promise<string> {
-  if (!file.type.startsWith('image/')) throw new Error('Please choose an image')
-  if (file.size > MAX_SOURCE_BYTES) throw new Error('That image is too large — under 5MB please')
-
-  const url = URL.createObjectURL(file)
-  try {
-    const img = await loadImage(url)
+export const fileToScreenshotDataUrl = (file: File): Promise<string> =>
+  render(file, img => {
     const scale = Math.min(1, SHOT_MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight))
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale))
-    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale))
-    const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('Could not process that image')
-    ctx.imageSmoothingQuality = 'high'
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
+    return { width: Math.max(1, Math.round(img.naturalWidth * scale)), height: Math.max(1, Math.round(img.naturalHeight * scale)) }
+  }, canvas => {
     for (const q of [0.7, 0.5, 0.35]) {
       const out = canvas.toDataURL('image/jpeg', q)
       if (out.length <= SHOT_MAX_CHARS) return out
     }
     throw new Error('That image is too detailed to attach — try cropping it')
-  } finally {
-    URL.revokeObjectURL(url)
-  }
-}
+  })
 
 const loadImage = (src: string): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {

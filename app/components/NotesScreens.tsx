@@ -87,7 +87,7 @@ export function NotesScreen() {
                   <div className="text-[14px] td-strong">{n.title}</div>
                   <div className="text-[12px] text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
                 </div>
-                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>
+                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="td-danger text-[12px] font-bold py-1.5 px-3 rounded-[11px] shrink-0">Remove</button>
               </div>
               {n.body && <div className="text-[13px] text-td-text leading-relaxed mt-2">{n.body}</div>}
               <div className="flex gap-2 mt-2.5">

@@ -24,8 +24,6 @@ We give **30 days' notice** before adding or replacing a Sub-processor. To recei
 | Sub-processor | Entity & country | What it does | Personal data it touches | Processing location |
 |---|---|---|---|---|
 | **Razorpay** | Razorpay Software Private Limited, India | Collects subscription payments from coaching centres. | Payer name, email, phone, payment instrument details (held by Razorpay — we never receive card numbers). **No student data.** | India |
-| **Upstash** | Upstash, Inc., USA | Distributed rate limiting. | An account identifier and a request counter. No names, no student data. | [UPSTASH REGION] |
-| **Sentry** | Functional Software, Inc. (Sentry), USA | Error and exception monitoring. | Stack traces, request paths, an account identifier. Configured to exclude request bodies and personal data payloads. | [SENTRY REGION] |
 
 ## Browser push delivery — not contracted Sub-processors
 
@@ -65,6 +63,5 @@ If that changes, this page changes first, with 30 days' notice.
 
 **Before publishing this page, verify:**
 - [ ] The Supabase project region — if it is not `ap-south-1`, Centre Data is stored outside India and the Privacy Policy and DPA must say so.
-- [ ] Whether Upstash and Sentry are actually configured in production. If the environment variables are unset, the features are inert — say "not currently used" rather than listing them as active.
 - [ ] Razorpay onboarding status. Do not list a payment processor you have not signed with.
 - [ ] The Vercel function region setting.

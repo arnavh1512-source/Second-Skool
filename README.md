@@ -193,8 +193,6 @@ Full list in [`.env.example`](.env.example).
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Server-only, used by `/api/push` |
 | `VAPID_*` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | ✅ | Web push |
 | `NEXT_PUBLIC_SITE_URL` | ➖ | Absolute base for OG images & manifest |
-| `SENTRY_DSN` | ➖ | Forwards server errors to Sentry |
-| `UPSTASH_REDIS_REST_URL` / `..._TOKEN` | ➖ | Rate limiting shared across instances |
 
 <sub>Optional vars are **dormant when unset** — the app runs fine without them and upgrades itself the moment they're added.</sub>
 

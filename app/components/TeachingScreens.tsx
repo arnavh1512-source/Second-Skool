@@ -163,7 +163,7 @@ export function TimetableScreen() {
                         {isAdmin && (
                           <div className="flex gap-1 mt-1.5">
                             <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-td-edge-blue bg-td-tint-blue text-td-primary text-[12px] cursor-pointer">✎</button>
-                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg border border-td-edge-red bg-td-wash-red text-td-red text-[12px] cursor-pointer">×</button>
+                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg td-danger text-[12px]">×</button>
                           </div>
                         )}
                       </div>
@@ -202,7 +202,7 @@ export function TimetableScreen() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-[12px] font-bold py-1 px-[9px] rounded-[20px]" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
                         {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-[12px] leading-none">✎</button>}
-                        {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full border border-td-edge-red bg-td-wash-red text-td-red flex items-center justify-center cursor-pointer text-[15px] leading-none">×</button>}
+                        {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full td-danger flex items-center justify-center text-[15px] leading-none">×</button>}
                       </div>
                     </div>
                     <div className="text-xs text-td-muted mt-1">{p[3]} · {p[4]}{p[5] ? ` · ${p[5]}` : ''}</div>

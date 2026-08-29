@@ -362,7 +362,7 @@ function Centres({ rows, onDelete }: CentresProps) {
             <button
               onClick={() => onDelete(c)}
               aria-label={`Delete ${c.name}`}
-              className="w-full text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border border-td-edge-red bg-td-wash-red text-td-red"
+              className="w-full text-[12.5px] font-extrabold py-2.5 rounded-[12px] td-danger"
             >
               Delete centre
             </button>

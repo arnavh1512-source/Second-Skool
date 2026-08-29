@@ -25,49 +25,79 @@ function ScreenLoading() {
 const dyn = (importFn: () => Promise<Record<string, ComponentType>>, name: string) =>
   dynamic(() => importFn().then(m => ({ default: m[name] })), { loading: ScreenLoading })
 
-const StaffApprovalsScreen = dyn(() => import('./components/AdminScreens'), 'StaffApprovalsScreen')
-const StudentRequestsScreen = dyn(() => import('./components/AdminScreens'), 'StudentRequestsScreen')
-const ReportsScreen = dyn(() => import('./components/AdminScreens'), 'ReportsScreen')
 const DevConsoleScreen = dyn(() => import('./components/DevConsole'), 'DevConsoleScreen')
 
-const TimetableScreen = dyn(() => import('./components/TeachingScreens'), 'TimetableScreen')
-const AttendanceScreen = dyn(() => import('./components/TeachingScreens'), 'AttendanceScreen')
-const ResultsScreen = dyn(() => import('./components/TeachingScreens'), 'ResultsScreen')
-const AssignmentsScreen = dyn(() => import('./components/TeachingScreens'), 'AssignmentsScreen')
-const RemindersScreen = dyn(() => import('./components/TeachingScreens'), 'RemindersScreen')
+const admin = () => import('./components/AdminScreens')
+const teaching = () => import('./components/TeachingScreens')
+const people = () => import('./components/PeopleScreens')
+const utility = () => import('./components/UtilityScreens')
+const support = () => import('./components/SupportScreens')
+const student = () => import('./components/StudentScreens')
+const notes = () => import('./components/NotesScreens')
 
-const StudentsScreen = dyn(() => import('./components/PeopleScreens'), 'StudentsScreen')
-const EditStudentScreen = dyn(() => import('./components/PeopleScreens'), 'EditStudentScreen')
-const AddStudentScreen = dyn(() => import('./components/PeopleScreens'), 'AddStudentScreen')
-const StaffScreen = dyn(() => import('./components/PeopleScreens'), 'StaffScreen')
-const AddTeacherScreen = dyn(() => import('./components/PeopleScreens'), 'AddTeacherScreen')
+// Every client-routed screen: what renders it, and the human label that keeps
+// the browser tab / history title in sync with what's on screen (this is a
+// single Next route, so per-page metadata can't do it). A screen with no title
+// is one of the pre-app gates, which get their label from the gate itself.
+//
+// One table rather than a lazy-import list, a title map and a switch, all keyed
+// on the same union: `Record<Screen, …>` makes a missing screen a type error,
+// which a switch with a `default` never could.
+const SCREENS: Record<Screen, { view: ComponentType; title?: string }> = {
+  home: { view: HomeScreen, title: 'Home' },
+  timetable: { view: dyn(teaching, 'TimetableScreen'), title: 'Timetable' },
+  attendance: { view: dyn(teaching, 'AttendanceScreen'), title: 'Attendance' },
+  results: { view: dyn(teaching, 'ResultsScreen'), title: 'Results' },
+  assign: { view: dyn(teaching, 'AssignmentsScreen'), title: 'Assignments' },
+  reminder: { view: dyn(teaching, 'RemindersScreen'), title: 'Reminders' },
+  students: { view: dyn(people, 'StudentsScreen'), title: 'Students' },
+  editStudent: { view: dyn(people, 'EditStudentScreen'), title: 'Edit student' },
+  addStudent: { view: dyn(people, 'AddStudentScreen'), title: 'Add student' },
+  teachers: { view: dyn(people, 'StaffScreen'), title: 'Staff' },
+  addTeacher: { view: dyn(people, 'AddTeacherScreen'), title: 'Add teacher' },
+  fees: { view: dyn(utility, 'FeesScreen'), title: 'Fees' },
+  meetings: { view: dyn(utility, 'MeetingsScreen'), title: 'Meetings' },
+  rankings: { view: dyn(utility, 'RankingsScreen'), title: 'Rankings' },
+  branches: { view: dyn(utility, 'BranchesScreen'), title: 'Branches' },
+  subjects: { view: dyn(utility, 'SubjectsScreen'), title: 'Subjects' },
+  batches: { view: dyn(utility, 'BatchesScreen'), title: 'Batches' },
+  notes: { view: dyn(notes, 'NotesScreen'), title: 'Study material' },
+  more: { view: dyn(utility, 'MoreScreen'), title: 'More' },
+  staffProfile: { view: dyn(utility, 'StaffProfileScreen'), title: 'Profile' },
+  notifications: { view: dyn(utility, 'NotificationsScreen'), title: 'Notifications' },
+  staffApprovals: { view: dyn(admin, 'StaffApprovalsScreen'), title: 'Staff approvals' },
+  studentRequests: { view: dyn(admin, 'StudentRequestsScreen'), title: 'Student requests' },
+  reports: { view: dyn(admin, 'ReportsScreen'), title: 'Reports' },
+  support: { view: dyn(support, 'SupportScreen'), title: 'Report a problem' },
+  supportThread: { view: dyn(support, 'SupportThreadScreen'), title: 'Your report' },
 
-const FeesScreen = dyn(() => import('./components/UtilityScreens'), 'FeesScreen')
-const MeetingsScreen = dyn(() => import('./components/UtilityScreens'), 'MeetingsScreen')
-const RankingsScreen = dyn(() => import('./components/UtilityScreens'), 'RankingsScreen')
-const BranchesScreen = dyn(() => import('./components/UtilityScreens'), 'BranchesScreen')
-const SubjectsScreen = dyn(() => import('./components/UtilityScreens'), 'SubjectsScreen')
-const BatchesScreen = dyn(() => import('./components/UtilityScreens'), 'BatchesScreen')
-const MoreScreen = dyn(() => import('./components/UtilityScreens'), 'MoreScreen')
-const StaffProfileScreen = dyn(() => import('./components/UtilityScreens'), 'StaffProfileScreen')
-const NotificationsScreen = dyn(() => import('./components/UtilityScreens'), 'NotificationsScreen')
+  stuHome: { view: dyn(student, 'StuHomeScreen'), title: 'Home' },
+  stuAttendance: { view: dyn(student, 'StuAttendanceScreen'), title: 'Attendance' },
+  stuResults: { view: dyn(student, 'StuResultsScreen'), title: 'Results' },
+  stuRanking: { view: dyn(student, 'StuRankingScreen'), title: 'Ranking' },
+  stuTeachers: { view: dyn(student, 'StuTeachersScreen'), title: 'Teachers' },
+  stuTeacher: { view: dyn(student, 'StuTeacherDetail'), title: 'Teacher' },
+  stuFees: { view: dyn(student, 'StuFeesScreen'), title: 'Fees' },
+  stuNotif: { view: dyn(student, 'StuNotifScreen'), title: 'Notifications' },
+  stuProfile: { view: dyn(student, 'StuProfileScreen'), title: 'Profile' },
+  stuTimetable: { view: dyn(student, 'StuTimetableScreen'), title: 'Timetable' },
+  stuAssignments: { view: dyn(student, 'StuAssignmentsScreen'), title: 'Assignments' },
+  stuNotes: { view: dyn(notes, 'StuNotesScreen'), title: 'Study material' },
 
-const SupportScreen = dyn(() => import('./components/SupportScreens'), 'SupportScreen')
-const SupportThreadScreen = dyn(() => import('./components/SupportScreens'), 'SupportThreadScreen')
+  // Pre-app gates. Reachable as a stored `screen`, so they render, but their
+  // tab title is set by the gate branches in ScreenRouter instead.
+  profileSetup: { view: ProfileSetupScreen },
+  register: { view: RegisterScreen },
+  pending: { view: PendingScreen },
+  denied: { view: DeniedScreen },
+  stuPending: { view: StuPendingScreen },
+  stuDenied: { view: StuDeniedScreen },
 
-const StuHomeScreen = dyn(() => import('./components/StudentScreens'), 'StuHomeScreen')
-const StuAttendanceScreen = dyn(() => import('./components/StudentScreens'), 'StuAttendanceScreen')
-const StuResultsScreen = dyn(() => import('./components/StudentScreens'), 'StuResultsScreen')
-const StuRankingScreen = dyn(() => import('./components/StudentScreens'), 'StuRankingScreen')
-const StuTeachersScreen = dyn(() => import('./components/StudentScreens'), 'StuTeachersScreen')
-const StuTeacherDetail = dyn(() => import('./components/StudentScreens'), 'StuTeacherDetail')
-const StuFeesScreen = dyn(() => import('./components/StudentScreens'), 'StuFeesScreen')
-const StuNotifScreen = dyn(() => import('./components/StudentScreens'), 'StuNotifScreen')
-const StuProfileScreen = dyn(() => import('./components/StudentScreens'), 'StuProfileScreen')
-const StuTimetableScreen = dyn(() => import('./components/StudentScreens'), 'StuTimetableScreen')
-const StuAssignmentsScreen = dyn(() => import('./components/StudentScreens'), 'StuAssignmentsScreen')
-const NotesScreen = dyn(() => import('./components/NotesScreens'), 'NotesScreen')
-const StuNotesScreen = dyn(() => import('./components/NotesScreens'), 'StuNotesScreen')
+  // Never navigated to: 'admin' predates the role split and 'stuSignup' is a
+  // step inside LoginScreen. Both land on home, as they always have.
+  admin: { view: HomeScreen },
+  stuSignup: { view: HomeScreen },
+}
 
 export default function Page() {
   return (
@@ -137,23 +167,6 @@ function AppShell({ children }: { children: React.ReactNode }) {
   return <PhoneFrame>{children}</PhoneFrame>
 }
 
-// Human labels for each client-routed screen — used to keep the browser tab /
-// history title in sync with what's actually on screen (this is a single Next
-// route, so per-page metadata can't do it).
-const SCREEN_TITLES: Partial<Record<Screen, string>> = {
-  home: 'Home', timetable: 'Timetable', attendance: 'Attendance', results: 'Results',
-  assign: 'Assignments', reminder: 'Reminders', students: 'Students', editStudent: 'Edit student',
-  addStudent: 'Add student', teachers: 'Staff', addTeacher: 'Add teacher', fees: 'Fees',
-  meetings: 'Meetings', rankings: 'Rankings', branches: 'Branches', subjects: 'Subjects',
-  batches: 'Batches', notes: 'Study material', more: 'More', staffApprovals: 'Staff approvals',
-  studentRequests: 'Student requests', staffProfile: 'Profile', notifications: 'Notifications',
-  reports: 'Reports', stuHome: 'Home', stuAttendance: 'Attendance', stuResults: 'Results',
-  stuRanking: 'Ranking', stuTeachers: 'Teachers', stuTeacher: 'Teacher', stuFees: 'Fees',
-  stuNotif: 'Notifications', stuProfile: 'Profile', stuTimetable: 'Timetable',
-  stuAssignments: 'Assignments', stuNotes: 'Study material',
-  support: 'Report a problem', supportThread: 'Your report',
-}
-
 function ScreenRouter() {
   const { screen, role, dataLoading, staffStatus, supabaseUserId, profileDone } = useDashboard()
   const notifGated = useNotificationGate()
@@ -166,7 +179,7 @@ function ScreenRouter() {
     else if (supabaseUserId && staffStatus !== 'approved')
       label = staffStatus === 'pending' ? 'Pending approval' : 'Complete setup'
     else if (role === 'student' && notifGated && screen !== 'stuDenied') label = 'Turn on reminders'
-    else label = SCREEN_TITLES[screen]
+    else label = SCREENS[screen]?.title
     document.title = label ? `${label} · Second Skool` : 'Second Skool'
   }, [screen, role, staffStatus, supabaseUserId, profileDone, notifGated])
 
@@ -193,51 +206,7 @@ function ScreenRouter() {
 
   if (dataLoading && (role === 'admin' || role === 'teacher')) return <ScreenLoading />
 
-  switch (screen) {
-    case 'home': return <HomeScreen />
-    case 'timetable': return <TimetableScreen />
-    case 'attendance': return <AttendanceScreen />
-    case 'results': return <ResultsScreen />
-    case 'assign': return <AssignmentsScreen />
-    case 'reminder': return <RemindersScreen />
-    case 'students': return <StudentsScreen />
-    case 'editStudent': return <EditStudentScreen />
-    case 'addStudent': return <AddStudentScreen />
-    case 'teachers': return <StaffScreen />
-    case 'addTeacher': return <AddTeacherScreen />
-    case 'fees': return <FeesScreen />
-    case 'meetings': return <MeetingsScreen />
-    case 'rankings': return <RankingsScreen />
-    case 'branches': return <BranchesScreen />
-    case 'subjects': return <SubjectsScreen />
-    case 'batches': return <BatchesScreen />
-    case 'notes': return <NotesScreen />
-    case 'more': return <MoreScreen />
-    case 'staffProfile': return <StaffProfileScreen />
-    case 'notifications': return <NotificationsScreen />
-    case 'staffApprovals': return <StaffApprovalsScreen />
-    case 'studentRequests': return <StudentRequestsScreen />
-    case 'reports': return <ReportsScreen />
-    case 'profileSetup': return <ProfileSetupScreen />
-    case 'register': return <RegisterScreen />
-    case 'pending': return <PendingScreen />
-    case 'denied': return <DeniedScreen />
-    case 'stuPending': return <StuPendingScreen />
-    case 'stuDenied': return <StuDeniedScreen />
-    case 'stuHome': return <StuHomeScreen />
-    case 'stuAttendance': return <StuAttendanceScreen />
-    case 'stuResults': return <StuResultsScreen />
-    case 'stuRanking': return <StuRankingScreen />
-    case 'stuTeachers': return <StuTeachersScreen />
-    case 'stuTeacher': return <StuTeacherDetail />
-    case 'stuFees': return <StuFeesScreen />
-    case 'stuNotif': return <StuNotifScreen />
-    case 'stuProfile': return <StuProfileScreen />
-    case 'stuTimetable': return <StuTimetableScreen />
-    case 'stuAssignments': return <StuAssignmentsScreen />
-    case 'stuNotes': return <StuNotesScreen />
-    case 'support': return <SupportScreen />
-    case 'supportThread': return <SupportThreadScreen />
-    default: return <HomeScreen />
-  }
+  // `?? home` covers a screen name left in localStorage by an older build.
+  const View = (SCREENS[screen] ?? SCREENS.home).view
+  return <View />
 }
