@@ -8,6 +8,33 @@ import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
 
+// Both staff screens below offer the same device toggle. It keeps its own
+// state rather than the store's: whether push is on is a fact about this
+// browser on this phone, not about the account.
+function EnablePushButton() {
+  const { supabaseUserId, notify } = useDashboard()
+  const [on, setOn] = useState(false)
+  const [busy, run] = useBusy()
+  const turnOn = () => run(async () => {
+    if (!supabaseUserId) return
+    const res = await enablePush('profile', supabaseUserId)
+    if (!res.ok) { notify(res.error || 'Could not enable'); return }
+    setOn(true)
+    // Prove the device can actually show one, rather than leaving the head to
+    // discover days later that the phone was silently blocking them.
+    const t = await testNotification(useDashboard.getState().centreName)
+    notify(t.ok ? 'Notifications on — check for a test alert' : (t.error || 'Notifications on for this device'))
+  })
+
+  if (!pushSupported()) return null
+  return (
+    <button onClick={turnOn} disabled={on || busy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+      <Icon name="reminder" size={17} color="var(--color-td-primary)" />
+      {on ? 'Notifications enabled' : busy ? 'Enabling…' : 'Enable notifications on this device'}
+    </button>
+  )
+}
+
 export function MeetingsScreen() {
   const { back, meetingsList, saveMeeting, deleteMeeting, role } = useDashboard()
   const [title, setTitle] = useState('')
@@ -76,7 +103,7 @@ export function MeetingsScreen() {
 export function RankingsScreen() {
   const { rankSubject, rankData, subjects, back, set, go } = useDashboard()
   const subjectNames = subjects.map(s => s.name)
-  const rows = (rankData[rankSubject] || []).map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, score: r.score }))
+  const rows = rankData[rankSubject] || []
 
   return (
     <div className="td-screen">
@@ -90,7 +117,7 @@ export function RankingsScreen() {
         {subjectNames.map(name => {
           const active = name === rankSubject
           return (
-            <button key={name} onClick={() => set({ rankSubject: name })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? 'var(--color-td-primary)' : '#fff', color: active ? '#fff' : 'var(--color-td-text)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>{name}</button>
+            <button key={name} onClick={() => set({ rankSubject: name })} className={`shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border ${active ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}>{name}</button>
           )
         })}
       </div>
@@ -101,7 +128,7 @@ export function RankingsScreen() {
         <div className="flex flex-col gap-[9px] mb-5">
           {rows.map((r, i) => (
             <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] td-card rounded-2xl p-3 px-3.5">
-              <div className="w-[26px] text-center text-sm font-extrabold" style={{ color: i < 3 ? 'var(--color-td-amber)' : 'var(--color-td-subtle)' }}>{r.rank}</div>
+              <div className="w-[26px] text-center text-sm font-extrabold" style={{ color: i < 3 ? 'var(--color-td-amber)' : 'var(--color-td-subtle)' }}>{i + 1}</div>
               <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(i) }}>{initials(r.name)}</div>
               <div className="flex-1 text-[13.5px] font-bold text-td-dark">{r.name}</div>
               <div className="text-sm td-strong">{r.score}%</div>
@@ -110,7 +137,7 @@ export function RankingsScreen() {
         </div>
       )}
       <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3.5 mt-1">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        <Icon name="info" size={18} color="var(--color-td-primary)" />
         <span className="text-[12.5px] text-td-primary font-semibold">Rankings update automatically — students always see the latest.</span>
       </div>
     </div>
@@ -200,7 +227,7 @@ export function MoreScreen() {
 // student self-registration requests, and (head only) staff access requests —
 // plus a device push toggle. Mirrors the student notifications bell.
 export function NotificationsScreen() {
-  const { go, role, pendingStudents, staffList, loadStaff, refreshData, supabaseUserId, notify } = useDashboard()
+  const { go, role, pendingStudents, staffList, loadStaff, refreshData } = useDashboard()
   const isAdmin = role === 'admin'
 
   // Pull fresh counts on open so the list reflects reality, not stale state.
@@ -209,15 +236,6 @@ export function NotificationsScreen() {
   const studentCount = pendingStudents.length
   const staffCount = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
   const empty = studentCount === 0 && staffCount === 0
-
-  const [pushBusy, runPush] = useBusy()
-  const [pushOn, setPushOn] = useState(false)
-  const enableNotifs = () => runPush(async () => {
-    if (!supabaseUserId) return
-    const res = await enablePush('profile', supabaseUserId)
-    if (res.ok) { setPushOn(true); const t = await testNotification(useDashboard.getState().centreName); notify(t.ok ? 'Notifications on — check for a test alert' : (t.error || 'Notifications on for this device')) }
-    else notify(res.error || 'Could not enable')
-  })
 
   const row = (icon: IconName, tint: string, label: string, count: number, screen: Screen) => (
     <button onClick={() => go(screen, 'home')} className="w-full text-left border-none td-card rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
@@ -250,18 +268,13 @@ export function NotificationsScreen() {
         </>
       )}
 
-      {pushSupported() && (
-        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
-          <Icon name="reminder" size={17} color="var(--color-td-primary)" />
-          {pushOn ? 'Notifications enabled' : pushBusy ? 'Enabling…' : 'Enable notifications on this device'}
-        </button>
-      )}
+      <EnablePushButton />
     </div>
   )
 }
 
 export function StaffProfileScreen() {
-  const { go, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, supabaseUserId, notify, setMyPassword } = useDashboard()
+  const { go, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'
   const logoInput = useRef<HTMLInputElement>(null)
   const [logoBusy, runLogo] = useBusy()
@@ -270,14 +283,6 @@ export function StaffProfileScreen() {
     try { await saveCentreLogo(await fileToLogoDataUrl(file)) }
     catch (e) { notify(e instanceof Error ? e.message : 'Could not use that image') }
     finally { if (logoInput.current) logoInput.current.value = '' }
-  })
-  const [pushOn, setPushOn] = useState(false)
-  const [pushBusy, runPush] = useBusy()
-  const enableNotifs = () => runPush(async () => {
-    if (!supabaseUserId) return
-    const res = await enablePush('profile', supabaseUserId)
-    if (res.ok) { setPushOn(true); const t = await testNotification(useDashboard.getState().centreName); notify(t.ok ? 'Notifications on — check for a test alert' : (t.error || 'Notifications on for this device')) }
-    else notify(res.error || 'Could not enable')
   })
   const [name, setName] = useState(myName)
   const [phone, setPhone] = useState(myPhone)
@@ -365,12 +370,7 @@ export function StaffProfileScreen() {
 
       <PrimaryButton onClick={save}>{busy ? 'Saving…' : 'Save changes'}</PrimaryButton>
 
-      {pushSupported() && (
-        <button onClick={enableNotifs} disabled={pushOn || pushBusy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
-          <Icon name="reminder" size={17} color="var(--color-td-primary)" />
-          {pushOn ? 'Notifications enabled' : 'Enable notifications'}
-        </button>
-      )}
+      <EnablePushButton />
 
       {!pwOpen ? (
         <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2">

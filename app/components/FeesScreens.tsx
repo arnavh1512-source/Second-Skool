@@ -38,7 +38,7 @@ export function FeesScreen() {
   const today = isoDay()
   const isAdmin = role === 'admin'
   const paidCount = students.filter(s => s.feeStatus === 'Paid').length
-  const pendingCount = students.filter(s => s.feeStatus !== 'Paid').length
+  const pendingCount = students.length - paidCount
   const totalCollected = students.reduce((n, s) => n + (s.feeCollected ?? 0), 0)
   const totalRemaining = students.reduce((n, s) => n + (s.feeDue ?? 0), 0)
   const rows = [...students.filter(d => d.feeStatus !== 'Paid'), ...students.filter(d => d.feeStatus === 'Paid')]
