@@ -23,10 +23,10 @@ export function StudentsScreen() {
       <div className="flex items-center justify-between mt-1.5 mb-4">
         <div className="flex items-center gap-3">
           {origin === 'admin' && <BackButton onClick={back} />}
-          <div className="text-2xl font-extrabold text-td-dark">Students</div>
+          <div className="text-2xl td-strong">Students</div>
         </div>
         {isAdmin && (
-          <button onClick={() => origin === 'admin' ? goFrom('addStudent', 'students', 'admin') : go('addStudent', 'students')} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
+          <button onClick={() => origin === 'admin' ? goFrom('addStudent', 'students', 'admin') : go('addStudent', 'students')} className="td-btn-sm">
             <span className="text-base leading-none">+</span> Add
           </button>
         )}
@@ -39,7 +39,7 @@ export function StudentsScreen() {
         </div>
       )}
 
-      <div className="flex items-center gap-2.5 bg-td-card border border-td-border rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
+      <div className="flex items-center gap-2.5 td-card rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
@@ -70,10 +70,10 @@ export function StudentsScreen() {
             const f = feeColor(s.feeStatus)
             return (
               <div key={studentKey(s) || i} className="flex items-center gap-2">
-                <button disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`flex-1 min-w-0 text-left bg-td-card border border-td-border rounded-[18px] p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
+                <button disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`flex-1 min-w-0 text-left td-card rounded-[18px] p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
                   <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(idx) }}>{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-extrabold text-td-dark">{s.name}</div>
+                    <div className="text-sm td-strong">{s.name}</div>
                     <div className="text-xs text-td-muted mt-0.5">{s.klass} · {s.attendance}% attendance</div>
                   </div>
                   {isAdmin && <span className="text-[12px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: f.c, background: f.b }}>{s.feeStatus}</span>}
@@ -115,7 +115,7 @@ export function EditStudentScreen() {
       <div className="flex items-center gap-3.5 mb-3">
         <div className="w-16 h-16 rounded-[18px] shrink-0 flex items-center justify-center text-white font-extrabold text-[22px]" style={{ background: av(avatarIdx) }}>{initials(st.name)}</div>
         <div>
-          <div className="text-[17px] font-extrabold text-td-dark">{st.name}</div>
+          <div className="text-[17px] td-strong">{st.name}</div>
           <div className="text-[12.5px] text-td-muted mt-0.5">{st.klass}</div>
         </div>
       </div>
@@ -187,7 +187,7 @@ export function AddStudentScreen() {
         <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-green flex items-center justify-center mb-5">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
-        <div className="text-[18px] font-extrabold text-td-dark mb-2">Student added!</div>
+        <div className="text-[18px] td-strong mb-2">Student added!</div>
         <div className="text-[13px] text-td-muted text-center leading-relaxed mb-5 max-w-[280px]">Share this code with the parent so the student can log in.</div>
         <div className="w-full max-w-[280px] border-2 border-dashed border-td-primary bg-td-tint-blue rounded-[16px] p-4 text-center mb-5">
           <div className="text-[12px] font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
@@ -258,27 +258,27 @@ export function StaffScreen() {
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
         <div className="flex items-center gap-3">
           {origin === 'admin' && <BackButton onClick={back} />}
-          <div className="text-2xl font-extrabold text-td-dark">Staff</div>
+          <div className="text-2xl td-strong">Staff</div>
         </div>
-        <button onClick={() => origin === 'admin' ? goFrom('addTeacher', 'teachers', 'admin') : go('addTeacher', 'teachers')} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
+        <button onClick={() => origin === 'admin' ? goFrom('addTeacher', 'teachers', 'admin') : go('addTeacher', 'teachers')} className="td-btn-sm">
           <span className="text-base leading-none">+</span> Add
         </button>
       </div>
 
-      <div className="flex items-center gap-[11px] bg-td-card border border-td-border rounded-2xl p-[11px] px-[15px] mb-4 lg:max-w-md">
+      <div className="flex items-center gap-[11px] td-card rounded-2xl p-[11px] px-[15px] mb-4 lg:max-w-md">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-subtle)" strokeWidth="2.2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search staff..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">{searchQuery ? 'No matches' : 'No teachers added yet'}</div>
+        <div className="td-none">{searchQuery ? 'No matches' : 'No teachers added yet'}</div>
       ) : (
         <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {filtered.map((t, i) => (
-            <div key={t.name + i} className="bg-td-card border border-td-border rounded-[18px] p-3.5 flex items-center gap-3.5">
+            <div key={t.name + i} className="td-card rounded-[18px] p-3.5 flex items-center gap-3.5">
               <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
               <div className="flex-1 min-w-0">
-                <div className="text-[15px] font-extrabold text-td-dark">{t.name}</div>
+                <div className="text-[15px] td-strong">{t.name}</div>
                 <div className="text-[12.5px] text-td-primary font-bold mt-0.5">{t.subject}</div>
                 <div className="text-[12px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
               </div>

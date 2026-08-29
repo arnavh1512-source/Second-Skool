@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { logInfo, logWarn, logError, parseSentryDsn } from '../app/lib/log'
+import { logWarn, logError, parseSentryDsn } from '../app/lib/log'
 
 afterEach(() => vi.restoreAllMocks())
 
@@ -16,13 +16,10 @@ describe('structured logger', () => {
     expect(typeof rec.at).toBe('string') // ISO timestamp present
   })
 
-  it('logWarn → console.warn, logInfo → console.log, at the right level', () => {
+  it('logWarn → console.warn, at the right level', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    logWarn('x.warned')
-    logInfo('x.happened', { n: 1 })
-    expect(parseLast(warn).level).toBe('warn')
-    expect(parseLast(log)).toMatchObject({ level: 'info', event: 'x.happened', n: 1 })
+    logWarn('x.warned', { n: 1 })
+    expect(parseLast(warn)).toMatchObject({ level: 'warn', event: 'x.warned', n: 1 })
   })
 
   it('emits valid single-line JSON with no fields', () => {

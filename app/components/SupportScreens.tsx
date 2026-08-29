@@ -39,13 +39,13 @@ export function SupportScreen() {
 
   return (
     <div className="td-screen">
-      <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-1.5">Report a problem</div>
+      <div className="text-2xl td-strong mt-1.5 mb-1.5">Report a problem</div>
       <div className="text-[13px] text-td-muted leading-[1.5] mb-4">
         Four quick questions. We can already see which version of the app you are on and what device
         you are using — you do not need to explain that part.
       </div>
 
-      <div className="bg-td-card border border-td-border rounded-[20px] p-4 grid gap-3.5">
+      <div className="td-card rounded-[20px] p-4 grid gap-3.5">
         <div>
           <label className={LABEL}>What were you trying to do?</label>
           <input
@@ -138,7 +138,7 @@ export function SupportScreen() {
       {myTickets.length > 0 && (
         <>
           <div className="text-[13px] font-extrabold text-td-muted mt-5 mb-[11px] px-1">Your reports</div>
-          <div className="bg-td-card border border-td-border rounded-[20px] overflow-hidden">
+          <div className="td-card rounded-[20px] overflow-hidden">
             {myTickets.map(t => {
               const last = t.messages[t.messages.length - 1]
               const unread = last?.author === 'operator'
@@ -182,7 +182,7 @@ export function SupportThreadScreen() {
   return (
     <div className="td-screen">
       <div className="flex items-start gap-3 mt-1.5 mb-1.5">
-        <div className="flex-1 text-2xl font-extrabold text-td-dark">{ticket.intent}</div>
+        <div className="flex-1 text-2xl td-strong">{ticket.intent}</div>
         <StatusPill status={ticket.status} />
       </div>
       <div className="text-[13px] text-td-muted leading-[1.5] mb-4">{ticket.outcome}</div>
@@ -191,7 +191,7 @@ export function SupportThreadScreen() {
         {ticket.messages.map((m, i) => {
           const ours = m.author === 'operator'
           return (
-            <div key={i} className={`max-w-[85%] rounded-[16px] p-3 px-3.5 ${ours ? 'bg-td-card border border-td-border self-start' : 'bg-td-primary text-white self-end'}`}>
+            <div key={i} className={`max-w-[85%] rounded-[16px] p-3 px-3.5 ${ours ? 'td-card self-start' : 'bg-td-primary text-white self-end'}`}>
               {ours && <div className="text-[11px] font-extrabold text-td-muted mb-1">Second Skool</div>}
               <div className="text-sm leading-[1.5] whitespace-pre-wrap">{m.body}</div>
               <div className={`text-[11px] mt-1 ${ours ? 'text-td-muted' : 'text-white/70'}`}>{fmtDate(m.createdAt)}</div>

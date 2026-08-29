@@ -203,8 +203,8 @@ export function DevConsoleScreen() {
           </div>
 
           {data.alerts.length > 0 && (
-            <div className="bg-td-card border border-td-border rounded-[16px] p-4 mb-4">
-              <div className="text-[13px] font-extrabold text-td-dark mb-2">Needs attention</div>
+            <div className="td-card rounded-[16px] p-4 mb-4">
+              <div className="text-[13px] td-strong mb-2">Needs attention</div>
               <ul className="flex flex-col gap-1.5">
                 {data.alerts.map(a => (
                   <li key={a} className="text-[12.5px] text-td-text flex gap-2">
@@ -252,7 +252,7 @@ export function DevConsoleScreen() {
       {doomed && (
         <div className="fixed inset-0 z-[80] bg-black/45 flex items-end md:items-center justify-center p-4">
           <div className="bg-td-card rounded-[18px] p-5 w-full max-w-sm">
-            <div className="text-[16px] font-extrabold text-td-dark">Delete {doomed.name}?</div>
+            <div className="text-[16px] td-strong">Delete {doomed.name}?</div>
             <p className="text-[12.5px] text-td-text mt-2 leading-relaxed">
               This erases {doomed.students.approved} students, {doomed.staff.approved} staff memberships and every
               attendance record, result, fee and note belonging to this centre. Its members go back to being
@@ -292,9 +292,9 @@ export function DevConsoleScreen() {
 
 function Stat({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
   return (
-    <div className="bg-td-card border border-td-border rounded-[16px] p-3.5">
+    <div className="td-card rounded-[16px] p-3.5">
       <div className="text-[12px] font-bold text-td-muted">{label}</div>
-      <div className="text-[20px] font-extrabold text-td-dark mt-0.5 leading-tight">{value}</div>
+      <div className="text-[20px] td-strong mt-0.5 leading-tight">{value}</div>
       {sub && <div className="text-[12px] text-td-amber mt-0.5">{sub}</div>}
     </div>
   )
@@ -304,7 +304,7 @@ function Field({ label, value, sub }: { label: string; value: string; sub?: stri
   return (
     <div>
       <div className="text-[12px] text-td-muted">{label}</div>
-      <div className="text-[13px] font-extrabold text-td-dark">{value}</div>
+      <div className="text-[13px] td-strong">{value}</div>
       {sub && <div className="text-[12px] text-td-amber">{sub}</div>}
     </div>
   )
@@ -320,10 +320,10 @@ function Centres({ rows, onDelete }: CentresProps) {
   return (
     <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
       {rows.map(c => (
-        <div key={c.id} className="bg-td-card border border-td-border rounded-[16px] p-4">
+        <div key={c.id} className="td-card rounded-[16px] p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-[15px] font-extrabold text-td-dark truncate">{c.name}</div>
+              <div className="text-[15px] td-strong truncate">{c.name}</div>
               <div className="text-[12px] text-td-muted truncate">
                 {c.owner?.name ?? 'no owner'}{c.owner?.email ? ` · ${c.owner.email}` : ''}
               </div>
@@ -378,9 +378,9 @@ function People({ rows }: { rows: StaffRow[] }) {
   return (
     <div className="flex flex-col gap-2.5">
       {rows.map(s => (
-        <div key={s.id} className="bg-td-card border border-td-border rounded-[16px] p-3.5 flex items-center gap-3">
+        <div key={s.id} className="td-card rounded-[16px] p-3.5 flex items-center gap-3">
           <div className="flex-1 min-w-0">
-            <div className="text-[13.5px] font-extrabold text-td-dark truncate">{s.name ?? '—'}</div>
+            <div className="text-[13.5px] td-strong truncate">{s.name ?? '—'}</div>
             <div className="text-[12px] text-td-muted truncate">{s.email ?? '—'}</div>
             <div className="text-[12px] text-td-subtle truncate">
               {s.centre ?? 'unattached'} · {s.role === 'admin' ? 'head' : s.role} · joined {day(s.createdAt)}
@@ -407,7 +407,7 @@ function People({ rows }: { rows: StaffRow[] }) {
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="text-center text-td-muted text-sm py-10 bg-td-card border border-td-border rounded-[16px]">{children}</div>
+  return <div className="text-center text-td-muted text-sm py-10 td-card rounded-[16px]">{children}</div>
 }
 
 // The inbox. Collapsed, a report is who and what; expanded it is everything the
@@ -438,14 +438,14 @@ function Reports({ rows, onReply, onResolve }: {
         const open = openId === t.id
         const d = t.diagnostics ?? {}
         return (
-          <div key={t.id} className="bg-td-card border border-td-border rounded-[16px] overflow-hidden">
+          <div key={t.id} className="td-card rounded-[16px] overflow-hidden">
             <button
               onClick={() => { setOpenId(open ? null : t.id); setDraft('') }}
               className="w-full text-left bg-transparent border-none p-4 cursor-pointer"
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-extrabold text-td-dark">{t.intent}</div>
+                  <div className="text-sm td-strong">{t.intent}</div>
                   <div className="text-[12px] text-td-muted mt-0.5 truncate">
                     {t.reporter_name || 'Someone'} · {t.reporter_role || 'unknown role'} · {t.centre_name || 'no centre'}
                   </div>

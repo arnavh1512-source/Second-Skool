@@ -53,7 +53,7 @@ export function FeesScreen() {
         onCancel={() => setConfirmFee(null)}
       />
       <ScreenHeader title="Fees" onBack={back} right={
-        <button onClick={() => setShowForm(f => !f)} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
+        <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add fee'}
         </button>
       } />
@@ -70,8 +70,8 @@ export function FeesScreen() {
       </div>
 
       {showForm && (
-        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
-          <div className="text-sm font-extrabold text-td-dark">Add fee record</div>
+        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
+          <div className="text-sm td-strong">Add fee record</div>
           <div><label className="td-label">Student</label>
             <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field text-[13.5px] bg-td-card">
               <option value="">Select student</option>
@@ -110,9 +110,9 @@ export function FeesScreen() {
             const open = !!d.dbId && openFees === d.dbId
             const records = d.dbId ? feeRecords[d.dbId] : undefined
             return (
-              <div key={d.id} className="bg-td-card border border-td-border rounded-2xl p-[13px] px-3.5">
+              <div key={d.id} className="td-card rounded-2xl p-[13px] px-3.5">
                 <div className="flex items-center gap-[13px]">
-                  <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(realIdx) }}>{initials(d.name)}</div>
+                  <div className="w-10 h-10 rounded-xl td-avatar" style={{ background: av(realIdx) }}>{initials(d.name)}</div>
                   {/* The balance was a total with nothing behind it. Tapping the
                       name now opens what it is made of — which is also the only
                       place a fee can be taken back off it. */}
@@ -186,8 +186,8 @@ export function MeetingsScreen() {
       />
       <ScreenHeader title="Meetings" onBack={back} />
 
-      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
-        <div className="text-sm font-extrabold text-td-dark">Schedule new</div>
+      <div className="td-card rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
+        <div className="text-sm td-strong">Schedule new</div>
         <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field text-sm focus:border-td-primary" /></div>
         <div><label className="td-label">Type</label>
           <select value={type} onChange={e => setType(e.target.value)} className="td-field text-[13.5px] bg-td-card">
@@ -207,7 +207,7 @@ export function MeetingsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {meetingsList.map((m, i) => (
-            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="bg-td-card border border-td-border rounded-2xl p-3.5 flex items-center gap-[13px]">
+            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="td-card rounded-2xl p-3.5 flex items-center gap-[13px]">
               <div className="w-[46px] text-center shrink-0 bg-td-tint-blue rounded-xl py-2">
                 <div className="text-base font-extrabold text-td-primary leading-none">{m.day}</div>
                 <div className="text-[12px] text-td-primary font-semibold mt-0.5">{m.mon}</div>
@@ -250,15 +250,15 @@ export function RankingsScreen() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">{rankSubject ? `No results entered for ${rankSubject} yet` : 'Enter results to generate rankings'}</div>
+        <div className="td-none">{rankSubject ? `No results entered for ${rankSubject} yet` : 'Enter results to generate rankings'}</div>
       ) : (
         <div className="flex flex-col gap-[9px] mb-5">
           {rows.map((r, i) => (
-            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] bg-td-card border border-td-border rounded-2xl p-3 px-3.5">
+            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] td-card rounded-2xl p-3 px-3.5">
               <div className="w-[26px] text-center text-sm font-extrabold" style={{ color: i < 3 ? 'var(--color-td-amber)' : 'var(--color-td-subtle)' }}>{r.rank}</div>
-              <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(r.name)}</div>
+              <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(i) }}>{initials(r.name)}</div>
               <div className="flex-1 text-[13.5px] font-bold text-td-dark">{r.name}</div>
-              <div className="text-sm font-extrabold text-td-dark">{r.score}%</div>
+              <div className="text-sm td-strong">{r.score}%</div>
             </div>
           ))}
         </div>
@@ -278,7 +278,7 @@ function StudentRoster({ list }: { list: Student[] }) {
     <div className="flex flex-col gap-2 mt-1">
       {list.map((s, i) => (
         <div key={s.dbId ?? s.id} className="bg-td-bg border border-td-border rounded-[14px] p-[11px] px-3 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
+          <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
           <div className="flex-1 min-w-0">
             <div className="text-[13.5px] font-bold text-td-dark truncate">{s.name}</div>
             <div className="text-[12px] text-td-muted truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
@@ -308,14 +308,14 @@ export function BranchesScreen() {
   return (
     <div className="td-screen">
       <ScreenHeader title="Branches" onBack={back} right={
-        <button onClick={() => setShowForm(f => !f)} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
+        <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
         </button>
       } />
 
       {showForm && (
-        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
-          <div className="text-sm font-extrabold text-td-dark">New branch</div>
+        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+          <div className="text-sm td-strong">New branch</div>
           <div><label className="td-label">Branch name</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="td-field text-sm focus:border-td-primary" />
           </div>
@@ -331,23 +331,23 @@ export function BranchesScreen() {
       )}
 
       {branchesList.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">No branches configured</div>
+        <div className="td-none">No branches configured</div>
       ) : (
         <div className="flex flex-col gap-3">
           {branchesList.map(b => {
             const roster = students.filter(s => s.branch === b.name)
             const open = openBranch === b.name
             return (
-            <div key={b.dbId ?? b.name} className="bg-td-card border border-td-border rounded-[18px] p-4">
+            <div key={b.dbId ?? b.name} className="td-card rounded-[18px] p-4">
               <div className="flex items-center justify-between mb-2.5">
-                <div className="text-[15px] font-extrabold text-td-dark">{b.name}</div>
+                <div className="text-[15px] td-strong">{b.name}</div>
                 {b.main && <span className="text-[12px] font-bold text-td-primary bg-td-tint-blue py-1 px-[9px] rounded-[20px]">Main</span>}
               </div>
               <div className="text-[12.5px] text-td-muted mb-3">{b.address}</div>
               <div className="flex items-center justify-between">
                 <button onClick={() => setOpenBranch(open ? null : b.name)} className="flex gap-[18px] bg-transparent border-none p-0 cursor-pointer text-left">
-                  <div><div className="text-base font-extrabold text-td-dark">{roster.length}</div><div className="text-[12px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
-                  <div><div className="text-base font-extrabold text-td-dark">{b.staff}</div><div className="text-[12px] text-td-subtle font-semibold">Staff</div></div>
+                  <div><div className="text-base td-strong">{roster.length}</div><div className="text-[12px] text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
+                  <div><div className="text-base td-strong">{b.staff}</div><div className="text-[12px] text-td-subtle font-semibold">Staff</div></div>
                 </button>
                 {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-2 px-3.5 rounded-[12px] cursor-pointer">Remove</button>}
               </div>
@@ -383,8 +383,8 @@ export function SubjectsScreen() {
       />
       <ScreenHeader title="Subjects" onBack={back} />
 
-      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
-        <div className="text-sm font-extrabold text-td-dark">Add subject</div>
+      <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="text-sm td-strong">Add subject</div>
         <div className="flex gap-[11px]">
           <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Mathematics" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
           <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
@@ -393,11 +393,11 @@ export function SubjectsScreen() {
 
       <div className="td-h2">All subjects ({subjects.length})</div>
       {subjects.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">No subjects added yet</div>
+        <div className="td-none">No subjects added yet</div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {subjects.map((s, i) => (
-            <div key={s.dbId} className="bg-td-card border border-td-border rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
+            <div key={s.dbId} className="td-card rounded-2xl p-[13px] px-[15px] flex items-center gap-[13px]">
               <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{s.name[0]}</div>
               <div className="flex-1 text-[14px] font-bold text-td-dark">{s.name}</div>
               {s.dbId && <button onClick={() => setConfirmSubject({ id: s.dbId!, name: s.name })} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer">Remove</button>}
@@ -432,8 +432,8 @@ export function BatchesScreen() {
       />
       <ScreenHeader title="Batches" onBack={back} />
 
-      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
-        <div className="text-sm font-extrabold text-td-dark">Add batch</div>
+      <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="text-sm td-strong">Add batch</div>
         <div className="flex gap-[11px]">
           <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Morning 10-A" className="flex-1 border border-td-border rounded-[14px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
           <button onClick={handleAdd} className="border-none bg-td-primary text-white text-sm font-bold py-[13px] px-5 rounded-[14px] cursor-pointer shrink-0">Add</button>
@@ -442,14 +442,14 @@ export function BatchesScreen() {
 
       <div className="td-h2">All batches ({batches.length})</div>
       {batches.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">No batches added yet</div>
+        <div className="td-none">No batches added yet</div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {batches.map((b, i) => {
             const roster = students.filter(s => s.batch === b.name)
             const open = openBatch === b.name
             return (
-            <div key={b.dbId} className="bg-td-card border border-td-border rounded-2xl p-[13px] px-[15px]">
+            <div key={b.dbId} className="td-card rounded-2xl p-[13px] px-[15px]">
               <div className="flex items-center gap-[13px]">
                 <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[14px]" style={{ background: av(i) }}>{b.name[0]}</div>
                 <button onClick={() => setOpenBatch(open ? null : b.name)} className="flex-1 min-w-0 bg-transparent border-none p-0 cursor-pointer text-left">
@@ -500,7 +500,7 @@ export function MoreScreen() {
   ]
 
   const card = (list: MoreItem[]) => (
-    <div className="bg-td-card border border-td-border rounded-[20px] overflow-hidden">
+    <div className="td-card rounded-[20px] overflow-hidden">
       {list.map(m => (
         <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="w-full text-left border-none bg-transparent border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
@@ -514,12 +514,12 @@ export function MoreScreen() {
 
   return (
     <div className="td-screen">
-      <div className="text-2xl font-extrabold text-td-dark mt-1.5 mb-[18px]">More tools</div>
+      <div className="text-2xl td-strong mt-1.5 mb-[18px]">More tools</div>
 
-      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left bg-td-card border border-td-border rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
+      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left td-card rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
         <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(0) }}>{initials(profileName)}</div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-extrabold text-td-dark truncate">{profileName}</div>
+          <div className="text-sm td-strong truncate">{profileName}</div>
           <div className="text-xs text-td-muted mt-0.5 truncate">{googleEmail} · {isAdmin ? 'Head teacher' : 'Teacher'}</div>
         </div>
         <ChevronRight />
@@ -571,10 +571,10 @@ export function NotificationsScreen() {
   })
 
   const row = (icon: IconName, tint: string, label: string, count: number, screen: Screen) => (
-    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none bg-td-card border border-td-border rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
+    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none td-card rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
       <div className="w-11 h-11 rounded-[13px] shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-extrabold text-td-dark">{label}</div>
+        <div className="text-sm td-strong">{label}</div>
         <div className="text-[12px] text-td-muted mt-0.5">{count} waiting for your review</div>
       </div>
       <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{count}</span>
@@ -591,7 +591,7 @@ export function NotificationsScreen() {
           <div className="w-16 h-16 rounded-[20px] bg-td-tint-green flex items-center justify-center mb-4">
             <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
           </div>
-          <div className="text-[16px] font-extrabold text-td-dark">You&apos;re all caught up</div>
+          <div className="text-[16px] td-strong">You&apos;re all caught up</div>
           <div className="text-[13px] text-td-muted mt-1 max-w-[240px]">New student and staff requests will show up here.</div>
         </div>
       ) : (
@@ -669,7 +669,7 @@ export function StaffProfileScreen() {
 
       <div className="flex flex-col items-center text-center mb-6">
         <div className="w-[76px] h-[76px] rounded-[24px] flex items-center justify-center text-white font-extrabold text-[26px] mb-3" style={{ background: av(0) }}>{initials(displayName)}</div>
-        <div className="text-[18px] font-extrabold text-td-dark">{displayName}</div>
+        <div className="text-[18px] td-strong">{displayName}</div>
         <div className="text-[12.5px] text-td-muted mt-0.5">{googleEmail}</div>
         <div className="inline-flex items-center gap-[6px] bg-td-tint-green rounded-[20px] py-[5px] px-[11px] mt-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-td-green" />
@@ -730,7 +730,7 @@ export function StaffProfileScreen() {
         </button>
       ) : (
         <div className="border border-td-border rounded-2xl p-4 mt-3">
-          <div className="text-sm font-extrabold text-td-dark">Set a password</div>
+          <div className="text-sm td-strong">Set a password</div>
           <p className="text-[12px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
           <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-3" />
           <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="w-full border border-td-border rounded-[12px] p-[13px] text-sm text-td-dark outline-none focus:border-td-primary mt-2.5" />

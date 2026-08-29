@@ -156,8 +156,8 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
   onAction?: () => void
 }) {
   return (
-    <div className="text-center bg-td-card border border-td-border rounded-[16px] py-9 px-6">
-      <div className="text-[15px] font-extrabold text-td-dark mb-1.5">{title}</div>
+    <div className="text-center td-card rounded-[16px] py-9 px-6">
+      <div className="text-[15px] td-strong mb-1.5">{title}</div>
       {hint && <p className="text-[13px] text-td-muted leading-relaxed max-w-[290px] mx-auto mb-0">{hint}</p>}
       {actionLabel && onAction && (
         <button
@@ -185,7 +185,7 @@ export function ScreenHeader({ title, onBack, right }: { title: string; onBack: 
     <div className="flex items-center justify-between mb-[18px]">
       <div className="flex items-center gap-3.5">
         <BackButton onClick={onBack} />
-        <div className="text-xl font-extrabold text-td-dark">{title}</div>
+        <div className="text-xl td-strong">{title}</div>
       </div>
       {right}
     </div>
@@ -289,7 +289,7 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
         onClick={e => e.stopPropagation()}
         className="w-full max-w-[380px] bg-td-card rounded-[20px] p-[21px] outline-none shadow-[0_20px_50px_rgba(16,24,40,.3)] animate-[pop_.2s_ease]"
       >
-        <div id="confirm-title" className="text-[16px] font-extrabold text-td-dark mb-2">{title}</div>
+        <div id="confirm-title" className="text-[16px] td-strong mb-2">{title}</div>
         <div id="confirm-body" className="text-[13.5px] text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
         <div className="flex gap-2.5">
           <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">Cancel</button>

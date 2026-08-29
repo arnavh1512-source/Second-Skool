@@ -31,7 +31,7 @@ function NavRow({ item }: { item: NavItem }) {
         on ? 'bg-td-tint-blue text-td-primary' : 'text-td-text hover:bg-td-soft'
       }`}
     >
-      <span className="w-[30px] h-[30px] rounded-[9px] bg-td-card border border-td-border flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
+      <span className="w-[30px] h-[30px] rounded-[9px] td-card flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
       <span className={`flex-1 text-[13.5px] ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
         <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
@@ -85,7 +85,7 @@ function Sidebar() {
           ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-[11px] object-cover shrink-0" />
           : <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-extrabold text-[15px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
         <div className="min-w-0">
-          <div className="text-[14.5px] font-extrabold text-td-dark truncate">{centreName || 'Second Skool'}</div>
+          <div className="text-[14.5px] td-strong truncate">{centreName || 'Second Skool'}</div>
           <div className="text-[12px] text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
         </div>
       </div>
@@ -106,7 +106,7 @@ function Sidebar() {
         <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-[12px] hover:bg-td-soft cursor-pointer mb-1">
           <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-bold text-[13px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{initials(name)}</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] font-extrabold text-td-dark truncate">{name}</div>
+            <div className="text-[13px] td-strong truncate">{name}</div>
             <div className="text-[12px] text-td-muted truncate">{googleEmail}</div>
           </div>
         </button>

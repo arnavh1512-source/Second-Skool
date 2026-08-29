@@ -46,13 +46,13 @@ export function NotesScreen() {
   return (
     <div className="td-screen">
       <ScreenHeader title="Study Material" onBack={back} right={
-        <button onClick={() => setShowForm(f => !f)} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
+        <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Share'}
         </button>
       } />
 
       {showForm && (
-        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
+        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5">
           <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field text-sm focus:border-td-primary" /></div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="td-label">Subject</label>
@@ -81,10 +81,10 @@ export function NotesScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {notesList.map(n => (
-            <div key={n.dbId} className="bg-td-card border border-td-border rounded-[18px] p-4">
+            <div key={n.dbId} className="td-card rounded-[18px] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-extrabold text-td-dark">{n.title}</div>
+                  <div className="text-[14px] td-strong">{n.title}</div>
                   <div className="text-[12px] text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
                 </div>
                 <button onClick={() => n.dbId && deleteNote(n.dbId)} className="border border-td-edge-red bg-td-wash-red text-td-red text-[12px] font-bold py-1.5 px-3 rounded-[11px] cursor-pointer shrink-0">Remove</button>
@@ -120,11 +120,11 @@ export function StuNotesScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {stuNotes.map((n, i) => (
-            <div key={`${n.date}-${n.title}-${i}`} className="bg-td-card border border-td-border rounded-[18px] p-4">
+            <div key={`${n.date}-${n.title}-${i}`} className="td-card rounded-[18px] p-4">
               <div className="flex items-center gap-[11px]">
                 <div className="w-9 h-9 rounded-xl shrink-0 flex items-center justify-center bg-td-tint-blue" style={{ color: ink('var(--color-td-tint-blue)') }}><Icon name="notes" size={19} /></div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-extrabold text-td-dark">{n.title}</div>
+                  <div className="text-[14px] td-strong">{n.title}</div>
                   {n.subject && <div className="text-[12px] text-td-muted mt-0.5">{n.subject}</div>}
                 </div>
               </div>

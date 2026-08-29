@@ -112,7 +112,7 @@ export function InstallPrompt() {
     return (
       <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-card border-t border-td-border rounded-t-[20px] px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)] shadow-[0_-10px_40px_rgba(20,30,60,.18)]">
         <div className="flex items-start justify-between gap-3 mb-2.5">
-          <h2 className="text-[15px] font-extrabold text-td-dark">Add Second Skool to your Home Screen</h2>
+          <h2 className="text-[15px] td-strong">Add Second Skool to your Home Screen</h2>
           <button type="button" onClick={dismiss} aria-label="Close" className="shrink-0 text-td-muted text-[20px] leading-none cursor-pointer px-1">×</button>
         </div>
         <p className="text-[13px] text-td-muted mb-3 leading-relaxed">

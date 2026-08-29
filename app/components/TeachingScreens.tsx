@@ -83,7 +83,7 @@ export function TimetableScreen() {
   return (
     <div className="td-screen td-wide">
       <ScreenHeader title="Timetable" onBack={back} right={isAdmin ? (
-        <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="border-none bg-td-primary text-white text-[13px] font-bold py-2.5 px-[15px] rounded-[14px] cursor-pointer flex items-center gap-1.5">
+        <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="td-btn-sm">
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
         </button>
       ) : undefined} />
@@ -101,8 +101,8 @@ export function TimetableScreen() {
       </div>
 
       {isAdmin && showForm && (
-        <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
-          <div className="text-sm font-extrabold text-td-dark">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
+        <div className="td-card rounded-[20px] p-[17px] mb-[18px] flex flex-col gap-3.5 lg:max-w-lg">
+          <div className="text-sm td-strong">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="td-label">Start</label>
               <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field text-sm focus:border-td-primary" />
@@ -146,7 +146,7 @@ export function TimetableScreen() {
             <div key={d.s} className={`rounded-2xl border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
               <button onClick={() => set({ ttDay: d.s })} className="w-full text-center mb-2 cursor-pointer bg-transparent border-none">
                 <div className="text-[12px] font-bold text-td-muted">{d.s}</div>
-                <div className="text-[15px] font-extrabold text-td-dark">{d.d}</div>
+                <div className="text-[15px] td-strong">{d.d}</div>
               </button>
               {ps.length === 0 ? (
                 <div className="text-center text-td-subtle text-[12px] py-3">—</div>
@@ -180,7 +180,7 @@ export function TimetableScreen() {
       <div className="text-[13px] text-td-muted font-semibold mb-3.5">{dayNames[ttDay]} · {periods.length} periods</div>
 
       {periods.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-8">No periods scheduled for {dayNames[ttDay]}</div>
+        <div className="td-none">No periods scheduled for {dayNames[ttDay]}</div>
       ) : (
         <div className="flex flex-col">
           {periods.map((p, i) => {
@@ -188,7 +188,7 @@ export function TimetableScreen() {
             return (
               <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="flex gap-[13px] items-stretch">
                 <div className="shrink-0 w-[58px] text-right pt-1">
-                  <div className="text-[12.5px] font-extrabold text-td-dark">{p[0]}</div>
+                  <div className="text-[12.5px] td-strong">{p[0]}</div>
                   <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
                 </div>
                 <div className="shrink-0 flex flex-col items-center">
@@ -246,7 +246,7 @@ export function AttendanceScreen() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2.4" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
         <div>
-          <div className="text-xl font-extrabold text-td-dark">Mark Attendance</div>
+          <div className="text-xl td-strong">Mark Attendance</div>
           <div className="text-xs text-td-muted">{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
         </div>
       </div>
@@ -416,7 +416,7 @@ export function ResultsScreen() {
         <div className="flex flex-col gap-[9px] mb-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {roster.map((s, i) => (
             <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
-              <div className="w-9 h-9 rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
+              <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
               <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
               <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-[11px] py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
               <span className="text-[13px] text-td-subtle font-semibold">/{maxMarks}</span>
@@ -445,7 +445,7 @@ export function AssignmentsScreen() {
     <div className="td-screen">
       <ScreenHeader title="New Assignment" onBack={back} />
 
-      <div className="bg-td-card border border-td-border rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
+      <div className="td-card rounded-[20px] p-[17px] mb-[22px] flex flex-col gap-3.5">
         <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm focus:border-td-primary" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="td-label">Subject</label>
@@ -476,7 +476,7 @@ export function AssignmentsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {assignmentsList.map((a, i) => (
-            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="bg-td-card border border-td-border rounded-2xl p-3.5">
+            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="td-card rounded-2xl p-3.5">
               <div className="flex justify-between items-start gap-2">
                 <div className="text-[13.5px] font-bold text-td-dark">{a.title}</div>
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -544,13 +544,13 @@ export function RemindersScreen() {
 
       <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>
 
-      <div className="text-[15px] font-extrabold text-td-dark mt-7 mb-3">Recently sent</div>
+      <div className="text-[15px] td-strong mt-7 mb-3">Recently sent</div>
       {reminderHistory.length === 0 ? (
         <EmptyState title="Nothing sent yet" hint="Reminders you send appear here, so you can check what has already gone out before sending it again." />
       ) : (
         <div className="flex flex-col gap-2.5">
           {reminderHistory.map(r => (
-            <div key={r.dbId} className="bg-td-card border border-td-border rounded-2xl p-3.5">
+            <div key={r.dbId} className="td-card rounded-2xl p-3.5">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[11.5px] font-extrabold text-td-primary bg-td-tint-blue rounded-full py-[3px] px-2.5">{r.type}</span>
                 <span className="text-[11.5px] text-td-muted">{r.when}</span>

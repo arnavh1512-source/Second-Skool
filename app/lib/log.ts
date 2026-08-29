@@ -8,15 +8,13 @@
 // by accident — you must pass explicit, named fields.
 type Fields = Record<string, string | number | boolean | null>
 
-function emit(level: 'info' | 'warn' | 'error', event: string, fields: Fields = {}): void {
+function emit(level: 'warn' | 'error', event: string, fields: Fields = {}): void {
   const line = JSON.stringify({ level, event, ...fields, at: new Date().toISOString() })
   if (level === 'error') console.error(line)
-  else if (level === 'warn') console.warn(line)
-  else console.log(line)
+  else console.warn(line)
   if (level === 'error') forwardToSentry(event, fields) // fire-and-forget, best-effort
 }
 
-export const logInfo = (event: string, fields?: Fields): void => emit('info', event, fields)
 export const logWarn = (event: string, fields?: Fields): void => emit('warn', event, fields)
 export const logError = (event: string, fields?: Fields): void => emit('error', event, fields)
 

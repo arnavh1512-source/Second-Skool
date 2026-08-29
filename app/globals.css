@@ -21,8 +21,6 @@
   --color-td-muted: #6b7689;
   --color-td-subtle: #7d879a;
   --color-td-text: #3a4456;
-  --color-td-pink: #d94f8a;
-  --color-td-teal: #3aa0c4;
 
   /* Surfaces. td-card is what `bg-white` used to be: the raised sheet a list,
      a form or a stat sits on. td-soft is a fill *on* that sheet; td-line is the
@@ -74,8 +72,6 @@
   --color-td-green: #38b27e;
   --color-td-red: #f0705a;
   --color-td-amber: #e8a33d;
-  --color-td-pink: #e173a6;
-  --color-td-teal: #5bb8d8;
 
   --color-td-bg: #0e1219;
   --color-td-card: #171c26;
@@ -165,3 +161,27 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    `td-field text-[13.5px]` still says 13.5px and nothing here can override it. */
 .td-label { display: block; font-size: .75rem; line-height: 1rem; font-weight: 700; color: var(--color-td-muted); margin-bottom: 7px; }
 .td-field { width: 100%; border: 1px solid var(--color-td-border); border-radius: 14px; padding: 13px; color: var(--color-td-dark); outline: none; }
+
+/* The card: a filled panel with a hairline round it, written out 74 times as
+   three utilities before this. Radius and padding stay on the element - the app
+   uses four different radii on purpose and one rule does not get to pick. */
+.td-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); }
+
+/* One weight and one colour, worn together 91 times: the app's strong text.
+   Size is not part of it - six different ones sit on top. */
+.td-strong { font-weight: 800; color: var(--color-td-dark); }
+
+/* The muted paragraph under a heading. Where it is width-capped, that stays
+   a utility, because only half of them are. */
+.td-sub { font-size: .875rem; line-height: 1.625; color: var(--color-td-muted); margin-top: 8px; }
+
+/* "Nothing here yet", on its own line inside a frame that already exists. */
+.td-none { text-align: center; color: var(--color-td-muted); font-size: .875rem; line-height: 1.25rem; padding: 32px 0; }
+
+/* The initials square beside a name. It comes in two sizes, so size and radius
+   stay on the element. */
+.td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+
+/* The small solid button that lives in a card header, as opposed to
+   PrimaryButton at the foot of a form. */
+.td-btn-sm { border: none; background: var(--color-td-primary); color: #fff; font-size: 13px; font-weight: 700; padding: 10px 15px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }

@@ -77,11 +77,11 @@ export function LoginScreen() {
   return (
     <div className="td-auth-screen flex flex-col">
       {LOGO}
-      <div className="text-[26px] font-extrabold text-td-dark tracking-tight mt-[22px]">Second Skool</div>
+      <div className="text-[26px] td-strong tracking-tight mt-[22px]">Second Skool</div>
 
       {mode === 'choose' && (
         <>
-          <div className="text-sm text-td-muted mt-2 leading-relaxed">Teachers sign in with Google. Students tap below and enter the code their teacher gave them — no account needed.</div>
+          <div className="td-sub">Teachers sign in with Google. Students tap below and enter the code their teacher gave them — no account needed.</div>
 
           <button onClick={signInWithGoogle} className="w-full border border-td-line bg-td-card rounded-[14px] p-3.5 mt-8 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
             <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.3 2.2 20.6 2.2 24s.8 6.7 2.3 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>
@@ -105,7 +105,7 @@ export function LoginScreen() {
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-green)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
             </div>
             <div className="flex-1">
-              <div className="text-base font-extrabold text-td-dark">I&apos;m a student</div>
+              <div className="text-base td-strong">I&apos;m a student</div>
               <div className="text-[12.5px] text-td-muted mt-[3px]">Enter your code to see your updates</div>
             </div>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-faint)" strokeWidth="2.4" strokeLinecap="round"><path d="m9 18 6-6-6-6"/></svg>
@@ -117,7 +117,7 @@ export function LoginScreen() {
 
       {mode === 'student' && (
         <>
-          <div className="text-sm text-td-muted mt-2 leading-relaxed">Enter the code your teacher gave you. We&apos;ll remember it on this device.</div>
+          <div className="td-sub">Enter the code your teacher gave you. We&apos;ll remember it on this device.</div>
           <input
             autoFocus value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
@@ -136,7 +136,7 @@ export function LoginScreen() {
 
       {mode === 'email' && (
         <>
-          <div className="text-sm text-td-muted mt-2 leading-relaxed">Sign in with your teacher email and password. Use the same email as your Google account.</div>
+          <div className="td-sub">Sign in with your teacher email and password. Use the same email as your Google account.</div>
           <input
             autoFocus value={email} type="email" inputMode="email" autoComplete="email" aria-label="Email address" required aria-required="true"
             onChange={e => setEmail(e.target.value)}
@@ -158,7 +158,7 @@ export function LoginScreen() {
 
       {mode === 'register' && (
         <>
-          <div className="text-sm text-td-muted mt-2 leading-relaxed">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
+          <div className="td-sub">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
           <div className="flex flex-col gap-3 mt-6">
             <div>
               <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-td-red">*</span></label>
@@ -290,16 +290,16 @@ export function NotificationGateScreen() {
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-blue flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       </div>
-      <div className="text-[20px] font-extrabold text-td-dark">{blocked ? 'Reminders are blocked' : 'Turn on reminders'}</div>
-      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">
+      <div className="text-[20px] td-strong">{blocked ? 'Reminders are blocked' : 'Turn on reminders'}</div>
+      <div className="td-sub max-w-[300px]">
         {blocked
           ? `Your browser is blocking reminders from ${centreName || 'your coaching centre'}, so we can’t tell you about tests, homework or fees. Allow them to continue.`
           : `${centreName || 'Your coaching centre'} needs to send you reminders about tests, homework and fees. Turn them on to continue.`}
       </div>
 
       {blocked ? (
-        <div className="mt-6 w-full max-w-[320px] bg-td-card border border-td-border rounded-[16px] p-4 text-left">
-          <div className="text-[12px] font-extrabold text-td-dark mb-2">How to allow them</div>
+        <div className="mt-6 w-full max-w-[320px] td-card rounded-[16px] p-4 text-left">
+          <div className="text-[12px] td-strong mb-2">How to allow them</div>
           <ol className="text-[12.5px] text-td-muted leading-relaxed list-decimal pl-4 flex flex-col gap-1">
             <li>Tap the lock or ⓘ icon next to the web address</li>
             <li>Open <span className="font-bold text-td-text">Permissions</span> → <span className="font-bold text-td-text">Notifications</span></li>
@@ -323,7 +323,7 @@ export function NotificationGateScreen() {
       {code && (
         <div className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-td-card">
           <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
-          <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
+          <div className="text-lg td-strong tracking-[0.15em] mt-1">{code}</div>
         </div>
       )}
       <button onClick={signOut} className="mt-auto text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent">Sign out</button>
@@ -363,13 +363,13 @@ export function StuPendingScreen() {
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-amber flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-amber)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </div>
-      <div className="text-[20px] font-extrabold text-td-dark">You&apos;re on the list{stuPending?.name ? `, ${stuPending.name.split(' ')[0]}` : ''}!</div>
-      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your teacher{stuPending?.centre ? ` at ${stuPending.centre}` : ''} is reviewing your details. You&apos;ll get in the moment they approve you.</div>
+      <div className="text-[20px] td-strong">You&apos;re on the list{stuPending?.name ? `, ${stuPending.name.split(' ')[0]}` : ''}!</div>
+      <div className="td-sub max-w-[300px]">Your teacher{stuPending?.centre ? ` at ${stuPending.centre}` : ''} is reviewing your details. You&apos;ll get in the moment they approve you.</div>
 
       {code && (
         <button onClick={copyCode} className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-td-card cursor-pointer">
           <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
-          <div className="text-lg font-extrabold text-td-dark tracking-[0.15em] mt-1">{code}</div>
+          <div className="text-lg td-strong tracking-[0.15em] mt-1">{code}</div>
         </button>
       )}
 
@@ -390,8 +390,8 @@ export function StuDeniedScreen() {
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-red flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
       </div>
-      <div className="text-[20px] font-extrabold text-td-dark">Registration not approved</div>
-      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your teacher{stuDenied?.centre ? ` at ${stuDenied.centre}` : ''} didn&apos;t approve this request{first}. If you think this is a mistake, reach out to them directly — or register again with the correct details.</div>
+      <div className="text-[20px] td-strong">Registration not approved</div>
+      <div className="td-sub max-w-[300px]">Your teacher{stuDenied?.centre ? ` at ${stuDenied.centre}` : ''} didn&apos;t approve this request{first}. If you think this is a mistake, reach out to them directly — or register again with the correct details.</div>
       <button onClick={signOut} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Back to start</button>
     </div>
   )
@@ -429,8 +429,8 @@ export function ProfileSetupScreen() {
   return (
     <div className="td-auth-screen flex flex-col">
       {LOGO}
-      <div className="text-[24px] font-extrabold text-td-dark tracking-tight mt-[22px]">Tell us about you</div>
-      <div className="text-sm text-td-muted mt-2 leading-relaxed">
+      <div className="text-[24px] td-strong tracking-tight mt-[22px]">Tell us about you</div>
+      <div className="td-sub">
         Signed in as <span className="font-bold text-td-text">{googleEmail}</span>. These details are what your centre and its students will see.
       </div>
 
@@ -459,8 +459,8 @@ export function RegisterScreen() {
   return (
     <div className="td-auth-screen flex flex-col">
       {LOGO}
-      <div className="text-[24px] font-extrabold text-td-dark tracking-tight mt-[22px]">Set up your access</div>
-      <div className="text-sm text-td-muted mt-2 leading-relaxed">Signed in as <span className="font-bold text-td-text">{googleEmail}</span>.</div>
+      <div className="text-[24px] td-strong tracking-tight mt-[22px]">Set up your access</div>
+      <div className="td-sub">Signed in as <span className="font-bold text-td-text">{googleEmail}</span>.</div>
 
       {mode === 'choose' && (
         <div className="flex flex-col gap-[13px] mt-7">
@@ -469,7 +469,7 @@ export function RegisterScreen() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
             <div className="flex-1">
-              <div className="text-base font-extrabold text-td-dark">Create a centre</div>
+              <div className="text-base td-strong">Create a centre</div>
               <div className="text-[12.5px] text-td-muted mt-[3px]">Start your own — you&apos;ll be the head teacher.</div>
             </div>
           </button>
@@ -478,7 +478,7 @@ export function RegisterScreen() {
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             </div>
             <div className="flex-1">
-              <div className="text-base font-extrabold text-td-dark">Join a centre</div>
+              <div className="text-base td-strong">Join a centre</div>
               <div className="text-[12.5px] text-td-muted mt-[3px]">As a teacher, with your centre&apos;s join code.</div>
             </div>
           </button>
@@ -536,8 +536,8 @@ export function PendingScreen() {
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-amber flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-amber)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
       </div>
-      <div className="text-[20px] font-extrabold text-td-dark">Waiting for approval</div>
-      <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">Your head teacher needs to approve <span className="font-bold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</div>
+      <div className="text-[20px] td-strong">Waiting for approval</div>
+      <div className="td-sub max-w-[300px]">Your head teacher needs to approve <span className="font-bold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</div>
       <button onClick={() => window.location.reload()} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Check again</button>
       <HelpLine />
       <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent mt-2">Sign out</button>
@@ -560,11 +560,11 @@ export function DeniedScreen() {
       <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-red flex items-center justify-center mb-5">
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>
       </div>
-      <div className="text-[20px] font-extrabold text-td-dark">Access not granted</div>
+      <div className="text-[20px] td-strong">Access not granted</div>
 
       {mode === 'view' && (
         <>
-          <div className="text-sm text-td-muted mt-2 leading-relaxed max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
+          <div className="td-sub max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
           <button onClick={() => setMode('join')} className="border-none bg-td-primary text-white text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Enter a join code</button>
           <HelpLine />
           <button onClick={signOut} className="text-[12.5px] text-td-muted font-bold py-3 cursor-pointer border-none bg-transparent mt-2">Sign out</button>

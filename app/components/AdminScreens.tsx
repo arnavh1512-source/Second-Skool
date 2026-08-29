@@ -48,15 +48,15 @@ export function StaffApprovalsScreen() {
 
       <div className="td-h2">Pending approval {pending.length > 0 && <span className="text-td-red">· {pending.length}</span>}</div>
       {pending.length === 0 ? (
-        <div className="text-center text-td-muted text-[13px] py-4 bg-td-card border border-td-border rounded-[16px] mb-6">No one waiting</div>
+        <div className="text-center text-td-muted text-[13px] py-4 td-card rounded-[16px] mb-6">No one waiting</div>
       ) : (
         <div className="flex flex-col gap-2.5 mb-6 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {pending.map((s, i) => (
-            <div key={s.id} className="bg-td-card border border-td-border rounded-[16px] p-3.5">
+            <div key={s.id} className="td-card rounded-[16px] p-3.5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
+                <div className="w-10 h-10 rounded-xl td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-extrabold text-td-dark truncate">{s.name}</div>
+                  <div className="text-sm td-strong truncate">{s.name}</div>
                   <div className="text-[12px] text-td-muted truncate">{s.email}</div>
                 </div>
               </div>
@@ -96,18 +96,18 @@ export function StaffApprovalsScreen() {
 
       <div className="td-h2">Active staff</div>
       {active.length === 0 ? (
-        <div className="text-center text-td-muted text-[13px] py-4 bg-td-card border border-td-border rounded-[16px]">No active staff yet</div>
+        <div className="text-center text-td-muted text-[13px] py-4 td-card rounded-[16px]">No active staff yet</div>
       ) : (
         <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {active.map((s, i) => {
             const isHead = s.role === 'admin'
             const isSelf = s.id === supabaseUserId
             return (
-              <div key={s.id} className="bg-td-card border border-td-border rounded-[16px] p-3.5">
+              <div key={s.id} className="td-card rounded-[16px] p-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i + 3) }}>{initials(s.name)}</div>
+                  <div className="w-10 h-10 rounded-xl td-avatar" style={{ background: av(i + 3) }}>{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-extrabold text-td-dark truncate">{s.name}{isSelf && <span className="text-td-muted font-semibold"> · you</span>}</div>
+                    <div className="text-sm td-strong truncate">{s.name}{isSelf && <span className="text-td-muted font-semibold"> · you</span>}</div>
                     <div className="text-[12px] text-td-muted truncate">{s.email}</div>
                   </div>
                   <span className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: isHead ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: isHead ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{isHead ? 'Head' : 'Teacher'}</span>
@@ -177,7 +177,7 @@ export function StudentRequestsScreen() {
 
       <div className="td-h2">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
       {pendingStudents.length === 0 ? (
-        <div className="text-center text-td-muted text-[13px] py-6 bg-td-card border border-td-border rounded-[16px]">No requests waiting</div>
+        <div className="text-center text-td-muted text-[13px] py-6 td-card rounded-[16px]">No requests waiting</div>
       ) : (
         <div className="flex flex-col gap-2.5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {pendingStudents.map((s, i) => (
@@ -211,11 +211,11 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
   })
 
   return (
-    <div className="bg-td-card border border-td-border rounded-[16px] p-3.5 self-start">
+    <div className="td-card rounded-[16px] p-3.5 self-start">
       <div className="flex items-center gap-3 mb-2.5">
-        <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(idx) }}>{initials(s.name)}</div>
+        <div className="w-10 h-10 rounded-xl td-avatar" style={{ background: av(idx) }}>{initials(s.name)}</div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-extrabold text-td-dark truncate">{s.name}</div>
+          <div className="text-sm td-strong truncate">{s.name}</div>
           <div className="text-[12px] text-td-muted truncate">{s.klass} · {s.school}</div>
         </div>
         {s.when && <span className="text-[12px] text-td-subtle shrink-0">{s.when}</span>}
@@ -303,15 +303,15 @@ export function ReportsScreen() {
         !teacherActivity ? (
           <div className="text-center text-td-muted text-sm py-12">Loading activity…</div>
         ) : teacherActivity.length === 0 ? (
-          <div className="text-center text-td-muted text-sm py-10 bg-td-card border border-td-border rounded-[16px]">No approved staff yet.</div>
+          <div className="text-center text-td-muted text-sm py-10 td-card rounded-[16px]">No approved staff yet.</div>
         ) : (
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 xl:grid-cols-3">
             <div className="text-[12px] text-td-muted mb-1 lg:col-span-full">What each staff member logged in the last {period} days.</div>
             {teacherActivity.map((t, i) => (
-              <div key={`${t.email}-${i}`} className="bg-td-card border border-td-border rounded-[18px] p-4">
+              <div key={`${t.email}-${i}`} className="td-card rounded-[18px] p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <div className="text-[14.5px] font-extrabold text-td-dark">{t.name || t.email}</div>
+                    <div className="text-[14.5px] td-strong">{t.name || t.email}</div>
                     <div className="text-[12px] text-td-muted">{t.email}</div>
                   </div>
                   <span className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: t.is_head ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: t.is_head ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{t.is_head ? 'Head' : 'Teacher'}</span>
@@ -323,7 +323,7 @@ export function ReportsScreen() {
                     { v: t.assignments_created, l: 'Assignments' },
                   ].map(x => (
                     <div key={x.l} className="bg-td-soft rounded-[12px] py-2.5">
-                      <div className="text-[18px] font-extrabold text-td-dark leading-none">{x.v}</div>
+                      <div className="text-[18px] td-strong leading-none">{x.v}</div>
                       <div className="text-[12px] text-td-muted mt-1 font-semibold">{x.l}</div>
                     </div>
                   ))}
@@ -349,10 +349,10 @@ export function ReportsScreen() {
             {studentReports.map((s, i) => {
               const attPct = s.att_total > 0 ? Math.round((s.att_present / s.att_total) * 100) : null
               return (
-                <div key={`${s.name}-${s.klass}-${i}`} className="bg-td-card border border-td-border rounded-[18px] p-4">
+                <div key={`${s.name}-${s.klass}-${i}`} className="td-card rounded-[18px] p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>
-                      <div className="text-[14.5px] font-extrabold text-td-dark">{s.name}</div>
+                      <div className="text-[14.5px] td-strong">{s.name}</div>
                       <div className="text-[12px] text-td-muted">{s.klass}</div>
                     </div>
                     <span className="text-[12px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: s.fee_status === 'Paid' ? 'var(--color-td-green)' : 'var(--color-td-amber)', background: s.fee_status === 'Paid' ? 'var(--color-td-tint-green)' : 'var(--color-td-tint-amber)' }}>{s.fee_status}</span>
@@ -374,11 +374,11 @@ export function ReportsScreen() {
           <div className="text-[12.5px] text-td-muted mb-4">Last {period} days · as of {fmtDate(r.generated_at)}</div>
 
           {r.branches.length === 0 ? (
-            <div className="text-center text-td-muted text-sm py-8 bg-td-card border border-td-border rounded-[16px] mb-4">No branches configured yet — add branches and assign students to see per-branch numbers.</div>
+            <div className="td-none td-card rounded-[16px] mb-4">No branches configured yet — add branches and assign students to see per-branch numbers.</div>
           ) : (
             <div className="flex flex-col gap-3 mb-4 lg:grid lg:grid-cols-2 xl:grid-cols-3">
               {r.branches.map((b, i) => (
-                <div key={`${b.name}-${i}`} className="bg-td-card border border-td-border rounded-[18px] p-4">
+                <div key={`${b.name}-${i}`} className="td-card rounded-[18px] p-4">
                   <div className="td-h2">{b.name}</div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
@@ -389,7 +389,7 @@ export function ReportsScreen() {
                       { label: 'Fees pending', value: rupee(b.fees_pending) },
                     ].map(s => (
                       <div key={s.label}>
-                        <div className="text-[17px] font-extrabold text-td-dark leading-none">{s.value}</div>
+                        <div className="text-[17px] td-strong leading-none">{s.value}</div>
                         <div className="text-[12px] text-td-muted mt-1 font-semibold">{s.label}</div>
                       </div>
                     ))}
