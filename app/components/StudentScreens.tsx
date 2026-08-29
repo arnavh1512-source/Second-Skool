@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { copyText } from '../lib/share'
 import { useDashboard, GRADIENTS, initials, av, rupee, stuGrade, type Teacher } from '../store'
-import { ScreenHeader, PrimaryButton, ChevronRight, CodeCard } from './Shell'
+import { ScreenHeader, PrimaryButton, ChevronRight, Chip, CodeCard } from './Shell'
 import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { ThemeToggle } from './ThemeToggle'
@@ -376,7 +376,7 @@ export function StuRankingScreen() {
           {subjectNames.map(name => {
             const active = name === stuRankSubject
             return (
-              <button key={name} onClick={() => set({ stuRankSubject: name })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? 'var(--color-td-primary)' : '#fff', color: active ? '#fff' : 'var(--color-td-text)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>{name}</button>
+              <Chip key={name} active={active} onClick={() => set({ stuRankSubject: name })}>{name}</Chip>
             )
           })}
         </div>
@@ -408,7 +408,7 @@ export function StuRankingScreen() {
             {rest.map((r, i) => {
               const isYou = r.id ? r.id === currentStudentDbId : me?.name === r.name
               return (
-                <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] border rounded-2xl p-3 px-3.5" style={{ background: isYou ? 'var(--color-td-tint-blue)' : '#fff', borderColor: isYou ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
+                <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] border rounded-2xl p-3 px-3.5" style={{ background: isYou ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: isYou ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
                   <div className="w-[26px] text-center text-sm font-extrabold text-td-subtle">{r.rank}</div>
                   <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(r.rank) }}>{initials(r.name)}</div>
                   <div className="flex-1 text-[13.5px] font-bold text-td-dark">{r.name}{isYou && <span className="text-td-primary text-xs"> (You)</span>}</div>
@@ -621,8 +621,8 @@ export function StuTimetableScreen() {
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => {
           const active = d === day
           return (
-            <button key={d} onClick={() => setDay(d)} className="shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-3 cursor-pointer text-center" style={{ background: active ? 'var(--color-td-primary)' : '#fff', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
-              <div className="text-[12px] font-bold" style={{ color: active ? '#fff' : 'var(--color-td-text)' }}>{d}</div>
+            <button key={d} onClick={() => setDay(d)} className={`shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-3 cursor-pointer text-center ${active ? 'bg-td-primary border-td-primary text-white' : 'bg-td-card border-td-border text-td-text'}`}>
+              <div className="text-[12px] font-bold">{d}</div>
             </button>
           )
         })}

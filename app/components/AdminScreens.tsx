@@ -3,9 +3,9 @@
 import { useEffect } from 'react'
 import { useBusy } from '../lib/use-busy'
 import { useDashboard, initials, av, fmtDate, rupee } from '../store'
-import { ScreenHeader, EmptyState, ConfirmDialog, WhatsAppIcon, CodeCard } from './Shell'
+import { ScreenHeader, EmptyState, ConfirmDialog, WhatsAppButton, CodeCard } from './Shell'
 import { supabase } from '../lib/supabase'
-import { whatsappShareUrl, weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
+import { weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
 import { useState } from 'react'
 
 
@@ -279,14 +279,14 @@ export function ReportsScreen() {
       <ScreenHeader title={period === 7 ? 'Weekly Report' : 'Monthly Report'} onBack={back} right={
         <div className="flex bg-td-soft rounded-[12px] p-[3px]">
           {([7, 30] as const).map(d => (
-            <button key={d} onClick={() => setPeriod(d)} className="text-[12px] font-bold py-[7px] px-3 rounded-[10px] cursor-pointer border-none" style={{ background: period === d ? '#fff' : 'transparent', color: period === d ? 'var(--color-td-primary)' : 'var(--color-td-muted)', boxShadow: period === d ? '0 1px 3px rgba(20,30,60,.12)' : 'none' }}>{d === 7 ? 'Week' : 'Month'}</button>
+            <button key={d} onClick={() => setPeriod(d)} className="text-[12px] font-bold py-[7px] px-3 rounded-[10px] cursor-pointer border-none" style={{ background: period === d ? 'var(--color-td-card)' : 'transparent', color: period === d ? 'var(--color-td-primary)' : 'var(--color-td-muted)', boxShadow: period === d ? '0 1px 3px rgba(20,30,60,.12)' : 'none' }}>{d === 7 ? 'Week' : 'Month'}</button>
           ))}
         </div>
       } />
 
       <div className="flex gap-2 mb-4 lg:max-w-md">
         {(['branches', 'students', 'teachers'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className="flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize" style={{ background: tab === t ? 'var(--color-td-primary)' : '#fff', color: tab === t ? '#fff' : 'var(--color-td-text)', borderColor: tab === t ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>{t}</button>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize ${tab === t ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}>{t}</button>
         ))}
       </div>
 
@@ -349,10 +349,13 @@ export function ReportsScreen() {
                     <span className="text-[12px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: s.fee_status === 'Paid' ? 'var(--color-td-green)' : 'var(--color-td-amber)', background: s.fee_status === 'Paid' ? 'var(--color-td-tint-green)' : 'var(--color-td-tint-amber)' }}>{s.fee_status}</span>
                   </div>
                   <div className="text-[12px] text-td-muted mb-3">Attendance: <span className="font-bold text-td-text">{attPct === null ? '—' : `${attPct}%`}</span> · Tests: <span className="font-bold text-td-text">{s.tests}{s.tests > 0 ? ` (avg ${s.avg_pct}%)` : ''}</span></div>
-                  <button onClick={() => window.open(whatsappShareUrl(s.parent, studentReportMessage(s, centreName || undefined, period)), '_blank', 'noopener,noreferrer')} disabled={!s.parent} className="w-full border-none bg-[#25D366] text-white text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2">
-                    <WhatsAppIcon />
-                    {s.parent ? 'Send to parent' : 'No parent number'}
-                  </button>
+                  <WhatsAppButton
+                    phone={s.parent}
+                    message={studentReportMessage(s, centreName || undefined, period)}
+                    label="Send to parent"
+                    unavailableLabel="No parent number"
+                    className="w-full text-[13px] py-2.5 rounded-[12px]"
+                  />
                 </div>
               )
             })}
@@ -403,10 +406,12 @@ export function ReportsScreen() {
             <div>Tests conducted this {period === 7 ? 'week' : 'month'}: <span className="font-bold text-td-text">{r.tests_this_week}</span></div>
           </div>
 
-          <button onClick={() => window.open(whatsappShareUrl(myPhone, weeklyReportMessage(r, centreName || undefined, period)), '_blank', 'noopener,noreferrer')} className="w-full lg:max-w-md border-none bg-[#25D366] text-white text-[14px] font-extrabold py-[14px] rounded-[14px] cursor-pointer flex items-center justify-center gap-2">
-            <WhatsAppIcon />
-            Send to WhatsApp
-          </button>
+          <WhatsAppButton
+            phone={myPhone}
+            message={weeklyReportMessage(r, centreName || undefined, period)}
+            label="Send to WhatsApp"
+            className="w-full lg:max-w-md text-[14px] py-[14px] rounded-[14px]"
+          />
           <div className="text-[12px] text-td-subtle text-center mt-3 leading-relaxed">Opens WhatsApp with the report ready to send to yourself or a co-owner.</div>
         </>
       )}

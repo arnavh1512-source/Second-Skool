@@ -1,7 +1,7 @@
 'use client'
 
 import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
-import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, options, CodeCard } from './Shell'
+import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard } from './Shell'
 import { whatsappShareUrl, studentCodeMessage, copyText } from '../lib/share'
 import { Icon } from './Icon'
 import { findStudent, indexOfStudent, studentKey } from '../lib/student-key'
@@ -127,10 +127,12 @@ export function EditStudentScreen() {
         code={st.id}
         onCopy={() => copyText(st.id, notify, 'Code copied!')}
       />
-      <button onClick={() => window.open(whatsappShareUrl(st.parent, studentCodeMessage(st.name, st.id)), '_blank', 'noopener,noreferrer')} className="w-full border-none bg-[#25D366] text-white text-[13px] font-extrabold py-3 rounded-[14px] mb-[22px] cursor-pointer flex items-center justify-center gap-2">
-        <WhatsAppIcon />
-        Send code on WhatsApp
-      </button>
+      <WhatsAppButton
+        phone={st.parent}
+        message={studentCodeMessage(st.name, st.id)}
+        label="Send code on WhatsApp"
+        className="w-full text-[13px] py-3 rounded-[14px] mb-[22px]"
+      />
 
       <div className="flex flex-col gap-3.5 mb-[18px]">
         <div><label className="td-label">Full name</label><input value={st.name} onChange={e => setStudentField({ name: e.target.value })} className="td-field text-sm" /></div>
@@ -158,7 +160,7 @@ export function EditStudentScreen() {
               const active = label === st.feeStatus
               const fc = feeColor(label)
               return (
-                <button key={label} onClick={() => setStudentField({ feeStatus: label })} className="flex-1 border text-[13px] font-bold p-[11px] rounded-[13px] cursor-pointer" style={{ background: active ? fc.b : '#fff', color: active ? fc.c : 'var(--color-td-subtle)', borderColor: active ? fc.c : 'var(--color-td-border)' }}>{label}</button>
+                <button key={label} onClick={() => setStudentField({ feeStatus: label })} className="flex-1 border text-[13px] font-bold p-[11px] rounded-[13px] cursor-pointer" style={{ background: active ? fc.b : 'var(--color-td-card)', color: active ? fc.c : 'var(--color-td-subtle)', borderColor: active ? fc.c : 'var(--color-td-border)' }}>{label}</button>
               )
             })}
           </div>
@@ -190,10 +192,12 @@ export function AddStudentScreen() {
           <div className="text-[12px] font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
           <div className="text-[24px] font-extrabold text-td-primary tracking-[0.15em]">{lastAdded.code}</div>
         </div>
-        <button onClick={() => window.open(whatsappShareUrl(lastAdded.parent, studentCodeMessage(lastAdded.name, lastAdded.code)), '_blank', 'noopener,noreferrer')} className="w-full max-w-[280px] border-none bg-[#25D366] text-white text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer mb-3 flex items-center justify-center gap-2">
-          <WhatsAppIcon />
-          Send on WhatsApp
-        </button>
+        <WhatsAppButton
+          phone={lastAdded.parent}
+          message={studentCodeMessage(lastAdded.name, lastAdded.code)}
+          label="Send on WhatsApp"
+          className="w-full max-w-[280px] text-[14px] py-[13px] rounded-[14px] mb-3"
+        />
         <button onClick={() => copyText(lastAdded.code, notify, 'Code copied!')} className="w-full max-w-[280px] border border-td-primary bg-td-card text-td-primary text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer mb-3 flex items-center justify-center gap-2">
           <Icon name="copy" size={16} color="var(--color-td-primary)" />
           Copy code

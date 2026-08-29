@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { isoDay } from '../store/format'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
-import { ScreenHeader, PrimaryButton, EmptyState, options, classesOf } from './Shell'
+import { ScreenHeader, PrimaryButton, EmptyState, Chip, options, classesOf } from './Shell'
 import { pickAttendanceClass } from '../lib/attendance'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
@@ -71,7 +71,7 @@ export function TimetableScreen() {
     const special = SPECIAL_PERIODS.has(p[2])
     return {
       dot: free ? 'var(--color-td-faint)' : special ? 'var(--color-td-amber)' : 'var(--color-td-primary)',
-      bg: free ? 'var(--color-td-soft)' : '#fff',
+      bg: free ? 'var(--color-td-soft)' : 'var(--color-td-card)',
       border: free ? 'var(--color-td-border)' : special ? 'var(--color-td-edge-amber)' : 'var(--color-td-edge-blue)',
       titleColor: free ? 'var(--color-td-subtle)' : 'var(--color-td-dark)',
       tag: free ? 'Free' : special ? 'Special' : 'Class',
@@ -92,9 +92,9 @@ export function TimetableScreen() {
         {days.map(d => {
           const active = d.s === ttDay
           return (
-            <button key={d.s} onClick={() => set({ ttDay: d.s })} className="shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-1.5 cursor-pointer text-center" style={{ background: active ? 'var(--color-td-primary)' : '#fff', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
-              <div className="text-[12px] font-bold" style={{ color: active ? '#fff' : 'var(--color-td-text)' }}>{d.s}</div>
-              <div className="text-sm font-extrabold mt-0.5" style={{ color: active ? '#fff' : 'var(--color-td-text)' }}>{d.d}</div>
+            <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-primary border-td-primary text-white' : 'bg-td-card border-td-border text-td-text'}`}>
+              <div className="text-[12px] font-bold">{d.s}</div>
+              <div className="text-sm font-extrabold mt-0.5">{d.d}</div>
             </button>
           )
         })}
@@ -264,7 +264,7 @@ export function AttendanceScreen() {
             {classes.map(name => {
               const active = name === selClass
               return (
-                <button key={name} onClick={() => set({ attClass: name, att: {} })} className="shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border" style={{ background: active ? 'var(--color-td-primary)' : '#fff', color: active ? '#fff' : 'var(--color-td-text)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>{name}</button>
+                <Chip key={name} active={active} onClick={() => set({ attClass: name, att: {} })}>{name}</Chip>
               )
             })}
           </div>
@@ -286,7 +286,7 @@ export function AttendanceScreen() {
               const key = studentKey(s)
               const absent = att[key] === 'absent'
               return (
-                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? 'var(--color-td-tint-red)' : '#fff', borderColor: absent ? 'var(--color-td-edge-red)' : 'var(--color-td-border)' }}>
+                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? 'var(--color-td-tint-red)' : 'var(--color-td-card)', borderColor: absent ? 'var(--color-td-edge-red)' : 'var(--color-td-border)' }}>
                   <div className="w-[38px] h-[38px] rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
                   <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
                   <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: absent ? 'var(--color-td-red)' : 'var(--color-td-green)' }}>
@@ -524,7 +524,7 @@ export function RemindersScreen() {
         {types.map(r => {
           const active = r.key === reminderType
           return (
-            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-2xl p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : '#fff', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
+            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-2xl p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
               <Icon name={r.icon} size={21} className="shrink-0" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-muted)' }} />
               <span className="text-[13.5px] font-bold" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-text)' }}>{r.label}</span>
             </button>

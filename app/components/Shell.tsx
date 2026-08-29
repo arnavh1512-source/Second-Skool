@@ -2,6 +2,7 @@
 
 import { useRef, useCallback, useState, useEffect } from 'react'
 import { useDashboard, type Screen, type Tab } from '../store'
+import { whatsappShareUrl } from '../lib/share'
 import { Icon } from './Icon'
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
@@ -146,6 +147,44 @@ function Toast() {
 // four screens as a literal path; every copy was the same 900 characters.
 export function WhatsAppIcon() {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M.057 24l1.687-6.163a11.867 11.867 0 0 1-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 0 1 8.413 3.488 11.824 11.824 0 0 1 3.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 0 1-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+}
+
+// A WhatsApp send button. An anchor rather than window.open() from a click
+// handler: a popup opened that way is exactly what mobile browsers block, and
+// four screens were each opening the same link their own way. Only the size
+// and spacing differ between them, so only those come in as a class.
+export function WhatsAppButton({ phone, message, label, unavailableLabel, className = '' }: {
+  phone: string
+  message: string
+  label: string
+  unavailableLabel?: string
+  className?: string
+}) {
+  const base = `bg-[#25D366] text-white font-extrabold flex items-center justify-center gap-2 ${className}`
+  // No number on file. Say so in place of the button rather than offering a
+  // link that opens WhatsApp with nobody in the To field.
+  if (!phone) return <div className={`${base} opacity-50`}><WhatsAppIcon />{unavailableLabel ?? label}</div>
+  return (
+    <a href={whatsappShareUrl(phone, message)} target="_blank" rel="noopener noreferrer" className={base}>
+      <WhatsAppIcon />{label}
+    </a>
+  )
+}
+
+// One pill out of a scrolling row of them — a subject, a class, a tab. Every
+// screen with a selector drew its own, and every copy hardcoded #fff for the
+// unselected state, which in dark theme is a white pill on a dark screen.
+export function Chip({ active, onClick, children }: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border ${active ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
+    >{children}</button>
+  )
 }
 
 export function EmptyState({ title, hint, actionLabel, onAction }: {

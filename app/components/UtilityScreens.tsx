@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useBusy } from '../lib/use-busy'
 import { useDashboard, initials, av, MIN_PASSWORD_LENGTH, type Screen } from '../store'
-import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog } from './Shell'
+import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog, Chip } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
@@ -117,7 +117,7 @@ export function RankingsScreen() {
         {subjectNames.map(name => {
           const active = name === rankSubject
           return (
-            <button key={name} onClick={() => set({ rankSubject: name })} className={`shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border ${active ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}>{name}</button>
+            <Chip key={name} active={active} onClick={() => set({ rankSubject: name })}>{name}</Chip>
           )
         })}
       </div>

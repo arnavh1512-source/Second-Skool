@@ -220,8 +220,7 @@ export function DevConsoleScreen() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className="flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize"
-                style={{ background: tab === t ? 'var(--color-td-primary)' : '#fff', color: tab === t ? '#fff' : 'var(--color-td-text)', borderColor: tab === t ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}
+                className={`flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize ${tab === t ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
               >
                 {t === 'reports' && openReports > 0 ? `reports (${openReports})` : t}
               </button>
