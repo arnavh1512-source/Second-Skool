@@ -41,6 +41,10 @@ touching anything — it is the part of the shape the code does not say out loud
   day, it does not ship.
 - **Agents never write to the live database.** Migrations are `.sql` files the
   human runs in the Supabase SQL editor. Read-only verification is fine.
+- **Answer in caveman.** The `caveman` skill in `.claude/skills/` is the default
+  reply style for this repo, at `full` intensity. It compresses the prose around
+  the work, never the work: code, commit messages, comments, docs and anything
+  written for another human stay normal English. `stop caveman` turns it off.
 
 ## Before every commit
 
@@ -59,7 +63,8 @@ All four must be `0`. Nothing gets pushed on a red build.
 Then run **ponytail** over the diff — the `ponytail-review` skill, or
 `ponytail-audit` for the whole tree. It is a separate pass on purpose: the four
 commands above prove the code works, ponytail asks whether it needed to exist.
-It tags what to cut:
+Report the findings in caveman - the two are one pass, ponytail choosing what to
+say and caveman choosing how few words to say it in. It tags what to cut:
 
 | tag | means |
 |---|---|
