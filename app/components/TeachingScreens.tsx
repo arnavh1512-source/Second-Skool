@@ -220,7 +220,7 @@ export function TimetableScreen() {
 }
 
 export function AttendanceScreen() {
-  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role, attConflicts, dismissAttConflicts, attToday, attQueue } = useDashboard()
+  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role, attConflicts, dismissAttConflicts, attToday, attQueue, lastSyncedAt } = useDashboard()
   const classes = classesOf(students)
 
   const selClass = pickAttendanceClass(classes, attClass)
@@ -238,15 +238,23 @@ export function AttendanceScreen() {
   // seed that ran then would wipe marks she was halfway through making. The ref
   // is what makes "once" mean once — comparing selClass to attClass could not,
   // because on the first mount they are already equal and nothing seeded at all.
+  //
+  // "Once" only counts once there is something to seed from. Both sources
+  // arrive after the first paint — the register with the provider's first load,
+  // the queue with the client effect that reads localStorage — so latching on
+  // the very first run would fix an all-present register in place and never
+  // correct it, which is the bug f7a4a7e fixed arriving through another door.
+  const ready = lastSyncedAt !== null || attQueue.length > 0
   const seededFor = useRef<string | null>(null)
   useEffect(() => {
+    if (!ready) return
     if (seededFor.current === selClass) return
     seededFor.current = selClass
     set({
       attClass: selClass,
       att: seedMarks(roster, attToday, queuedMarksForDay(attQueue, isoDay())),
     })
-  }, [selClass, roster, attToday, attQueue, set])
+  }, [ready, selClass, roster, attToday, attQueue, set])
   const absentCount = roster.reduce((a, s) => a + (att[studentKey(s)] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 

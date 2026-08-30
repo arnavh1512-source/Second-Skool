@@ -42,24 +42,53 @@ export function validatePushBody(raw: unknown): Validated {
 // so window expiry is testable. This one counts within a single serverless
 // instance; rateLimit() below is what routes call, and it prefers a shared
 // counter when one is configured.
+const CAP = 1000
+
 export function createRateLimiter(limit: number, windowMs: number, now: () => number = Date.now) {
   const log = new Map<string, number[]>()
   return {
     limited(key: string): boolean {
       const t = now()
       const recent = (log.get(key) ?? []).filter(ts => t - ts < windowMs)
-      if (recent.length >= limit) { log.set(key, recent); return true }
-      recent.push(t)
+      const over = recent.length >= limit
+      if (!over) recent.push(t)
+      // Deleting before setting rather than overwriting in place: a Map keeps
+      // insertion order, and re-inserting is what makes that order mean "least
+      // recently seen first", which is what the eviction below needs.
+      log.delete(key)
       log.set(key, recent)
       // Cap memory on long-lived instances. Dropping the whole map would have
       // handed every caller in it a fresh allowance — the one moment the
       // limiter is under load is the one moment it forgot everything. Evict
       // only the keys whose newest request is already outside the window, which
       // are the entries `limited()` would have discarded anyway.
-      if (log.size > 1000) {
+      if (log.size > CAP) {
         for (const [k, stamps] of log) if (stamps[stamps.length - 1] <= t - windowMs) log.delete(k)
+        // A flood of distinct keys inside one window leaves nothing stale to
+        // sweep, and a map that only ever grows is a memory leak on an instance
+        // the platform keeps alive for hours — which is the shape of the attack
+        // this guard exists to survive. So something has to go, and the only
+        // question is what.
+        //
+        // Not the callers close to their limit: forgetting those is forgetting
+        // the enforcement itself, at the exact moment it is doing work. The
+        // entries worth least are the ones a long way from tripping, taken
+        // least recently seen first, which map order gives for free.
+        for (const [k, stamps] of log) {
+          if (log.size <= CAP) break
+          if (stamps.length < limit) log.delete(k)
+        }
+        // Every entry is at its limit and the map is still too big: the flood is
+        // now entirely made of blocked callers, and a bounded map matters more
+        // than any one of them staying counted. They are re-counted on their
+        // very next request anyway.
+        while (log.size > CAP) {
+          const oldest = log.keys().next().value
+          if (oldest === undefined) break
+          log.delete(oldest)
+        }
       }
-      return false
+      return over
     },
   }
 }

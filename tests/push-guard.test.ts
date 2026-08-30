@@ -99,15 +99,20 @@ describe('createRateLimiter', () => {
   })
 
   // The memory cap used to clear the whole map, which handed an allowance back
-  // to every caller in it at the exact moment the limiter was busiest. It now
-  // evicts only entries already outside their window, so a caller who is
-  // hammering the endpoint stays counted while the map is being trimmed.
+  // to every caller in it at the exact moment the limiter was busiest. Trimming
+  // now spares the callers close to their limit, so the one actually hammering
+  // the endpoint stays counted while a flood of one-shot keys is evicted around
+  // it — which is the only reason the map is being trimmed in the first place.
   it('does not forgive an active caller when the memory cap trips', () => {
     let t = 0
-    const rl = createRateLimiter(1, 1000, () => t)
+    const rl = createRateLimiter(3, 1000, () => t)
     expect(rl.limited('busy')).toBe(false)
-    // 1200 idle keys, stamped long enough ago to be evictable.
-    for (let i = 0; i < 1200; i++) rl.limited(`idle-${i}`)
+    expect(rl.limited('busy')).toBe(false)
+    expect(rl.limited('busy')).toBe(false)
+    expect(rl.limited('busy')).toBe(true)
+    // 1200 distinct callers with one request each, all inside the window, so
+    // nothing is stale and the cap has to evict live entries to stay bounded.
+    for (let i = 0; i < 1200; i++) rl.limited(`flood-${i}`)
     t = 1 // still inside 'busy''s window
     expect(rl.limited('busy')).toBe(true)
   })

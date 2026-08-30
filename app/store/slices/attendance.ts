@@ -45,8 +45,11 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
     set({ attQueue: queue })
   }
 
+  // The id is what the drain deletes by, so two batches saved in the same
+  // millisecond must not share one — a collision would delete a register that
+  // was never sent.
   const enqueue = (date: string, marks: QueuedMark[]) => {
-    const batch: QueuedBatch = { id: `${date}-${Date.now()}`, date, marks }
+    const batch: QueuedBatch = { id: `${date}-${crypto.randomUUID()}`, date, marks }
     commit([...loadQueue(), batch])
     get().notify(`Saved on this phone · ${marks.length} marks. They will sync by themselves once you are back online.`)
   }
@@ -136,7 +139,13 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
 
       draining = true
       const notify = get().notify
-      const kept: QueuedBatch[] = []
+      // What the drain finished with, rather than what it means to keep. The
+      // two are not the same set: a drain that stops early has said nothing
+      // about the batches it never reached, and a teacher can save a new
+      // register while this is still awaiting the network. Deleting by id at
+      // the end, off a fresh read of the disk, leaves both of those alone —
+      // writing back a list built before the first await would throw them out.
+      const done = new Set<string>()
       const conflicts = [...get().attConflicts]
       let written = 0
 
@@ -148,7 +157,7 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
           // Could not even look: the connection is still not real. Keep the
           // batch and try again on the next reconnect — dropping it here would
           // lose the register for a reason she never sees.
-          if (readErr) { kept.push(batch); continue }
+          if (readErr) continue
 
           const { rows, absent, conflicts: found } = resolveBatch(batch, existing ?? [])
           conflicts.push(...found)
@@ -156,23 +165,25 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
           if (rows.length) {
             const res = await supabase.from('attendance').upsert(rows, { onConflict: 'student_id,date' })
             if (res.error) {
-              if (looksOffline(res.error)) { kept.push(batch); get().setOnline(false); break }
+              if (looksOffline(res.error)) { get().setOnline(false); break }
               // A rejection that retrying cannot fix — RLS, a deleted student, a
               // constraint. Keeping it would retry it forever on every
               // reconnect, so it is dropped, and said out loud rather than
               // disappearing.
               notify(`${batch.marks.length} queued marks from ${batch.date} could not be saved. Please mark that class again.`, 'error')
+              done.add(batch.id)
               continue
             }
             written += rows.length
             await tellParents(absent, notify)
           }
+          done.add(batch.id)
         }
       } finally {
         draining = false
       }
 
-      commit(kept)
+      commit(loadQueue().filter(b => !done.has(b.id)))
       set({ attConflicts: conflicts })
 
       // The conflicts are not toasted. A toast is gone in four seconds and this

@@ -1,3 +1,5 @@
+import { studentKey, type Identifiable } from './student-key'
+
 // Attendance percentage maths, kept pure and out of the data provider so it can
 // be tested without a database.
 //
@@ -90,15 +92,17 @@ export function marksForDay(
  * safe reading is the one that does not tell a parent their child was absent.
  */
 export function seedMarks(
-  roster: readonly { id?: string; dbId?: string }[],
+  roster: readonly Identifiable[],
   recorded: Record<string, string>,
   queued: Record<string, string>,
 ): Record<string, string> {
   const out: Record<string, string> = {}
   for (const s of roster) {
-    const key = s.dbId ?? s.id ?? ''
+    const key = studentKey(s)
     if (!key) continue
-    const status = queued[s.dbId ?? ''] ?? recorded[s.dbId ?? '']
+    // The two maps are keyed by database uuid, not by studentKey: they come off
+    // rows the server wrote, and a student with no uuid yet has no rows there.
+    const status = s.dbId ? queued[s.dbId] ?? recorded[s.dbId] : undefined
     out[key] = status === 'Absent' ? 'absent' : 'present'
   }
   return out

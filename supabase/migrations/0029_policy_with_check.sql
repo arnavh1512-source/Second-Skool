@@ -123,5 +123,3 @@ create trigger notes_stamp_author before insert or update on public.notes
 -- ---------------------------------------------------------------------------
 insert into public.schema_migrations (version) values ('0029_policy_with_check')
   on conflict (version) do nothing;
-</content>
-</invoke>

@@ -43,6 +43,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   // Whether the first dataset has landed. Only the first load may blank the
   // screen; later refreshes happen underneath whatever the user is doing.
   const dataLoadedOnce = useRef(false)
+  // The row-cap warning is a fact about the centre, not about this load. It
+  // refires on every focus and every reconnect otherwise, which turns the one
+  // message a big centre needs to act on into the one it learns to dismiss.
+  const capWarned = useRef(false)
   const role = useDashboard(s => s.role)
   const staffStatus = useDashboard(s => s.staffStatus)
 
@@ -228,7 +232,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       [assignments, 500, 'assignments'],
     ]
     const over = caps.filter(([rows, cap]) => (rows?.length ?? 0) >= cap).map(([, , what]) => what)
-    if (over.length) {
+    if (over.length && !capWarned.current) {
+      capWarned.current = true
       useDashboard.getState().notify(
         `This centre has more ${over.join(' and ')} than the app loads at once, so some totals are short. Report this from More > Report a problem.`,
         'error',
