@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { totalsByStudent, countDailyRows, attendancePct, pickAttendanceClass } from '../app/lib/attendance'
+import { totalsByStudent, countDailyRows, attendancePct, pickAttendanceClass, marksForDay, seedMarks } from '../app/lib/attendance'
 
 describe('totalsByStudent', () => {
   it('indexes server-computed totals by student id', () => {
@@ -108,5 +108,75 @@ describe('pickAttendanceClass', () => {
       const picked = pickAttendanceClass(classes, stored)
       expect(classes).toContain(picked)
     }
+  })
+})
+
+describe('marksForDay', () => {
+  const rows = [
+    { student_id: 'a', date: '2026-08-31', status: 'Absent' },
+    { student_id: 'b', date: '2026-08-31', status: 'Present' },
+    { student_id: 'c', date: '2026-08-30', status: 'Absent' },
+  ]
+
+  it('keeps only the day asked for', () => {
+    expect(marksForDay(rows, '2026-08-31')).toEqual({ a: 'Absent', b: 'Present' })
+  })
+
+  it('is empty for a day with nothing recorded', () => {
+    expect(marksForDay(rows, '2026-09-01')).toEqual({})
+  })
+
+  it('ignores rows with no usable student or status', () => {
+    // The fetch is capped and shaped by the server; a row missing its id would
+    // otherwise land under the key "undefined" and mark a student who is not
+    // in the class.
+    const junk = [
+      { date: '2026-08-31', status: 'Absent' },
+      { student_id: '', date: '2026-08-31', status: 'Absent' },
+      { student_id: 'd', date: '2026-08-31' },
+      { student_id: 'e', date: '2026-08-31', status: 'Present' },
+    ]
+    expect(marksForDay(junk, '2026-08-31')).toEqual({ e: 'Present' })
+  })
+})
+
+describe('seedMarks', () => {
+  const roster = [{ dbId: 'a', id: 'S1' }, { dbId: 'b', id: 'S2' }, { dbId: 'c', id: 'S3' }]
+
+  // The bug: the screen opened blank every time, so a teacher who marked four
+  // children absent, left and came back saw a clean register and no evidence
+  // her work had happened.
+  it('shows the marks the centre already has', () => {
+    expect(seedMarks(roster, { a: 'Absent' }, {})).toEqual({ a: 'absent', b: 'present', c: 'present' })
+  })
+
+  it('defaults an unmarked student to present', () => {
+    expect(seedMarks(roster, {}, {})).toEqual({ a: 'present', b: 'present', c: 'present' })
+  })
+
+  it('lets a mark still queued on this phone win', () => {
+    // It is the newest thing she did; it simply has not been sent yet.
+    expect(seedMarks(roster, { a: 'Present' }, { a: 'Absent' })).toMatchObject({ a: 'absent' })
+  })
+
+  it('reads a status the toggle cannot produce as present', () => {
+    // The column also allows 'Leave'. A two-state toggle cannot show it, and
+    // guessing 'absent' would tell a parent their child missed the class.
+    expect(seedMarks(roster, { a: 'Leave' }, {})).toMatchObject({ a: 'present' })
+  })
+
+  it('keys by the student, not by their slot in the roster', () => {
+    // The roster is re-fetched newest-first on every refresh, so an
+    // index-keyed seed lands somebody else's mark on the wrong child.
+    expect(Object.keys(seedMarks(roster, {}, {}))).toEqual(['a', 'b', 'c'])
+  })
+
+  it('falls back to the student code before the uuid exists', () => {
+    // A student added moments ago has no uuid until the insert returns.
+    expect(seedMarks([{ id: 'S9' }], {}, {})).toEqual({ S9: 'present' })
+  })
+
+  it('skips a row with no handle at all rather than keying on empty string', () => {
+    expect(seedMarks([{}], {}, {})).toEqual({})
   })
 })

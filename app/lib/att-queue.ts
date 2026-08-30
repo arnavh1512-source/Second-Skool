@@ -144,6 +144,18 @@ export function saveQueue(queue: readonly QueuedBatch[]): void {
   } catch { /* nothing useful to say to a teacher about a storage quota */ }
 }
 
+/** The queued marks for one day, indexed by student, so the screen can show her
+ *  what this phone is still holding rather than a register that looks blank. A
+ *  later batch wins: it is the correction. */
+export function queuedMarksForDay(queue: readonly QueuedBatch[], day: string): Record<string, AttStatus> {
+  const out: Record<string, AttStatus> = {}
+  for (const b of queue) {
+    if (b.date !== day) continue
+    for (const m of b.marks) out[m.studentId] = m.status
+  }
+  return out
+}
+
 /** Marks, not batches — "3 registers waiting" means nothing to her, "84 marks
  *  waiting" is the size of what she would lose. */
 export const queuedMarkCount = (queue: readonly QueuedBatch[]): number =>

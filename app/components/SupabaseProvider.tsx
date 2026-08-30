@@ -3,7 +3,8 @@
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { readLocal, removeLocal } from '../lib/storage'
-import { totalsByStudent, countDailyRows, attendancePct, type AttendanceTotal } from '../lib/attendance'
+import { totalsByStudent, countDailyRows, attendancePct, marksForDay, type AttendanceTotal } from '../lib/attendance'
+import { isoDay } from '../store/format'
 import { useDashboard, registerRefresh, parseDay, timeAgo, type RankRow, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type ScheduleItem } from '../store'
 
 // Minimal shape of the Supabase rows this provider reads — the DB schema is the
@@ -285,6 +286,11 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }))
     const batchList = (batches ?? []).map((b: Row) => ({ name: b.name as string, dbId: b.id as string }))
     const subjectList = (subjects ?? []).map((s: Row) => ({ name: s.name as string, dbId: s.id as string }))
+
+    // Today's register, kept rather than discarded with the rest of the daily
+    // rows. It is what the Mark Attendance screen opens on, so a teacher who
+    // comes back to it sees the marks she already made instead of a clean slate.
+    set({ attToday: marksForDay((attendance ?? []) as Row[], isoDay()) })
 
     loadTeachers(mappedTeachers)
     loadStudents(mappedStudents)

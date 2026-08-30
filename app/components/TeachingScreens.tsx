@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { isoDay } from '../store/format'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
 import { ScreenHeader, PrimaryButton, EmptyState, Chip, options, classesOf } from './Shell'
-import { pickAttendanceClass } from '../lib/attendance'
+import { pickAttendanceClass, seedMarks } from '../lib/attendance'
+import { queuedMarksForDay } from '../lib/att-queue'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
 
@@ -219,23 +220,33 @@ export function TimetableScreen() {
 }
 
 export function AttendanceScreen() {
-  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role, attConflicts, dismissAttConflicts } = useDashboard()
+  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role, attConflicts, dismissAttConflicts, attToday, attQueue } = useDashboard()
   const classes = classesOf(students)
 
   const selClass = pickAttendanceClass(classes, attClass)
-
-  // att is keyed by the student, so a roster reorder can no longer move a mark
-  // onto somebody else. Still cleared on a class change: the marks belong to the
-  // class the teacher was looking at, and carrying them across is confusing even
-  // now that it is no longer dangerous.
-  useEffect(() => {
-    if (selClass !== attClass) set({ attClass: selClass, att: {} })
-  }, [selClass, attClass, set])
 
   // Student objects, not names — the roster is passed straight to saveAttendance,
   // which needs the database id. Resolving by name broke centres with two
   // students of the same name (both mapped to the first one's record).
   const roster = students.filter(s => s.klass === selClass)
+
+  // att is keyed by the student, so a roster reorder can no longer move a mark
+  // onto somebody else.
+  //
+  // Seeded once per class rather than on every render, and never again while
+  // she stays on it: the screen re-renders on every background refresh, and a
+  // seed that ran then would wipe marks she was halfway through making. The ref
+  // is what makes "once" mean once — comparing selClass to attClass could not,
+  // because on the first mount they are already equal and nothing seeded at all.
+  const seededFor = useRef<string | null>(null)
+  useEffect(() => {
+    if (seededFor.current === selClass) return
+    seededFor.current = selClass
+    set({
+      attClass: selClass,
+      att: seedMarks(roster, attToday, queuedMarksForDay(attQueue, isoDay())),
+    })
+  }, [selClass, roster, attToday, attQueue, set])
   const absentCount = roster.reduce((a, s) => a + (att[studentKey(s)] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 

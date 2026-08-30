@@ -80,6 +80,10 @@ export interface SupportTicket {
 export interface State {
   screen: Screen; tab: Tab; role: Role; origin: string | null
   attClass: string; att: Record<string, string>; rankSubject: string; ttDay: string
+  // Today's register as the centre currently has it, indexed by student uuid.
+  // Derived from rows the provider already fetches, so the Mark Attendance
+  // screen can open on what was recorded instead of on a blank slate.
+  attToday: Record<string, string>
   // Registers marked with no working connection, mirrored from localStorage.
   // Rendered as a count so she can see her work is still on the phone rather
   // than having to trust that it is.

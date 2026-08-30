@@ -48,6 +48,63 @@ export function attendancePct(count: AttendanceCount | undefined): number | null
 }
 
 /**
+ * One day's marks, indexed by student.
+ *
+ * The Mark Attendance screen opened from a blank slate every time, which reads
+ * as "everybody present" — so a teacher who marked four children absent, left
+ * the screen and came back saw a clean register and no sign her work had
+ * happened. Nothing was lost, but she had no way to know that, and the obvious
+ * response is to mark them again.
+ *
+ * The rows are already in the browser (the provider fetches them to compute
+ * percentages and then drops them), so this costs one pass over an array and
+ * nothing on the network.
+ */
+export function marksForDay(
+  rows: readonly { student_id?: unknown; date?: unknown; status?: unknown }[],
+  day: string,
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const r of rows) {
+    if (r?.date !== day) continue
+    const k = r?.student_id
+    if (typeof k !== 'string' || !k || typeof r.status !== 'string') continue
+    out[k] = r.status
+  }
+  return out
+}
+
+/**
+ * What the roster should look like when the screen opens.
+ *
+ * Three sources, in order of how recently the teacher touched them: everyone
+ * starts present, the register overwrites that with what the centre has
+ * recorded, and marks still queued on this phone overwrite that in turn —
+ * those are the newest thing she did, they simply have not been sent yet.
+ *
+ * Keyed by `studentKey`, because this is handed straight to the screen's `att`
+ * map and a mark that moves to another child is the worst bug this app has.
+ *
+ * `Leave` and anything else the register may hold is treated as present: the
+ * screen is a two-state toggle and cannot represent a third answer, so the
+ * safe reading is the one that does not tell a parent their child was absent.
+ */
+export function seedMarks(
+  roster: readonly { id?: string; dbId?: string }[],
+  recorded: Record<string, string>,
+  queued: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  for (const s of roster) {
+    const key = s.dbId ?? s.id ?? ''
+    if (!key) continue
+    const status = queued[s.dbId ?? ''] ?? recorded[s.dbId ?? '']
+    out[key] = status === 'Absent' ? 'absent' : 'present'
+  }
+  return out
+}
+
+/**
  * Which class the Mark Attendance screen should show.
  *
  * The stored choice starts empty and nothing sets it until a class chip is

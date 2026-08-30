@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveBatch, parseQueue, queuedMarkCount, type QueuedBatch } from '../app/lib/att-queue'
+import { resolveBatch, parseQueue, queuedMarkCount, queuedMarksForDay, type QueuedBatch } from '../app/lib/att-queue'
 
 const mark = (studentId: string, status: 'Present' | 'Absent', name = studentId) =>
   ({ studentId, code: `TUT-${studentId}`, name, status })
@@ -118,5 +118,23 @@ describe('queuedMarkCount', () => {
 
   it('is zero for an empty queue', () => {
     expect(queuedMarkCount([])).toBe(0)
+  })
+})
+
+describe('queuedMarksForDay', () => {
+  it('ignores batches from another day', () => {
+    const q = [batch([mark('s1', 'Absent')], '2026-08-30'), batch([mark('s2', 'Absent')], '2026-08-31')]
+    expect(queuedMarksForDay(q, '2026-08-31')).toEqual({ s2: 'Absent' })
+  })
+
+  it('lets the later batch win', () => {
+    // She marked the class, then went back and corrected one child. The
+    // correction is the answer, not the first pass.
+    const q = [batch([mark('s1', 'Absent')]), batch([mark('s1', 'Present')])]
+    expect(queuedMarksForDay(q, '2026-08-31')).toEqual({ s1: 'Present' })
+  })
+
+  it('is empty when nothing is waiting', () => {
+    expect(queuedMarksForDay([], '2026-08-31')).toEqual({})
   })
 })
