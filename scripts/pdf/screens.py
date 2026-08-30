@@ -61,7 +61,7 @@ def head_home(g, bx, by, bw, bh):
     txt(g, bx + tw + 13, y - 15, '48', 13, DARK, True)
     txt(g, bx + tw + 13, y - 25, 'Students', 5.4, MUTED)
     y -= 36
-    # parent reach card - head only
+    # parent reach card
     card(g, bx, y - 44, bw, 44, CARD, BLUE)
     txt(g, bx + 7, y - 12, 'Parent reach - this week', 6.4, DARK, True)
     txt(g, bx + 7, y - 26, '34 of 48', 11, BLUE, True)
@@ -102,11 +102,13 @@ def teacher_home(g, bx, by, bw, bh):
     txt(g, bx + tw + 13, y - 15, '48', 13, DARK, True)
     txt(g, bx + tw + 13, y - 25, 'Students', 5.4, MUTED)
     y -= 36
-    # the gap where parent reach would be
-    g.add(Rect(bx, y - 44, bw, 44, rx=6, ry=6, fillColor=None,
-               strokeColor=FAINT, strokeWidth=0.7, strokeDashArray=[2, 2]))
-    txt(g, bx + bw / 2, y - 21, 'no parent reach card', 6, FAINT, False, 'middle')
-    txt(g, bx + bw / 2, y - 30, 'this is head-only', 5.4, FAINT, False, 'middle')
+    # parent reach - the same card the head sees
+    card(g, bx, y - 44, bw, 44, CARD, INDIGO)
+    txt(g, bx + 7, y - 12, 'Parent reach - this week', 6.4, DARK, True)
+    txt(g, bx + 7, y - 26, '34 of 48', 11, INDIGO, True)
+    txt(g, bx + bw - 7, y - 25, 'families opened', 5.2, MUTED, False, 'end')
+    meter(g, bx + 7, y - 34, bw - 14, 71, INDIGO)
+    txt(g, bx + 7, y - 41, '14 did not open this week', 5.2, MUTED)
     y -= 53
     txt(g, bx, y, 'Quick actions', 6, MUTED, True)
     y -= 5

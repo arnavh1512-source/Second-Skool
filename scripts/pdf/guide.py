@@ -249,10 +249,9 @@ E(h1('Part 2 &mdash; The head teacher',
      'A head can do everything a teacher can do, and ten things a teacher cannot.'))
 
 E(figure(phone_row(CW, [
-    ('Home', STAFF_TABS_HEAD, SC.head_home, 'Head teacher. Five tabs, and the parent reach card.'),
-    ('Home', STAFF_TABS_TEA, SC.teacher_home, 'Teacher. Four tabs, and no reach card at all.'),
-]), 'The same home screen for both staff roles. The differences are the Staff tab and the '
-    'card in the middle.'))
+    ('Home', STAFF_TABS_HEAD, SC.head_home, 'Head teacher. Five tabs.'),
+    ('Home', STAFF_TABS_TEA, SC.teacher_home, 'Teacher. Four tabs, same parent reach card.'),
+]), 'The same home screen for both staff roles. The only difference here is the Staff tab.'))
 
 A(Paragraph('The home screen', S['h2']))
 A(Paragraph('A head opens onto the centre logo and name, a branch pill they can tap to jump '
@@ -262,13 +261,16 @@ A(Paragraph('A head opens onto the centre logo and name, a branch pill they can 
             '<b>Assignment</b> and <b>Reminder</b>. Then today&rsquo;s schedule, in order.',
             S['body']))
 
-A(Paragraph('Parent reach &mdash; head only', S['h3']))
-A(Paragraph('One card does not appear for teachers at all. <b>Parent reach &middot; this week</b> '
-            'answers a question no attendance register can: how many families actually opened '
-            'the app. It reads &ldquo;34 of 48&rdquo; with a progress bar, and a line underneath '
-            'saying how many did not open it this week. Tapping it opens the student list already '
-            'filtered to exactly those families, so the head can chase them by WhatsApp from the '
-            'list without opening a single record.', S['body']))
+A(Paragraph('Parent reach', S['h3']))
+A(Paragraph('<b>Parent reach &middot; this week</b> answers a question no attendance register '
+            'can: how many families actually opened the app. It reads &ldquo;34 of 48&rdquo; with '
+            'a progress bar, and a line underneath saying how many did not open it this week. '
+            'Tapping it opens the student list already filtered to exactly those families. '
+            'Both staff roles see the card, because a parent who never opens the app is a parent '
+            'who never sees the absence, and it is the teacher who gets asked about that at the '
+            'end of term. What the head has and the teacher does not is the chase itself: a '
+            'WhatsApp button beside each name on that filtered list, which sends the family '
+            'their child&rsquo;s link code.', S['body']))
 E(callout('Why that card exists',
           'A centre can be recording everything perfectly and still have half its parents unaware '
           'of any of it. Reach is the number that says whether the work is landing.', GREEN))
@@ -394,28 +396,40 @@ E(callout('A small thing that matters',
           '&mdash; an absent mark cannot slide onto the wrong child.'))
 
 A(Paragraph('Marking a register with no signal', S['h3']))
-A(Paragraph('Attendance is the one thing that still works with the internet gone. If the phone is '
-            'offline when Save is pressed &mdash; or the save fails because the signal went while '
-            'she was marking &mdash; the whole register is kept on that phone and the app says so: '
-            '<i>&ldquo;Saved on this phone. They will sync by themselves once you are back '
-            'online.&rdquo;</i> An amber bar along the top says how many marks are still waiting, '
-            'so nothing is quietly sitting there unsent.', S['body']))
+A(Paragraph('Attendance is the one thing in the app that still works with the internet gone. '
+            'Normally Save sends the register straight to the centre. With no signal there is '
+            'nowhere to send it, so the app keeps the register <b>on the phone</b> instead, and '
+            'says so: <i>&ldquo;Saved on this phone. They will sync by themselves once you are '
+            'back online.&rdquo;</i> An amber bar along the top counts how many marks are still '
+            'waiting, so nothing sits there unsent without her knowing.', S['body']))
+A(Paragraph('The moment the phone has a signal again the waiting marks go up on their own. There '
+            'is nothing to press and nothing to remember. Three rules make that safe:', S['body']))
 E(bullets([
-    'Waiting marks survive closing the app and reopening it. They are sent the moment the phone '
-    'has a signal again, with nothing to press.',
-    'They are filed under the day she marked them, not the day they finally send. A Tuesday '
-    'register that syncs on Wednesday morning is still Tuesday&rsquo;s.',
-    'Marks still waiting on the phone are shown on the register too, so she is never looking at a '
-    'screen that hides her own work.',
-    'Absence alerts to parents go out only for the marks that actually saved &mdash; never for one '
-    'the centre&rsquo;s register turned down.',
+    '<b>The date is fixed when she marks, not when it sends.</b> A Tuesday register that syncs on '
+    'Wednesday morning is still Tuesday&rsquo;s. Filing it under Wednesday would mark a class that '
+    'never met and leave Tuesday blank.',
+    '<b>Waiting marks are shown on the register.</b> Open attendance again and she sees her own '
+    'work, not an empty sheet &mdash; otherwise she would mark the whole class a second time.',
+    '<b>A waiting mark is only written where the centre has nothing.</b> It can never overwrite '
+    'anybody. Why that is the right rule is below.',
 ]))
 E(callout('What happens if two people marked the same class',
-          'A waiting mark is only ever written where the centre has nothing recorded for that child '
-          'that day. If somebody online marked them in the meantime, that mark stands and hers is '
-          'shown to her instead, on a card naming the child, the day, what she put and what the '
-          'centre has. She decides. The app will not overwrite a colleague&rsquo;s register to '
-          'clear its own backlog.', AMBER))
+          'Her marks were made offline, so none of them ever reached the centre. Anything the '
+          'centre does have for that child that day was therefore put in by somebody who was '
+          'online, after she lost signal &mdash; their mark is the fresh one and hers is the old '
+          'one. So where the centre already has an answer, hers is not applied. If it says the '
+          'same thing, nothing happens and nothing is reported: two people marking the same child '
+          'absent is not a disagreement. If it says something different, she gets a card naming '
+          'the child, the day, what she put and what the centre has, and she decides. That costs '
+          'her one tap. Overwriting would cost a child a wrong absence and their parent an alert '
+          'about it, which is the one message a centre cannot take back.', AMBER))
+E(bullets([
+    'Waiting marks survive closing the app, and survive restarting the phone.',
+    'Absence alerts to parents go out only for the marks that actually saved &mdash; never for one '
+    'the centre&rsquo;s register turned down.',
+    'The bar counts marks, not registers. &ldquo;84 marks waiting&rdquo; is the size of what she '
+    'would lose; &ldquo;3 registers waiting&rdquo; tells her nothing.',
+]))
 
 A(Paragraph('Enter results', S['h2']))
 A(Paragraph('Choose the class, the subject, a test name and the maximum mark, then type each '
@@ -459,7 +473,8 @@ E(table(['Screen', 'What is different for a teacher'],
          ['Meetings', 'Can see them, cannot cancel one.'],
          ['Management block', 'Absent entirely: fees, reports, rankings, branches, subjects, '
                               'batches, staff approvals and the join code.'],
-         ['Home', 'No parent reach card.']],
+         ['Home', 'The parent reach card is there, and taps through to the families who did '
+                  'not open the app. The WhatsApp chase button on that list is not.']],
         [36 * mm, 134 * mm]))
 E(callout('This is a design rule, not an oversight',
           'A feature that costs a teacher extra typing every day does not ship, because adoption '
@@ -650,7 +665,8 @@ E(table(['Capability', 'Head', 'Teacher', 'Student'],
          ['Subjects and batches', 'Yes', 'No', 'No'],
          ['Rotate the student join code', 'Yes', 'No', 'No'],
          ['Rename the centre, set the logo', 'Yes', 'No', 'Sees the logo'],
-         ['Parent reach card', 'Yes', 'No', '&mdash;'],
+         ['Parent reach card', 'Yes', 'Yes', '&mdash;'],
+         ['WhatsApp a family who did not open the app', 'Yes', 'No', '&mdash;'],
          ['Report a problem', 'Yes', 'Yes', 'Yes']],
         [70 * mm, 27 * mm, 38 * mm, 35 * mm], colorise=True))
 

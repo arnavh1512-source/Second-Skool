@@ -24,10 +24,12 @@ export function HomeScreen() {
   const displayName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Admin' : 'Teacher')
   const ini = initials(displayName)
 
-  // Enrolment is what the head pays for; reach is what she gets. Nothing else
-  // on this screen tells her whether the families are actually looking, and
-  // that is the only number that decides whether the app was worth it.
-  const reach = isAdmin && students.length > 0 ? reachSummary(students) : null
+  // Whether the families are actually looking is the number that decides
+  // whether any of this was worth it, and nothing else on this screen says it.
+  // The teacher who marks the register needs it as much as the head who pays
+  // for the app: a parent who never opens it is a parent who never sees the
+  // absence, and the teacher gets blamed for that at the end of term.
+  const reach = students.length > 0 ? reachSummary(students) : null
 
   // Home = the four quick daily shortcuts (same for head and teacher, clean
   // grid). Timetable is a bottom tab; Study material + all management (fees,
