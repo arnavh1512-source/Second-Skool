@@ -213,6 +213,27 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       supabase.rpc('student_attendance_totals'),
     ])
 
+    // A cap that trips in silence is worse than no cap. The orderings put the
+    // newest rows first, so what falls off is always the oldest tail — and a
+    // fee row that fell off is still missing from the collected total the head
+    // reads, with nothing on screen to say a number is short. A full page is
+    // the only evidence a browser ever gets that there was more behind it, so
+    // equality with the cap is the whole test.
+    const caps: [unknown[] | null, number, string][] = [
+      [students, 2000, 'students'],
+      [fees, 5000, 'fee records'],
+      [attendance, 20000, 'attendance days'],
+      [timetable, 1000, 'timetable slots'],
+      [assignments, 500, 'assignments'],
+    ]
+    const over = caps.filter(([rows, cap]) => (rows?.length ?? 0) >= cap).map(([, , what]) => what)
+    if (over.length) {
+      useDashboard.getState().notify(
+        `This centre has more ${over.join(' and ')} than the app loads at once, so some totals are short. Report this from More > Report a problem.`,
+        'error',
+      )
+    }
+
     const mappedTeachers = (teachers ?? []).map(mapTeacher)
     // Per-student attendance counts (mapStudent alone can't know them — without
     // this every student shows 0%). Prefer the database's aggregate: it spans
