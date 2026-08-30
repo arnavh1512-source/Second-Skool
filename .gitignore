@@ -38,6 +38,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# generated handouts — build output of scripts/pdf, regenerate rather than commit
+/Second-Skool-*.pdf
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
