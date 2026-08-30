@@ -38,6 +38,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# python bytecode from scripts/pdf
+__pycache__/
+
 # generated handouts — build output of scripts/pdf, regenerate rather than commit
 /Second-Skool-*.pdf
 
