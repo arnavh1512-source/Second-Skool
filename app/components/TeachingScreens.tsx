@@ -219,7 +219,7 @@ export function TimetableScreen() {
 }
 
 export function AttendanceScreen() {
-  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role } = useDashboard()
+  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role, attConflicts, dismissAttConflicts } = useDashboard()
   const classes = classesOf(students)
 
   const selClass = pickAttendanceClass(classes, attClass)
@@ -250,6 +250,33 @@ export function AttendanceScreen() {
           <div className="text-xs text-td-muted">{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
         </div>
       </div>
+
+      {/* Marks she made offline that the register had already answered for by
+          the time the phone reconnected. Shown rather than resolved, because
+          only she knows which of the two is right — and it sits above the
+          roster so the correction is one tap away from being re-entered. */}
+      {attConflicts.length > 0 && (
+        <div className="mb-4 rounded-[14px] border p-3.5" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
+          <div className="text-[13px] font-bold text-td-on-red">
+            {attConflicts.length} {attConflicts.length === 1 ? 'mark was' : 'marks were'} already answered by someone else
+          </div>
+          <div className="text-[12px] text-td-on-red mt-1 mb-2.5 opacity-90">
+            These were marked on this phone while it was offline. The centre already had a different answer, so yours was not applied. Mark them again if yours is right.
+          </div>
+          <ul className="flex flex-col gap-1.5">
+            {attConflicts.map((c, i) => (
+              <li key={`${c.name}-${c.date}-${i}`} className="text-[12px] text-td-on-red flex flex-wrap gap-x-1.5">
+                <span className="font-bold">{c.name}</span>
+                <span className="opacity-80">{c.date}</span>
+                <span>· you marked {c.mine.toLowerCase()}, centre has {c.theirs.toLowerCase()}</span>
+              </li>
+            ))}
+          </ul>
+          <button onClick={dismissAttConflicts} className="mt-3 text-[12px] font-bold underline text-td-on-red cursor-pointer">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {classes.length === 0 ? (
         <EmptyState

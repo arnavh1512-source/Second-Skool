@@ -4,6 +4,11 @@ import type { State } from './types'
 // exactly one file to read when asking "what does the store start as?".
 export const initialState: State = {
   screen: 'home', tab: 'home', role: null, origin: null,
+  // Seeded empty rather than from localStorage on purpose: this module is
+  // evaluated on the server too, and a queue that exists on the client but not
+  // in the server render is a hydration mismatch. `syncAttQueue` fills it on
+  // mount, which is a client effect and cannot disagree with the markup.
+  attQueue: [], attConflicts: [],
   attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
   toast: '', toastKind: 'info', editId: '',
   online: typeof navigator === 'undefined' ? true : navigator.onLine,

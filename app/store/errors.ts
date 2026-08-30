@@ -51,7 +51,10 @@ const BY_CODE: Record<string, string> = {
 
 // Supabase surfaces a dropped connection as a plain TypeError from fetch, with
 // no code at all — the single most common failure at a centre on mobile data.
-const looksOffline = (e: PgLike) => {
+// Exported because the attendance queue needs the same test for a different
+// reason: this decides what wording a teacher sees, and there it decides
+// whether a register is held for retry or thrown away.
+export const looksOffline = (e: PgLike) => {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return true
   const m = e?.message ?? ''
   return /failed to fetch|networkerror|load failed|fetch failed/i.test(m)

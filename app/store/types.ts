@@ -3,6 +3,7 @@
 import type { IconName } from '../components/Icon'
 import type { ReportDraft } from '../lib/support'
 import type { Installment } from '../lib/fee-plan'
+import type { QueuedBatch, AttConflict } from '../lib/att-queue'
 
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
@@ -79,6 +80,13 @@ export interface SupportTicket {
 export interface State {
   screen: Screen; tab: Tab; role: Role; origin: string | null
   attClass: string; att: Record<string, string>; rankSubject: string; ttDay: string
+  // Registers marked with no working connection, mirrored from localStorage.
+  // Rendered as a count so she can see her work is still on the phone rather
+  // than having to trust that it is.
+  attQueue: QueuedBatch[]
+  // Queued marks that did not apply because someone else had already answered
+  // for that child. Shown, never resolved silently.
+  attConflicts: AttConflict[]
   toast: string; toastKind: ToastKind; editId: string
   // Mirrors navigator.onLine. Every write checks it before firing, so a teacher
   // on dead mobile data is told up front instead of after a failed round-trip.
@@ -174,6 +182,10 @@ export interface Actions {
   saveTeacher: () => Promise<void>
   addStudent: () => Promise<void>
   saveAttendance: (roster: Student[]) => Promise<void>
+  // Reads the queue off the phone and, if there is a connection, drains it.
+  // Safe to call at any time: it is a no-op with nothing waiting.
+  syncAttQueue: () => Promise<void>
+  dismissAttConflicts: () => void
   saveMeeting: (title: string, type: string, date: string, time: string) => Promise<boolean>
   deleteMeeting: (dbId: string) => Promise<void>
   saveAssignment: (title: string, subject: string, klass: string, dueDate: string, instructions: string) => Promise<boolean>
