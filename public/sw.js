@@ -40,8 +40,18 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close()
   const target = (event.notification.data && event.notification.data.url) || '/'
   event.waitUntil((async () => {
-    // Resolve to an absolute same-origin URL so window matching works.
-    const targetUrl = new URL(target, self.registration.scope).href
+    // Resolve to an absolute URL so window matching works — then check it is
+    // actually ours. new URL() happily resolves 'https://evil.example/x'
+    // against the scope by ignoring the scope entirely, so a payload that ever
+    // reached a device with an absolute link would open that link on a tap.
+    // The sender is validated (safeLink in app/lib/push-guard.ts), but a
+    // notification is stored on the device and opened later, by the one piece
+    // of this app that runs with no session and no server in the loop.
+    // Anything not on this origin goes to the app root instead.
+    const resolved = new URL(target, self.registration.scope)
+    const targetUrl = resolved.origin === self.location.origin
+      ? resolved.href
+      : new URL('/', self.registration.scope).href
     const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
 
     // 1) A window already on the target screen — just focus it.

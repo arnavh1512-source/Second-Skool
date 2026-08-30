@@ -96,7 +96,7 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
   },
 
   fileReport: async () => {
-    const { reportDraft: d, reportShot, role, supabaseUserId, centreName, myName } = get()
+    const { reportDraft: d, reportShot, role } = get()
     const problem = validateReport(d)
     if (problem) { get().notify(problem, 'error'); return }
     const diag = diagnostics()
@@ -115,19 +115,17 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
       })
       if (error) { get().notify(friendlyError(error, 'send your report'), 'error'); return }
     } else {
-      // centre_id is left to its default, current_centre(), the same way a new
-      // student row gets one.
-      const { error } = await supabase.from('support_tickets').insert({
-        reporter_profile_id: supabaseUserId,
-        centre_name: centreName,
-        reporter_name: myName,
-        reporter_role: role ?? '',
-        intent: d.intent.trim(),
-        outcome: d.outcome.trim(),
-        area: d.area,
-        frequency: d.frequency,
-        shot: reportShot,
-        diagnostics: diag,
+      // Staff file through an RPC for the same reason students do: who you are
+      // is read off your profile row on the server. A browser that gets to
+      // supply its own reporter_name is a browser that can file a report as
+      // somebody else, and the operator's inbox has no join to catch it.
+      const { error } = await supabase.rpc('file_staff_ticket', {
+        p_intent: d.intent,
+        p_outcome: d.outcome,
+        p_area: d.area,
+        p_frequency: d.frequency,
+        p_shot: reportShot,
+        p_diag: diag,
       })
       if (error) { get().notify(friendlyError(error, 'send your report'), 'error'); return }
     }

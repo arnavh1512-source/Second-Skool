@@ -39,8 +39,9 @@ export function validatePushBody(raw: unknown): Validated {
 }
 
 // Sliding-window rate limiter keyed by caller id. Pure given an injected clock,
-// so window expiry is testable. Best-effort per serverless instance (see the
-// audit's M3): the counter isn't shared across instances.
+// so window expiry is testable. This one counts within a single serverless
+// instance; rateLimit() below is what routes call, and it prefers a shared
+// counter when one is configured.
 export function createRateLimiter(limit: number, windowMs: number, now: () => number = Date.now) {
   const log = new Map<string, number[]>()
   return {
@@ -50,20 +51,76 @@ export function createRateLimiter(limit: number, windowMs: number, now: () => nu
       if (recent.length >= limit) { log.set(key, recent); return true }
       recent.push(t)
       log.set(key, recent)
-      if (log.size > 1000) log.clear() // cap memory on long-lived instances
+      // Cap memory on long-lived instances. Dropping the whole map would have
+      // handed every caller in it a fresh allowance — the one moment the
+      // limiter is under load is the one moment it forgot everything. Evict
+      // only the keys whose newest request is already outside the window, which
+      // are the entries `limited()` would have discarded anyway.
+      if (log.size > 1000) {
+        for (const [k, stamps] of log) if (stamps[stamps.length - 1] <= t - windowMs) log.delete(k)
+      }
       return false
     },
   }
 }
 
 // One limiter per (limit,window) so repeated calls with the same config share a
-// window instead of resetting each time. Per serverless instance, not shared
-// across them — good enough to stop a single caller hammering one endpoint,
-// which is all this guards against. `async` because every call site awaits it.
+// window instead of resetting each time. `async` because the shared counter
+// below is a network call.
 const limiters = new Map<string, ReturnType<typeof createRateLimiter>>()
+
+// ---------------------------------------------------------------------------
+// The shared counter.
+//
+// Vercel's Fluid Compute reuses a function instance across concurrent requests,
+// but it still runs several instances at once and they share no memory. A limit
+// held in a Map is therefore a limit per instance: the real ceiling is the one
+// above multiplied by however many instances the platform happened to start,
+// and the caller does not have to know that to benefit from it.
+//
+// So when an Upstash Redis REST endpoint is configured, the count lives there
+// instead. Plain fetch against their HTTP API — the official client is a
+// dependency for a two-command pipeline.
+//
+// The key carries the window number, so each window is a fresh key that expires
+// on its own. The alternative — one key with its TTL refreshed on every hit —
+// never expires under sustained traffic, which locks out the steady caller it
+// was meant to allow.
+//
+// Any failure returns null and the caller falls back to memory. A rate limiter
+// that cannot reach its counter must not fail closed (the endpoint goes dark
+// over an unrelated outage) nor fully open (the guard silently stops existing).
+// Per-instance counting is the honest middle: worse than shared, better than
+// none, and exactly what this app did before.
+// ---------------------------------------------------------------------------
+async function sharedCount(key: string, windowMs: number): Promise<number | null> {
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  if (!url || !token) return null
+  const bucket = `rl:${key}:${Math.floor(Date.now() / windowMs)}`
+  try {
+    const res = await fetch(`${url}/pipeline`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+      body: JSON.stringify([['INCR', bucket], ['PEXPIRE', bucket, String(windowMs * 2)]]),
+      cache: 'no-store',
+      // A rate limiter is in front of the work, not instead of it. One second
+      // is already longer than the request it is guarding deserves to wait.
+      signal: AbortSignal.timeout(1000),
+    })
+    if (!res.ok) return null
+    const out = await res.json()
+    const n = Array.isArray(out) ? out[0]?.result : null
+    return typeof n === 'number' ? n : null
+  } catch {
+    return null
+  }
+}
 
 // Returns true if `key` has exceeded `limit` requests in the current window.
 export async function rateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
+  const shared = await sharedCount(key, windowMs)
+  if (shared !== null) return shared > limit
   const id = `${limit}:${windowMs}`
   let l = limiters.get(id)
   if (!l) { l = createRateLimiter(limit, windowMs); limiters.set(id, l) }

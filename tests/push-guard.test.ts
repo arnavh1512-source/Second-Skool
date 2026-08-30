@@ -97,6 +97,20 @@ describe('createRateLimiter', () => {
     t = 1001 // window passed
     expect(rl.limited('u1')).toBe(false)
   })
+
+  // The memory cap used to clear the whole map, which handed an allowance back
+  // to every caller in it at the exact moment the limiter was busiest. It now
+  // evicts only entries already outside their window, so a caller who is
+  // hammering the endpoint stays counted while the map is being trimmed.
+  it('does not forgive an active caller when the memory cap trips', () => {
+    let t = 0
+    const rl = createRateLimiter(1, 1000, () => t)
+    expect(rl.limited('busy')).toBe(false)
+    // 1200 idle keys, stamped long enough ago to be evictable.
+    for (let i = 0; i < 1200; i++) rl.limited(`idle-${i}`)
+    t = 1 // still inside 'busy''s window
+    expect(rl.limited('busy')).toBe(true)
+  })
 })
 
 // No Upstash env is set under test, so this exercises the in-memory fallback

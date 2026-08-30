@@ -47,8 +47,12 @@ name: Database backup
 
 on:
   schedule:
-    # 20:00 UTC = 01:30 IST, well clear of tuition hours.
+    # Twice a day, twelve hours apart, so the worst case is losing half a day of
+    # marks and attendance rather than a whole one. 20:00 UTC = 01:30 IST, well
+    # clear of tuition hours; 08:00 UTC = 13:30 IST, over the lunch gap between
+    # the morning and evening batches.
     - cron: '0 20 * * *'
+    - cron: '0 8 * * *'
   workflow_dispatch:
 
 # Never let two dumps overlap.

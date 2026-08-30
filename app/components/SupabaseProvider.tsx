@@ -180,8 +180,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       { data: assignments },
       { data: timetable },
       { data: fees },
-      { data: tests },
-      { data: results },
+      { data: rankings },
       { data: subjects },
       { data: attendance },
       { data: batches },
@@ -196,11 +195,13 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       supabase.from('assignments').select('*').order('due_date', { ascending: false }).limit(500),
       supabase.from('timetable').select('*').order('start_time', { ascending: true }).limit(1000),
       supabase.from('fees').select('*').order('due_date', { ascending: false }).limit(5000),
-      supabase.from('tests').select('*').order('date', { ascending: false }).limit(1000),
-      // Ordered so that a centre which outgrows the cap loses its oldest
-      // results rather than an arbitrary slice — without an ORDER BY, which
-      // rows Postgres drops at the limit is undefined.
-      supabase.from('results').select('*').order('created_at', { ascending: false }).limit(20000),
+      // The leaderboard, aggregated in the database. This used to be every test
+      // and every result in the centre — up to 21,000 rows on every staff load,
+      // fetched for no other purpose — reduced in the browser to a few hundred
+      // bytes of percentages. Both caps could silently truncate the marks the
+      // ranking was computed from, and on a budget Android the loop ran on the
+      // main thread while the teacher waited.
+      supabase.rpc('centre_rankings'),
       supabase.from('subjects').select('*').limit(100),
       // Only the columns the recent-activity log needs. Percentages no longer
       // come from these rows (see attTotals below), so this set being capped
@@ -263,8 +264,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     }))
     const batchList = (batches ?? []).map((b: Row) => ({ name: b.name as string, dbId: b.id as string }))
     const subjectList = (subjects ?? []).map((s: Row) => ({ name: s.name as string, dbId: s.id as string }))
-    const subjectMap = Object.fromEntries(subjectList.map(s => [s.dbId, s.name]))
-    const studentMap = Object.fromEntries(mappedStudents.map(s => [s.dbId, s]))
 
     loadTeachers(mappedTeachers)
     loadStudents(mappedStudents)
@@ -334,32 +333,10 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // Subjects
     const subjectItems = subjectList
 
-    // Rankings
-    const testMap: Record<string, Row> = Object.fromEntries((tests ?? []).map((t: Row) => [t.id, t]))
-
-    // Compute rankings per subject from results
-    // Bucketed by student id, not by student name. Two students called Aarav
-    // Patel used to collapse into a single leaderboard row carrying the sum of
-    // both their marks, which put one name at a rank neither child had earned.
-    const rankData: Record<string, RankRow[]> = {}
-    const resultsBySubjectStudent: Record<string, Record<string, { name: string; total: number; max: number }>> = {}
-    for (const r of (results ?? []) as Row[]) {
-      const test = testMap[r.test_id]
-      if (!test) continue
-      const subjectName = subjectMap[test.subject_id] ?? 'Unknown'
-      const studentId = String(r.student_id ?? '')
-      if (!studentId) continue
-      const studentName = studentMap[r.student_id]?.name ?? 'Unknown'
-      if (!resultsBySubjectStudent[subjectName]) resultsBySubjectStudent[subjectName] = {}
-      if (!resultsBySubjectStudent[subjectName][studentId]) resultsBySubjectStudent[subjectName][studentId] = { name: studentName, total: 0, max: 0 }
-      resultsBySubjectStudent[subjectName][studentId].total += r.marks ?? 0
-      resultsBySubjectStudent[subjectName][studentId].max += test.max_marks ?? 100
-    }
-    for (const [subject, byStudent] of Object.entries(resultsBySubjectStudent)) {
-      rankData[subject] = Object.entries(byStudent)
-        .map(([id, { name, total, max }]) => ({ id, name, score: max > 0 ? Math.round((total / max) * 100) : 0 }))
-        .sort((a, b) => b.score - a.score)
-    }
+    // Rankings — already grouped by subject, already bucketed by student id and
+    // already sorted by centre_rankings(). The student snapshot has been served
+    // this same shape since 0021, so the two roles now read one query.
+    const rankData = (rankings ?? {}) as Record<string, RankRow[]>
 
     // Nothing student-facing is set here. This runs only in a staff session,
     // and the six stu* fields it used to fill (results, attendance log, fee
