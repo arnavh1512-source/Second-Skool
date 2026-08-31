@@ -224,7 +224,7 @@ export function EditStudentScreen() {
 }
 
 export function AddStudentScreen() {
-  const { go, goFrom, origin, newStudent, setNewStudent, addStudent, branchesList, batches, lastAdded, set, notify } = useDashboard()
+  const { go, goFrom, origin, role, newStudent, setNewStudent, addStudent, branchesList, batches, lastAdded, set, notify } = useDashboard()
   const [adding, runAdd] = useBusy()
   const backToList = () => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')
 
@@ -284,10 +284,16 @@ export function AddStudentScreen() {
         </div>
         <div><label className="td-label">Parent contact</label><input value={newStudent.parent} onChange={e => setNewStudent({ parent: e.target.value })} placeholder="+91" className="td-field text-sm" /></div>
         <div><label className="td-label">Address</label><input value={newStudent.address} onChange={e => setNewStudent({ address: e.target.value })} placeholder="Address" className="td-field text-sm" /></div>
-        <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Monthly fee (&#8377;) <span className="text-td-subtle font-semibold">· optional</span></label><input type="number" value={newStudent.fee} onChange={e => setNewStudent({ fee: e.target.value })} placeholder="e.g. 2000" className="td-field text-sm" /></div>
-          <div><label className="td-label">Fee due date</label><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="td-field text-sm" /></div>
-        </div>
+        {/* Fees are the head's to set — fees_head is the database policy, so a
+            teacher who filled these in had the whole save refused. Hiding the
+            fields costs a teacher nothing they could do anyway: they add the
+            student, the head adds the fee. */}
+        {role === 'admin' && (
+          <div className="grid grid-cols-2 gap-[11px]">
+            <div><label className="td-label">Monthly fee (&#8377;) <span className="text-td-subtle font-semibold">· optional</span></label><input type="number" value={newStudent.fee} onChange={e => setNewStudent({ fee: e.target.value })} placeholder="e.g. 2000" className="td-field text-sm" /></div>
+            <div><label className="td-label">Fee due date</label><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="td-field text-sm" /></div>
+          </div>
+        )}
         <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3">
           <Icon name="lock" size={16} color="var(--color-td-primary)" />
           <span className="text-[12px] text-td-primary font-semibold">A secure login code is generated automatically and shown after you save.</span>

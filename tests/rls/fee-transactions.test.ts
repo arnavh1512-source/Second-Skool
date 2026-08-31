@@ -215,6 +215,85 @@ suite('fee writes', () => {
     expect(r).toEqual({ student: 0, fees: 0, status: null })
   })
 
+  // ── create_student ────────────────────────────────────────────────────────
+
+  const mk = (fee: string) =>
+    `select public.create_student('Nita','Class 9','','St Xavier','9000000123',
+       'TUT-NEW1', 'Addr', null, ${fee}) as r`
+
+  it('creates the student and their enrolment fee in one call', async () => {
+    const out = await asHead(async q => {
+      const r = (await q(mk('2000, current_date + 5'))).rows[0].r
+      return { r, fees: (await q(
+        'select amount, status from public.fees where student_id = $1', [r.id])).rows }
+    })
+    expect(out.r).toMatchObject({ student: 1, fees: 1, status: 'Due' })
+    expect(out.fees).toEqual([{ amount: '2000.00', status: 'Due' }])
+  })
+
+  it('a student added without a fee is Paid, not Due', async () => {
+    // The badge means "at least one fee row is unpaid". With no fee rows there
+    // is nothing for the parent to pay and nothing for the head to clear, so
+    // Due would be a badge neither of them can act on.
+    const out = await asHead(async q => {
+      const r = (await q(mk('null'))).rows[0].r
+      return { r, badge: (await q(
+        'select fee_status from public.students where id = $1', [r.id])).rows[0].fee_status }
+    })
+    expect(out.r).toMatchObject({ student: 1, fees: 0, status: 'Paid' })
+    expect(out.badge).toBe('Paid')
+  })
+
+  it('a teacher is told the fee is not theirs to set, in words', async () => {
+    // fees_head would refuse this anyway, as an unreadable with-check violation
+    // — and only after the student row had been written. The named check turns
+    // it into a sentence and takes the student row down with it.
+    const msg = await denied(() => act(c, { uid: a.teacher }, q =>
+      q(mk('2000, current_date'))))
+    expect(msg).toMatch(/only the head can set a fee/i)
+  })
+
+  it('a teacher can still add a student without a fee', async () => {
+    const r = await act(c, { uid: a.teacher }, async q => (await q(mk('null'))).rows[0].r)
+    expect(r).toMatchObject({ student: 1, fees: 0, status: 'Paid' })
+  })
+
+  it('anon cannot execute create_student', async () => {
+    const msg = await denied(() => act(c, { role: 'anon' }, q => q(mk('null'))))
+    expect(msg).toMatch(/permission denied/i)
+  })
+
+  // ── the other doors into the students table ───────────────────────────────
+
+  it('a student who signs up and waits is not Due before anyone has billed them', async () => {
+    const badge = await asHead(async q => {
+      // What student_signup() writes, including its literal 'Due' — the table
+      // is what overrules it, so every path is covered and not just that one.
+      const id = (await q(`insert into public.students
+        (name, class, school, parent_contact, student_code, fee_status, status)
+        values ('Waiting','Class 8','St Xavier','9000000124','TUT-WAIT','Due','pending')
+        returning id`)).rows[0].id
+      return (await q('select fee_status from public.students where id = $1', [id])).rows[0].fee_status
+    })
+    expect(badge).toBe('Paid')
+  })
+
+  it('approving with a fee turns the badge Due, and approving without one leaves it Paid', async () => {
+    const out = await asHead(async q => {
+      const add = async (code: string) => (await q(`insert into public.students
+        (name, class, school, parent_contact, student_code, status)
+        values ('Waiting','Class 8','St Xavier','9000000124',$1,'pending') returning id`, [code])).rows[0].id
+      const billed = await add('TUT-BILL')
+      const free = await add('TUT-FREE')
+      await q('select public.approve_student($1, null, null, 1500, current_date)', [billed])
+      await q('select public.approve_student($1)', [free])
+      const badge = async (id: string) =>
+        (await q('select fee_status from public.students where id = $1', [id])).rows[0].fee_status
+      return { billed: await badge(billed), free: await badge(free) }
+    })
+    expect(out).toEqual({ billed: 'Due', free: 'Paid' })
+  })
+
   // ── the roles with nothing ────────────────────────────────────────────────
 
   for (const fn of ['add_fee($1, 1, $2, current_date)', 'add_fee_plan($1, \'[]\'::json)',

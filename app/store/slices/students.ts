@@ -4,12 +4,12 @@ import { enablePush, pushSupported, sendPush, sendStudentRequestPush } from '../
 import { genStudentCode } from '../codes'
 import { writeLocal, removeLocal } from '../../lib/storage'
 import { findStudent, indexOfStudent, studentKey } from '../../lib/student-key'
-import { changedNothing, dbErr, NOT_SAVED } from '../db'
+import { changedNothing, NOT_SAVED } from '../db'
 import { isoDay } from '../format'
 import { LIMITS, capLength, clampText } from '../validate'
 import type { Slice } from '../slice'
 import { mapSnapshot } from '../snapshot'
-import type { State, Student, Tab } from '../types'
+import type { FeeStatus, State, Student, Tab } from '../types'
 
 // Register this device against a student code while the head has not approved
 // them yet.
@@ -172,9 +172,14 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     }
     let code = genStudentCode()
     while (students.some(s => s.id === code)) code = genStudentCode()
+    // A student owes nothing until a fee row says otherwise, so a new student
+    // added without an enrolment fee starts Paid rather than Due. Due with no
+    // fee under it is a badge the family cannot act on and the head cannot
+    // clear.
+    const amt = Number(ns.fee)
     const student: Student = {
       name: ns.name, klass: ns.klass, batch: ns.batch || undefined, attendance: 0,
-      feeStatus: 'Due', school: ns.school, parent: ns.parent, id: code,
+      feeStatus: amt > 0 ? 'Due' : 'Paid', school: ns.school, parent: ns.parent, id: code,
     }
     // Exact match. `includes` picked the first branch merely *containing* the
     // chosen name, so a centre with both "Main" and "Main Annexe" filed the
@@ -183,12 +188,19 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     // Show the row straight away so the roster feels instant, but do not claim
     // success until the insert lands.
     set({ students: [student, ...students] })
-    const { data, error } = await supabase.from('students').insert({
-      name: ns.name, class: student.klass, batch: ns.batch || null, school: ns.school,
-      parent_contact: ns.parent, student_code: code, fee_status: 'Due',
-      address: ns.address, branch_id: branchId ?? null,
-    }).select().single()
-    if (error || !data) {
+    // The student and their enrolment fee go in together or not at all. As two
+    // requests, a drop between them left a student who owes nothing on the day
+    // the head typed what they owe, and a teacher — allowed the child, refused
+    // the money — got that outcome every single time.
+    const { data, error } = await supabase.rpc('create_student', {
+      p_name: ns.name, p_class: student.klass, p_batch: ns.batch || null, p_school: ns.school,
+      p_parent_contact: ns.parent, p_student_code: code, p_address: ns.address,
+      p_branch_id: branchId ?? null,
+      p_fee_amount: amt > 0 ? amt : null,
+      p_fee_due_date: amt > 0 ? (ns.feeDue || isoDay()) : null,
+    })
+    const created = data as { id?: string; status?: FeeStatus } | null
+    if (error || !created?.id) {
       // Roll the optimistic row back. Leaving it stranded gave the head a
       // student who looked real — tappable, editable, counted in attendance —
       // but had no dbId, so every edit silently wrote nothing. Having been
@@ -197,15 +209,8 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       get().notify(friendlyError(error, 'save student'), 'error')
       return
     }
-    set((s) => ({ students: s.students.map(x => x.id === code && !x.dbId ? { ...x, dbId: data.id } : x) }))
-    // Optional enrolment fee — creates the first fee record so the student
-    // immediately sees what's due (keeps status and fee records in sync).
-    const amt = Number(ns.fee)
-    if (amt > 0) {
-      const period = new Date().toLocaleString('en', { month: 'short', year: 'numeric' })
-      const feeRes = await supabase.from('fees').insert({ student_id: data.id, amount: amt, period, due_date: ns.feeDue || isoDay(), status: 'Due' })
-      dbErr('add enrolment fee', get().notify)(feeRes)
-    }
+    set((s) => ({ students: s.students.map(x => x.id === code && !x.dbId
+      ? { ...x, dbId: created.id, feeStatus: created.status ?? x.feeStatus } : x) }))
     set({ newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
   },
 
@@ -235,11 +240,16 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       return code
     })
 
+    // No fee rows are created here — an imported roster is names, not money,
+    // and the head sets fees afterwards. So the badge is Paid: fee_status now
+    // defaults to Paid in the database for exactly this reason, and stamping
+    // 'Due' on sixty students with no fee under any of them was the same lie
+    // 0034 went through the table to erase.
     const branchId = branch ? branchesList.find(b => b.name === branch)?.dbId ?? null : null
     const { data, error } = await supabase.from('students').insert(
       rows.map((r, i) => ({
         name: r.name, class: r.klass, school: r.school, parent_contact: r.parent,
-        student_code: codes[i], fee_status: 'Due', branch_id: branchId,
+        student_code: codes[i], branch_id: branchId,
       })),
     ).select('id, student_code')
     if (error || !data) { get().notify(friendlyError(error, 'import students'), 'error'); return null }
@@ -250,7 +260,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     // the wrong child.
     const ids = new Map(data.map(d => [d.student_code as string, d.id as string]))
     const added: Student[] = rows.map((r, i) => ({
-      name: r.name, klass: r.klass, attendance: 0, feeStatus: 'Due',
+      name: r.name, klass: r.klass, attendance: 0, feeStatus: 'Paid',
       school: r.school, parent: r.parent, id: codes[i], dbId: ids.get(codes[i]),
       ...(branch ? { branch } : {}),
     }))
