@@ -35,8 +35,21 @@
 -- The composite target the child keys point at. `id` is already the primary
 -- key, so this adds no new uniqueness — it exists because Postgres requires a
 -- unique constraint covering exactly the referenced column pair.
-alter table public.students drop constraint if exists students_id_centre_key;
-alter table public.students add constraint students_id_centre_key unique (id, centre_id);
+--
+-- Added, never dropped-and-recreated. The five child keys below reference this
+-- constraint, so the second run of a `drop ... if exists` fails with 2BP01
+-- ("other objects depend on it") — which is exactly what happened the first
+-- time this file was re-run against a database it had already been applied to.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conname = 'students_id_centre_key'
+       and conrelid = 'public.students'::regclass
+  ) then
+    alter table public.students add constraint students_id_centre_key unique (id, centre_id);
+  end if;
+end $$;
 
 do $$
 declare t text;

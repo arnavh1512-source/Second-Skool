@@ -81,9 +81,15 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     if (!st.name.trim()) { get().notify('Name is required', 'error'); return false }
     if (st.parent && !/^\+?\d[\d\s\-]{6,}$/.test(st.parent)) { get().notify('Invalid phone number', 'error'); return false }
     if (st.dbId) {
+      // fee_status is deliberately absent. The edit form has no fee control, so
+      // the only value this could send is whatever the badge happened to say
+      // when the form opened — and since migration 0030 that column is derived
+      // by the database from the fee rows themselves. Writing it back here
+      // would let "fix a typo in the phone number" quietly restore a stale
+      // badge over a payment somebody recorded thirty seconds ago.
       const res = await supabase.from('students').update({
         name: st.name.trim(), class: st.klass, school: st.school,
-        parent_contact: st.parent, fee_status: st.feeStatus,
+        parent_contact: st.parent,
       }).eq('id', st.dbId).select('id')
       if (res.error) { get().notify(friendlyError(res.error, 'update student'), 'error'); return false }
       // The row must exist — it was on the roster when the form opened. If it
