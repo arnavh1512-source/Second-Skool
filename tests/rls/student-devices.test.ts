@@ -20,11 +20,15 @@ suite('student devices', () => {
   let c: pg.Client
   let a: Centre
   let b: Centre
+  // Its own centre, because the race test needs a student no other test here
+  // has already given a phone to.
+  let r: Centre
 
   beforeAll(async () => {
     c = await owner()
     a = await seedCentre(c, 'Voucher')
     b = await seedCentre(c, 'Bystander')
+    r = await seedCentre(c, 'Racer')
   }, 60_000)
 
   afterAll(async () => { await c?.end() })
@@ -92,6 +96,44 @@ suite('student devices', () => {
     // And the code it was bought with is not a way back in: the revoked row is
     // still there, so the compatibility window stays shut for this student.
     expect(await snapshot(a.students[1].code)).toBeNull()
+  })
+
+  it('two phones claiming at the same instant cannot both be the first', async () => {
+    // The property everything else here rests on, tested the only way it can be
+    // proved: with two connections and one of them still open. Without the row
+    // lock in 0041 both callers read an empty device table, both concluded they
+    // were the household's first phone, and both let themselves in — which is
+    // precisely the code-that-travelled case the design exists to stop.
+    const student = r.students[0]
+    const other = new pg.Client({ connectionString: DB_URL })
+    await other.connect()
+    try {
+      await c.query('begin')
+      await c.query('set local role anon')
+      const first = (await c.query('select public.claim_student_device($1,$2) as r',
+        [student.code, 'Racing phone A'])).rows[0].r
+      expect(first.approved).toBe(true)
+
+      // Still uncommitted. The second caller must not read around it.
+      await other.query('begin')
+      await other.query('set local role anon')
+      await other.query(`set local statement_timeout = '1500ms'`)
+      const msg = await denied(() => other.query('select public.claim_student_device($1,$2) as r',
+        [student.code, 'Racing phone B']))
+      expect(msg).toMatch(/statement timeout/i)
+      await other.query('rollback')
+
+      await c.query('commit')
+
+      // And once the first claim is committed, the second one sees it.
+      const second = await act(c, { role: 'anon', commit: true }, async q =>
+        (await q('select public.claim_student_device($1,$2) as r',
+          [student.code, 'Racing phone B'])).rows[0].r)
+      expect(second.approved).toBe(false)
+    } finally {
+      await c.query('rollback').catch(() => {})
+      await other.end()
+    }
   })
 
   it('a code that does not exist is refused without saying so', async () => {
