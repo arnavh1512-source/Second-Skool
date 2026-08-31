@@ -8,27 +8,28 @@ const batch = (marks: QueuedBatch['marks'], date = '2026-08-31'): QueuedBatch =>
   ({ id: 'b1', date, marks })
 
 describe('resolveBatch', () => {
-  it('writes every mark when the register is empty', () => {
+  it('reports nothing when the register was empty', () => {
+    // Nothing was already there, so nothing was refused and nothing is disputed.
     const r = resolveBatch(batch([mark('s1', 'Present'), mark('s2', 'Absent')]), [])
-    expect(r.rows).toEqual([
-      { student_id: 's1', date: '2026-08-31', status: 'Present' },
-      { student_id: 's2', date: '2026-08-31', status: 'Absent' },
-    ])
     expect(r.conflicts).toEqual([])
+    expect(r.absent.map(m => m.studentId)).toEqual(['s2'])
   })
 
-  it('files under the day she marked, not the day it drains', () => {
+  it('files a conflict under the day she marked, not the day it drains', () => {
     // A register queued on Tuesday evening and synced on Wednesday morning is
-    // Tuesday's. Filing it under Wednesday would mark a class that never met.
-    const r = resolveBatch(batch([mark('s1', 'Absent')], '2026-08-25'), [])
-    expect(r.rows[0].date).toBe('2026-08-25')
+    // Tuesday's. Naming Wednesday would send her looking at the wrong class.
+    const r = resolveBatch(
+      batch([mark('s1', 'Absent', 'Riya')], '2026-08-25'),
+      [{ student_id: 's1', status: 'Present' }],
+    )
+    expect(r.conflicts[0].date).toBe('2026-08-25')
   })
 
-  it('never overwrites a mark that is already there', () => {
+  it('surfaces a mark the register refused', () => {
     // Hers was made offline, so it never reached the server; anything standing
-    // was written by someone who was online after she lost signal.
+    // was written by someone who was online after she lost signal, and
+    // save_attendance() left it exactly where it was.
     const r = resolveBatch(batch([mark('s1', 'Absent', 'Riya')]), [{ student_id: 's1', status: 'Present' }])
-    expect(r.rows).toEqual([])
     expect(r.conflicts).toEqual([{ name: 'Riya', date: '2026-08-31', mine: 'Absent', theirs: 'Present' }])
   })
 
@@ -36,17 +37,15 @@ describe('resolveBatch', () => {
     // Two people marking the same child absent is not a disagreement, and a
     // conflict list padded with non-conflicts is a list she stops reading.
     const r = resolveBatch(batch([mark('s1', 'Absent')]), [{ student_id: 's1', status: 'Absent' }])
-    expect(r.rows).toEqual([])
     expect(r.conflicts).toEqual([])
   })
 
-  it('applies the rest of the batch around a conflict', () => {
+  it('reports only the children the register actually disputed', () => {
     // The whole point: one disputed child must not cost her the other 39.
     const r = resolveBatch(
       batch([mark('s1', 'Absent', 'Riya'), mark('s2', 'Present'), mark('s3', 'Absent')]),
       [{ student_id: 's1', status: 'Present' }],
     )
-    expect(r.rows.map(x => x.student_id)).toEqual(['s2', 's3'])
     expect(r.conflicts).toHaveLength(1)
   })
 
@@ -64,7 +63,6 @@ describe('resolveBatch', () => {
     // The column also allows 'Leave', which this screen cannot produce. A value
     // she cannot have written is by definition not hers to overwrite.
     const r = resolveBatch(batch([mark('s1', 'Present', 'Riya')]), [{ student_id: 's1', status: 'Leave' }])
-    expect(r.rows).toEqual([])
     expect(r.conflicts[0].theirs).toBe('Leave')
   })
 })

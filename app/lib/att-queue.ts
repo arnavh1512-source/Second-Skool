@@ -43,16 +43,19 @@ export type AttConflict = {
 }
 
 type Resolution = {
-  rows: { student_id: string; date: string; status: AttStatus }[]
-  /** The subset of `rows` that is an absence, for the parent push. */
+  /** The marks the register accepted, and that were absences, for the parent push. */
   absent: QueuedMark[]
   conflicts: AttConflict[]
 }
 
 /**
- * Decide what a queued batch may still write.
+ * Read what the register did with a queued batch.
  *
- * The rule: **a queued mark writes only where the register has no answer yet.**
+ * The rule is **a queued mark writes only where the register has no answer
+ * yet**, and save_attendance() is what enforces it: called with p_overwrite
+ * false, it inserts where nothing was there and leaves every other row exactly
+ * as it found it, in one locked statement. This function only interprets the
+ * answer.
  *
  * Her marks were made offline, so none of them reached the server; any row that
  * exists for that child and day was therefore written by somebody who was
@@ -67,23 +70,22 @@ type Resolution = {
  * her one tap. A wrong overwrite costs a child a wrong absence and a parent a
  * push about it, which is the one message a centre cannot take back.
  *
- * Where the register already agrees with her, nothing is written and nothing is
- * reported — two people marking the same child absent is not a disagreement.
+ * Where the register already agrees with her, nothing was written and nothing
+ * is reported — two people marking the same child absent is not a disagreement.
  *
- * @param existing Rows already in the database for this batch's date, for any
- *   of its students. Read immediately before this call.
+ * @param existing The rows save_attendance() found already there, which are
+ *   exactly the ones it refused to touch.
  */
 export function resolveBatch(
   batch: QueuedBatch,
   existing: readonly { student_id: string; status: string }[],
 ): Resolution {
   const held = new Map(existing.map((r) => [r.student_id, r.status]))
-  const res: Resolution = { rows: [], absent: [], conflicts: [] }
+  const res: Resolution = { absent: [], conflicts: [] }
 
   for (const mark of batch.marks) {
     const theirs = held.get(mark.studentId)
     if (theirs === undefined) {
-      res.rows.push({ student_id: mark.studentId, date: batch.date, status: mark.status })
       if (mark.status === 'Absent') res.absent.push(mark)
     } else if (theirs !== mark.status) {
       res.conflicts.push({ name: mark.name, date: batch.date, mine: mark.status, theirs })

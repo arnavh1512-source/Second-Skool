@@ -184,6 +184,59 @@ suite('rpc authorization', () => {
     expect(tickets).toEqual([])
   })
 
+  // ── who the throttle thinks is calling ────────────────────────────────────
+
+  /** client_ip() against one set of request headers, rolled back afterwards. */
+  const ipFor = async (headers: Record<string, string> | null): Promise<string> => {
+    await c.query('begin')
+    try {
+      if (headers) await c.query(
+        'select set_config($1, $2, true)', ['request.headers', JSON.stringify(headers)])
+      return (await c.query('select public.client_ip() as ip')).rows[0].ip
+    } finally {
+      await c.query('rollback')
+    }
+  }
+
+  it('a caller cannot choose their own throttle bucket by writing x-forwarded-for', async () => {
+    // The header is a trail, and a proxy appends to it rather than replacing
+    // it. 0032 read the FIRST entry, which under that behaviour is whatever the
+    // caller typed — so 25-attempts-per-IP was 25 per string the attacker
+    // picked, and they could pick a new one every request. The last entry is
+    // the hop nearest us and the only one we did not let them write.
+    expect(await ipFor({ 'x-forwarded-for': '1.2.3.4, 203.0.113.9' })).toBe('203.0.113.9')
+  })
+
+  it('a header written by the edge beats the one the caller supplied', async () => {
+    expect(await ipFor({
+      'cf-connecting-ip': '203.0.113.9',
+      'x-real-ip': '198.51.100.7',
+      'x-forwarded-for': '1.2.3.4',
+    })).toBe('203.0.113.9')
+    expect(await ipFor({ 'x-real-ip': '198.51.100.7', 'x-forwarded-for': '1.2.3.4' }))
+      .toBe('198.51.100.7')
+  })
+
+  it('an edge that overwrites the header rather than appending still reads right', async () => {
+    // One entry: last and first are the same thing, so this change costs
+    // nothing under a proxy that replaces the header outright.
+    expect(await ipFor({ 'x-forwarded-for': '203.0.113.9' })).toBe('203.0.113.9')
+  })
+
+  it('a caller with no headers at all shares one named bucket', async () => {
+    // A direct SQL caller, a cron job, a migration. In production this is
+    // nobody, and being wrong here is being wrong on the strict side.
+    expect(await ipFor(null)).toBe('unknown')
+    expect(await ipFor({ 'x-forwarded-for': '   ' })).toBe('unknown')
+  })
+
+  it('the bucket key cannot be made arbitrarily long by the caller', async () => {
+    // It is stored in a table, one row per attempt. An unbounded string out of
+    // a request header is a row somebody else chooses the size of.
+    const ip = await ipFor({ 'x-forwarded-for': 'x'.repeat(5000) })
+    expect(ip.length).toBe(45)
+  })
+
   it('no SECURITY DEFINER function is executable by PUBLIC', async () => {
     // 0036 swept all of these by hand and found four that had never been
     // granted, which under Postgres means granted to everybody. The point of

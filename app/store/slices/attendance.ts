@@ -8,6 +8,14 @@ import { isoDay } from '../format'
 import type { Slice } from '../slice'
 import type { Actions } from '../types'
 
+/** What save_attendance() returns: how many marks it actually wrote, and the
+ *  rows it found already there — which, on a queue drain, are exactly the ones
+ *  it refused to touch. */
+type SaveResult = {
+  written: number
+  existing: { student_id: string; status: string }[]
+}
+
 /** Two drains at once would each read the same register, each find it unwritten
  *  and each write it. Module-level because the guard has to outlive any one
  *  call, and there is exactly one queue on the device. */
@@ -99,22 +107,29 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
       // a round-trip that may never come back on a stalled mobile connection.
       if (!online) { enqueue(date, marks); return }
 
-      const ids = marks.map(m => m.studentId)
-      // Warn when overwriting: another teacher may have marked this class already.
-      const { data: existing } = await supabase.from('attendance').select('id').eq('date', date).in('student_id', ids).limit(1)
-      const already = !!existing?.length
-
-      const rows = marks.map(m => ({ student_id: m.studentId, date, status: m.status }))
-      const res = await supabase.from('attendance').upsert(rows, { onConflict: 'student_id,date' })
-      if (res.error) {
+      // One statement reads and writes. Asking the register what was there and
+      // then upserting is two round trips, and two teachers marking the same
+      // class in the same minute both fell through the gap: both saw it empty,
+      // both wrote, and both were told "saved" while the second silently
+      // replaced the first. save_attendance() locks each row it touches and
+      // reports back what was already on it.
+      const { data, error } = await supabase.rpc('save_attendance', {
+        p_date: date,
+        p_marks: marks.map(m => ({ student_id: m.studentId, status: m.status })),
+        // She is looking at the class right now, so the latest mark is the true
+        // one. The rows that were already there come back only to be mentioned.
+        p_overwrite: true,
+      })
+      if (error) {
         // navigator.onLine reports that a network interface exists, which on
         // Indian mobile data is regularly true while nothing gets through. The
         // failed write is the first honest evidence of that, so this is where
         // the flag gets corrected and the register gets kept instead of lost.
-        if (looksOffline(res.error)) { get().setOnline(false); enqueue(date, marks); return }
-        dbErr('save attendance', notify)(res)
+        if (looksOffline(error)) { get().setOnline(false); enqueue(date, marks); return }
+        dbErr('save attendance', notify)({ error })
         return
       }
+      const already = ((data as SaveResult | null)?.existing ?? []).length > 0
 
       notify(already
         ? `Attendance updated · ${present} present (today was already marked)`
@@ -151,32 +166,37 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
 
       try {
         for (const batch of queue) {
-          const ids = batch.marks.map(m => m.studentId)
-          const { data: existing, error: readErr } = await supabase
-            .from('attendance').select('student_id,status').eq('date', batch.date).in('student_id', ids)
-          // Could not even look: the connection is still not real. Keep the
-          // batch and try again on the next reconnect — dropping it here would
-          // lose the register for a reason she never sees.
-          if (readErr) continue
-
-          const { rows, absent, conflicts: found } = resolveBatch(batch, existing ?? [])
-          conflicts.push(...found)
-
-          if (rows.length) {
-            const res = await supabase.from('attendance').upsert(rows, { onConflict: 'student_id,date' })
-            if (res.error) {
-              if (looksOffline(res.error)) { get().setOnline(false); break }
-              // A rejection that retrying cannot fix — RLS, a deleted student, a
-              // constraint. Keeping it would retry it forever on every
-              // reconnect, so it is dropped, and said out loud rather than
-              // disappearing.
-              notify(`${batch.marks.length} queued marks from ${batch.date} could not be saved. Please mark that class again.`, 'error')
-              done.add(batch.id)
-              continue
-            }
-            written += rows.length
-            await tellParents(absent, notify)
+          // p_overwrite false: these marks were made with no signal, so anything
+          // already in the register was written by somebody who was online
+          // after she lost it, and is newer than hers. The rule used to be
+          // enforced here, against a list read a round trip earlier, and then
+          // written with an upsert — a row landing in that gap was overwritten
+          // by a stale mark, and a stale Absent pushes a parent a message about
+          // a child who was in class. Now the database refuses it inside the
+          // same statement and hands back what it refused.
+          const { data, error } = await supabase.rpc('save_attendance', {
+            p_date: batch.date,
+            p_marks: batch.marks.map(m => ({ student_id: m.studentId, status: m.status })),
+            p_overwrite: false,
+          })
+          if (error) {
+            // The connection is still not real. Keep the batch and try again on
+            // the next reconnect — dropping it here would lose the register for
+            // a reason she never sees.
+            if (looksOffline(error)) { get().setOnline(false); break }
+            // A rejection that retrying cannot fix — RLS, a deleted student, a
+            // constraint. Keeping it would retry it forever on every reconnect,
+            // so it is dropped, and said out loud rather than disappearing.
+            notify(`${batch.marks.length} queued marks from ${batch.date} could not be saved. Please mark that class again.`, 'error')
+            done.add(batch.id)
+            continue
           }
+
+          const saved = (data as SaveResult | null) ?? { written: 0, existing: [] }
+          const { absent, conflicts: found } = resolveBatch(batch, saved.existing)
+          conflicts.push(...found)
+          written += saved.written
+          await tellParents(absent, notify)
           done.add(batch.id)
         }
       } finally {
