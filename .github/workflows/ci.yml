@@ -44,3 +44,54 @@ jobs:
       # without depending on anyone's .env.local.
       - name: Build
         run: npm run build
+
+  # The database half. Nothing in `verify` touches Postgres — the unit tests are
+  # pure logic and the build never opens a connection — so until this job
+  # existed, the schema and every row level security policy in it were shipped
+  # on the strength of having been read carefully.
+  #
+  # Two things happen here. The migrations are applied to an empty database in
+  # filename order, which is the only place they ever run from zero: the real
+  # project has had them pasted in one at a time over months, on top of state
+  # that no longer exists. Then the RLS suite builds two centres and has one try
+  # to read and write the other's students.
+  database:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        # Match the Supabase project's major version. A policy that behaves
+        # differently on 16 is a test that lies.
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply every migration to an empty database
+        run: npm run db:migrate
+
+      # The same command as `verify`, but with DATABASE_URL set, which is what
+      # switches the tests/rls suite on. Without it those tests skip themselves,
+      # which is how `npx vitest run` stays green on a laptop with no Postgres.
+      - name: Test, including row level security
+        run: npm test
