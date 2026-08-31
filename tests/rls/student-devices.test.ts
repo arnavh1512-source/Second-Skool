@@ -86,7 +86,7 @@ suite('student devices', () => {
 
     await act(c, { uid: a.head, commit: true }, q =>
       q(`update public.student_devices set revoked_at = now()
-          where token_hash = encode(extensions.digest($1, 'sha256'), 'hex')`, [token]))
+          where token_hash = encode(digest($1, 'sha256'), 'hex')`, [token]))
 
     expect(await snapshot(token)).toEqual({ status: 'device_revoked' })
     // And the code it was bought with is not a way back in: the revoked row is

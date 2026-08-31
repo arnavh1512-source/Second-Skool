@@ -111,7 +111,7 @@ declare v_student public.students; v_hash text;
 begin
   if length(coalesce(p_cred,'')) < 4 then return null; end if;
 
-  v_hash := encode(extensions.digest(p_cred, 'sha256'), 'hex');
+  v_hash := encode(digest(p_cred, 'sha256'), 'hex');
 
   select s.* into v_student
     from public.student_devices d
@@ -179,11 +179,11 @@ begin
   select not exists (select 1 from public.student_devices where student_id = v_student.id)
     into v_approved;
 
-  v_token := encode(extensions.gen_random_bytes(32), 'hex');
+  v_token := encode(gen_random_bytes(32), 'hex');
 
   insert into public.student_devices (student_id, centre_id, token_hash, label, approved)
   values (v_student.id, v_student.centre_id,
-          encode(extensions.digest(v_token, 'sha256'), 'hex'),
+          encode(digest(v_token, 'sha256'), 'hex'),
           nullif(left(trim(coalesce(p_label, '')), 60), ''),
           v_approved);
 
@@ -308,7 +308,7 @@ begin
     select case when d.revoked_at is not null then 'device_revoked' else 'device_pending' end
       into v_device
       from public.student_devices d
-     where d.token_hash = encode(extensions.digest(p_code, 'sha256'), 'hex');
+     where d.token_hash = encode(digest(p_code, 'sha256'), 'hex');
     if v_device is not null then return json_build_object('status', v_device); end if;
 
     perform public.code_attempt_guard();
