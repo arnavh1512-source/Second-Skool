@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:pending": "node scripts/db-pending.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
