@@ -17,10 +17,11 @@ const chip = (name: string) => (
 )
 
 export function HomeScreen() {
-  const { role, go, goFrom, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList, atRisk } = useDashboard()
+  const { role, go, goFrom, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList, atRisk, studentDevices } = useDashboard()
   const isAdmin = role === 'admin'
   const pendingStaff = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
-  const hasAlerts = pendingStudents.length > 0 || pendingStaff > 0
+  const waitingPhones = studentDevices.filter(d => !d.allowed).length
+  const hasAlerts = pendingStudents.length > 0 || pendingStaff > 0 || waitingPhones > 0
   const mainBranch = branchesList.find(b => b.main) ?? branchesList[0]
   const displayName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Admin' : 'Teacher')
   const ini = initials(displayName)

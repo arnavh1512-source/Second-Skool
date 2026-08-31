@@ -45,12 +45,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function Sidebar() {
-  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, pendingStudents, loadMyCentre } = useDashboard()
+  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, pendingStudents, studentDevices, loadMyCentre } = useDashboard()
   const isAdmin = role === 'admin'
   useEffect(() => { if (!centreName) loadMyCentre() }, [centreName, loadMyCentre])
   const name = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
   const pending = staffList.filter(s => s.status === 'pending').length
-  const stuReq = pendingStudents.length
+  const stuReq = pendingStudents.length + studentDevices.filter(d => !d.allowed).length
 
   const main: NavItem[] = [
     { icon: 'home', label: 'Dashboard', screen: 'home', tab: 'home' },

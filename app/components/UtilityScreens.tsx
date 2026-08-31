@@ -147,14 +147,15 @@ export function RankingsScreen() {
 type MoreItem = { icon: IconName; label: string; tint: string; screen: Screen; badge?: number }
 
 export function MoreScreen() {
-  const { goFrom, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents } = useDashboard()
+  const { goFrom, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents, studentDevices } = useDashboard()
   const isAdmin = role === 'admin'
   const profileName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
 
   // Head: keep the approvals badge fresh (Admin Dashboard now lives here).
   useEffect(() => { if (isAdmin) loadStaff() }, [isAdmin, loadStaff])
   const pendingCount = staffList.filter(s => s.status === 'pending').length
-  const studentRequestCount = pendingStudents.length
+  // Both live on the Student requests screen, so one badge counts both.
+  const studentRequestCount = pendingStudents.length + studentDevices.filter(d => !d.allowed).length
 
   const daily: MoreItem[] = [
     { icon: 'requests', label: 'Student requests', tint: 'var(--color-td-tint-green)', screen: 'studentRequests', badge: studentRequestCount },

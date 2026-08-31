@@ -115,6 +115,27 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => { supabase.removeChannel(ch) }
   }, [role, staffStatus])
 
+  // Staff (head or teacher): a phone waiting for approval is a family locked
+  // out until someone notices, and nothing outside the Student requests screen
+  // was looking. Load the list once so the badges elsewhere are truthful, then
+  // keep it live. RLS (student_devices_staff) scopes events to the own centre.
+  useEffect(() => {
+    if ((role !== 'admin' && role !== 'teacher') || staffStatus !== 'approved') return
+    useDashboard.getState().loadStudentDevices()
+    const ch = supabase
+      .channel('student-devices-watch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'student_devices' }, (payload) => {
+        const st = useDashboard.getState()
+        const row = payload.new as { approved?: boolean } | null
+        if (payload.eventType === 'INSERT' && row?.approved === false) {
+          st.notify('A phone is waiting to be allowed — check Student requests')
+        }
+        st.loadStudentDevices()
+      })
+      .subscribe()
+    return () => { supabase.removeChannel(ch) }
+  }, [role, staffStatus])
+
   // No Google session: a returning student may have a saved code; otherwise land on login.
   function resumeStudentOrLanding() {
     const code = readStudentCred()

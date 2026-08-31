@@ -36,7 +36,7 @@ function StatusBar() {
 }
 
 function BottomTabBar() {
-  const { role, tab, go, currentStudentDbId, staffStatus, supabaseUserId, pendingStudents, staffList } = useDashboard()
+  const { role, tab, go, currentStudentDbId, staffStatus, supabaseUserId, pendingStudents, staffList, studentDevices } = useDashboard()
   if (!role) return null
   // Unapproved Google staff (register/pending/denied) get no navigation.
   if (supabaseUserId && staffStatus !== 'approved') return null
@@ -74,9 +74,10 @@ function BottomTabBar() {
   const tabs = allTabs.filter(t => role === 'admin' || !t.headOnly)
 
   // Red dot on "More": something in that section needs the head/teacher's action —
-  // a student self-registration waiting, or (head only) a staff access request.
+  // a student self-registration waiting, a phone waiting to be allowed, or
+  // (head only) a staff access request.
   const pendingStaff = role === 'admin' ? staffList.filter(s => s.status === 'pending').length : 0
-  const moreAlert = pendingStudents.length > 0 || pendingStaff > 0
+  const moreAlert = pendingStudents.length > 0 || pendingStaff > 0 || studentDevices.some(d => !d.allowed)
 
   return (
     <div className="shrink-0 flex justify-around items-center pt-3 pb-[26px] px-2.5 bg-td-card border-t border-td-line">
