@@ -18,3 +18,11 @@ alter table public.fees add column if not exists plan_id uuid;
 -- Only plan rows are ever looked up this way; a partial index keeps the
 -- ad-hoc rows, which are the majority, out of it.
 create index if not exists fees_plan_idx on public.fees (plan_id) where plan_id is not null;
+
+-- ---------------------------------------------------------------------------
+-- Record this migration as applied. Keep this block last in every file. Added
+-- late — this file shipped without it, so a database that already had plan_id
+-- still reported 0026 as never run.
+-- ---------------------------------------------------------------------------
+insert into public.schema_migrations (version) values ('0026_fee_plans')
+  on conflict (version) do nothing;
