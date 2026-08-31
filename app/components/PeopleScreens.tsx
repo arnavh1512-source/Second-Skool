@@ -1,6 +1,8 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
+import { parseRoster, MAX_IMPORT } from '../lib/roster-import'
 import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard } from './Shell'
 import { whatsappShareUrl, studentCodeMessage, copyText } from '../lib/share'
 import { Icon } from './Icon'
@@ -27,9 +29,17 @@ export function StudentsScreen() {
           <div className="text-2xl td-strong">Students</div>
         </div>
         {isAdmin && (
-          <button onClick={() => origin === 'admin' ? goFrom('addStudent', 'students', 'admin') : go('addStudent', 'students')} className="td-btn-sm">
-            <span className="text-base leading-none">+</span> Add
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Sits beside Add rather than replacing it: the first roster
+                arrives as a paste, every student after that arrives one at a
+                time. Both stay one tap away. */}
+            <button onClick={() => origin === 'admin' ? goFrom('importStudents', 'students', 'admin') : go('importStudents', 'students')} className="td-btn-sm">
+              Import list
+            </button>
+            <button onClick={() => origin === 'admin' ? goFrom('addStudent', 'students', 'admin') : go('addStudent', 'students')} className="td-btn-sm">
+              <span className="text-base leading-none">+</span> Add
+            </button>
+          </div>
         )}
       </div>
 
@@ -246,6 +256,146 @@ export function AddStudentScreen() {
         </div>
       </div>
       <PrimaryButton onClick={() => runAdd(addStudent)}>{adding ? 'Saving…' : 'Save student'}</PrimaryButton>
+    </div>
+  )
+}
+
+// The list the centre already has, in one paste.
+//
+// Typing sixty students into the nine-field form above is an evening's work
+// before the app has done anything for anybody, and that evening is where
+// adoption actually dies. But the list exists already — in Excel, in a
+// WhatsApp message, in Notes — so the job is to read whatever she has rather
+// than to ask her to reformat it first.
+export function ImportStudentsScreen() {
+  const { students, branchesList, origin, go, goFrom, importStudents, notify } = useDashboard()
+  const [text, setText] = useState('')
+  const [klass, setKlass] = useState('Class 10')
+  const [branch, setBranch] = useState('')
+  const [added, setAdded] = useState<{ code: string; name: string; parent: string }[] | null>(null)
+  const backToList = () => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')
+
+  // Re-read on every keystroke: she is watching the preview to decide whether
+  // the paste came out right, and a preview that lags behind the box is worse
+  // than none.
+  const { students: rows, skipped, overflow } = useMemo(
+    () => parseRoster(text, students, klass),
+    [text, students, klass],
+  )
+
+  // Sixty students is sixty codes to hand out. An import that ends at "added"
+  // has moved the wall rather than removed it.
+  if (added) {
+    return (
+      <div className="td-screen">
+        <ScreenHeader title="Send the codes" onBack={backToList} />
+        <p className="text-[13px] text-td-muted leading-relaxed mb-4">
+          {added.length} student{added.length === 1 ? ' is' : 's are'} on your roster. Each parent needs their child&#39;s code to log in — send them now, or later from any student&#39;s page.
+        </p>
+        <div className="td-list gap-2 mb-5">
+          {added.map(s => (
+            <div key={s.code} className="td-card rounded-[14px] p-3 flex items-center gap-2.5">
+              <div className="flex-1 min-w-0">
+                <div className="text-[13.5px] td-strong truncate">{s.name}</div>
+                <div className="text-[12px] text-td-muted font-mono tracking-[0.08em] mt-0.5">{s.code}</div>
+              </div>
+              {s.parent ? (
+                <a href={whatsappShareUrl(s.parent, studentCodeMessage(s.name, s.code))} target="_blank" rel="noopener noreferrer" aria-label={`Send ${s.name}'s code on WhatsApp`} className="shrink-0 w-10 h-10 rounded-[12px] bg-[#25D366] text-white flex items-center justify-center">
+                  <WhatsAppIcon />
+                </a>
+              ) : (
+                <button onClick={() => copyText(s.code, notify, 'Code copied!')} aria-label={`Copy ${s.name}'s code`} className="shrink-0 w-10 h-10 rounded-[12px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
+                  <Icon name="copy" size={15} color="var(--color-td-primary)" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <PrimaryButton onClick={backToList}>Done</PrimaryButton>
+      </div>
+    )
+  }
+
+  return (
+    <div className="td-screen">
+      <ScreenHeader title="Import students" onBack={backToList} />
+
+      <p className="text-[13px] text-td-muted leading-relaxed mb-3">
+        Paste your list — one student per line, from Excel, WhatsApp or anywhere else. Name, class and parent&#39;s number are picked out wherever they sit on the line.
+      </p>
+
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value)}
+        rows={7}
+        placeholder={'Rahul Sharma, 10, 9876543210\nPriya Patel, Class 9, 91234 56780'}
+        className="td-field text-[13px] font-mono leading-relaxed mb-3.5 resize-y"
+      />
+
+      <div className="grid grid-cols-2 gap-[11px] mb-4">
+        <div>
+          <label className="td-label">Class for rows that don&#39;t say</label>
+          <select value={klass} onChange={e => setKlass(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+            {STANDARDS.map(c => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="td-label">Branch</label>
+          <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+            <option value="">No branch</option>
+            {branchesList.map(b => <option key={b.name}>{b.name}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {overflow > 0 && (
+        <div className="bg-td-tint-amber border border-td-edge-amber rounded-[14px] p-3 mb-3 text-[12.5px] font-semibold text-td-dark leading-relaxed">
+          Only the first {MAX_IMPORT} lines are read. The last {overflow} were left out — import these, then paste the rest.
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <>
+          <div className="td-label mb-2">Ready to add · {rows.length}</div>
+          <div className="td-list gap-2 mb-4">
+            {rows.map(s => (
+              <div key={s.name} className="td-card rounded-[13px] py-2.5 px-3 flex items-center gap-2.5">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] td-strong truncate">{s.name}</div>
+                  <div className="text-[11.5px] text-td-muted mt-0.5 truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
+                </div>
+                <span className={`text-[11.5px] font-semibold shrink-0 ${s.parent ? 'text-td-muted' : 'text-td-amber'}`}>
+                  {s.parent || 'no number'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {skipped.length > 0 && (
+        <>
+          <div className="td-label mb-2">Skipped · {skipped.length}</div>
+          <div className="td-list gap-1.5 mb-4">
+            {skipped.map(s => (
+              <div key={s.line} className="bg-td-soft border border-td-border rounded-[13px] py-2.5 px-3">
+                <div className="text-[12.5px] text-td-dark truncate">Line {s.line}: {s.text}</div>
+                <div className="text-[11.5px] text-td-muted mt-0.5">{s.reason}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {text.trim() && rows.length === 0 && (
+        <EmptyState title="Nothing to add" hint="No line here had a name on it. Check the paste, or add the students one at a time." />
+      )}
+
+      <PrimaryButton onClick={async () => {
+        if (!rows.length) { notify('Paste your list first', 'error'); return }
+        const result = await importStudents(rows, branch)
+        if (result) setAdded(result)
+      }}>{rows.length ? `Add ${rows.length} student${rows.length === 1 ? '' : 's'}` : 'Add students'}</PrimaryButton>
     </div>
   )
 }

@@ -40,7 +40,7 @@ const subscribePending = (code: string) => {
 
 type Keys =
   | 'setStudentField' | 'setNewStudent' | 'setStuSignup' | 'studentSignup'
-  | 'deleteStudent' | 'addStudent' | 'approveStudent' | 'rejectStudent' | 'saveStudentEdit'
+  | 'deleteStudent' | 'addStudent' | 'importStudents' | 'approveStudent' | 'rejectStudent' | 'saveStudentEdit'
   | 'loadStudentByCode'
 
 export const createStudentsSlice: Slice<Keys> = (set, get) => ({
@@ -201,6 +201,56 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       dbErr('add enrolment fee', get().notify)(feeRes)
     }
     set({ newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' }, lastAdded: { code, name: ns.name, parent: ns.parent } })
+  },
+
+  // A whole pasted roster, in one insert.
+  //
+  // Not optimistic, unlike addStudent: sixty provisional rows that have to be
+  // unwound on a failure is a worse thing to get wrong than a moment's wait,
+  // and the head is watching a progress button rather than a list. Postgres
+  // takes the array or it takes none of it, so a failure leaves the roster
+  // exactly as it was.
+  //
+  // Returns the codes it minted, in roster order, so the screen can hand them
+  // out — an import that stops at "60 students added" has only moved the wall
+  // from typing names to chasing sixty parents.
+  importStudents: async (rows, branch) => {
+    if (!rows.length) return null
+    const { students, branchesList } = get()
+
+    // Unique against the roster AND against the codes minted a moment ago in
+    // this same loop — student_code is unique in the database, so one repeat
+    // rejects the entire paste.
+    const taken = new Set(students.map(s => s.id))
+    const codes = rows.map(() => {
+      let code = genStudentCode()
+      while (taken.has(code)) code = genStudentCode()
+      taken.add(code)
+      return code
+    })
+
+    const branchId = branch ? branchesList.find(b => b.name === branch)?.dbId ?? null : null
+    const { data, error } = await supabase.from('students').insert(
+      rows.map((r, i) => ({
+        name: r.name, class: r.klass, school: r.school, parent_contact: r.parent,
+        student_code: codes[i], fee_status: 'Due', branch_id: branchId,
+      })),
+    ).select('id, student_code')
+    if (error || !data) { get().notify(friendlyError(error, 'import students'), 'error'); return null }
+
+    // Match the returned ids back by code rather than by position: PostgREST
+    // does not promise the rows come back in the order they went in, and a
+    // student wearing another student's dbId writes their marks and fees onto
+    // the wrong child.
+    const ids = new Map(data.map(d => [d.student_code as string, d.id as string]))
+    const added: Student[] = rows.map((r, i) => ({
+      name: r.name, klass: r.klass, attendance: 0, feeStatus: 'Due',
+      school: r.school, parent: r.parent, id: codes[i], dbId: ids.get(codes[i]),
+      ...(branch ? { branch } : {}),
+    }))
+    set((s) => ({ students: [...added, ...s.students] }))
+    get().notify(`${added.length} student${added.length === 1 ? '' : 's'} added`)
+    return added.map(s => ({ code: s.id, name: s.name, parent: s.parent }))
   },
 
   approveStudent: async (dbId, klass, branchId, fee, feeDue, batch) => {

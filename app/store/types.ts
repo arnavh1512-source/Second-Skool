@@ -2,12 +2,13 @@
 // screen can import a type without pulling the whole store graph with it.
 import type { IconName } from '../components/Icon'
 import type { ReportDraft } from '../lib/support'
+import type { ParsedStudent } from '../lib/roster-import'
 import type { Installment } from '../lib/fee-plan'
 import type { QueuedBatch, AttConflict } from '../lib/att-queue'
 
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
-  | 'students' | 'editStudent' | 'addStudent' | 'teachers' | 'addTeacher'
+  | 'students' | 'editStudent' | 'addStudent' | 'importStudents' | 'teachers' | 'addTeacher'
   | 'fees' | 'meetings' | 'rankings' | 'branches' | 'subjects' | 'batches' | 'notes' | 'more'
   | 'admin' | 'staffApprovals' | 'studentRequests' | 'staffProfile' | 'notifications' | 'reports' | 'profileSetup' | 'register' | 'pending' | 'denied'
   | 'stuSignup' | 'stuPending' | 'stuDenied'
@@ -185,6 +186,9 @@ export interface Actions {
   deleteStudent: () => Promise<void>
   saveTeacher: () => Promise<void>
   addStudent: () => Promise<void>
+  // Resolves to the login codes it minted, in the order the rows were pasted,
+  // or null if nothing was saved.
+  importStudents: (rows: readonly ParsedStudent[], branch: string) => Promise<{ code: string; name: string; parent: string }[] | null>
   saveAttendance: (roster: Student[]) => Promise<void>
   // Reads the queue off the phone and, if there is a connection, drains it.
   // Safe to call at any time: it is a no-op with nothing waiting.

@@ -55,6 +55,7 @@ const SCREENS: Record<Screen, { view: ComponentType; title?: string }> = {
   students: { view: dyn(people, 'StudentsScreen'), title: 'Students' },
   editStudent: { view: dyn(people, 'EditStudentScreen'), title: 'Edit student' },
   addStudent: { view: dyn(people, 'AddStudentScreen'), title: 'Add student' },
+  importStudents: { view: dyn(people, 'ImportStudentsScreen'), title: 'Import students' },
   teachers: { view: dyn(people, 'StaffScreen'), title: 'Staff' },
   addTeacher: { view: dyn(people, 'AddTeacherScreen'), title: 'Add teacher' },
   fees: { view: dyn(fees, 'FeesScreen'), title: 'Fees' },
