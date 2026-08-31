@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useBusy } from '../lib/use-busy'
-import { useDashboard, initials, av, fmtDate, rupee } from '../store'
+import { useDashboard, initials, av, fmtDate, rupee, timeAgo } from '../store'
 import { ScreenHeader, EmptyState, ConfirmDialog, WhatsAppButton, CodeCard } from './Shell'
 import { supabase } from '../lib/supabase'
 import { weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
@@ -128,11 +128,12 @@ export function StaffApprovalsScreen() {
 // Head/teacher review of self-registered students. Approve (optionally setting
 // batch/branch + a first fee) turns their code live; reject declines it.
 export function StudentRequestsScreen() {
-  const { back, pendingStudents, branchesList, batches, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify } = useDashboard()
+  const { back, pendingStudents, branchesList, batches, refreshData, approveStudent, rejectStudent, role, studentJoinCode, centreName, loadMyCentre, regenerateStudentCode, notify,
+    studentDevices, loadStudentDevices, allowStudentDevice, removeStudentDevice } = useDashboard()
 
   const [confirmRotate, setConfirmRotate] = useState(false)
 
-  useEffect(() => { refreshData(); loadMyCentre() }, [refreshData, loadMyCentre])
+  useEffect(() => { refreshData(); loadMyCentre(); loadStudentDevices() }, [refreshData, loadMyCentre, loadStudentDevices])
 
   return (
     <div className="td-wide td-screen">
@@ -176,6 +177,49 @@ export function StudentRequestsScreen() {
           ))}
         </div>
       )}
+
+      {studentDevices.length > 0 && <>
+        <div className="td-h2 mt-7">Phones {studentDevices.some(d => !d.allowed) && <span className="text-td-red">· {studentDevices.filter(d => !d.allowed).length} waiting</span>}</div>
+        <div className="text-[13px] text-td-muted leading-relaxed mb-3 lg:max-w-2xl">Each student&apos;s first phone is allowed automatically. A second one waits here — if you did not expect it, remove it and the code stops working on that phone.</div>
+        <div className="td-list gap-2.5">
+          {studentDevices.map(d => (
+            <StudentDeviceRow key={d.dbId} d={d} onAllow={allowStudentDevice} onRemove={removeStudentDevice} />
+          ))}
+        </div>
+      </>}
+    </div>
+  )
+}
+
+// One phone signed in as a student. A student's code is meant for their own
+// household, so the second phone on one code is the case worth a look — it is
+// stopped until the head says otherwise, and removing any phone here signs it
+// out for good, code included.
+function StudentDeviceRow({ d, onAllow, onRemove }: {
+  d: import('../store').StudentDevice
+  onAllow: (dbId: string) => Promise<void>
+  onRemove: (dbId: string) => Promise<void>
+}) {
+  const [busy, run] = useBusy()
+  return (
+    <div className="td-card rounded-[16px] p-3.5 flex items-center gap-3">
+      <div className="min-w-0 flex-1">
+        <div className="font-extrabold text-[14px] truncate">{d.studentName}</div>
+        <div className="text-[12px] text-td-subtle truncate">{d.label}</div>
+        <div className="text-[12px] text-td-subtle">
+          Added {fmtDate(d.when)}{d.lastSeen ? ` · last used ${timeAgo(d.lastSeen)}` : ''}
+        </div>
+      </div>
+      {!d.allowed && (
+        <button
+          onClick={() => run(() => onAllow(d.dbId))} disabled={busy}
+          className="td-pill text-[13px] font-extrabold py-2 px-4 rounded-xl cursor-pointer disabled:opacity-50"
+        >Allow</button>
+      )}
+      <button
+        onClick={() => run(() => onRemove(d.dbId))} disabled={busy}
+        className="text-[13px] font-extrabold text-td-red underline cursor-pointer disabled:opacity-50"
+      >Remove</button>
     </div>
   )
 }

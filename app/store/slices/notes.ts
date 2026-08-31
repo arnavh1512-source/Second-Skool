@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { readLocal } from '../../lib/storage'
+import { readStudentCred } from '../../lib/student-cred'
 import { dbErr } from '../db'
 import { LIMITS, clampText, safeLinkUrl } from '../validate'
 import type { Slice } from '../slice'
@@ -47,9 +47,9 @@ export const createNotesSlice: Slice<Keys> = (set, get) => ({
   },
 
   loadStudentNotes: async () => {
-    const code = readLocal('student_code')
-    if (!code) return
-    const { data, error } = await supabase.rpc('get_student_notes', { p_code: code })
+    const cred = readStudentCred()
+    if (!cred) return
+    const { data, error } = await supabase.rpc('get_student_notes', { p_code: cred })
     if (error) { get().notify('Could not load study material', 'error'); return }
     set({ stuNotes: (data ?? []).map((n: { title: string | null; subject: string | null; body: string | null; fileUrl: string | null; linkUrl: string | null; date: string | null }) => ({
       title: n.title ?? '', subject: n.subject ?? '', body: n.body ?? '',

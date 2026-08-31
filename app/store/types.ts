@@ -28,6 +28,10 @@ export interface StaffMember { id: string; name: string; email: string; role: st
 export interface Teacher { name: string; subject: string; experience: number; qualification: string; rating?: string; about?: string; dbId?: string }
 export interface Student { name: string; klass: string; batch?: string; branch?: string; attendance: number; attendanceMarked?: number; feeStatus: FeeStatus; feeCollected?: number; feeDue?: number; school: string; parent: string; id: string; address?: string; dbId?: string; status?: string; lastSeenAt?: string }
 // A self-registered student awaiting the head's approval (roster is separate).
+// A phone that has claimed a student code. `allowed` false means it is waiting
+// for the head — the case worth looking at, because it is a code that travelled.
+export interface StudentDevice { dbId: string; studentName: string; label: string; allowed: boolean; when: string; lastSeen: string | null }
+
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
 export interface ScheduleItem { time: string; ampm: string; subject: string; klass: string; room: string; status: string; statusColor: string; statusBg: string }
@@ -111,8 +115,9 @@ export interface State {
   newStudent: { name: string; school: string; klass: string; batch: string; branch: string; parent: string; address: string; fee: string; feeDue: string }
   stuSignup: { joinCode: string; name: string; parent: string; klass: string; school: string; address: string }
   stuPending: { name: string; code: string; centre: string } | null
-  stuDenied: { name: string; centre: string } | null
+  stuDenied: { name: string; centre: string; reason?: 'device_pending' | 'device_revoked' } | null
   pendingStudents: PendingStudent[]
+  studentDevices: StudentDevice[]
   stuTeacherId: string; stuRankSubject: string
   supabaseUserId: string | null; authLoading: boolean; dataLoading: boolean
   // null = not asked yet. Only the server knows who the operator is; this is
@@ -188,6 +193,9 @@ export interface Actions {
   studentSignup: () => Promise<void>
   approveStudent: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string, batch?: string) => Promise<void>
   rejectStudent: (dbId: string) => Promise<void>
+  loadStudentDevices: () => Promise<void>
+  allowStudentDevice: (dbId: string) => Promise<void>
+  removeStudentDevice: (dbId: string) => Promise<void>
   deleteStudent: () => Promise<void>
   saveTeacher: () => Promise<void>
   addStudent: () => Promise<void>

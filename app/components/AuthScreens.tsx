@@ -8,6 +8,7 @@ import { PrimaryButton } from './Shell'
 import { Icon, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { readLocal, writeLocal, removeLocal } from '../lib/storage'
+import { readStudentCred } from '../lib/student-cred'
 import { useBusy } from '../lib/use-busy'
 
 const LOGO = (
@@ -287,9 +288,12 @@ export function useNotificationGate(): boolean {
 
 export function NotificationGateScreen() {
   const { stuPending, students, currentStudentDbId, signOut, notify, centreName } = useDashboard()
-  const code = stuPending?.code
+  // What the device sends, not what the student reads out: once this phone has
+  // claimed a device token the raw code no longer resolves for it.
+  const code = readStudentCred()
+    || stuPending?.code
     || students.find(s => s.dbId === currentStudentDbId)?.id
-    || (readLocal('student_code') ?? '')
+    || ''
 
   const [perm, setPerm] = useState<NotificationPermission>('default')
   const [busy, run] = useBusy()
@@ -354,19 +358,23 @@ export function NotificationGateScreen() {
 export function StuPendingScreen() {
   const { stuPending, signOut, loadStudentByCode, notify } = useDashboard()
   const [busy, run] = useBusy()
+  // Two different strings that used to be one. The code is what the student
+  // reads, copies and gives to their parent; the credential is what this device
+  // sends, which is a token as soon as it has claimed one.
   const code = stuPending?.code || (readLocal('student_code') ?? '')
+  const cred = readStudentCred() || code
 
   useEffect(() => {
-    if (!code) return
+    if (!cred) return
     const id = setInterval(() => {
-      if (document.visibilityState === 'visible') loadStudentByCode(code, false)
+      if (document.visibilityState === 'visible') loadStudentByCode(cred, false)
     }, 15000)
     return () => clearInterval(id)
-  }, [code, loadStudentByCode])
+  }, [cred, loadStudentByCode])
 
   const checkNow = () => run(async () => {
-    if (!code) return
-    const ok = await loadStudentByCode(code, true)
+    if (!cred) return
+    const ok = await loadStudentByCode(cred, true)
     // Only reassure if they're genuinely still pending. If the head declined,
     // loadStudentByCode has already routed to the declined screen — don't
     // flash a "hang tight" toast that contradicts it.
@@ -397,17 +405,35 @@ export function StuPendingScreen() {
   )
 }
 
-// Shown when the head declines a student's registration. Replaces the hopeful
-// "you're on the list" screen so a rejected student gets a clear, honest state
-// instead of waiting forever for an approval that will never come.
+// Shown when a student cannot get in. Three different things land here and they
+// are not the same message: the head declined the registration, or this phone is
+// a second device waiting to be allowed, or its access was taken away. Telling a
+// waiting household "not approved" would send them to register all over again.
 export function StuDeniedScreen() {
   const { stuDenied, signOut } = useDashboard()
   const first = stuDenied?.name ? `, ${stuDenied.name.split(' ')[0]}` : ''
+  const at = stuDenied?.centre ? ` at ${stuDenied.centre}` : ''
+
+  const copy = stuDenied?.reason === 'device_pending'
+    ? {
+        title: 'Waiting for this phone to be allowed',
+        sub: <>This code is already in use on another phone{first}. Ask your teacher{at} to allow this one, then check back — you do not need to register again.</>,
+      }
+    : stuDenied?.reason === 'device_revoked'
+      ? {
+          title: 'This phone was signed out',
+          sub: <>Your teacher{at} removed this phone&apos;s access{first}. If that was not meant to happen, reach out to them directly.</>,
+        }
+      : {
+          title: 'Registration not approved',
+          sub: <>Your teacher{at} didn&apos;t approve this request{first}. If you think this is a mistake, reach out to them directly — or register again with the correct details.</>,
+        }
+
   return (
     <GateNotice
       tint="bg-td-tint-red" icon="absent" color="var(--color-td-red)"
-      title="Registration not approved"
-      sub={<>Your teacher{stuDenied?.centre ? ` at ${stuDenied.centre}` : ''} didn&apos;t approve this request{first}. If you think this is a mistake, reach out to them directly — or register again with the correct details.</>}
+      title={copy.title}
+      sub={copy.sub}
     >
       <button onClick={signOut} className="td-pill text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Back to start</button>
     </GateNotice>

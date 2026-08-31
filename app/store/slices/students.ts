@@ -2,14 +2,15 @@ import { supabase } from '../../lib/supabase'
 import { friendlyError } from '../errors'
 import { enablePush, pushSupported, sendPush, sendStudentRequestPush } from '../../lib/push'
 import { genStudentCode } from '../codes'
-import { writeLocal, removeLocal } from '../../lib/storage'
+import { writeLocal } from '../../lib/storage'
+import { claimStudentDevice, clearStudentCred, hasStudentToken, readStudentCred } from '../../lib/student-cred'
 import { findStudent, indexOfStudent, studentKey } from '../../lib/student-key'
 import { changedNothing, NOT_SAVED } from '../db'
 import { isoDay } from '../format'
 import { LIMITS, capLength, clampText } from '../validate'
 import type { Slice } from '../slice'
 import { mapSnapshot } from '../snapshot'
-import type { FeeStatus, State, Student, Tab } from '../types'
+import type { FeeStatus, State, Student, StudentDevice, Tab } from '../types'
 
 // Register this device against a student code while the head has not approved
 // them yet.
@@ -42,6 +43,7 @@ type Keys =
   | 'setStudentField' | 'setNewStudent' | 'setStuSignup' | 'studentSignup'
   | 'deleteStudent' | 'addStudent' | 'importStudents' | 'approveStudent' | 'rejectStudent' | 'saveStudentEdit'
   | 'loadStudentByCode'
+  | 'loadStudentDevices' | 'allowStudentDevice' | 'removeStudentDevice'
 
 export const createStudentsSlice: Slice<Keys> = (set, get) => ({
   // Free text is capped here rather than at each input, because this is the
@@ -125,6 +127,10 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     if (error || !data) { get().notify(friendlyError(error, 'register'), 'error'); return }
     const d = data as { code: string; name: string; centre: string }
     writeLocal('student_code', d.code)
+    // Spend it immediately: this phone is definitionally the first device on a
+    // code that is seconds old, so the claim is silent and this household never
+    // sends the raw code again.
+    claimStudentDevice(d.code).catch(() => {})
     // Let the head know a request is waiting (best-effort push). This cannot go
     // through sendPush: a self-registering student has no Supabase session, so
     // sendPush returned `not signed in` and the head was never told — the whole
@@ -316,6 +322,53 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     get().notify('Request declined')
   },
 
+  // The phones using this centre's student codes. RLS scopes the table to the
+  // head's own centre, so a plain select is already tenant-safe.
+  loadStudentDevices: async () => {
+    const { data, error } = await supabase
+      .from('student_devices')
+      .select('id, label, approved, created_at, last_seen_at, students!inner(name)')
+      .is('revoked_at', null)
+      .order('approved', { ascending: true })
+      .order('created_at', { ascending: false })
+      .limit(200)
+    if (error) { get().notify(friendlyError(error, 'load the phones'), 'error'); return }
+    const rows = (data ?? []) as unknown as {
+      id: string; label: string | null; approved: boolean
+      created_at: string; last_seen_at: string | null; students: { name: string } | { name: string }[]
+    }[]
+    const devices: StudentDevice[] = rows.map(r => ({
+      dbId: r.id,
+      studentName: (Array.isArray(r.students) ? r.students[0]?.name : r.students?.name) ?? 'Student',
+      label: r.label ?? 'Unknown phone',
+      allowed: r.approved,
+      when: r.created_at,
+      lastSeen: r.last_seen_at,
+    }))
+    set({ studentDevices: devices })
+  },
+
+  allowStudentDevice: async (dbId) => {
+    const res = await supabase.from('student_devices').update({ approved: true }).eq('id', dbId).select('id')
+    if (res.error || changedNothing(res)) {
+      get().notify(friendlyError(res.error, 'allow this phone'), 'error'); return
+    }
+    set((s) => ({ studentDevices: s.studentDevices.map(d => d.dbId === dbId ? { ...d, allowed: true } : d) }))
+    get().notify('Phone allowed')
+  },
+
+  // Revoking is a soft delete on purpose: the row is what makes the raw code
+  // stop working for a student who has ever had a device, and deleting it would
+  // hand the leaked code back its power.
+  removeStudentDevice: async (dbId) => {
+    const res = await supabase.from('student_devices').update({ revoked_at: new Date().toISOString() }).eq('id', dbId).select('id')
+    if (res.error || changedNothing(res)) {
+      get().notify(friendlyError(res.error, 'remove this phone'), 'error'); return
+    }
+    set((s) => ({ studentDevices: s.studentDevices.filter(d => d.dbId !== dbId) }))
+    get().notify('Phone removed')
+  },
+
   loadStudentByCode: async (code, navigate = true) => {
     const trimmed = code.trim()
     if (trimmed.length < 4) { if (navigate) get().notify('Enter your code', 'error'); return false }
@@ -327,7 +380,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       // so it stops re-firing "Invalid code" on every launch — this is what
       // hijacks a head's device when a stale test code is left in storage.
       // Never clear on a rate-limit: the code may be perfectly valid.
-      if (!throttled) removeLocal('student_code')
+      if (!throttled) clearStudentCred()
       if (navigate) get().notify(throttled ? error!.message : 'Invalid code — check with your teacher', 'error')
       return false
     }
@@ -335,7 +388,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
 
     // Awaiting the head's approval — hold on the waiting screen (no dashboard data).
     if (snap.status === 'pending') {
-      writeLocal('student_code', trimmed)
+      if (!hasStudentToken()) writeLocal('student_code', trimmed)
       subscribePending(trimmed)
       set({
         stuPending: { name: snap.student?.name ?? '', code: snap.student?.code ?? trimmed, centre: get().stuPending?.centre ?? '' },
@@ -351,16 +404,30 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     // background polls too, so a live decline flips the screen immediately.
     if (snap.status && snap.status !== 'approved') {
       const prev = get().stuPending
-      removeLocal('student_code')
+      // A device waiting to be allowed keeps its token — that is the whole
+      // point of the wait, and clearing it would make the head's approval land
+      // on a device that had already forgotten who it was.
+      if (snap.status !== 'device_pending') clearStudentCred()
       set({
-        stuDenied: { name: prev?.name ?? snap.student?.name ?? '', centre: prev?.centre ?? '' },
+        stuDenied: {
+          name: prev?.name ?? snap.student?.name ?? '',
+          centre: prev?.centre ?? '',
+          reason: snap.status === 'device_pending' || snap.status === 'device_revoked' ? snap.status : undefined,
+        },
         stuPending: null,
         role: 'student', staffStatus: 'none', screen: 'stuDenied', tab: 'stuHome', authLoading: false,
       })
       return false
     }
 
-    writeLocal('student_code', trimmed)
+    // Once a token exists, `trimmed` IS the token, and writing it here would
+    // put 64 hex characters on the waiting screen where the student's code
+    // belongs.
+    if (!hasStudentToken()) writeLocal('student_code', trimmed)
+    // First launch on a phone that was already signed in with a raw code, or a
+    // student who has just typed one. Either way the code works exactly once
+    // more, and after this it is only a voucher.
+    claimStudentDevice(trimmed).catch(() => {})
     const patch: Partial<State> = mapSnapshot(data)
     // The snapshot is this student's whole dataset, so a successful pull is a
     // sync in exactly the same sense as the staff one.
@@ -386,7 +453,7 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       // button. enablePush is idempotent and stays silent once permission is
       // decided (granted → re-subscribes, denied → no dialog); skip when denied
       // and swallow failures so a blocked prompt never disrupts login.
-      if (pushSupported() && Notification.permission !== 'denied') enablePush('student', trimmed).catch(() => {})
+      if (pushSupported() && Notification.permission !== 'denied') enablePush('student', readStudentCred() ?? trimmed).catch(() => {})
     }
     set(patch)
     return true

@@ -8,6 +8,7 @@ import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { ThemeToggle } from './ThemeToggle'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
+import { readStudentCred } from '../lib/student-cred'
 import { teacherKey } from '../lib/student-key'
 import { readLocal, writeLocal } from '../lib/storage'
 
@@ -101,7 +102,7 @@ export function StuHomeScreen() {
         </div>
         {pushSupported() && me?.id && (
           <button onClick={async () => {
-            const r = await enablePush('student', me.id)
+            const r = await enablePush('student', readStudentCred() ?? me.id)
             if (!r.ok) { useDashboard.getState().notify(r.error || 'Could not enable'); return }
             // Immediately prove the device can actually display one. Turning
             // alerts "on" and seeing nothing for days is how a student ends up

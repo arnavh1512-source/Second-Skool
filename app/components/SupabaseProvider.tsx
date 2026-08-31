@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
-import { readLocal, removeLocal } from '../lib/storage'
+import { clearStudentCred, readStudentCred } from '../lib/student-cred'
 import { totalsByStudent, countDailyRows, attendancePct, marksForDay, type AttendanceTotal } from '../lib/attendance'
 import { atRisk } from '../lib/at-risk'
 import { isoDay } from '../store/format'
@@ -68,7 +68,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         // A code-access student has no Supabase session, so the staff branch
         // above skips them entirely and refreshData() used to be a no-op on
         // every student screen. Their snapshot is the equivalent pull.
-        const code = readLocal('student_code')
+        const code = readStudentCred()
         if (code) await st.loadStudentByCode(code, false).catch(() => false)
       }
     })
@@ -117,7 +117,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
 
   // No Google session: a returning student may have a saved code; otherwise land on login.
   function resumeStudentOrLanding() {
-    const code = readLocal('student_code')
+    const code = readStudentCred()
     if (code) {
       useDashboard.getState().loadStudentByCode(code)
         .then(ok => { if (!ok) set({ authLoading: false }) })
@@ -133,7 +133,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // A Google-authenticated user is staff, never a code-access student. Purge
     // any student_code left over from testing so a session blip can't drop this
     // device into the student "invalid code" path.
-    removeLocal('student_code')
+    clearStudentCred()
     try {
       const { data: profile } = await supabase.from('profiles').select('role, staff_status, full_name, phone, subject, qualification, profile_completed_at').eq('id', userId).single()
       const role = (profile?.role as Role) ?? 'student'
@@ -434,7 +434,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     if (st.supabaseUserId && (st.role === 'admin' || st.role === 'teacher') && st.staffStatus === 'approved') {
       fetchAllData().catch(() => {}) // ignore transient failures
     } else if (!st.supabaseUserId && st.currentStudentDbId) {
-      const code = readLocal('student_code')
+      const code = readStudentCred()
       if (code) st.loadStudentByCode(code, false) // refresh without navigating
     }
   }
@@ -476,7 +476,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       if (document.visibilityState !== 'visible') return
       const st = useDashboard.getState()
       if (!st.supabaseUserId && st.currentStudentDbId) {
-        const code = readLocal('student_code')
+        const code = readStudentCred()
         if (code) st.loadStudentByCode(code, false)
       }
     }, 60000)

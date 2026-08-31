@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase'
-import { readLocal } from '../../lib/storage'
+import { readStudentCred } from '../../lib/student-cred'
 import { fileToScreenshotDataUrl } from '../../lib/image'
 import { buildDiagnostics, validateReport } from '../../lib/support'
 import { friendlyError } from '../errors'
@@ -78,9 +78,9 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
 
   loadMyTickets: async () => {
     if (get().role === 'student') {
-      const code = readLocal('student_code')
-      if (!code) return
-      const { data, error } = await supabase.rpc('my_tickets', { p_code: code })
+      const cred = readStudentCred()
+      if (!cred) return
+      const { data, error } = await supabase.rpc('my_tickets', { p_code: cred })
       if (error) { get().notify(friendlyError(error, 'load your reports'), 'error'); return }
       set({ myTickets: (Array.isArray(data) ? data : []).map(toTicket) })
       return
@@ -102,10 +102,10 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
     const diag = diagnostics()
 
     if (role === 'student') {
-      const code = readLocal('student_code')
-      if (!code) { get().notify('Sign in again to report a problem', 'error'); return }
+      const cred = readStudentCred()
+      if (!cred) { get().notify('Sign in again to report a problem', 'error'); return }
       const { error } = await supabase.rpc('file_ticket', {
-        p_code: code,
+        p_code: cred,
         p_intent: d.intent,
         p_outcome: d.outcome,
         p_area: d.area,
@@ -143,9 +143,9 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
     const text = body.trim()
     if (!id || !text) return
     if (get().role === 'student') {
-      const code = readLocal('student_code')
-      if (!code) return
-      const { error } = await supabase.rpc('reply_ticket', { p_code: code, p_ticket: id, p_body: text })
+      const cred = readStudentCred()
+      if (!cred) return
+      const { error } = await supabase.rpc('reply_ticket', { p_code: cred, p_ticket: id, p_body: text })
       if (error) { get().notify(friendlyError(error, 'send that message'), 'error'); return }
     } else {
       const { error } = await supabase

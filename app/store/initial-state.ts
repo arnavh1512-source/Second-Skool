@@ -19,7 +19,7 @@ export const initialState: State = {
   newTeacher: { name: '', subject: '', qualification: '', experience: '', branch: '' },
   newStudent: { name: '', school: '', klass: 'Class 10', batch: '', branch: '', parent: '', address: '', fee: '', feeDue: '' },
   stuSignup: { joinCode: '', name: '', parent: '', klass: 'Class 10', school: '', address: '' },
-  stuPending: null, stuDenied: null, pendingStudents: [],
+  stuPending: null, stuDenied: null, pendingStudents: [], studentDevices: [],
   teachers: [], students: [],
   stuTeacherId: '', stuRankSubject: '',
   supabaseUserId: null, authLoading: true, dataLoading: false, devAllowed: null, devConsoleOpen: false,
