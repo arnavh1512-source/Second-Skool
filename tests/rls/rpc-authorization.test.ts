@@ -148,6 +148,15 @@ suite('rpc authorization', () => {
     expect(msg).toMatch(/permission denied/i)
   })
 
+  it('the door the ticket functions walk through is not a door of its own', async () => {
+    // support_student() returns a whole students row and is SECURITY DEFINER.
+    // 0023 and 0032 both tried to revoke it from anon and both left PUBLIC's
+    // default grant in place, which anon inherits. 0037 revokes from PUBLIC.
+    const msg = await denied(() => act(c, { role: 'anon' }, q =>
+      q('select public.support_student($1)', [a.students[0].code])))
+    expect(msg).toMatch(/permission denied/i)
+  })
+
   it('signing up with one centre code cannot land a student in another', async () => {
     const signup = await act(c, { role: 'anon', commit: true }, async q =>
       (await q('select public.student_signup($1,$2,$3,$4,$5) as r',
@@ -173,6 +182,30 @@ suite('rpc authorization', () => {
     const tickets = await act(c, { role: 'anon' }, async q =>
       (await q('select public.my_tickets($1) as r', [a.students[0].code])).rows[0].r)
     expect(tickets).toEqual([])
+  })
+
+  it('no SECURITY DEFINER function is executable by PUBLIC', async () => {
+    // 0036 swept all of these by hand and found four that had never been
+    // granted, which under Postgres means granted to everybody. The point of
+    // writing it as a test is that the sweep does not have to be remembered
+    // again: the next definer function added without a grant fails here.
+    //
+    // The invariant is not "anon is forbidden" — file_ticket, my_tickets and
+    // reply_ticket are anon's on purpose, because students have no session.
+    // It is that every one of them names its callers, so PUBLIC (grantee 0,
+    // which is also what an absent ACL defaults to) is never among them.
+    const { rows } = await c.query(`
+      select p.oid::regprocedure::text as fn
+        from pg_proc p
+        join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public'
+         and p.prosecdef
+         and p.prorettype <> 'trigger'::regtype
+         and exists (
+           select 1 from aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+            where a.grantee = 0 and a.privilege_type = 'EXECUTE')
+       order by 1`)
+    expect(rows.map(r => r.fn)).toEqual([])
   })
 
   it('a wrong centre code is refused rather than guessed at', async () => {

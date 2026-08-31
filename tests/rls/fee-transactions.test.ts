@@ -284,6 +284,11 @@ suite('fee writes', () => {
     const out = await act(c, { role: 'anon' }, async q => {
       const code = (await q('select public.student_signup($1,$2,$3,$4,$5) as r',
         [a.studentJoinCode, 'Fresh Signup', '9000000125', '9', 'St Xavier'])).rows[0].r.code
+      // A student has no session and cannot read the students table — the row
+      // just written is invisible to the role that wrote it. Step back to the
+      // owning connection to look at it, still inside the same transaction, so
+      // the signup is rolled back with everything else.
+      await q('reset role')
       const row = (await q(
         'select id, fee_status from public.students where student_code = $1', [code])).rows[0]
       return { badge: row.fee_status, fees: (await q(
