@@ -158,6 +158,23 @@ suite('rpc authorization', () => {
     expect(rows[0].status).toBe('pending')
   })
 
+  it('anon cannot execute join_centre at all', async () => {
+    // It reads auth.uid(), so anon calling it was never going to achieve
+    // anything — but the grant should say that, rather than leaving it to be
+    // reconstructed from the body.
+    const msg = await denied(() => act(c, { role: 'anon' }, q =>
+      q('select public.join_centre($1)', ['NOTACODE00'])))
+    expect(msg).toMatch(/permission denied/i)
+  })
+
+  it('anon can still reach the student support functions', async () => {
+    // The opposite intent, and the reason the grants are written out: students
+    // have no session, so these three are anon's on purpose.
+    const tickets = await act(c, { role: 'anon' }, async q =>
+      (await q('select public.my_tickets($1) as r', [a.students[0].code])).rows[0].r)
+    expect(tickets).toEqual([])
+  })
+
   it('a wrong centre code is refused rather than guessed at', async () => {
     const msg = await denied(() => act(c, { uid: a.outsider }, q =>
       q('select public.join_centre($1)', ['NOTACODE00'])))

@@ -265,10 +265,12 @@ suite('fee writes', () => {
 
   // ── the other doors into the students table ───────────────────────────────
 
-  it('a student who signs up and waits is not Due before anyone has billed them', async () => {
+  it('a caller cannot manufacture a Due student by simply asking for one', async () => {
+    // Straight at the table, with the literal 'Due' that student_signup() and
+    // the roster import both used to write, and no fee row behind it. The
+    // trigger is what overrules it, so this holds for every path into the
+    // table rather than for the three that were known on the day it was fixed.
     const badge = await asHead(async q => {
-      // What student_signup() writes, including its literal 'Due' — the table
-      // is what overrules it, so every path is covered and not just that one.
       const id = (await q(`insert into public.students
         (name, class, school, parent_contact, student_code, fee_status, status)
         values ('Waiting','Class 8','St Xavier','9000000124','TUT-WAIT','Due','pending')
@@ -276,6 +278,18 @@ suite('fee writes', () => {
       return (await q('select fee_status from public.students where id = $1', [id])).rows[0].fee_status
     })
     expect(badge).toBe('Paid')
+  })
+
+  it('a student who signs up through the real anon path is Paid, with no fee rows', async () => {
+    const out = await act(c, { role: 'anon' }, async q => {
+      const code = (await q('select public.student_signup($1,$2,$3,$4,$5) as r',
+        [a.studentJoinCode, 'Fresh Signup', '9000000125', '9', 'St Xavier'])).rows[0].r.code
+      const row = (await q(
+        'select id, fee_status from public.students where student_code = $1', [code])).rows[0]
+      return { badge: row.fee_status, fees: (await q(
+        'select count(*) from public.fees where student_id = $1', [row.id])).rows[0].count }
+    })
+    expect(out).toEqual({ badge: 'Paid', fees: '0' })
   })
 
   it('approving with a fee turns the badge Due, and approving without one leaves it Paid', async () => {
