@@ -41,7 +41,9 @@ suite('rpc authorization', () => {
 
   it("reopen_fees_today finds nothing when aimed at another centre's student", async () => {
     const r = await call(b.head, 'select public.reopen_fees_today($1) as r', [a.students[0].id])
-    expect(r).toEqual({ student: 0, fees: 0 })
+    // Since 0034 the settled badge comes back with the row counts, and it is
+    // null here because nothing was settled: the student could not be locked.
+    expect(r).toEqual({ student: 0, fees: 0, status: null })
   })
 
   it("sync_fee_status finds nothing when aimed at another centre's student", async () => {
