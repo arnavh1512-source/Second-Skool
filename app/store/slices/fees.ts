@@ -1,6 +1,6 @@
 import { supabase } from '../../lib/supabase'
 import { indexOfStudent } from '../../lib/student-key'
-import { changedNothing, dbErr, NOT_SAVED } from '../db'
+import { dbErr, NOT_SAVED } from '../db'
 import type { Slice } from '../slice'
 import type { FeeRecord, FeeStatus } from '../types'
 
@@ -16,12 +16,16 @@ import type { FeeRecord, FeeStatus } from '../types'
 // of the past; a fee added on the head's phone thirty seconds earlier is not in
 // it, and the write confidently stamped it away.
 //
-// So the pairs now happen inside one database transaction each, and fee_status
-// is derived there from the rows that actually exist — mark_fees_paid(),
-// reopen_fees_today() and sync_fee_status(), all in migration 0030. Each takes
-// a lock on the student row first, so two people touching the same child's fees
-// at the same moment queue rather than overwrite. The browser's job is down to
-// asking for the change and reporting what came back.
+// So every pair now happens inside one database transaction, and fee_status is
+// derived there from the rows that actually exist. Collecting and reopening
+// went first, in migration 0030; adding and deleting followed in 0034, because
+// until then those three still committed the fee row and only then asked for
+// the badge — the same gap, on the paths that create the money rather than
+// collect it. Six functions, one shape: add_fee, add_fee_plan, delete_fee,
+// delete_fee_plan, mark_fees_paid, reopen_fees_today. Each locks the student
+// row before touching anything, so two people working on the same child at the
+// same moment queue rather than overwrite. The browser's job is down to asking
+// for the change and reporting what came back.
 //
 // The optimistic update stays — the badge must move the instant she taps — but
 // it is rolled back when the write fails, and success is only claimed once the
@@ -40,16 +44,14 @@ export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 
       set({ students: arr })
     }
 
-    const r1 = await supabase.from('fees').insert({ student_id: studentDbId, amount, period, due_date: dueDate, status: 'Due' })
-    if (r1.error) { set({ students: before }); dbErr('add the fee', notify)(r1); return false }
-
-    // The fee row is committed at this point, so a failure here is a mismatched
-    // badge rather than a lost record — report it, but do not roll the fee back.
-    const r2 = await supabase.rpc('sync_fee_status', { p_student_id: studentDbId })
-    if (r2.error) { dbErr('update the fee status', notify)(r2); await get().refreshData(); return true }
-    // The student row must exist — a fee was just inserted against it. Zero
-    // rows means the roster moved under us, and the badge is now wrong.
-    if (!syncedStudent(r2.data)) { notify('Fee saved, but the status badge did not update — refresh to see it', 'error'); await get().refreshData(); return true }
+    const res = await supabase.rpc('add_fee', {
+      p_student_id: studentDbId, p_amount: amount, p_period: period, p_due_date: dueDate,
+    })
+    if (res.error) { set({ students: before }); dbErr('add the fee', notify)(res); return false }
+    // Nothing was written if the student could not be locked — deleted in
+    // another session, or in a centre this head may not touch. The whole call
+    // rolled back with it, so rolling the badge back here is the truth.
+    if (!syncedStudent(res.data)) { set({ students: before }); notify(NOT_SAVED, 'error'); return false }
 
     notify('Fee record added')
     await get().refreshData()
@@ -57,16 +59,16 @@ export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 
   },
 
   // A plan is written as ordinary fee rows sharing one plan_id. Six installments
-  // are one insert, not six round trips — a partial plan (three rows in, three
-  // lost to a dropped connection) would be worse than no plan, and Postgres
-  // gives us all-or-nothing for free on a single statement.
+  // are one call, not six round trips — a partial plan (three rows in, three
+  // lost to a dropped connection) would be worse than no plan, and one
+  // transaction gives us all-or-nothing for free. The plan_id is the database's
+  // to choose; nothing out here needs to know it before the rows exist.
   addFeePlan: async (studentDbId, installments) => {
     const notify = get().notify
     if (!studentDbId) { notify('Choose a student before setting up a plan', 'error'); return false }
     if (installments.length === 0) { notify('That plan has no installments', 'error'); return false }
     if (!get().online) { notify('No internet — the plan has NOT been created. Try again once you are back online.', 'error'); return false }
 
-    const planId = crypto.randomUUID()
     const total = installments.reduce((n, i) => n + i.amount, 0)
 
     const before = get().students
@@ -77,17 +79,12 @@ export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 
       set({ students: arr })
     }
 
-    const r1 = await supabase.from('fees').insert(installments.map(i => ({
-      student_id: studentDbId, plan_id: planId,
-      amount: i.amount, period: i.period, due_date: i.dueDate, status: 'Due',
-    })))
-    if (r1.error) { set({ students: before }); dbErr('create the fee plan', notify)(r1); return false }
-
-    // The rows are committed by here, so a failure below is a stale badge and
-    // not a lost plan — say so, but do not roll the plan back.
-    const r2 = await supabase.rpc('sync_fee_status', { p_student_id: studentDbId })
-    if (r2.error) { dbErr('update the fee status', notify)(r2); await get().refreshData(); return true }
-    if (!syncedStudent(r2.data)) { notify('Plan saved, but the status badge did not update — refresh to see it', 'error'); await get().refreshData(); return true }
+    const res = await supabase.rpc('add_fee_plan', {
+      p_student_id: studentDbId,
+      p_installments: installments.map(i => ({ amount: i.amount, period: i.period, due_date: i.dueDate })),
+    })
+    if (res.error) { set({ students: before }); dbErr('create the fee plan', notify)(res); return false }
+    if (!syncedStudent(res.data)) { set({ students: before }); notify(NOT_SAVED, 'error'); return false }
 
     // The open breakdown was fetched before these rows existed. Without this the
     // head watches a success toast and an unchanged list.
@@ -110,19 +107,12 @@ export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 
     if (doomed.length === 0) { notify('Every installment in that plan is already paid', 'error'); return }
     set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before.filter(f => !doomed.includes(f)) } }))
 
-    const res = await supabase.from('fees').delete()
-      .eq('plan_id', planId).eq('student_id', studentDbId).neq('status', 'Paid').select('id')
-    if (res.error) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); dbErr('remove the fee plan', notify)(res); return }
-    if (changedNothing(res)) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); notify(NOT_SAVED, 'error'); return }
-
-    // Same reason as deleteFee: fee_status is a stored column, so it has to be
-    // recomputed from what is actually left or the family keeps the Due badge.
-    const upd = await supabase.rpc('sync_fee_status', { p_student_id: studentDbId })
-    if (upd.error || !syncedStudent(upd.data)) {
-      notify('Plan removed, but the status badge did not update — refresh to see it', 'error')
-      await get().refreshData()
-      return
-    }
+    const res = await supabase.rpc('delete_fee_plan', { p_plan_id: planId, p_student_id: studentDbId })
+    const rollback = () => set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } }))
+    if (res.error) { rollback(); dbErr('remove the fee plan', notify)(res); return }
+    // Zero rows is a teacher's delete filtered out by RLS, or a plan someone
+    // else removed first. Either way nothing changed, including the badge.
+    if (!syncedStudent(res.data)) { rollback(); notify(NOT_SAVED, 'error'); return }
 
     notify(`${doomed.length} unpaid installments removed`)
     await get().refreshData()
@@ -165,7 +155,11 @@ export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 
     // head walks away believing a fee was collected. Roll the badge back.
     if (!syncedStudent(res.data)) { set({ students: before }); notify(NOT_SAVED, 'error'); return }
 
-    notify(`${student.name}: ${newStatus}`)
+    // Report what the database settled on, not what the tap asked for. Reopening
+    // a student whose fees were all collected in earlier months reopens nothing
+    // — correctly — and the badge stays Paid. Saying "Due" there would be the
+    // toast agreeing with an optimistic guess the DB has already overruled.
+    notify(`${student.name}: ${settledStatus(res.data) ?? newStatus}`)
     await get().refreshData()
   },
 
@@ -194,8 +188,8 @@ export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 
   // on that family's balance permanently — and the only way to clear it was to
   // mark it Paid, which records money nobody ever handed over. Head-only,
   // because fees_head is the policy that permits it: a teacher's delete is
-  // filtered out by RLS and returns PostgREST's silent zero-row success, which
-  // is exactly what changedNothing is here to catch.
+  // filtered out by RLS and returns a silent zero-row success, which is what
+  // the row counts coming back from delete_fee are here to catch.
   deleteFee: async (feeId, studentDbId) => {
     const notify = get().notify
     if (!get().online) { notify('No internet — the fee has NOT been removed. Try again once you are back online.', 'error'); return }
@@ -203,29 +197,32 @@ export const createFeesSlice: Slice<'addFee' | 'addFeePlan' | 'deleteFeePlan' | 
     const before = get().feeRecords[studentDbId] ?? []
     set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before.filter(f => f.dbId !== feeId) } }))
 
-    const res = await supabase.from('fees').delete().eq('id', feeId).select('id')
-    if (res.error) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); dbErr('remove the fee', notify)(res); return }
-    if (changedNothing(res)) { set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } })); notify(NOT_SAVED, 'error'); return }
-
-    // The badge is a column, not a total, so refreshData alone would leave a
-    // student reading "Due" with nothing left owing. Recompute it from what
-    // actually remains — and if that write fails the fee is still gone, so
-    // say so rather than rolling back a delete that already happened.
-    const upd = await supabase.rpc('sync_fee_status', { p_student_id: studentDbId })
-    if (upd.error || !syncedStudent(upd.data)) {
-      notify('Fee removed, but the status badge did not update — refresh to see it', 'error')
-      await get().refreshData()
-      return
-    }
+    // The badge is a column, not a total, so a delete on its own would leave a
+    // student reading "Due" with nothing left owing. delete_fee recomputes it
+    // from what remains, in the same transaction as the delete.
+    const res = await supabase.rpc('delete_fee', { p_fee_id: feeId })
+    const rollback = () => set(s => ({ feeRecords: { ...s.feeRecords, [studentDbId]: before } }))
+    if (res.error) { rollback(); dbErr('remove the fee', notify)(res); return }
+    if (!syncedStudent(res.data)) { rollback(); notify(NOT_SAVED, 'error'); return }
 
     notify('Fee record removed')
     await get().refreshData()
   },
 })
 
-// All three fee functions report how many student rows they touched. Zero means
-// the student was not there to lock — deleted in another session, or behind an
-// RLS policy this user does not satisfy — which PostgREST would otherwise hand
-// back as a cheerful success. Same job changedNothing() does for a plain write.
+// Every fee function reports how many student rows it touched. Zero means the
+// write did not happen — the student was not there to lock, or RLS filtered the
+// change away — and because the whole function is one transaction, zero here
+// means nothing at all changed. PostgREST would otherwise hand that back as a
+// cheerful success. Same job changedNothing() does for a plain write.
 const syncedStudent = (data: unknown): boolean =>
   Number((data as { student?: unknown } | null)?.student ?? 0) > 0
+
+// The badge the database actually wrote. Only the toggle needs it — every other
+// path already knows the answer it asked for — and refreshData() reconciles the
+// roster a moment later regardless, so a shape we do not recognise is a reason
+// to fall back rather than to fail.
+const settledStatus = (data: unknown): FeeStatus | null => {
+  const s = (data as { status?: unknown } | null)?.status
+  return s === 'Paid' || s === 'Due' || s === 'Overdue' ? s : null
+}
