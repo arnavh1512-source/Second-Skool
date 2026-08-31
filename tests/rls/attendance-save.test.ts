@@ -139,10 +139,13 @@ suite('save_attendance', () => {
   })
 
   it('a teacher cannot mark a child at another centre', async () => {
-    // SECURITY INVOKER on purpose: attendance_staff still decides who may
-    // write, exactly as it did when the client wrote the rows itself.
+    // SECURITY INVOKER on purpose: the row still has to survive everything a
+    // row written by the client had to survive. What stops it is the composite
+    // foreign key rather than a policy — the centre_id column fills itself in
+    // from her session, and (student_id, centre_id) has to name a child who is
+    // actually at that centre. It refuses one step earlier than RLS would.
     const msg = await denied(() => save(b.teacher, marksFor('Present'), false))
-    expect(msg).toMatch(/row-level security|permission denied/i)
+    expect(msg).toMatch(/attendance_student_centre_fk|row-level security|permission denied/i)
   })
 
   it('refuses a register for a class that has not happened yet', async () => {
