@@ -40,6 +40,11 @@ type Snapshot = {
     activity7d: number; activity30d: number
     newStudents7d: number; newStaff7d: number
   }
+  // What the system itself is doing, as opposed to what the centres are doing.
+  health: {
+    phonesLive: number; phonesWaiting: number; codeAttempts5m: number
+    migrations: number; migrationLatest: string | null
+  }
   centres: CentreRow[]
   staff: StaffRow[]
   alerts: string[]
@@ -189,6 +194,34 @@ export function DevConsoleScreen() {
             <Stat label="Actions · 7d" value={data.totals.activity7d} sub={`${data.totals.activity30d} in 30d`} />
           </div>
 
+          {/* The system's own vitals. Every one of these was already being
+              written and none of it was being read: a phone waiting on a head
+              who never saw the badge, a code being ground against the throttle,
+              a migration file pasted into the SQL editor months ago and never
+              confirmed. Three numbers, no dashboards. */}
+          <div className="grid grid-cols-3 gap-2.5 mb-4 lg:max-w-2xl">
+            <Stat
+              label="Phones"
+              value={data.health.phonesLive}
+              sub={data.health.phonesWaiting ? `${data.health.phonesWaiting} waiting` : 'none waiting'}
+              calm={data.health.phonesWaiting === 0}
+            />
+            <Stat
+              label="Code attempts · 5m"
+              value={data.health.codeAttempts5m}
+              sub={data.health.codeAttempts5m >= 10 ? 'throttle holding' : 'quiet'}
+              calm={data.health.codeAttempts5m < 10}
+            />
+            <Stat
+              label="Migrations"
+              value={data.health.migrations}
+              // The full version string is a sentence; the number in front of
+              // it is the thing being checked against the repository.
+              sub={data.health.migrationLatest ? `latest ${data.health.migrationLatest.split('_')[0]}` : 'none recorded'}
+              calm={data.health.migrationLatest !== null}
+            />
+          </div>
+
           {data.alerts.length > 0 && (
             <div className="td-card rounded-[16px] p-4 mb-4">
               <div className="text-[13px] td-strong mb-2">Needs attention</div>
@@ -276,12 +309,15 @@ export function DevConsoleScreen() {
   )
 }
 
-function Stat({ label, value, sub }: { label: string; value: number | string; sub?: string }) {
+// `sub` is amber because everywhere it appeared it meant "something is waiting".
+// The health strip has subs that mean the opposite — nothing waiting, throttle
+// quiet — and amber for good news is a false alarm every time the console opens.
+function Stat({ label, value, sub, calm }: { label: string; value: number | string; sub?: string; calm?: boolean }) {
   return (
     <div className="td-card rounded-[16px] p-3.5">
       <div className="text-[12px] font-bold text-td-muted">{label}</div>
       <div className="text-[20px] td-strong mt-0.5 leading-tight">{value}</div>
-      {sub && <div className="text-[12px] text-td-amber mt-0.5">{sub}</div>}
+      {sub && <div className={`text-[12px] mt-0.5 ${calm ? 'text-td-subtle' : 'text-td-amber'}`}>{sub}</div>}
     </div>
   )
 }

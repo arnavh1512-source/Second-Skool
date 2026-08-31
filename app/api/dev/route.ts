@@ -147,7 +147,7 @@ export async function GET(req: NextRequest) {
   const sevenDaysAgo = now - 7 * 86_400_000
   const errors: string[] = []
 
-  const [centres, profiles, students, branches, devices, activity, authUsers] = await Promise.all([
+  const [centres, profiles, students, branches, devices, phones, attempts, migrations, activity, authUsers] = await Promise.all([
     fetchRows<CentreRow>('centres', () =>
       admin.from('centres').select('id,name,join_code,student_join_code,owner_id,created_at').limit(CAP), errors),
     fetchRows<ProfileRow>('profiles', () =>
@@ -158,6 +158,20 @@ export async function GET(req: NextRequest) {
       admin.from('branches').select('centre_id').limit(CAP), errors),
     fetchRows<{ centre_id: string | null; kind: string }>('push_subscriptions', () =>
       admin.from('push_subscriptions').select('centre_id,kind').limit(CAP), errors),
+    // The three reads behind the health strip. All of them already existed and
+    // nothing was looking at them: a phone waiting on a head who never noticed,
+    // a code being ground against the throttle, a migration pasted into the SQL
+    // editor and forgotten. None of this is new machinery — it is the machinery
+    // that was already running, finally reporting.
+    fetchRows<{ centre_id: string | null; approved: boolean; revoked_at: string | null }>('student_devices', () =>
+      admin.from('student_devices').select('centre_id,approved,revoked_at').limit(CAP), errors),
+    // This table is a live throttle bucket, not a log: rows older than five
+    // minutes are deleted by the functions that write it. A count here is
+    // therefore "right now", and that is exactly what it is worth.
+    fetchRows<{ id: number }>('code_attempts', () =>
+      admin.from('code_attempts').select('id').limit(CAP), errors),
+    fetchRows<{ version: string }>('schema_migrations', () =>
+      admin.from('schema_migrations').select('version').order('version').limit(CAP), errors),
     Promise.all(ACTIVITY_TABLES.map(async table => ({
       table,
       rows: await fetchRows<Dated>(table, () =>
@@ -304,6 +318,29 @@ export async function GET(req: NextRequest) {
   const orphanStaff = profiles.filter(p => p.role !== 'student' && !p.centre_id && p.staff_status !== 'rejected').length
   if (orphanStaff) alerts.push(`${orphanStaff} signed-in staff not attached to any centre`)
 
+  // ---- health strip ---------------------------------------------------------
+  const livePhones = phones.filter(p => !p.revoked_at)
+  const waitingByCentre = new Map<string, number>()
+  for (const p of livePhones) {
+    if (p.approved || !p.centre_id) continue
+    waitingByCentre.set(p.centre_id, (waitingByCentre.get(p.centre_id) ?? 0) + 1)
+  }
+  for (const [id, n] of waitingByCentre)
+    alerts.push(`${centreNameById.get(id) ?? 'Unknown centre'}: ${n} phone${n > 1 ? 's' : ''} waiting to be allowed`)
+  // The throttle refuses the eleventh failure in a minute, so a bucket this
+  // full is somebody working through the code space rather than a parent
+  // mistyping. It is the only place that fact is visible at all.
+  if (attempts.length >= 10)
+    alerts.push(`${attempts.length} failed code attempts in the last 5 minutes — the throttle is holding`)
+
+  const health = {
+    phonesLive: livePhones.length,
+    phonesWaiting: livePhones.filter(p => !p.approved).length,
+    codeAttempts5m: attempts.length,
+    migrations: migrations.length,
+    migrationLatest: migrations.length ? migrations[migrations.length - 1].version : null,
+  }
+
   const totals = {
     centres: centres.length,
     staffApproved: staffRows.filter(s => s.status === 'approved').length,
@@ -318,7 +355,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json(
-    { generatedAt: new Date(now).toISOString(), windowDays: WINDOW_DAYS, totals, centres: centreRows, staff: staffRows, alerts, errors },
+    { generatedAt: new Date(now).toISOString(), windowDays: WINDOW_DAYS, totals, health, centres: centreRows, staff: staffRows, alerts, errors },
     { headers: { 'cache-control': 'no-store' } },
   )
 }
