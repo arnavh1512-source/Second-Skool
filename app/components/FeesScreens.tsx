@@ -8,10 +8,8 @@ import { ScreenHeader, PrimaryButton, EmptyState, ConfirmDialog } from './Shell'
 
 // Due dates are parsed as calendar parts, not as instants: "5 Oct" is a day on
 // a wall calendar and must not slide to the 4th because of a timezone.
-const fmtDue = (iso: string) => {
-  const d = parseDay(iso)
-  return d ? `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })} ${d.getFullYear()}` : ''
-}
+const fmtDue = (iso: string) =>
+  parseDay(iso)?.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) ?? ''
 
 export function FeesScreen() {
   const { students, back, notify, addFee, addFeePlan, deleteFeePlan, toggleFeeStatus, saveReminder, go, role, feeRecords, loadStudentFees, deleteFee } = useDashboard()

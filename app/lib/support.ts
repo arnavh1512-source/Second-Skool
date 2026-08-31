@@ -49,14 +49,14 @@ export function validateReport(d: ReportDraft): string | null {
 // is filed, the URL never changes in a single-route app, and the role is
 // already on the ticket — recording those would look like telemetry and tell
 // you nothing. These four all actually vary between one reporter and the next.
-export type Diagnostics = {
+type Diagnostics = {
   version: string
   viewport: string
   userAgent: string
   lastError: string | null
 }
 
-export type DiagnosticsInput = {
+type DiagnosticsInput = {
   version: string
   userAgent: string
   width: number

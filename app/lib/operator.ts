@@ -11,13 +11,13 @@ const ALLOWED = ['arnavh1512@gmail.com']
 
 // The subset of the Supabase user we are willing to trust an identity decision
 // to. Kept structural so the check can be tested without a live auth server.
-export type OperatorClaims = {
+type OperatorClaims = {
   email?: string | null
   email_confirmed_at?: string | null
   identities?: { provider: string }[] | null
 }
 
-export type OperatorVerdict = { operator: boolean; reason: 'ok' | 'not_listed' | 'unconfirmed' | 'not_google' }
+type OperatorVerdict = { operator: boolean; reason: 'ok' | 'not_listed' | 'unconfirmed' | 'not_google' }
 
 // Matching the address is necessary but nowhere near sufficient.
 //

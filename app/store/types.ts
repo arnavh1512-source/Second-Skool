@@ -37,8 +37,8 @@ export interface BranchItem { name: string; address: string; students: number; s
 export interface StuResultItem { subject: string; test: string; date: string; marks: number; total: number }
 export interface AttLogItem { day: string; date: string; status: string; icon: string; tint: string; color: string }
 export interface StuAssignmentItem { title: string; subject: string; due: string; instructions: string }
-export interface NoteItem { dbId?: string; title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }
-export interface StuNoteItem { title: string; subject: string; body: string; fileUrl: string; linkUrl: string; date: string }
+interface NoteItem { dbId?: string; title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }
+interface StuNoteItem { title: string; subject: string; body: string; fileUrl: string; linkUrl: string; date: string }
 export interface FeeHistoryItem { period: string; date: string; amount: string }
 // The head's view of a single fee row. FeeHistoryItem is the parent's version
 // and carries no id, because a parent can only ever read theirs — the head
@@ -49,7 +49,7 @@ export interface FeeHistoryItem { period: string; date: string; amount: string }
 export interface FeeRecord { dbId: string; period: string; amount: number; dueDate: string; status: FeeStatus; planId: string | null }
 // One line of the sent-reminder log. `when` is pre-formatted by timeAgo at
 // fetch time, the same way NotifItem does it.
-export interface ReminderLogItem { dbId: string; type: string; message: string; targetClass: string | null; when: string }
+interface ReminderLogItem { dbId: string; type: string; message: string; targetClass: string | null; when: string }
 export interface NotifItem { icon: string; tint: string; title: string; detail: string; when: string; dbId?: string }
 // A leaderboard row. `id` is the student's row id and is what decides who is
 // who — two students in the same centre can share a name, and keying the board
@@ -59,12 +59,12 @@ export interface NotifItem { icon: string; tint: string; title: string; detail: 
 export interface RankRow { id: string | null; name: string; score: number }
 export interface SubjectItem { name: string; dbId: string }
 export interface BatchItem { name: string; dbId: string }
-export interface BranchReport { name: string; students: number; new_students: number; staff: number; att_pct: number; fees_collected: number; fees_pending: number }
+interface BranchReport { name: string; students: number; new_students: number; staff: number; att_pct: number; fees_collected: number; fees_pending: number }
 export interface WeeklyReport { generated_at: string; branches: BranchReport[]; unassigned_students: number; tests_this_week: number }
 export interface StudentReport { name: string; klass: string; parent: string; fee_status: string; att_present: number; att_total: number; tests: number; avg_pct: number }
 export interface TeacherActivity { name: string; email: string; is_head: boolean; attendance_marks: number; tests_entered: number; assignments_created: number }
 
-export interface StaffProfile { name: string; phone: string; subject: string; qualification: string }
+interface StaffProfile { name: string; phone: string; subject: string; qualification: string }
 
 export type ToastKind = 'info' | 'error'
 

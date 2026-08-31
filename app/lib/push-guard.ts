@@ -4,7 +4,7 @@
 
 import { logWarn } from './log'
 
-export type PushBody = {
+type PushBody = {
   studentCodes?: string[]
   notifyHead?: boolean
   title: string
@@ -217,7 +217,7 @@ export function signWithCentre(centreName: string | null | undefined, title: str
 // the row it names and refuses anything that is not still pending. This guard
 // is only the cheap shape gate in front of that lookup.
 // ---------------------------------------------------------------------------
-export type StudentRequestBody = { code: string }
+type StudentRequestBody = { code: string }
 
 export function validateStudentRequest(raw: unknown): { ok: true; value: StudentRequestBody } | { ok: false; error: string } {
   const code = (raw as Record<string, unknown> | null | undefined)?.code

@@ -12,7 +12,7 @@
 // the rule that decides whether a stale mark may overwrite a live one can be
 // tested without a database.
 
-export type AttStatus = 'Present' | 'Absent'
+type AttStatus = 'Present' | 'Absent'
 
 export type QueuedMark = {
   studentId: string
@@ -42,7 +42,7 @@ export type AttConflict = {
   theirs: string
 }
 
-export type Resolution = {
+type Resolution = {
   rows: { student_id: string; date: string; status: AttStatus }[]
   /** The subset of `rows` that is an absence, for the parent push. */
   absent: QueuedMark[]

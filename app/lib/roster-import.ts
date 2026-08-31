@@ -27,19 +27,19 @@ export interface ParsedStudent {
   school: string
 }
 
-export type SkipReason =
+type SkipReason =
   | 'no name on this line'
   | 'the same student twice in this list'
   | 'already on your roster'
 
-export interface SkippedLine {
+interface SkippedLine {
   /** 1-based, counting the raw pasted lines, so it matches what she is looking at. */
   line: number
   text: string
   reason: SkipReason
 }
 
-export interface ParsedRoster {
+interface ParsedRoster {
   students: ParsedStudent[]
   skipped: SkippedLine[]
   /** Lines past MAX_IMPORT, which were not looked at. */
@@ -103,7 +103,7 @@ const isHeader = (cells: readonly string[]): boolean =>
 /** Fold for duplicate detection: case and spacing vary, the person does not. */
 const fold = (s: string): string => s.trim().toLowerCase().replace(/\s+/g, ' ')
 
-export interface ExistingStudent { name: string; parent?: string }
+interface ExistingStudent { name: string; parent?: string }
 
 /**
  * What a pasted list means.

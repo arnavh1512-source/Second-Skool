@@ -109,7 +109,7 @@ export function splitPlan(d: PlanDraft): Installment[] {
 
 // ---------------------------------------------------------------------------
 
-export type FeeLike = { amount: number; dueDate: string; status: string; period?: string }
+type FeeLike = { amount: number; dueDate: string; status: string; period?: string }
 
 /** Past its due date and still not paid.
  *
@@ -121,7 +121,7 @@ export function isOverdue(f: FeeLike, today: string): boolean {
   return f.status !== 'Paid' && !!f.dueDate && f.dueDate < today
 }
 
-export type FeeSummary = {
+type FeeSummary = {
   total: number
   outstanding: number
   count: number

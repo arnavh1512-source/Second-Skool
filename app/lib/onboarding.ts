@@ -17,7 +17,7 @@
 // and nobody types anything new — a checklist that cost data entry would be
 // exactly the kind of feature this app does not ship.
 
-export interface SetupProgress {
+interface SetupProgress {
   /** Any students on the roster at all. */
   roster: boolean
   /** The register has been marked at least once, for anybody. */

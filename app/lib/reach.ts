@@ -19,7 +19,7 @@ export const ACTIVE_DAYS = 7
 
 const DAY = 86_400_000
 
-export interface ReachSummary {
+interface ReachSummary {
   /** Opened the app inside the window. */
   active: number
   /** Everyone else — the list worth chasing. */

@@ -21,7 +21,7 @@
 // for anybody to remember to do.
 
 /** A row of the register, as the database stores it. */
-export interface AttendanceRow {
+interface AttendanceRow {
   student_id?: unknown
   date?: unknown
   status?: unknown

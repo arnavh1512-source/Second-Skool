@@ -12,7 +12,7 @@
  *  flight otherwise, which reads to the user as a random logout. */
 export const CLOCK_SKEW_S = 60
 
-export type MaybeSession = { access_token?: string | null; expires_at?: number | null } | null | undefined
+type MaybeSession = { access_token?: string | null; expires_at?: number | null } | null | undefined
 
 export function usableToken(session: MaybeSession, nowMs: number = Date.now()): string | null {
   const token = session?.access_token

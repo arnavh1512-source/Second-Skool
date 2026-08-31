@@ -9,7 +9,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logError } from './log'
 
 export type Sub = { endpoint: string; p256dh: string; auth: string }
-export type Group = { subs: Sub[]; payload: string }
+type Group = { subs: Sub[]; payload: string }
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY ?? ''
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY ?? ''

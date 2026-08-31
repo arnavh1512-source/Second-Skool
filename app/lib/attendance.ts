@@ -15,7 +15,7 @@ import { studentKey, type Identifiable } from './student-key'
 //     where `supabase/migrations/0013_attendance_totals.sql` has not been applied yet.
 
 export type AttendanceTotal = { student_id: string; present: number; total: number }
-export type AttendanceCount = { p: number; t: number }
+type AttendanceCount = { p: number; t: number }
 
 /** Index server-computed totals by student id. */
 export function totalsByStudent(rows: readonly AttendanceTotal[]): Record<string, AttendanceCount> {

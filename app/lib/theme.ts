@@ -6,7 +6,7 @@
 // starts out wrong on the server.
 import { writeLocal } from './storage'
 
-export type Theme = 'light' | 'dark'
+type Theme = 'light' | 'dark'
 
 // Kept in step by hand with the pre-paint script in layout.tsx, which runs
 // before any module exists and so cannot import this.

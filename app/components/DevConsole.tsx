@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { useDashboard, SESSION_EXPIRED, devFetch, fmtDate } from '../store'
+import { useDashboard, SESSION_EXPIRED, devFetch, fmtDate, timeAgo } from '../store'
 import { ScreenHeader } from './Shell'
 
 // ---- shape of /api/dev ------------------------------------------------------
@@ -67,22 +67,9 @@ type Ticket = {
 }
 
 // "3h ago" / "12d ago" — an absolute timestamp is noise when the only question
-// is whether someone has been here recently.
-const ago = (iso: string | null): string => {
-  if (!iso) return 'never'
-  const ms = Date.now() - Date.parse(iso)
-  if (!Number.isFinite(ms)) return '—'
-  const mins = Math.floor(ms / 60_000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  if (days < 30) return `${days}d ago`
-  return `${Math.floor(days / 30)}mo ago`
-}
-
-const day = (iso: string) => fmtDate(iso)
+// is whether someone has been here recently. A column that has never happened
+// says so; timeAgo has nothing to measure from.
+const ago = (iso: string | null): string => (iso ? timeAgo(iso) || '—' : 'never')
 
 // Kept outside the component so the mount effect can call it without touching
 // React state synchronously — every setState below happens in a callback.
@@ -354,7 +341,7 @@ function Centres({ rows, onDelete }: CentresProps) {
           </div>
 
           <div className="text-[12px] text-td-subtle mt-2">
-            created {day(c.createdAt)} · staff code {c.joinCode ?? '—'} · student code {c.studentJoinCode ?? '—'}
+            created {fmtDate(c.createdAt)} · staff code {c.joinCode ?? '—'} · student code {c.studentJoinCode ?? '—'}
           </div>
 
           <div className="mt-3">
@@ -382,7 +369,7 @@ function People({ rows }: { rows: StaffRow[] }) {
             <div className="text-[13.5px] td-strong truncate">{s.name ?? '—'}</div>
             <div className="text-[12px] text-td-muted truncate">{s.email ?? '—'}</div>
             <div className="text-[12px] text-td-subtle truncate">
-              {s.centre ?? 'unattached'} · {s.role === 'admin' ? 'head' : s.role} · joined {day(s.createdAt)}
+              {s.centre ?? 'unattached'} · {s.role === 'admin' ? 'head' : s.role} · joined {fmtDate(s.createdAt)}
             </div>
           </div>
           <div className="text-right shrink-0">
@@ -461,7 +448,7 @@ function Reports({ rows, onReply, onResolve }: {
               <div className="flex gap-1.5 mt-2.5 flex-wrap">
                 <Chip>{t.area}</Chip>
                 <Chip>{FREQ_LABEL[t.frequency] ?? t.frequency}</Chip>
-                <Chip>{day(t.created_at)}</Chip>
+                <Chip>{fmtDate(t.created_at)}</Chip>
                 {t.support_messages.length > 0 && <Chip>{t.support_messages.length} messages</Chip>}
               </div>
             </button>
@@ -497,7 +484,7 @@ function Reports({ rows, onReply, onResolve }: {
                           className={`text-[13px] leading-[1.5] rounded-[12px] p-2.5 px-3 whitespace-pre-wrap ${m.author === 'operator' ? 'bg-td-tint-blue text-td-dark' : 'bg-td-soft text-td-text'}`}
                         >
                           <div className="text-[11px] font-extrabold text-td-muted mb-1">
-                            {m.author === 'operator' ? 'You' : t.reporter_name || 'Reporter'} · {day(m.created_at)}
+                            {m.author === 'operator' ? 'You' : t.reporter_name || 'Reporter'} · {fmtDate(m.created_at)}
                           </div>
                           {m.body}
                         </div>
