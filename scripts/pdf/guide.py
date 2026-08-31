@@ -9,7 +9,7 @@ from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT
-from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, PageBreak,
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, PageBreak, KeepTogether,
                                 Table, TableStyle, ListFlowable, ListItem)
 
 import viz
@@ -136,7 +136,7 @@ def callout(title, body, tone=BLUE):
         ('TOPPADDING', (0, 1), (0, 1), 0),
         ('BOTTOMPADDING', (0, 1), (0, 1), 8),
     ]))
-    return [t, Spacer(1, 10)]
+    return [KeepTogether(t), Spacer(1, 10)]
 
 
 def figure(drawing, caption):
@@ -218,15 +218,19 @@ E(figure(flow(CW, [
     ('Get a code', 'Staff add them, or they register with the centre code'),
     ('Approval', 'A teacher sets their batch, fee and due date'),
     ('Code works', 'Only after approval does the code let them in'),
+    ('This phone', 'The code is spent once, the phone keeps a token'),
     ('Allow alerts', 'Mandatory - a test alert fires straight away'),
 ], GREEN, 52),
   'The student route. No email, no password, and no way in until a human says yes.'))
 
-E(callout('The code is the account',
-          'A student has no email and no password. The code is typed once and remembered on that '
-          'device. It is also printed permanently on the student&rsquo;s own profile page with a '
-          'copy button, because before that it only ever appeared in a message that vanished, and '
-          'anyone who did not write it down was locked out of a new phone.'))
+E(callout('The code is a one-time key, not a password',
+          'A student has no email and no password. The printed code is a <b>one-time bootstrap '
+          'credential</b>: the first phone to type it is let in on the spot and keeps a random '
+          'device token instead, of which the server stores only a hash. From that moment the '
+          'code on its own opens nothing &mdash; a second phone that types it is stored as a '
+          'request and reads nothing until the centre allows it. The code is still printed on the '
+          'student&rsquo;s own profile page with a copy button, so a household adding a phone can '
+          'find it without asking.'))
 
 A(Paragraph('Approving people', S['h2']))
 A(Paragraph('Staff requests and student requests are two separate queues, and only the head sees '
@@ -242,6 +246,19 @@ E(table(['Queue', 'Who reviews it', 'What the reviewer sees and decides'],
 A(Paragraph('The staff approvals screen refreshes itself live, so a head watching it sees a new '
             'request appear without reloading. Both screens show the relevant join code in a '
             'dashed box that copies when tapped.', S['body']))
+
+A(Paragraph('Phones', S['h2']))
+A(Paragraph('Below the student requests queue sits the list of phones signed in with this '
+            'centre&rsquo;s student codes: which student, what kind of phone, the day it was '
+            'added and when it was last used. A phone still waiting carries an <b>Allow</b> '
+            'button; any phone can be <b>Removed</b>. Head and teacher both see this list, '
+            'because both already approve students.', S['body']))
+E(callout('Removing a phone does not give the code back its power',
+          'Removing signs that phone out for good. It does not reopen the code: once a student '
+          'has ever had a phone, typing the raw code can only ever produce another request '
+          'waiting to be allowed. That is the whole point &mdash; a code that leaked into a '
+          'class WhatsApp group stays useless, and the family who genuinely lost a phone is one '
+          'tap away from being back in.', AMBER))
 A(PageBreak())
 
 # ------------------------------------------------------------------ head ---
@@ -664,6 +681,7 @@ E(table(['Capability', 'Head', 'Teacher', 'Student'],
          ['Branches', 'Yes', 'No', 'Sees own branch'],
          ['Subjects and batches', 'Yes', 'No', 'No'],
          ['Rotate the student join code', 'Yes', 'No', 'No'],
+         ['Allow or remove a student&rsquo;s phone', 'Yes', 'Yes', 'No'],
          ['Rename the centre, set the logo', 'Yes', 'No', 'Sees the logo'],
          ['Parent reach card', 'Yes', 'Yes', '&mdash;'],
          ['WhatsApp a family who did not open the app', 'Yes', 'No', '&mdash;'],

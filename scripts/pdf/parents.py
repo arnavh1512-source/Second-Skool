@@ -9,7 +9,7 @@ from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT
-from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, PageBreak,
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, PageBreak, KeepTogether,
                                 Table, TableStyle, ListFlowable, ListItem)
 
 import viz
@@ -120,7 +120,7 @@ def callout(title, body, tone=BLUE):
         ('TOPPADDING', (0, 1), (0, 1), 0),
         ('BOTTOMPADDING', (0, 1), (0, 1), 8),
     ]))
-    return [t, Spacer(1, 10)]
+    return [KeepTogether(t), Spacer(1, 10)]
 
 
 def figure(drawing, caption):
@@ -187,14 +187,17 @@ E(h1('Part 1 &mdash; Getting in', 'One code. No password, no email, no sign-up f
 A(Paragraph('What the student code is', S['h2']))
 A(Paragraph('When your child is enrolled, the tuition centre creates them in Second Skool and the '
             'app generates a short student code for them &mdash; a handful of letters and numbers. '
-            'That code <b>is</b> the login. There is no password to remember, no email to verify '
-            'and no account to create.', S['body']))
+            'That code is what you type the <b>first</b> time on a phone. There is no password to '
+            'remember, no email to verify and no account to create. After that first time the '
+            'phone remembers something of its own and the code is not needed on it again.',
+            S['body']))
 
 E(figure(flow(CW, [
     ('Centre adds', 'The head or a teacher creates the student'),
     ('Code appears', 'A short code, shown on the student card'),
     ('You type it', 'Once, on your phone. It is remembered'),
     ('It stays', 'Until someone signs out on that phone'),
+    ('More phones', 'The centre allows the second and third'),
 ], GREEN, 52),
   'Where the code comes from. Ask the centre for it if it was never handed to you.'))
 
@@ -209,6 +212,11 @@ A(Paragraph('Do this on your own phone, not only on your child&rsquo;s. The whol
             'get your own window into the same information, at the same time, from wherever you are.',
             S['body']))
 
+A(Paragraph('Adding a second phone', S['h2']))
+A(Paragraph('The first phone to use the code is let in straight away. Every phone after it is '
+            'held: it shows <b>Waiting for this phone to be allowed</b> until someone at the centre '
+            'taps Allow, which takes them a second. One message is all it needs.', S['body']))
+
 A(Paragraph('If your child was just enrolled and the app says they are waiting', S['h2']))
 A(Paragraph('Some centres let a student register themselves with the centre&rsquo;s join code. When '
             'that happens the student sits in a waiting state until the head teacher approves them, '
@@ -220,12 +228,14 @@ A(Paragraph('If you lose the code', S['h2']))
 A(Paragraph('It is on the <b>My Profile</b> screen inside the app, with a copy button beside it, so '
             'as long as one phone is still signed in you can read it off there. If no phone is signed '
             'in, ask the centre &mdash; they can see it on your child&rsquo;s record. The code cannot '
-            'be recovered by email, because there is no email attached to it.', S['body']))
+            'be recovered by email. Ask for both in the same message: the code, and Allow for '
+            'this phone.', S['body']))
 
-E(callout('Treat the code like a key',
-          'Anyone holding it can see your child&rsquo;s attendance, marks and fees. It is not secret '
-          'in the way a bank password is, but it is not something to post in a class WhatsApp group '
-          'either.', AMBER))
+E(callout('The code is a key that turns once',
+          'The first phone keeps a private key of its own from then on. A second phone typing the '
+          'same code only raises a request the centre has to allow, so a code that ends up in a '
+          'class WhatsApp group hands over nothing. Still worth not posting it &mdash; but a '
+          'mistake is no longer a door left open.', AMBER))
 
 A(PageBreak())
 
@@ -439,7 +449,8 @@ A(Paragraph('Yes. The same code can be used on as many phones as you like, and e
             'sees the same live information.', S['body']))
 
 A(Paragraph('I have two children at the centre.', S['h2']))
-A(Paragraph('They have separate codes. Sign in with one, look, sign out from the profile screen and '
+A(Paragraph('They have separate codes, and each phone is allowed per child, so ask the centre to '
+            'allow this phone for both. Sign in with one, look, sign out from the profile screen and '
             'sign in with the other. Two children on one phone at the same time is not supported '
             'today.', S['body']))
 

@@ -335,11 +335,11 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
     if (error) { get().notify(friendlyError(error, 'load the phones'), 'error'); return }
     const rows = (data ?? []) as unknown as {
       id: string; label: string | null; approved: boolean
-      created_at: string; last_seen_at: string | null; students: { name: string } | { name: string }[]
+      created_at: string; last_seen_at: string | null; students: { name: string } | null
     }[]
     const devices: StudentDevice[] = rows.map(r => ({
       dbId: r.id,
-      studentName: (Array.isArray(r.students) ? r.students[0]?.name : r.students?.name) ?? 'Student',
+      studentName: r.students?.name ?? 'Student',
       label: r.label ?? 'Unknown phone',
       allowed: r.approved,
       when: r.created_at,

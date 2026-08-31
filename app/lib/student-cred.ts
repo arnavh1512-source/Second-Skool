@@ -6,9 +6,12 @@
 // to be read out loud and forwarded. Every WhatsApp group it landed in is a
 // group that can read the child's marks, fees, address and parent's number.
 //
-// Now the code buys a token once (claim_student_device) and the token is what
-// this phone sends afterwards. The token is 32 random bytes, the server stores
-// only its SHA-256, and the head can revoke it from the device list.
+// Now the printed code is a one-time bootstrap credential: it is spent once on
+// a device (claim_student_device) and the long-lived credential is a random
+// device token, of which the server stores only a SHA-256 hash. The raw code
+// keeps real authority right up until that first claim, which is why the first
+// phone is let in on the spot and every phone after it waits for staff. The
+// head can revoke any of them from the device list.
 //
 // Both are read through readStudentCred() because the server accepts either:
 // a raw code still resolves, but only for a student with no live device, so

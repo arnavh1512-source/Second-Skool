@@ -22,7 +22,7 @@ function refreshOnce(): Promise<string | null> {
   return refreshing
 }
 
-export async function operatorToken(): Promise<string | null> {
+async function operatorToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession()
   return usableToken(data.session) ?? await refreshOnce()
 }

@@ -200,7 +200,7 @@ def three_roles(c, w, h):
     cols = [
         ('STUDENT & PARENT', GREEN, WGRN, 'No account',
          ['Opens a link, types a code', 'Reads only - changes nothing',
-          'Same code works on the', 'parent\'s phone at the same time']),
+          'First phone is let in at once,', 'the centre allows any more']),
         ('TEACHER', BLUE, WBLU, 'Google or password',
          ['Approved by the head', 'Records the day\'s work',
           'Cannot see fees, cannot', 'add or edit a student']),
@@ -239,7 +239,7 @@ def code_map(c, w, h):
          ('Student types it once to', 'register themselves')),
         ('PERSONAL CODE', 'TUT-A1B2C3D4', NAVY, WNVY,
          'Issued on approval', 'Students > tap the student',
-         ('The actual login - student', 'and parent both use it')),
+         ('Typed once per phone. That', 'phone then holds a token')),
     ]
     rh = (h - 2 * 7) / 3.0
     for i, (name, sample, col, wash, who, where, use) in enumerate(rows):
@@ -393,6 +393,7 @@ def matrix(c, w, h):
         ('Make someone else a head teacher',   0, 1),
         ('Change the centre name and logo',    0, 1),
         ('Regenerate the student code',        0, 1),
+        ('Allow or remove a student phone',    1, 1),
     ]
     hh = 22
     rh = (h - hh) / float(len(rows))
@@ -496,6 +497,13 @@ story.append(feature_table([
      'The two screens want opposite things.'),
     ('&ldquo;It worked last week&rdquo;',
      'The student code was regenerated. Only the head can do that, and the old one stops working the moment they do.'),
+    ('&ldquo;It says this phone is waiting&rdquo;',
+     'A second phone typed the code. The first phone on a code is let in at once; every phone after it waits for staff. '
+     'Allow it from the Phones list under More &gt; Student requests.'),
+    ('&ldquo;This phone was signed out&rdquo;, or signing out and back in',
+     'Signing out throws away this phone&rsquo;s token, and so does removing it from the Phones list. Re-typing the code '
+     'does not undo either: once a student has had a phone the code can no longer let one in by itself. Allow the phone '
+     'again from the Phones list.'),
     ('&ldquo;I registered but nothing happened&rdquo;',
      'Nothing is wrong. The request is sitting on the teacher&rsquo;s More screen waiting to be approved.'),
     ('&ldquo;The teacher cannot see the centre&rdquo;',
