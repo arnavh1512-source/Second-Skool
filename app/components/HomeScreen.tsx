@@ -2,6 +2,7 @@
 
 import { useDashboard, initials, type Screen } from '../store'
 import { reachSummary } from '../lib/reach'
+import { setupProgress } from '../lib/onboarding'
 import { ChevronRight } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
@@ -30,6 +31,18 @@ export function HomeScreen() {
   // for the app: a parent who never opens it is a parent who never sees the
   // absence, and the teacher gets blamed for that at the end of term.
   const reach = students.length > 0 ? reachSummary(students) : null
+
+  // Day one is a screen of zeros with no path out of it. Only the head sees
+  // this — a teacher cannot add students or send codes, and a checklist you
+  // are not allowed to action is just something in the way. It goes away for
+  // good the moment the third step lands; there is no dismiss button because
+  // there is nothing to dismiss once the centre is running.
+  const setup = isAdmin ? setupProgress(students) : null
+  const steps = setup && !setup.done ? [
+    { label: 'Add your students', hint: 'Paste the list you already have', done: setup.roster, onClick: () => go('importStudents', 'students') },
+    { label: 'Mark attendance once', hint: 'The first thing a parent will see', done: setup.register, onClick: () => go('attendance') },
+    { label: 'Send the login codes', hint: 'A code nobody was sent is a login nobody uses', done: setup.parents, onClick: () => goFrom('students', 'students', 'reach') },
+  ] : []
 
   // Home = the four quick daily shortcuts (same for head and teacher, clean
   // grid). Timetable is a bottom tab; Study material + all management (fees,
@@ -73,6 +86,39 @@ export function HomeScreen() {
         ) : <span />}
         <LastUpdated />
       </div>
+
+      {steps.length > 0 && (
+        <div className="td-card rounded-[18px] p-4 mb-3.5 lg:max-w-md">
+          <div className="text-[11px] font-bold text-td-muted uppercase tracking-[.06em]">Get your centre running</div>
+          <p className="text-[12.5px] text-td-muted leading-relaxed mt-1.5 mb-3">
+            Three things, once. After that the app fills itself in as you teach.
+          </p>
+          <div className="flex flex-col gap-2">
+            {steps.map((s, i) => (
+              <button
+                key={s.label}
+                onClick={s.onClick}
+                // The tick and the strike-through are the whole status for a
+                // sighted head; neither reaches a screen reader on its own.
+                aria-label={`${s.label} — ${s.done ? 'done' : 'not done yet'}`}
+                className="td-plain flex items-center gap-3 text-left w-full p-0 cursor-pointer"
+              >
+                <span
+                  className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[12px] font-extrabold ${s.done ? 'bg-td-tint-green text-td-green' : 'bg-td-soft text-td-subtle'}`}
+                  aria-hidden="true"
+                >
+                  {s.done ? <Icon name="check" size={15} color="var(--color-td-green)" /> : i + 1}
+                </span>
+                <span className="flex-1 min-w-0">
+                  <span className={`block text-[13px] font-bold ${s.done ? 'text-td-subtle line-through' : 'text-td-dark'}`}>{s.label}</span>
+                  {!s.done && <span className="block text-[11.5px] text-td-muted mt-0.5">{s.hint}</span>}
+                </span>
+                {!s.done && <ChevronRight />}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2.5 mb-3.5 lg:max-w-md">
         <div className="rounded-[18px] p-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
