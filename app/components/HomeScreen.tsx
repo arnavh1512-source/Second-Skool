@@ -2,6 +2,7 @@
 
 import { useDashboard, initials, type Screen } from '../store'
 import { reachSummary } from '../lib/reach'
+import { funnelSummary, type Missed } from '../lib/funnel'
 import { setupProgress } from '../lib/onboarding'
 import { ChevronRight } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
@@ -32,6 +33,18 @@ export function HomeScreen() {
   // for the app: a parent who never opens it is a parent who never sees the
   // absence, and the teacher gets blamed for that at the end of term.
   const reach = students.length > 0 ? reachSummary(students) : null
+
+  // "Missed" is not one problem, and the head cannot act on a lump. A family
+  // that never got in needs the code sent again; one that looked once needs
+  // walking through it; one that has gone quiet needs asking why. Three
+  // different calls, so three separate numbers, each opening the list of names
+  // to make them to.
+  const funnel = reach && reach.missed > 0 ? funnelSummary(students, studentDevices) : null
+  const chips = ([
+    { stage: 'dark', n: funnel?.dark ?? 0, label: 'never opened it', tint: 'var(--color-td-tint-red)' },
+    { stage: 'once', n: funnel?.once ?? 0, label: 'opened it once', tint: 'var(--color-td-tint-amber)' },
+    { stage: 'quiet', n: funnel?.quiet ?? 0, label: 'gone quiet', tint: 'var(--color-td-tint-blue)' },
+  ] satisfies { stage: Missed; n: number; label: string; tint: string }[]).filter(c => c.n > 0)
 
   // The children who have stopped coming. Counted off the roster rather than
   // off the map, so the number here and the list on the other side can never
@@ -170,6 +183,18 @@ export function HomeScreen() {
             <ChevronRight />
           </div>
         </button>
+      )}
+
+      {chips.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 mb-3.5 lg:max-w-md">
+          {chips.map(c => (
+            <button key={c.stage} onClick={() => goFrom('students', 'students', c.stage)} className="td-plain cursor-pointer text-left border border-td-border bg-td-card rounded-[14px] py-2.5 px-3">
+              <div className="w-6 h-1 rounded-full mb-2" style={{ background: c.tint }} />
+              <div className="text-[17px] td-strong leading-none">{c.n}</div>
+              <div className="text-[11px] text-td-muted font-semibold mt-1 leading-tight">{c.label}</div>
+            </button>
+          ))}
+        </div>
       )}
 
       <div className="td-h2">Quick actions</div>

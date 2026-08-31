@@ -327,18 +327,19 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
   loadStudentDevices: async () => {
     const { data, error } = await supabase
       .from('student_devices')
-      .select('id, label, approved, created_at, last_seen_at, students!inner(name)')
+      .select('id, student_id, label, approved, created_at, last_seen_at, students!inner(name)')
       .is('revoked_at', null)
       .order('approved', { ascending: true })
       .order('created_at', { ascending: false })
       .limit(200)
     if (error) { get().notify(friendlyError(error, 'load the phones'), 'error'); return }
     const rows = (data ?? []) as unknown as {
-      id: string; label: string | null; approved: boolean
+      id: string; student_id: string; label: string | null; approved: boolean
       created_at: string; last_seen_at: string | null; students: { name: string } | null
     }[]
     const devices: StudentDevice[] = rows.map(r => ({
       dbId: r.id,
+      studentId: r.student_id,
       studentName: r.students?.name ?? 'Student',
       label: r.label ?? 'Unknown phone',
       allowed: r.approved,

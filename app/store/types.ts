@@ -30,7 +30,7 @@ export interface Student { name: string; klass: string; batch?: string; branch?:
 // A self-registered student awaiting the head's approval (roster is separate).
 // A phone that has claimed a student code. `allowed` false means it is waiting
 // for the head — the case worth looking at, because it is a code that travelled.
-export interface StudentDevice { dbId: string; studentName: string; label: string; allowed: boolean; when: string; lastSeen: string | null }
+export interface StudentDevice { dbId: string; studentId: string; studentName: string; label: string; allowed: boolean; when: string; lastSeen: string | null }
 
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 

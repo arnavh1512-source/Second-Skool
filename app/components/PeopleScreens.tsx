@@ -9,19 +9,47 @@ import { fmtDayMonth } from '../store/format'
 import { Icon } from './Icon'
 import { findStudent, indexOfStudent, studentKey } from '../lib/student-key'
 import { opened } from '../lib/reach'
+import { firstClaims, stageOf, type Missed } from '../lib/funnel'
 import { useBusy } from '../lib/use-busy'
 
 // Full school range so any tuition centre can pick the right standard.
 const STANDARDS = ['Class 12', 'Class 11', 'Class 10', 'Class 9', 'Class 8', 'Class 7', 'Class 6', 'Class 5', 'Class 4', 'Class 3', 'Class 2', 'Class 1']
 
+// Each of the three is a different conversation with a different family, and
+// the line at the top of the list is what tells the head which one she is
+// about to have.
+const STAGE_COPY: Record<Missed, { banner: string; emptyTitle: string; emptyHint: string }> = {
+  dark: {
+    banner: 'Never opened the app — send the code again',
+    emptyTitle: 'Every family got in',
+    emptyHint: 'Nobody is still sitting on an unused code.',
+  },
+  once: {
+    banner: 'Opened it once and never came back',
+    emptyTitle: 'Nobody stopped at the first visit',
+    emptyHint: 'Every family that got in came back at least once more.',
+  },
+  quiet: {
+    banner: 'Used to look, and has stopped',
+    emptyTitle: 'Nobody has drifted off',
+    emptyHint: 'Every family that was looking is still looking.',
+  },
+}
+
 export function StudentsScreen() {
-  const { students, role, origin, back, go, goFrom, set, searchQuery, atRisk, centreName } = useDashboard()
+  const { students, role, origin, back, go, goFrom, set, searchQuery, atRisk, centreName, studentDevices } = useDashboard()
   const isAdmin = role === 'admin'
   // Arrived from the parent-reach card on Home, which asked "which families?".
   const missedOnly = origin === 'reach'
   // Or from the card above it, which asked "who has stopped coming?".
   const stoppedOnly = origin === 'atRisk'
-  const roster = missedOnly
+  // Or from one of the three chips under the reach card, each of which asked a
+  // narrower question than "who missed?" and wants a different call made.
+  const stage: Missed | null = origin === 'dark' || origin === 'once' || origin === 'quiet' ? origin : null
+  const claims = firstClaims(studentDevices)
+  const roster = stage
+    ? students.filter(s => stageOf(s, (s.dbId !== undefined ? claims[s.dbId] : undefined) ?? null) === stage)
+    : missedOnly
     ? students.filter(s => !opened(s))
     : stoppedOnly
       // Longest absence first, same order the card counted them in — the head
@@ -59,6 +87,13 @@ export function StudentsScreen() {
         </div>
       )}
 
+      {stage && (
+        <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
+          <span className="text-[12.5px] font-bold text-td-dark">{STAGE_COPY[stage].banner}</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+        </div>
+      )}
+
       {stoppedOnly && (
         <div className="flex items-center justify-between gap-3 bg-td-tint-red border border-td-edge-red rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
           <span className="text-[12.5px] font-bold text-td-dark">Absent the last few classes running</span>
@@ -72,7 +107,9 @@ export function StudentsScreen() {
       </div>
 
       {filtered.length === 0 ? (
-        missedOnly && !searchQuery ? (
+        stage && !searchQuery ? (
+          <EmptyState title={STAGE_COPY[stage].emptyTitle} hint={STAGE_COPY[stage].emptyHint} />
+        ) : missedOnly && !searchQuery ? (
           <EmptyState
             title="Every family opened the app"
             hint="All of them looked at least once this week. Nothing to chase."
