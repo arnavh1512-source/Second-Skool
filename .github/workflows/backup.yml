@@ -161,18 +161,24 @@ jobs:
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           set -eu
+          # These dumps are every child's name, address, guardian's phone number
+          # and fee history. Without a passphrase they used to upload as plain
+          # gzip behind a warning nobody reads, protected only by the repository
+          # staying private -- one settings toggle, or one collaborator, away
+          # from being public. An unencrypted backup of this data is not a
+          # backup worth having, so a missing passphrase now fails the run.
+          if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
+            echo "::error::BACKUP_PASSPHRASE is not set. Refusing to store an unencrypted dump of student records. Add the secret (Settings -> Secrets and variables -> Actions) and re-run."
+            exit 1
+          fi
           gzip out/public.sql out/auth-users.sql
-          if [ -n "${BACKUP_PASSPHRASE:-}" ]; then
-            command -v gpg >/dev/null || { apt-get update -qq && apt-get install -y -qq gnupg; }
-            for f in out/*.gz; do
+          command -v gpg >/dev/null || { apt-get update -qq && apt-get install -y -qq gnupg; }
+          for f in out/*.gz; do
               gpg --batch --yes --symmetric --cipher-algo AES256 \
                   --passphrase "$BACKUP_PASSPHRASE" "$f"
-              rm "$f"
-            done
-            echo "Encrypted with AES256. Decrypt with: gpg --decrypt <file>.gpg > <file>"
-          else
-            echo "::warning::BACKUP_PASSPHRASE is not set — dumps are stored as plain gzip. Safe only while this repository stays private."
-          fi
+            rm "$f"
+          done
+          echo "Encrypted with AES256. Decrypt with: gpg --decrypt <file>.gpg > <file>"
           ls -lh out/
 
       - name: Upload

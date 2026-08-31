@@ -2,6 +2,8 @@
 // route so the security-critical logic (link safety, input validation, rate
 // limiting) can be unit-tested without spinning up a server or Supabase.
 
+import { logWarn } from './log'
+
 export type PushBody = {
   studentCodes?: string[]
   notifyHead?: boolean
@@ -121,10 +123,31 @@ const limiters = new Map<string, ReturnType<typeof createRateLimiter>>()
 // over an unrelated outage) nor fully open (the guard silently stops existing).
 // Per-instance counting is the honest middle: worse than shared, better than
 // none, and exactly what this app did before.
+//
+// It is also invisible, which was the real problem: an Upstash outage silently
+// multiplied every limit by the instance count and nothing anywhere said so.
+// The fallback now leaves a line in the log, so "the push limits were softer
+// than they look" is something you can find out afterwards rather than guess.
 // ---------------------------------------------------------------------------
+
+// Throttle the warning itself. The endpoint this guards can be hit hundreds of
+// times a minute, and a counter outage would put one line in the log for each.
+let lastFallbackLog = 0
+const FALLBACK_LOG_EVERY_MS = 60_000
+
+function fellBack(reason: string): null {
+  const now = Date.now()
+  if (now - lastFallbackLog >= FALLBACK_LOG_EVERY_MS) {
+    lastFallbackLog = now
+    logWarn('push.ratelimit_fallback', { reason })
+  }
+  return null
+}
+
 async function sharedCount(key: string, windowMs: number): Promise<number | null> {
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  // Not configured is a deployment choice, not a fault — nothing to report.
   if (!url || !token) return null
   const bucket = `rl:${key}:${Math.floor(Date.now() / windowMs)}`
   try {
@@ -137,12 +160,12 @@ async function sharedCount(key: string, windowMs: number): Promise<number | null
       // is already longer than the request it is guarding deserves to wait.
       signal: AbortSignal.timeout(1000),
     })
-    if (!res.ok) return null
+    if (!res.ok) return fellBack(`http ${res.status}`)
     const out = await res.json()
     const n = Array.isArray(out) ? out[0]?.result : null
-    return typeof n === 'number' ? n : null
-  } catch {
-    return null
+    return typeof n === 'number' ? n : fellBack('unreadable response')
+  } catch (e) {
+    return fellBack(e instanceof Error ? e.name : 'unreachable')
   }
 }
 

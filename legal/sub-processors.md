@@ -18,6 +18,7 @@ We give **30 days' notice** before adding or replacing a Sub-processor. To recei
 | **Supabase** | Supabase, Inc., USA | Database, authentication, storage. This is where Centre Data lives. | All Centre Data — student names, guardian contacts, attendance, results, fees, timetables, staff records. Account credentials and auth tokens. | **[SUPABASE REGION]** |
 | **Vercel** | Vercel, Inc., USA | Application hosting and content delivery. Runs the app code; data passes through in transit. | All data in transit between the user and the database. Request metadata and access logs. | Global edge network; functions in [VERCEL FUNCTION REGION] |
 | **Google** | Google LLC / Google India, USA & India | (a) Google OAuth sign-in. (b) Firebase Cloud Messaging, which delivers web push notifications to Chrome and Android. | Sign-in: name, email address, profile picture, Google account ID. Push: device push endpoint and the notification content sent to it. | Global |
+| **GitHub** | GitHub, Inc. (a Microsoft company), USA | Source code hosting, and the scheduled job that takes our off-site database backups. The backup files are stored as GitHub Actions artifacts. | Every backup holds a **complete copy of all Centre Data** — student names, addresses, guardian phone numbers, attendance, results and fees — encrypted with AES-256 before it leaves the job. Also the email addresses in our commit history. | USA |
 
 ## Conditional — used only where the feature or setting is enabled
 
@@ -65,3 +66,4 @@ If that changes, this page changes first, with 30 days' notice.
 - [ ] The Supabase project region — if it is not `ap-south-1`, Centre Data is stored outside India and the Privacy Policy and DPA must say so.
 - [ ] Razorpay onboarding status. Do not list a payment processor you have not signed with.
 - [ ] The Vercel function region setting.
+- [ ] That `BACKUP_PASSPHRASE` is set in the GitHub repository secrets. Without it the backup workflow fails by design, and a failing backup is a broken promise in the DPA.

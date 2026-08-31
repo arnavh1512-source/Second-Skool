@@ -85,7 +85,7 @@ We do not use your data for any purpose incompatible with the above without aski
 
 We use a small number of service providers ("sub-processors"). Each is bound to confidentiality and to process data only for us.
 
-The current list, with what each one handles and where, is maintained at **[sub-processors.md](./sub-processors.md)**. In summary: hosting and database (Supabase), application hosting (Vercel), sign-in and push delivery (Google), payments (Razorpay).
+The current list, with what each one handles and where, is maintained at **[sub-processors.md](./sub-processors.md)**. In summary: hosting and database (Supabase), application hosting (Vercel), sign-in and push delivery (Google), off-site encrypted backups and source code (GitHub), payments (Razorpay).
 
 Beyond those, we disclose personal data only:
 

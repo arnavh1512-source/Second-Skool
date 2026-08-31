@@ -432,43 +432,24 @@ async function deleteCentre(admin: SupabaseClient, uid: string, body: unknown): 
 
   logWarn('dev.centre_delete_started', { uid, centre: centreId })
 
-  // Data first, members last. Detaching up front looked tidier, but the abort
-  // below ("the centre was left in place") then left every member already
-  // stripped of their centre_id: the head could no longer see the centre they
-  // still own, and re-joining put them back as `pending` with no approved admin
-  // left to approve them. Nobody can undo that from inside the app.
-  const failed: string[] = []
-  for (const table of [...LEAF_TABLES, ...SPINE_TABLES]) {
-    const { error } = await admin.from(table).delete().eq('centre_id', centreId)
-    if (error) {
-      failed.push(table)
-      logError('dev.delete_table_failed', { uid, centre: centreId, table, message: error.message })
-    }
+  // One transaction, in the database. The loop that used to live here was one
+  // HTTP round trip per table, each committing on its own, so a failure halfway
+  // through left a customer's centre with an arbitrary subset of its history
+  // missing and no way back. delete_centre() either clears the lot — data,
+  // members detached, centre row — or moves nothing at all. See migration 0033.
+  //
+  // The ordered table list still comes from centre-tables.ts, which
+  // centre-delete-coverage.test.ts checks against the migrations on every run.
+  const { data: result, error: delErr } = await admin.rpc('delete_centre', {
+    p_centre_id: centreId,
+    p_tables: [...LEAF_TABLES, ...SPINE_TABLES],
+  })
+  if (delErr) {
+    logError('dev.delete_centre_failed', { uid, centre: centreId, message: delErr.message })
+    return nostore({ error: 'could not delete that centre. Nothing was removed.' }, 500)
   }
-  // Stop before the centre row itself: a half-deleted centre that still exists
-  // can be retried or inspected, whereas an orphaned pile of rows whose centre
-  // is gone is unreachable by every query in the app. Members are still
-  // attached at this point, so the head keeps their way back in.
-  if (failed.length)
-    return nostore({ error: `could not clear: ${failed.join(', ')}. The centre was left in place.` }, 500)
-
-  // Nothing can abort the delete from here, so release the members: once the
-  // centre is gone their profiles would point at nothing, and they go back to
-  // the unregistered state a fresh sign-in lands in.
-  const { error: detachErr } = await admin
-    .from('profiles')
-    .update({ centre_id: null, branch_id: null, role: 'student', staff_status: 'none' })
-    .eq('centre_id', centreId)
-  if (detachErr) {
-    logError('dev.detach_failed', { uid, centre: centreId, message: detachErr.message })
-    return nostore({ error: 'the centre data was cleared but its members could not be detached' }, 500)
-  }
-
-  const { error: centreErr } = await admin.from('centres').delete().eq('id', centreId)
-  if (centreErr) {
-    logError('dev.delete_centre_failed', { uid, centre: centreId, message: centreErr.message })
-    return nostore({ error: 'the centre’s data was cleared but the centre could not be removed' }, 500)
-  }
+  if (!(result as { deleted?: unknown } | null)?.deleted)
+    return nostore({ error: 'centre not found' }, 404)
 
   logWarn('dev.centre_deleted', { uid, centre: centreId })
   return nostore({ ok: true, deleted: centre.name })

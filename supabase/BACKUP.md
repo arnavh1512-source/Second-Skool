@@ -37,11 +37,13 @@ One secret, once.
    - Name: `SUPABASE_DB_URL`
    - Value: the URI above
 
-3. Optional but recommended — add a second secret `BACKUP_PASSPHRASE` (any long
-   random string, stored in your password manager). The dumps are then
-   encrypted with AES256. Without it they are plain gzip, which is only
-   acceptable while this repository stays private. **If this repo ever becomes
-   public, artifacts become world-readable and this secret is mandatory.**
+3. Required — add a second secret `BACKUP_PASSPHRASE` (any long random string,
+   stored in your password manager). The dumps are encrypted with AES256 before
+   they are uploaded. Without this secret the workflow fails on purpose rather
+   than storing a plain-gzip copy of every student's name, address, guardian's
+   phone number and fee history behind nothing but the repository being
+   private. Keep the passphrase somewhere you will still have it on the day the
+   laptop does not boot — a backup you cannot decrypt is not a backup.
 
 4. Actions tab → Database backup → **Run workflow** to confirm it works
    without waiting for the overnight run.
