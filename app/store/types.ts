@@ -5,6 +5,7 @@ import type { ReportDraft } from '../lib/support'
 import type { ParsedStudent } from '../lib/roster-import'
 import type { Installment } from '../lib/fee-plan'
 import type { QueuedBatch, AttConflict } from '../lib/att-queue'
+import type { AtRisk } from '../lib/at-risk'
 
 export type Screen =
   | 'home' | 'timetable' | 'attendance' | 'results' | 'assign' | 'reminder'
@@ -85,6 +86,10 @@ export interface State {
   // Derived from rows the provider already fetches, so the Mark Attendance
   // screen can open on what was recorded instead of on a blank slate.
   attToday: Record<string, string>
+  // Students absent for the last few sessions running, keyed by student uuid.
+  // Read off the same daily rows as attToday, which were previously thrown away
+  // after today's register was taken out of them.
+  atRisk: Record<string, AtRisk>
   // Registers marked with no working connection, mirrored from localStorage.
   // Rendered as a count so she can see her work is still on the phone rather
   // than having to trust that it is.

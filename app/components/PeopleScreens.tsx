@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react'
 import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
 import { parseRoster, MAX_IMPORT } from '../lib/roster-import'
 import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard } from './Shell'
-import { whatsappShareUrl, studentCodeMessage, copyText } from '../lib/share'
+import { whatsappShareUrl, studentCodeMessage, absenceCheckInMessage, copyText } from '../lib/share'
+import { fmtDayMonth } from '../store/format'
 import { Icon } from './Icon'
 import { findStudent, indexOfStudent, studentKey } from '../lib/student-key'
 import { opened } from '../lib/reach'
@@ -14,11 +15,19 @@ import { useBusy } from '../lib/use-busy'
 const STANDARDS = ['Class 12', 'Class 11', 'Class 10', 'Class 9', 'Class 8', 'Class 7', 'Class 6', 'Class 5', 'Class 4', 'Class 3', 'Class 2', 'Class 1']
 
 export function StudentsScreen() {
-  const { students, role, origin, back, go, goFrom, set, searchQuery } = useDashboard()
+  const { students, role, origin, back, go, goFrom, set, searchQuery, atRisk, centreName } = useDashboard()
   const isAdmin = role === 'admin'
   // Arrived from the parent-reach card on Home, which asked "which families?".
   const missedOnly = origin === 'reach'
-  const roster = missedOnly ? students.filter(s => !opened(s)) : students
+  // Or from the card above it, which asked "who has stopped coming?".
+  const stoppedOnly = origin === 'atRisk'
+  const roster = missedOnly
+    ? students.filter(s => !opened(s))
+    : stoppedOnly
+      // Longest absence first, same order the card counted them in — the head
+      // reads down from the top and the top is the call that matters most.
+      ? students.filter(s => atRisk[s.dbId ?? '']).sort((a, b) => atRisk[b.dbId ?? ''].missed - atRisk[a.dbId ?? ''].missed)
+      : students
   const filtered = searchQuery ? roster.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) : roster
 
   return (
@@ -50,6 +59,13 @@ export function StudentsScreen() {
         </div>
       )}
 
+      {stoppedOnly && (
+        <div className="flex items-center justify-between gap-3 bg-td-tint-red border border-td-edge-red rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
+          <span className="text-[12.5px] font-bold text-td-dark">Absent the last few classes running</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2.5 td-card rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
         <Icon name="search" size={17} color="var(--color-td-subtle)" />
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
@@ -60,6 +76,11 @@ export function StudentsScreen() {
           <EmptyState
             title="Every family opened the app"
             hint="All of them looked at least once this week. Nothing to chase."
+          />
+        ) : stoppedOnly && !searchQuery ? (
+          <EmptyState
+            title="Everyone is still coming"
+            hint="Nobody has missed three classes in a row. This list fills itself in if that changes."
           />
         ) : students.length === 0 ? (
           <EmptyState
@@ -79,13 +100,22 @@ export function StudentsScreen() {
             // while the edit screen is open cannot repoint it at someone else.
             const idx = students.indexOf(s)
             const f = feeColor(s.feeStatus)
+            const gone = stoppedOnly ? atRisk[s.dbId ?? ''] : undefined
             return (
               <div key={studentKey(s) || i} className="flex items-center gap-2">
                 <button disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`flex-1 min-w-0 text-left td-card rounded-[18px] p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
                   <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(idx) }}>{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm td-strong">{s.name}</div>
-                    <div className="text-xs text-td-muted mt-0.5">{s.klass} · {s.attendance}% attendance</div>
+                    {/* The lifetime percentage is the one number that hides
+                        this: a student with two good years still reads fine
+                        three weeks after they left. On this list it makes way
+                        for the two facts that decide whether to call. */}
+                    <div className="text-xs text-td-muted mt-0.5">
+                      {gone
+                        ? `Missed ${gone.missed} in a row · ${gone.lastPresent ? `last came ${fmtDayMonth(gone.lastPresent)}` : 'never attended'}`
+                        : `${s.klass} · ${s.attendance}% attendance`}
+                    </div>
                   </div>
                   {isAdmin && <span className="text-[12px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: f.c, background: f.b }}>{s.feeStatus}</span>}
                   {isAdmin && <ChevronRight />}
@@ -95,6 +125,14 @@ export function StudentsScreen() {
                     own screen already sends — put it one tap from the name. */}
                 {missedOnly && isAdmin && s.parent && (
                   <a href={whatsappShareUrl(s.parent, studentCodeMessage(s.name, s.id))} target="_blank" rel="noopener noreferrer" aria-label={`Send ${s.name}'s code on WhatsApp`} className="shrink-0 w-11 h-11 rounded-[14px] bg-[#25D366] text-white flex items-center justify-center">
+                    <WhatsAppIcon />
+                  </a>
+                )}
+                {/* Knowing who has gone quiet is worth nothing on its own. The
+                    ask is one message, so it sits on the row rather than
+                    behind a screen the head has to decide to open. */}
+                {gone && isAdmin && s.parent && (
+                  <a href={whatsappShareUrl(s.parent, absenceCheckInMessage(s.name, gone.missed, centreName))} target="_blank" rel="noopener noreferrer" aria-label={`Ask ${s.name}'s family what happened, on WhatsApp`} className="shrink-0 w-11 h-11 rounded-[14px] bg-[#25D366] text-white flex items-center justify-center">
                     <WhatsAppIcon />
                   </a>
                 )}

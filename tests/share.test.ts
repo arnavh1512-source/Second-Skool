@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { studentCodeMessage, whatsappShareUrl, appOrigin, weeklyReportMessage, studentReportMessage } from '../app/lib/share'
+import { studentCodeMessage, absenceCheckInMessage, whatsappShareUrl, appOrigin, weeklyReportMessage, studentReportMessage } from '../app/lib/share'
 
 describe('appOrigin', () => {
   it('falls back to the production URL when there is no window (SSR)', () => {
@@ -17,6 +17,27 @@ describe('studentCodeMessage', () => {
 
   it('uses a friendly fallback when the name is blank', () => {
     expect(studentCodeMessage('   ', 'TUT-ABCDEFGH')).toContain('your child')
+  })
+})
+
+describe('absenceCheckInMessage', () => {
+  it('names the child, the count and the centre', () => {
+    const msg = absenceCheckInMessage('Arjun', 4, 'Sharma Classes')
+    expect(msg).toContain('Arjun')
+    expect(msg).toContain('4 classes')
+    expect(msg).toContain('Sharma Classes')
+  })
+
+  it('asks rather than accuses', () => {
+    // The one phrasing that ends the conversation is the one that reads as a
+    // complaint, and at this point the centre does not know what happened.
+    expect(absenceCheckInMessage('Arjun', 3)).toContain('Is everything alright')
+  })
+
+  it('falls back when the name or the centre name is blank', () => {
+    const msg = absenceCheckInMessage('  ', 3, '   ')
+    expect(msg).toContain('your child')
+    expect(msg).toContain('the centre')
   })
 })
 

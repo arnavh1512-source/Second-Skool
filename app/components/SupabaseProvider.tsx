@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { readLocal, removeLocal } from '../lib/storage'
 import { totalsByStudent, countDailyRows, attendancePct, marksForDay, type AttendanceTotal } from '../lib/attendance'
+import { atRisk } from '../lib/at-risk'
 import { isoDay } from '../store/format'
 import { useDashboard, registerRefresh, parseDay, timeAgo, type RankRow, type Role, type StaffStatus, type Teacher, type Student, type PendingStudent, type FeeStatus, type MeetingItem, type AssignmentItem, type BranchItem, type ScheduleItem } from '../store'
 
@@ -295,7 +296,14 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     // Today's register, kept rather than discarded with the rest of the daily
     // rows. It is what the Mark Attendance screen opens on, so a teacher who
     // comes back to it sees the marks she already made instead of a clean slate.
-    set({ attToday: marksForDay((attendance ?? []) as Row[], isoDay()) })
+    // And who has stopped coming, off those same rows. The cap is harmless
+    // here for the same reason it is harmless for today's register: the order
+    // puts the newest rows first, so what falls off the end is old history that
+    // a run of recent absences cannot be hiding in.
+    set({
+      attToday: marksForDay((attendance ?? []) as Row[], isoDay()),
+      atRisk: atRisk((attendance ?? []) as Row[]),
+    })
 
     loadTeachers(mappedTeachers)
     loadStudents(mappedStudents)

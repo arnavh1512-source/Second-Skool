@@ -23,6 +23,22 @@ export function studentCodeMessage(name: string, code: string): string {
   ].join('\n')
 }
 
+// The message that goes to a family whose child has stopped turning up.
+//
+// It asks rather than accuses, because at this point the centre does not know
+// which it is — an illness, a move, a clash with school, or a family who has
+// quietly left. All four need the same first question, and the one phrasing
+// that closes the conversation is the one that sounds like a complaint.
+export function absenceCheckInMessage(name: string, missed: number, centreName?: string): string {
+  const who = name.trim() ? name.trim() : 'your child'
+  const centre = centreName?.trim() ? centreName.trim() : 'the centre'
+  return [
+    `Hello! ${who} has missed the last ${missed} classes at ${centre}, so I wanted to check in.`,
+    '',
+    'Is everything alright at home? If something has come up we can work around it — just let me know.',
+  ].join('\n')
+}
+
 import type { WeeklyReport, StudentReport } from '../store'
 
 // Formats the weekly branch report as a WhatsApp-friendly message (*bold* via

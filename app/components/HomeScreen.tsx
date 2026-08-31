@@ -17,7 +17,7 @@ const chip = (name: string) => (
 )
 
 export function HomeScreen() {
-  const { role, go, goFrom, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList } = useDashboard()
+  const { role, go, goFrom, schedule, students, branchesList, googleEmail, myName, pendingStudents, staffList, atRisk } = useDashboard()
   const isAdmin = role === 'admin'
   const pendingStaff = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
   const hasAlerts = pendingStudents.length > 0 || pendingStaff > 0
@@ -31,6 +31,12 @@ export function HomeScreen() {
   // for the app: a parent who never opens it is a parent who never sees the
   // absence, and the teacher gets blamed for that at the end of term.
   const reach = students.length > 0 ? reachSummary(students) : null
+
+  // The children who have stopped coming. Counted off the roster rather than
+  // off the map, so the number here and the list on the other side can never
+  // disagree — a student removed or unapproved since the last fetch is in
+  // neither. The teacher sees it too: she is the one who knows why.
+  const gone = students.filter(s => atRisk[s.dbId ?? '']).length
 
   // Day one is a screen of zeros with no path out of it. Only the head sees
   // this — a teacher cannot add students or send codes, and a checklist you
@@ -130,6 +136,22 @@ export function HomeScreen() {
           <div className="text-[12px] text-td-muted mt-1.5 font-semibold">Students</div>
         </div>
       </div>
+
+      {/* Above parent reach because it outranks it: a family not looking is a
+          problem, a child not turning up is a child already leaving. The card
+          exists only while somebody is on the list, so a centre where everyone
+          is coming never sees it — an alarm that is always on is furniture. */}
+      {gone > 0 && (
+        <button onClick={() => goFrom('students', 'students', 'atRisk')} className="block text-left w-full bg-td-tint-red border border-td-edge-red rounded-[18px] p-4 mb-3.5 lg:max-w-md cursor-pointer">
+          <div className="text-[11px] font-bold text-td-red uppercase tracking-[.06em]">Stopped coming</div>
+          <div className="text-2xl td-strong leading-none mt-2">{gone} {gone === 1 ? 'student' : 'students'}</div>
+          <div className="text-[12px] text-td-muted font-semibold mt-1.5">absent the last 3 classes running</div>
+          <div className="flex items-center justify-between gap-2 mt-2.5">
+            <span className="text-[11.5px] text-td-subtle font-semibold">Ask before the month ends</span>
+            <ChevronRight />
+          </div>
+        </button>
+      )}
 
       {/* Tapping through is the point: the head learns the number here and the
           names on the other side. origin='reach' is what carries the filter,
