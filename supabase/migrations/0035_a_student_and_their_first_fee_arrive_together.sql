@@ -150,7 +150,7 @@ end; $$;
 -- ---------------------------------------------------------------------------
 -- Erase the false Due badges written since 0034 ran — every roster import and
 -- every student still waiting for approval. Identical to 0034's repair pass,
--- and it stays here rather than being assumed done, because the default above
+-- and it stays here rather than being assumed done, because the trigger above
 -- is what stops the next one.
 -- ---------------------------------------------------------------------------
 update public.students s
