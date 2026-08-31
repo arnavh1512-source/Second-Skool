@@ -48,8 +48,10 @@ S = {
     'h1':      P('h1', fontName='Helvetica-Bold', fontSize=18, leading=22, textColor=DARK,
                  spaceBefore=6, spaceAfter=3),
     'h1sub':   P('h1sub', fontSize=10, leading=14, textColor=MUTED, spaceAfter=14),
+    # keepWithNext: a heading alone at the foot of a page reads as a section with
+    # nothing in it, which is how 'If you lose the code' once lost its answer overleaf.
     'h2':      P('h2', fontName='Helvetica-Bold', fontSize=12.5, leading=16, textColor=BLUE,
-                 spaceBefore=13, spaceAfter=5),
+                 spaceBefore=13, spaceAfter=5, keepWithNext=1),
     'h3':      P('h3', fontName='Helvetica-Bold', fontSize=10.2, leading=14, textColor=DARK,
                  spaceBefore=9, spaceAfter=3),
     'body':    P('body'),
@@ -164,9 +166,11 @@ E(callout('One idea holds the whole product together',
           'not be able to hide any of it, and the teacher should never be the one blamed for '
           'a missed message. Every feature below exists to serve that.', GREEN))
 A(Spacer(1, 6))
-A(Paragraph('Second Skool is a single installable web app. There is nothing to download from '
-            'a store, it works on any phone or laptop, and it remembers when it last synced '
-            'so nobody is reading stale numbers without knowing it.', S['small']))
+A(Paragraph('Second Skool opens in a web browser and can be added to a phone&rsquo;s home '
+            'screen, where it behaves like any other app. There is nothing to download from a '
+            'store, it works on any phone or laptop, and every screen prints the time it last '
+            'checked with the centre, so nobody reads yesterday&rsquo;s numbers thinking they are '
+            'today&rsquo;s.', S['small']))
 A(PageBreak())
 
 # ------------------------------------------------------------- contents ----
@@ -218,19 +222,19 @@ E(figure(flow(CW, [
     ('Get a code', 'Staff add them, or they register with the centre code'),
     ('Approval', 'A teacher sets their batch, fee and due date'),
     ('Code works', 'Only after approval does the code let them in'),
-    ('This phone', 'The code is spent once, the phone keeps a token'),
+    ('This phone', 'The code works once; the phone remembers after'),
     ('Allow alerts', 'Mandatory - a test alert fires straight away'),
 ], GREEN, 52),
   'The student route. No email, no password, and no way in until a human says yes.'))
 
-E(callout('The code is a one-time key, not a password',
-          'A student has no email and no password. The printed code is a <b>one-time bootstrap '
-          'credential</b>: the first phone to type it is let in on the spot and keeps a random '
-          'device token instead, of which the server stores only a hash. From that moment the '
-          'code on its own opens nothing &mdash; a second phone that types it is stored as a '
-          'request and reads nothing until the centre allows it. The code is still printed on the '
-          'student&rsquo;s own profile page with a copy button, so a household adding a phone can '
-          'find it without asking.'))
+E(callout('The code is a key that turns once, not a password',
+          'A student has no email and no password. The printed code works <b>once</b>: the first '
+          'phone to type it is let in on the spot, and from then on that phone identifies itself '
+          'with a long secret of its own that nobody can read off the screen or guess. After that '
+          'the code by itself opens nothing &mdash; a second phone that types it joins the queue '
+          'and shows nothing until somebody at the centre allows it. The code stays printed on the '
+          'student&rsquo;s own profile page with a copy button, so a family adding a phone can find '
+          'it without asking.'))
 
 A(Paragraph('Approving people', S['h2']))
 A(Paragraph('Staff requests and student requests are two separate queues, and only the head sees '
@@ -255,7 +259,7 @@ A(Paragraph('Below the student requests queue sits the list of phones signed in 
             'because both already approve students.', S['body']))
 E(callout('Removing a phone does not give the code back its power',
           'Removing signs that phone out for good. It does not reopen the code: once a student '
-          'has ever had a phone, typing the raw code can only ever produce another request '
+          'has ever had a phone, typing the code on its own can only ever produce another request '
           'waiting to be allowed. That is the whole point &mdash; a code that leaked into a '
           'class WhatsApp group stays useless, and the family who genuinely lost a phone is one '
           'tap away from being back in.', AMBER))
@@ -373,7 +377,7 @@ A(Paragraph('The other head-only powers', S['h2']))
 E(bullets([
     '<b>Editing the timetable.</b> Only a head can add, edit or delete a period. Teachers open '
     'the same screen and read it.',
-    '<b>Rotating the student join code.</b> Behind a confirmation that says the current code stops '
+    '<b>Replacing the student join code.</b> Behind a confirmation that says the current code stops '
     'working immediately.',
     '<b>Cancelling a meeting.</b> Behind a confirmation that reminds the head parents are not '
     'automatically told.',
@@ -593,7 +597,7 @@ A(PageBreak())
 E(h1('Part 5 &mdash; Shared across every role'))
 
 A(Paragraph('Notifications on this device', S['h2']))
-A(Paragraph('Every role can turn on push notifications from their own profile or notifications '
+A(Paragraph('Every role can turn on phone notifications from their own profile or notifications '
             'screen. Enabling it fires a test alert straight away, so nobody has to wonder '
             'whether it worked.', S['body']))
 
@@ -603,14 +607,15 @@ A(Paragraph('A theme toggle sits in the header of both home screens. Every colou
             'is no screen that only works in one of them.', S['body']))
 
 A(Paragraph('Installing it', S['h2']))
-A(Paragraph('Second Skool is a progressive web app, so it can be added to a phone&rsquo;s home '
-            'screen and opened like any other app. Staff who install it can set an email and '
+A(Paragraph('Second Skool is a website built to behave like an app, so it can be added to a '
+            'phone&rsquo;s home screen and opened like any other one. Staff who install it can set '
+            'an email and '
             'password from <b>My Profile</b>, which keeps them signed in on the installed app '
-            'without the Google redirect.', S['body']))
+            'without being sent through Google every time.', S['body']))
 
 A(Paragraph('Knowing the data is fresh', S['h2']))
 A(Paragraph('Both home screens carry a last-updated line, and the data refreshes itself after '
-            'every change and whenever the app comes back to the foreground.', S['body']))
+            'every change and every time you come back to the app.', S['body']))
 
 A(Paragraph('When the signal drops', S['h2']))
 A(Paragraph('A bar appears along the top of the app and tells the truth about which of three '
@@ -627,10 +632,10 @@ E(table(['The bar says', 'What it means'],
         [72 * mm, 98 * mm]))
 
 A(Paragraph('When a centre outgrows one page of data', S['h2']))
-A(Paragraph('The app loads each table up to a fixed number of rows, newest first, so a very large '
+A(Paragraph('The app loads each list up to a fixed number of rows, newest first, so a very large '
             'centre would lose its oldest tail &mdash; and a fees total short by whatever fell off '
             'the end is a wrong number nobody can see is wrong. If a centre ever reaches one of '
-            'those caps, the app now says which table it was and asks for a report, instead of '
+            'those limits, the app now says which list it was and asks for a report, instead of '
             'quietly serving a smaller number than the truth.', S['body']))
 
 A(Paragraph('Report a problem', S['h2']))
@@ -680,7 +685,7 @@ E(table(['Capability', 'Head', 'Teacher', 'Student'],
          ['Cancel a meeting', 'Yes', 'No', 'No'],
          ['Branches', 'Yes', 'No', 'Sees own branch'],
          ['Subjects and batches', 'Yes', 'No', 'No'],
-         ['Rotate the student join code', 'Yes', 'No', 'No'],
+         ['Replace the student join code', 'Yes', 'No', 'No'],
          ['Allow or remove a student&rsquo;s phone', 'Yes', 'Yes', 'No'],
          ['Rename the centre, set the logo', 'Yes', 'No', 'Sees the logo'],
          ['Parent reach card', 'Yes', 'Yes', '&mdash;'],

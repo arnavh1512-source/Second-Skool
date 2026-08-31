@@ -392,7 +392,7 @@ def matrix(c, w, h):
         ('Approve or remove a teacher',        0, 1),
         ('Make someone else a head teacher',   0, 1),
         ('Change the centre name and logo',    0, 1),
-        ('Regenerate the student code',        0, 1),
+        ('Replace the student code',           0, 1),
         ('Allow or remove a student phone',    1, 1),
     ]
     hh = 22
@@ -496,7 +496,7 @@ story.append(feature_table([
      'A centre code was typed on the student sign-in screen, or a TUT- code was typed into the registration form. '
      'The two screens want opposite things.'),
     ('&ldquo;It worked last week&rdquo;',
-     'The student code was regenerated. Only the head can do that, and the old one stops working the moment they do.'),
+     'The head replaced the student code. Only a head can do that, and the old one stops working the moment they do.'),
     ('&ldquo;It says this phone is waiting&rdquo;',
      'A second phone typed the code. The first phone on a code is let in at once; every phone after it waits for staff. '
      'Allow it from the Phones list under More &gt; Student requests.'),

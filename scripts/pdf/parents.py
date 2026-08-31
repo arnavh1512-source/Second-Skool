@@ -48,8 +48,10 @@ S = {
     'h1':      P('h1', fontName='Helvetica-Bold', fontSize=18, leading=22, textColor=DARK,
                  spaceBefore=6, spaceAfter=3),
     'h1sub':   P('h1sub', fontSize=10, leading=14, textColor=MUTED, spaceAfter=14),
+    # keepWithNext: a heading alone at the foot of a page reads as a section with
+    # nothing in it, which is how 'If you lose the code' once lost its answer overleaf.
     'h2':      P('h2', fontName='Helvetica-Bold', fontSize=12.5, leading=16, textColor=BLUE,
-                 spaceBefore=13, spaceAfter=5),
+                 spaceBefore=13, spaceAfter=5, keepWithNext=1),
     'body':    P('body'),
     'bullet':  P('bullet', spaceAfter=3, leading=13.6),
     'small':   P('small', fontSize=8.6, leading=12.4, textColor=MUTED),
@@ -196,7 +198,7 @@ E(figure(flow(CW, [
     ('Centre adds', 'The head or a teacher creates the student'),
     ('Code appears', 'A short code, shown on the student card'),
     ('You type it', 'Once, on your phone. It is remembered'),
-    ('It stays', 'Until someone signs out on that phone'),
+    ('It stays', 'Do not sign out - you would need the centre again'),
     ('More phones', 'The centre allows the second and third'),
 ], GREEN, 52),
   'Where the code comes from. Ask the centre for it if it was never handed to you.'))
@@ -217,25 +219,31 @@ A(Paragraph('The first phone to use the code is let in straight away. Every phon
             'held: it shows <b>Waiting for this phone to be allowed</b> until someone at the centre '
             'taps Allow, which takes them a second. One message is all it needs.', S['body']))
 
+E(callout('The code is a key that turns once',
+          'A code forwarded to the wrong person, or posted in a class group by mistake, shows '
+          'them nothing &mdash; their phone only joins the queue. Still worth not posting it, but '
+          'a mistake is no longer a door left open.', AMBER))
+
+A(Paragraph('Do not sign out unless you have to', S['h2']))
+A(Paragraph('There is a <b>Sign out</b> button on the profile screen, and it does more than it looks '
+            'like it does. Signing out makes this phone forget the code, and typing the code back in '
+            'does not undo it &mdash; the phone joins the queue like a new one, and somebody at the '
+            'centre has to tap Allow before it works again. There is no need to sign out at the end '
+            'of the day. Leave it signed in, the way you leave WhatsApp signed in.', S['body']))
+
 A(Paragraph('If your child was just enrolled and the app says they are waiting', S['h2']))
 A(Paragraph('Some centres let a student register themselves with the centre&rsquo;s join code. When '
             'that happens the student sits in a waiting state until the head teacher approves them, '
             'and until then the app shows a waiting screen with a <b>Check again</b> button and '
-            'nothing else. Nobody has lost anything &mdash; the approval simply has not happened yet. '
-            'One message to the centre usually clears it the same day.', S['body']))
+            'nothing else. Nobody has lost anything. One message to the centre usually clears it '
+            'the same day.', S['body']))
 
 A(Paragraph('If you lose the code', S['h2']))
 A(Paragraph('It is on the <b>My Profile</b> screen inside the app, with a copy button beside it, so '
             'as long as one phone is still signed in you can read it off there. If no phone is signed '
             'in, ask the centre &mdash; they can see it on your child&rsquo;s record. The code cannot '
-            'be recovered by email. Ask for both in the same message: the code, and Allow for '
-            'this phone.', S['body']))
-
-E(callout('The code is a key that turns once',
-          'The first phone keeps a private key of its own from then on. A second phone typing the '
-          'same code only raises a request the centre has to allow, so a code that ends up in a '
-          'class WhatsApp group hands over nothing. Still worth not posting it &mdash; but a '
-          'mistake is no longer a door left open.', AMBER))
+            'be recovered by email. When you ask, ask for two things in the same message: the '
+            'code itself, and for this phone to be allowed.', S['body']))
 
 A(PageBreak())
 
@@ -271,8 +279,8 @@ E(table(['Tab', 'What is behind it'],
 
 A(Paragraph('Everything in the app is read-only for you and for your child. Nothing on any of these '
             'screens can be edited, deleted or hidden from a phone. Only the centre can change what '
-            'is recorded, and the app shows when it last synced so you always know whether you are '
-            'reading fresh numbers.', S['body']))
+            'is recorded, and the app prints the time it last checked with the centre, so you '
+            'always know whether you are reading today&rsquo;s numbers.', S['body']))
 
 A(PageBreak())
 
@@ -357,7 +365,7 @@ E(bullets([
     'Below either of those sits the payment history &mdash; every payment the centre has recorded, '
     'with its date.',
     'There is a <b>Pay now</b> button on the red card. Tapping it says &ldquo;Contact your teacher '
-    'to arrange payment&rdquo; &mdash; it is a prompt, not a payment gateway.',
+    'to arrange payment&rdquo; &mdash; it is a prompt to talk to the centre, not a way of paying online.',
 ]))
 
 A(Paragraph('Payment happens outside the app', S['h2']))
@@ -445,19 +453,24 @@ A(Paragraph('No. Every screen a student opens is read-only. Marks, attendance an
             'still sitting in the Notifications list, and still on your phone.', S['body']))
 
 A(Paragraph('Can I see the app on my phone and my child on theirs at the same time?', S['h2']))
-A(Paragraph('Yes. The same code can be used on as many phones as you like, and every one of them '
-            'sees the same live information.', S['body']))
+A(Paragraph('Yes &mdash; that is the point of it. Up to ten phones can be signed in for one '
+            'child, and all of them see the same thing at the same time. Only the first phone gets '
+            'in by typing the code alone; for every phone after that, somebody at the centre taps '
+            '<b>Allow</b> once and it is done. So set up your phone and your child&rsquo;s, and ask '
+            'the centre to allow whichever one went second.', S['body']))
 
 A(Paragraph('I have two children at the centre.', S['h2']))
-A(Paragraph('They have separate codes, and each phone is allowed per child, so ask the centre to '
-            'allow this phone for both. Sign in with one, look, sign out from the profile screen and '
-            'sign in with the other. Two children on one phone at the same time is not supported '
-            'today.', S['body']))
+A(Paragraph('Each child has their own code, and the centre allows a phone for one child at a '
+            'time, so ask them to allow your phone for both. One phone can still only show one child '
+            'at a time: you would sign out of one and sign in with the other, and each of those '
+            'swaps needs the centre again. Two phones is far less trouble &mdash; one child on '
+            'each.', S['body']))
 
 A(Paragraph('We share a phone with the rest of the family.', S['h2']))
-A(Paragraph('The code stays signed in until someone signs out. If the phone passes around the house, '
-            'either sign out when you are done, or accept that anyone picking it up can see the same '
-            'screens.', S['body']))
+A(Paragraph('Whoever picks the phone up sees the same screens, so treat it the way you treat '
+            'the family WhatsApp. Signing out to hide it is a poor trade, because it costs the '
+            'centre a tap to let the phone back in afterwards. If it matters, use the phone&rsquo;s '
+            'own lock instead.', S['body']))
 
 A(Paragraph('What does the centre see about me?', S['h2']))
 A(Paragraph('Only what you gave them when you enrolled &mdash; your child&rsquo;s name, grade, '
