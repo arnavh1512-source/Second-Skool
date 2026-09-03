@@ -6,7 +6,7 @@ import type { Slice } from '../slice'
 
 type Keys =
   | 'createCentre' | 'joinCentre' | 'loadMyCentre'
-  | 'regenerateStudentCode' | 'renameCentre' | 'saveCentreLogo'
+  | 'regenerateStudentCode' | 'regenerateJoinCode' | 'renameCentre' | 'saveCentreLogo'
 
 export const createCentreSlice: Slice<Keys> = (set, get) => ({
   createCentre: async (name) => {
@@ -36,6 +36,16 @@ export const createCentreSlice: Slice<Keys> = (set, get) => ({
     if (error || !data) { get().notify(friendlyError(error, 'change the code'), 'error'); return }
     set({ studentJoinCode: data as string })
     get().notify('New student code generated')
+  },
+
+  // The staff code and the student code rotate the same way and mean different
+  // things: this one only ever gates a request that still has to be approved,
+  // so nobody who has already joined is affected by changing it.
+  regenerateJoinCode: async () => {
+    const { data, error } = await supabase.rpc('regenerate_join_code')
+    if (error || !data) { get().notify(friendlyError(error, 'change the code'), 'error'); return }
+    set({ joinCode: data as string })
+    get().notify('New staff code generated')
   },
 
   renameCentre: async (name) => {

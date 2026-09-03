@@ -10,7 +10,8 @@ import { useState } from 'react'
 
 
 export function StaffApprovalsScreen() {
-  const { back, staffList, loadStaff, loadMyCentre, joinCode, centreName, approveTeacher, rejectTeacher, grantHead, removeStaff, supabaseUserId, notify } = useDashboard()
+  const { back, staffList, loadStaff, loadMyCentre, joinCode, centreName, approveTeacher, rejectTeacher, grantHead, removeStaff, supabaseUserId, role, regenerateJoinCode, notify } = useDashboard()
+  const [confirmRotate, setConfirmRotate] = useState(false)
 
   // Reload on open, and live-refresh whenever any profile changes (e.g. a new
   // teacher registers) so pending requests appear without leaving the screen.
@@ -32,6 +33,15 @@ export function StaffApprovalsScreen() {
 
       <div className="text-[13px] text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
 
+      <ConfirmDialog
+        open={confirmRotate}
+        title="Generate a new staff code?"
+        body="The current code stops working immediately. Teachers who have already joined are not affected — only someone yet to join needs the new one."
+        confirmLabel="Generate new code"
+        onConfirm={() => { setConfirmRotate(false); regenerateJoinCode() }}
+        onCancel={() => setConfirmRotate(false)}
+      />
+
       {joinCode && (
         <CodeCard
           className="lg:max-w-md rounded-[16px] mb-5"
@@ -39,7 +49,13 @@ export function StaffApprovalsScreen() {
           code={joinCode}
           hint="Share with teachers so they can join your centre."
           onCopy={() => copyText(joinCode, notify, 'Join code copied!')}
-        />
+        >
+          {role === 'admin' && (
+            <button onClick={() => setConfirmRotate(true)} className="text-[12px] font-bold text-td-muted underline mt-2 cursor-pointer">
+              Generate a new code
+            </button>
+          )}
+        </CodeCard>
       )}
 
       <div className="td-h2">Pending approval {pending.length > 0 && <span className="text-td-red">· {pending.length}</span>}</div>

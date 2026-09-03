@@ -238,6 +238,7 @@ export interface Actions {
   joinCentre: (code: string) => Promise<void>
   loadMyCentre: () => Promise<void>
   regenerateStudentCode: () => Promise<void>
+  regenerateJoinCode: () => Promise<void>
   renameCentre: (name: string) => Promise<void>
   saveCentreLogo: (dataUrl: string) => Promise<void>
   checkDevAccess: () => Promise<void>
