@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { isoDay } from '../store/format'
+import { isoDay, parseDay } from '../store/format'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
 import { ScreenHeader, PrimaryButton, EmptyState, Chip, options, classesOf } from './Shell'
 import { pickAttendanceClass, seedMarks } from '../lib/attendance'
 import { queuedMarksForDay } from '../lib/att-queue'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
+import { changedMarks, writeOrder } from '../lib/results-edit'
 
 // Period labels that are not a subject. Matched exactly — see periodStyle.
 const SPECIAL_PERIODS = new Set(['Test', 'Staff meeting', 'Parent meeting', 'Doubt session'])
@@ -350,6 +351,27 @@ export function AttendanceScreen() {
   )
 }
 
+// A test that has already gone out to the class. Read back from the database
+// rather than kept in the store: nothing else in a staff session needs the
+// list, and loading it on every refresh for the one screen that opens it would
+// be a query the other twenty screens pay for.
+interface PublishedTest { id: string; name: string; klass: string; subject: string; max: number; date: string }
+
+// The twenty most recent tests in the centre, RLS-scoped like every other
+// staff read. Outside the component so the effect that loads it sets state in a
+// callback rather than in the effect body.
+async function fetchTests(): Promise<PublishedTest[]> {
+  const { supabase } = await import('../lib/supabase')
+  const { data } = await supabase.from('tests')
+    .select('id,name,class,date,max_marks,subject_id').order('date', { ascending: false }).limit(20)
+  const subjects = useDashboard.getState().subjects
+  return (data ?? []).map(t => ({
+    id: t.id as string, name: t.name as string, klass: (t.class as string) ?? '',
+    subject: subjects.find(s => s.dbId === t.subject_id)?.name ?? '',
+    max: t.max_marks as number, date: (t.date as string) ?? '',
+  }))
+}
+
 export function ResultsScreen() {
   const { students, subjects, back, notify, go, role } = useDashboard()
   const [klass, setKlass] = useState('')
@@ -362,11 +384,22 @@ export function ResultsScreen() {
   // in the class. Keying by student makes that structurally impossible; clearing
   // on a class change stops half-entered marks reappearing later.
   const [marks, setMarks] = useState<Record<string, string>>({})
+  // The published tests, and — while one is open — the marks it already holds,
+  // so an edit can tell a corrected mark from one nobody touched.
+  const [tests, setTests] = useState<PublishedTest[]>([])
+  const [editing, setEditing] = useState<PublishedTest | null>(null)
+  const [published, setPublished] = useState<Record<string, number>>({})
   const classes = classesOf(students)
-  const selKlass = klass || classes[0] || ''
+  const selKlass = editing ? editing.klass : (klass || classes[0] || '')
   const roster = students.filter(s => s.klass === selKlass)
   const subjectNames = subjects.map(s => s.name)
-  const selSubject = subject || subjectNames[0] || ''
+  const selSubject = editing ? editing.subject : (subject || subjectNames[0] || '')
+
+  useEffect(() => {
+    let alive = true
+    fetchTests().then(t => { if (alive) setTests(t) })
+    return () => { alive = false }
+  }, [])
 
   const handlePublish = async () => {
     if (!testName.trim()) { notify('Enter test name', 'error'); return }
@@ -421,6 +454,7 @@ export function ResultsScreen() {
     useDashboard.getState().notifyClass(selKlass, 'New results published', `${testName} · ${selSubject} — check your marks in the app`, 'results')
     notify('Results published & parents notified')
     setMarks({})
+    setTests(await fetchTests())
     // Rankings, the student's results screen and the reports all read from the
     // store snapshot, which knows nothing about marks written straight to
     // Postgres. Without this the teacher published a test and then found
@@ -429,19 +463,96 @@ export function ResultsScreen() {
     await useDashboard.getState().refreshData()
   }
 
+  // Open a published test for correction. The marks already recorded are read
+  // back and shown in the boxes, so the teacher is editing the thing the
+  // parents can see rather than typing a class in again from memory.
+  const openTest = async (t: PublishedTest) => {
+    const { supabase } = await import('../lib/supabase')
+    const { data, error } = await supabase.from('results').select('student_id,marks').eq('test_id', t.id)
+    if (error) { notify('Could not open this test — try again', 'error'); return }
+    const byStudent = new Map((data ?? []).map(r => [r.student_id as string, r.marks as number]))
+    const typed: Record<string, string> = {}
+    const already: Record<string, number> = {}
+    for (const s of students.filter(x => x.klass === t.klass)) {
+      const m = s.dbId ? byStudent.get(s.dbId) : undefined
+      if (m === undefined) continue
+      typed[studentKey(s)] = String(m)
+      already[studentKey(s)] = m
+    }
+    setEditing(t); setPublished(already); setMarks(typed)
+    setTestName(t.name); setMaxMarks(String(t.max))
+  }
+
+  const closeTest = () => {
+    setEditing(null); setPublished({}); setMarks({})
+    setTestName('Unit Test'); setMaxMarks('50')
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editing) return
+    if (!testName.trim()) { notify('Enter test name', 'error'); return }
+    if (!isWholeNumber(maxMarks, 1, LIMITS.maxMarks)) { notify(`Max marks must be a whole number from 1 to ${LIMITS.maxMarks}`); return }
+    const max = Number(maxMarks)
+
+    const entries = roster.filter(s => s.dbId).map(s => ({
+      studentId: s.dbId as string, name: s.name,
+      typed: marks[studentKey(s)] ?? '', published: published[studentKey(s)] ?? null,
+    }))
+    for (const e of entries) {
+      if (e.typed.trim() === '') continue
+      if (!isWholeNumber(e.typed, 0, max)) { notify(`${e.name}: marks must be a whole number from 0 to ${max}`); return }
+    }
+
+    const rows = changedMarks(editing.id, entries)
+    const name = clampText(testName, LIMITS.title)
+    const testChanged = name !== editing.name || max !== editing.max
+    if (!rows.length && !testChanged) { notify('Nothing to save — no mark was changed'); return }
+
+    const { supabase } = await import('../lib/supabase')
+    const writeTest = async () => testChanged
+      ? supabase.from('tests').update({ name, max_marks: max }).eq('id', editing.id)
+      : { error: null }
+    const writeMarks = async () => rows.length
+      ? supabase.from('results').upsert(rows, { onConflict: 'test_id,student_id' })
+      : { error: null }
+
+    // The maximum and the marks are guarded against each other in both
+    // directions, so whichever one is moving into the space of the other has to
+    // go second. See writeOrder.
+    const testFirst = writeOrder(editing.max, max) === 'test-first'
+    const { error: firstError } = testFirst ? await writeTest() : await writeMarks()
+    if (firstError) { notify('Could not save the correction — nothing was changed', 'error'); return }
+    const { error: secondError } = testFirst ? await writeMarks() : await writeTest()
+    // Half of an edit landed. Saying "saved" here would leave a mark on screen
+    // that no parent can see, which is the exact failure this screen exists to
+    // prevent.
+    if (secondError) { notify('Only part of the change was saved — open the test again and check', 'error'); setTests(await fetchTests()); return }
+
+    // A mark that changes in silence is worse than one that was wrong: the
+    // parent saw the first number and has no reason to look again.
+    useDashboard.getState().notifyClass(editing.klass, 'Results updated',
+      `${name}${editing.subject ? ` · ${editing.subject}` : ''} — marks were corrected, check the app`, 'results')
+    notify('Correction saved & parents notified')
+    closeTest()
+    setTests(await fetchTests())
+    await useDashboard.getState().refreshData()
+  }
+
   return (
     <div className="td-wide td-screen">
-      <ScreenHeader title="Enter Results" onBack={back} />
+      <ScreenHeader title={editing ? 'Edit Results' : 'Enter Results'} onBack={editing ? closeTest : back} />
 
       <div className="grid grid-cols-2 gap-[11px] mb-[13px]">
         <div><label className="td-label">Class</label>
-          <select value={selKlass} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field text-[13.5px] bg-td-card">
-            {classes.map(c => <option key={c}>{c}</option>)}
+          {/* Locked while editing: the test belongs to a class, and moving it to
+              another one would hand a set of marks to students who never sat it. */}
+          <select value={selKlass} disabled={!!editing} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+            {editing ? <option>{editing.klass}</option> : classes.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div><label className="td-label">Subject</label>
-          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
-            {options(subjectNames, 'Add subjects first')}
+          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={!!editing || subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+            {editing ? <option>{editing.subject || '—'}</option> : options(subjectNames, 'Add subjects first')}
           </select>
         </div>
       </div>
@@ -450,7 +561,12 @@ export function ResultsScreen() {
         <div><label className="td-label">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-[13.5px]" /></div>
       </div>
 
-      <div className="td-h2">Enter marks</div>
+      <div className="td-h2">{editing ? 'Correct marks' : 'Enter marks'}</div>
+      {editing && (
+        <div className="text-[12.5px] text-td-subtle mb-2.5">
+          A published mark can be corrected but never removed — clearing a box leaves that mark as it is. The class is told when you save.
+        </div>
+      )}
       {roster.length === 0 ? (
         <EmptyState
           title={selKlass ? `No students in ${selKlass}` : 'No students in this class'}
@@ -470,7 +586,35 @@ export function ResultsScreen() {
           ))}
         </div>
       )}
-      <div className="lg:max-w-xs"><PrimaryButton onClick={handlePublish}>Publish results</PrimaryButton></div>
+      <div className="lg:max-w-xs">
+        <PrimaryButton onClick={editing ? handleSaveEdit : handlePublish}>{editing ? 'Save correction' : 'Publish results'}</PrimaryButton>
+      </div>
+
+      {/* Published tests were write-once until now: a wrong mark could only be
+          fixed by deleting the whole test out of the database, taking the rest
+          of the class with it. */}
+      {!editing && tests.length > 0 && (
+        <>
+          <div className="td-h2 mt-[26px]">Published tests</div>
+          <div className="text-[12.5px] text-td-subtle mb-2.5">Tap a test to correct a mark. Nothing here can be deleted.</div>
+          <div className="td-list gap-[9px]">
+            {tests.map(t => {
+              const d = parseDay(t.date)
+              return (
+                <button key={t.id} onClick={() => openTest(t)} className="w-full text-left td-card rounded-2xl p-[11px] px-3.5 flex items-center gap-3 cursor-pointer">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13.5px] font-bold text-td-dark truncate">{t.name}</div>
+                    <div className="text-[12px] text-td-muted">
+                      {t.klass}{t.subject ? ` · ${t.subject}` : ''} · out of {t.max}{d ? ` · ${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}` : ''}
+                    </div>
+                  </div>
+                  <span className="text-[12.5px] text-td-primary font-semibold shrink-0">Edit</span>
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }
