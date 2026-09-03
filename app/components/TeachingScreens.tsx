@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { isoDay, parseDay } from '../store/format'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
 import { ScreenHeader, PrimaryButton, EmptyState, Chip, options, classesOf } from './Shell'
-import { pickAttendanceClass, seedMarks } from '../lib/attendance'
+import { earliestMarkableDay, pickAttendanceClass, seedMarks } from '../lib/attendance'
 import { queuedMarksForDay } from '../lib/att-queue'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
@@ -220,9 +220,52 @@ export function TimetableScreen() {
   )
 }
 
+// One past day's register, read straight from the database rather than from the
+// daily rows the provider already holds. Those are capped, newest first, so on
+// a centre big enough to fill the cap the older days fall off the end — and a
+// register that looks empty because it was never loaded is indistinguishable
+// from one that was never marked. Saving that would write a full set of
+// Presents over a day somebody had already answered honestly.
+// One shared empty register, so the seeding effect below does not see a brand
+// new object on every render of a day that has not loaded yet.
+const NO_MARKS: Record<string, string> = {}
+
+async function fetchDayMarks(day: string): Promise<Record<string, string>> {
+  const { supabase } = await import('../lib/supabase')
+  const { data, error } = await supabase.from('attendance').select('student_id,status').eq('date', day)
+  if (error) throw error
+  const out: Record<string, string> = {}
+  for (const r of data ?? []) out[r.student_id as string] = r.status as string
+  return out
+}
+
 export function AttendanceScreen() {
-  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role, attConflicts, dismissAttConflicts, attToday, attQueue, lastSyncedAt } = useDashboard()
+  const { attClass, att, students, back, set, toggleAtt, saveAttendance, go, role, attConflicts, dismissAttConflicts, attToday, attQueue, lastSyncedAt, online, notify } = useDashboard()
   const classes = classesOf(students)
+
+  // The day being marked. Today until she says otherwise, and a past day is a
+  // correction: the register for a day that has already happened was wrong, or
+  // never got filled in at all, and until now there was no door into it.
+  const today = isoDay()
+  const [day, setDay] = useState(today)
+  const correcting = day !== today
+
+  // What the centre already has for that day. Today's comes free with the
+  // provider's load and survives going offline; a past day has to be read, and
+  // `loaded` is what stops her saving a register she has not actually seen.
+  const [pastMarks, setPastMarks] = useState<{ day: string; marks: Record<string, string> } | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
+  const loaded = !correcting || pastMarks?.day === day
+  const recorded = correcting ? (pastMarks?.day === day ? pastMarks.marks : NO_MARKS) : attToday
+
+  useEffect(() => {
+    if (!correcting) return
+    let alive = true
+    fetchDayMarks(day)
+      .then(marks => { if (alive) setPastMarks({ day, marks }) })
+      .catch(() => { if (alive) setLoadFailed(true) })
+    return () => { alive = false }
+  }, [correcting, day])
 
   const selClass = pickAttendanceClass(classes, attClass)
 
@@ -245,17 +288,22 @@ export function AttendanceScreen() {
   // the queue with the client effect that reads localStorage — so latching on
   // the very first run would fix an all-present register in place and never
   // correct it, which is the bug f7a4a7e fixed arriving through another door.
-  const ready = lastSyncedAt !== null || attQueue.length > 0
+  //
+  // Keyed by class *and* day, so switching to a day she wants to correct
+  // reseeds from that day's register rather than leaving today's marks sitting
+  // on the screen under yesterday's date.
+  const ready = (lastSyncedAt !== null || attQueue.length > 0) && loaded
   const seededFor = useRef<string | null>(null)
   useEffect(() => {
     if (!ready) return
-    if (seededFor.current === selClass) return
-    seededFor.current = selClass
+    const seedKey = `${day}|${selClass}`
+    if (seededFor.current === seedKey) return
+    seededFor.current = seedKey
     set({
       attClass: selClass,
-      att: seedMarks(roster, attToday, queuedMarksForDay(attQueue, isoDay())),
+      att: seedMarks(roster, recorded, queuedMarksForDay(attQueue, day)),
     })
-  }, [ready, selClass, roster, attToday, attQueue, set])
+  }, [ready, day, selClass, roster, recorded, attQueue, set])
   const absentCount = roster.reduce((a, s) => a + (att[studentKey(s)] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 
@@ -266,10 +314,42 @@ export function AttendanceScreen() {
           <Icon name="back" size={18} color="var(--color-td-dark)" />
         </button>
         <div>
-          <div className="text-xl td-strong">Mark Attendance</div>
-          <div className="text-xs text-td-muted">{new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          <div className="text-xl td-strong">{correcting ? 'Correct Attendance' : 'Mark Attendance'}</div>
+          <div className="text-xs text-td-muted">{(parseDay(day) ?? new Date()).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
         </div>
       </div>
+
+      {/* A day that has already happened can be opened and put right. Offline it
+          cannot: correcting a register the phone is unable to read back would
+          mean saving a screen full of Presents over marks nobody can see. */}
+      <div className="flex flex-wrap items-center gap-2.5 mb-4">
+        <label htmlFor="att-day" className="text-xs text-td-subtle font-semibold">Day</label>
+        <input
+          id="att-day"
+          type="date"
+          value={day}
+          max={today}
+          min={isoDay(earliestMarkableDay(new Date()))}
+          disabled={!online}
+          onChange={e => { setDay(e.target.value || today); setLoadFailed(false) }}
+          className="border border-td-border bg-td-card rounded-[12px] px-3 py-2 text-[13px] text-td-dark disabled:opacity-60"
+        />
+        {correcting && (
+          <button onClick={() => { setDay(today); setLoadFailed(false) }} className="text-[12px] font-bold text-td-muted underline cursor-pointer">
+            Back to today
+          </button>
+        )}
+      </div>
+
+      {!online && (
+        <div className="text-[12px] text-td-muted mb-4">An earlier day can only be corrected while you are online.</div>
+      )}
+
+      {correcting && loadFailed && (
+        <div className="mb-4 rounded-[14px] border p-3.5 text-[12px] text-td-on-red" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
+          That day&apos;s register could not be loaded, so it cannot be corrected right now. Try again in a moment.
+        </div>
+      )}
 
       {/* Marks she made offline that the register had already answered for by
           the time the phone reconnected. Shown rather than resolved, because
@@ -344,7 +424,17 @@ export function AttendanceScreen() {
               )
             })}
           </div>
-          <div className="lg:max-w-xs"><PrimaryButton onClick={() => saveAttendance(roster)}>Save attendance</PrimaryButton></div>
+          {correcting && (
+            <div className="text-[12px] text-td-muted mb-2.5 lg:max-w-2xl">
+              This replaces what the centre has for {day}. Parents are not sent a message about a day that has already passed — the corrected register is what they will see.
+            </div>
+          )}
+          <div className="lg:max-w-xs">
+            <PrimaryButton onClick={() => {
+              if (!loaded) { notify('That day’s register has not loaded yet', 'error'); return }
+              saveAttendance(roster, day)
+            }}>{correcting ? 'Save correction' : 'Save attendance'}</PrimaryButton>
+          </div>
         </>
       )}
     </div>

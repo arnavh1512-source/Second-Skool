@@ -202,7 +202,9 @@ export interface Actions {
   // Resolves to the login codes it minted, in the order the rows were pasted,
   // or null if nothing was saved.
   importStudents: (rows: readonly ParsedStudent[], branch: string) => Promise<{ code: string; name: string; parent: string }[] | null>
-  saveAttendance: (roster: Student[]) => Promise<void>
+  /** `date` is the day being marked, defaulting to today. A past day is a
+   *  correction: it writes the register for that day and tells no parent. */
+  saveAttendance: (roster: Student[], date?: string) => Promise<void>
   // Reads the queue off the phone and, if there is a connection, drains it.
   // Safe to call at any time: it is a no-op with nothing waiting.
   syncAttQueue: () => Promise<void>

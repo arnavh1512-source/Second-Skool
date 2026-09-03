@@ -126,3 +126,21 @@ export function seedMarks(
 export function pickAttendanceClass(classes: readonly string[], stored: string): string {
   return classes.includes(stored) ? stored : (classes[0] ?? '')
 }
+
+/**
+ * The oldest day a teacher may still correct.
+ *
+ * `archive_old_attendance()` folds daily rows older than 90 days into monthly
+ * totals and deletes them, so a day past that boundary has no rows to correct —
+ * opening it would show an empty register, and saving that empty register would
+ * write a fresh set of Presents for a day the centre had already counted.
+ *
+ * 89 rather than 90, because the archive runs on a day of its own choosing and
+ * a register saved at the exact boundary can be swallowed before anybody reads
+ * it back. One day of margin costs nothing and removes the whole race.
+ */
+export function earliestMarkableDay(today: Date): Date {
+  const d = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  d.setDate(d.getDate() - 89)
+  return d
+}

@@ -80,7 +80,7 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
     // save rejected by RLS, dropped by a flaky connection or refused by a
     // constraint still showed green — on the screen a teacher touches every
     // working day, holding the one record parents actually watch.
-    saveAttendance: async (roster) => {
+    saveAttendance: async (roster, day) => {
       const { att, online } = get()
       const notify = get().notify
 
@@ -100,7 +100,9 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
 
       // The date is fixed here, at the moment she marks. A batch queued tonight
       // and drained tomorrow is still tonight's register.
-      const date = isoDay()
+      const today = isoDay()
+      const date = day ?? today
+      const correcting = date !== today
       const present = marks.filter(m => m.status === 'Present').length
 
       // Checked up front so she is told before she walks away, rather than after
@@ -131,12 +133,19 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
       }
       const already = ((data as SaveResult | null)?.existing ?? []).length > 0
 
-      notify(already
-        ? `Attendance updated · ${present} present (today was already marked)`
-        : `Attendance saved · ${present} present`)
+      notify(correcting
+        ? `Register corrected for ${date} · ${present} present`
+        : already
+          ? `Attendance updated · ${present} present (today was already marked)`
+          : `Attendance saved · ${present} present`)
 
-      // Tell only the absent students (their parents watch these devices).
-      await tellParents(marks.filter(m => m.status === 'Absent'), notify)
+      // Tell only the absent students (their parents watch these devices), and
+      // only for today. The push says the child was marked absent today, and
+      // for a day already gone that sentence is simply false — a parent reading
+      // it on Friday about Monday is being told their child missed Friday. The
+      // correction still lands in the register, which is where a parent looks
+      // when they want the answer for a particular day.
+      if (!correcting) await tellParents(marks.filter(m => m.status === 'Absent'), notify)
 
       // Re-pull so the Students list shows the new attendance % right away,
       // instead of staying stale until the next focus/manual refresh.

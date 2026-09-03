@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { totalsByStudent, countDailyRows, attendancePct, pickAttendanceClass, marksForDay, seedMarks } from '../app/lib/attendance'
+import { totalsByStudent, countDailyRows, attendancePct, pickAttendanceClass, marksForDay, seedMarks, earliestMarkableDay } from '../app/lib/attendance'
+import { isoDay } from '../app/store/format'
 
 describe('totalsByStudent', () => {
   it('indexes server-computed totals by student id', () => {
@@ -178,5 +179,30 @@ describe('seedMarks', () => {
 
   it('skips a row with no handle at all rather than keying on empty string', () => {
     expect(seedMarks([{}], {}, {})).toEqual({})
+  })
+})
+
+describe('earliestMarkableDay', () => {
+  it('stops one day inside the 90-day archive boundary', () => {
+    expect(isoDay(earliestMarkableDay(new Date(2026, 8, 4)))).toBe('2026-06-07')
+  })
+
+  it('crosses a month end without landing on the wrong day', () => {
+    expect(isoDay(earliestMarkableDay(new Date(2026, 2, 1)))).toBe('2025-12-02')
+  })
+
+  it('handles a leap day in the span', () => {
+    expect(isoDay(earliestMarkableDay(new Date(2024, 4, 1)))).toBe('2024-02-02')
+  })
+
+  it('ignores the time of day it is called at', () => {
+    const late = new Date(2026, 8, 4, 23, 59, 59)
+    expect(isoDay(earliestMarkableDay(late))).toBe(isoDay(earliestMarkableDay(new Date(2026, 8, 4))))
+  })
+
+  it('does not mutate the date it was given', () => {
+    const today = new Date(2026, 8, 4)
+    earliestMarkableDay(today)
+    expect(isoDay(today)).toBe('2026-09-04')
   })
 })
