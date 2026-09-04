@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { totalsByStudent, countDailyRows, attendancePct, pickAttendanceClass, marksForDay, seedMarks, earliestMarkableDay } from '../app/lib/attendance'
+import { totalsByStudent, countDailyRows, attendancePct, pickAttendanceClass, marksForDay, seedMarks, earliestMarkableDay, absenceDayLabel } from '../app/lib/attendance'
 import { isoDay } from '../app/store/format'
 
 describe('totalsByStudent', () => {
@@ -204,5 +204,21 @@ describe('earliestMarkableDay', () => {
     const today = new Date(2026, 8, 4)
     earliestMarkableDay(today)
     expect(isoDay(today)).toBe('2026-09-04')
+  })
+})
+
+describe('absenceDayLabel', () => {
+  it("says today when the day being marked is today", () => {
+    expect(absenceDayLabel('2026-09-04', '2026-09-04')).toBe('today')
+  })
+
+  it('names a past day instead of calling it today', () => {
+    // A parent reading this on Friday about Monday must not be told their
+    // child missed Friday.
+    expect(absenceDayLabel('2026-08-31', '2026-09-04')).toBe('on Mon, 31 Aug')
+  })
+
+  it('falls back to today rather than printing a broken date', () => {
+    expect(absenceDayLabel('not-a-date', '2026-09-04')).toBe('today')
   })
 })

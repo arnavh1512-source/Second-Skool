@@ -1,4 +1,5 @@
 import { studentKey, type Identifiable } from './student-key'
+import { parseDay } from '../store/format'
 
 // Attendance percentage maths, kept pure and out of the data provider so it can
 // be tested without a database.
@@ -143,4 +144,23 @@ export function earliestMarkableDay(today: Date): Date {
   const d = new Date(today.getFullYear(), today.getMonth(), today.getDate())
   d.setDate(d.getDate() - 89)
   return d
+}
+
+/**
+ * How an absence message should name the day it is about.
+ *
+ * The push used to be hardcoded to "today", which was true for as long as the
+ * register could only be marked for today. It stopped being true the moment a
+ * teacher could fill in a day she had missed: a parent reading "marked absent
+ * today" on Friday about Monday is being told their child missed Friday.
+ *
+ * A day that is not today is named outright rather than described as "on
+ * Monday", because a parent opening the phone a week later has no way to know
+ * which Monday.
+ */
+export function absenceDayLabel(day: string, today: string): string {
+  if (day === today) return 'today'
+  const d = parseDay(day)
+  if (!d) return 'today'
+  return `on ${d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}`
 }

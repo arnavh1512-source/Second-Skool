@@ -426,7 +426,7 @@ export function AttendanceScreen() {
           </div>
           {correcting && (
             <div className="text-[12px] text-td-muted mb-2.5 lg:max-w-2xl">
-              This replaces what the centre has for {day}. Parents are not sent a message about a day that has already passed — the corrected register is what they will see.
+              This replaces what the centre has for {day}. A child newly marked absent gets a message home naming that day.
             </div>
           )}
           <div className="lg:max-w-xs">

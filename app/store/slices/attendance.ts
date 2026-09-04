@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase'
 import { sendPush } from '../../lib/push'
 import { studentKey } from '../../lib/student-key'
+import { absenceDayLabel } from '../../lib/attendance'
 import { loadQueue, saveQueue, resolveBatch, type QueuedBatch, type QueuedMark } from '../../lib/att-queue'
 import { dbErr } from '../db'
 import { looksOffline } from '../errors'
@@ -24,12 +25,17 @@ let draining = false
 /** The parents of the children marked absent. Deliberately separate from the
  *  save itself: the attendance is already committed by the time this runs, so a
  *  failed notification must never read as a failed save. */
-async function tellParents(absent: readonly QueuedMark[], notify: Actions['notify']) {
+async function tellParents(absent: readonly QueuedMark[], day: string, notify: Actions['notify']) {
   if (!absent.length) return
+  // The day is named, not assumed. A register can now be filled in after the
+  // fact, and a parent told "absent today" about last Monday has been told
+  // something false about a day their child was in class.
+  const when = absenceDayLabel(day, isoDay())
+  const title = `Marked absent ${when}`
   const rows = absent.map(m => ({
     student_id: m.studentId,
-    title: 'Marked absent today',
-    detail: `${m.name} was marked absent. Please contact the centre if this is a mistake.`,
+    title,
+    detail: `${m.name} was marked absent ${when}. Please contact the centre if this is a mistake.`,
     icon: 'absence',
   }))
   await supabase.from('notifications').insert(rows).then(dbErr('send the absence notifications', notify))
@@ -37,8 +43,8 @@ async function tellParents(absent: readonly QueuedMark[], notify: Actions['notif
   if (codes.length) {
     await sendPush({
       studentCodes: codes,
-      title: 'Marked absent today',
-      body: 'Your ward was marked absent at the centre today.',
+      title,
+      body: `Your ward was marked absent at the centre ${when}.`,
     }).catch(() => {})
   }
 }
@@ -139,13 +145,11 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
           ? `Attendance updated · ${present} present (today was already marked)`
           : `Attendance saved · ${present} present`)
 
-      // Tell only the absent students (their parents watch these devices), and
-      // only for today. The push says the child was marked absent today, and
-      // for a day already gone that sentence is simply false — a parent reading
-      // it on Friday about Monday is being told their child missed Friday. The
-      // correction still lands in the register, which is where a parent looks
-      // when they want the answer for a particular day.
-      if (!correcting) await tellParents(marks.filter(m => m.status === 'Absent'), notify)
+      // Tell only the absent students (their parents watch these devices). A
+      // day filled in late still reaches them — a teacher who never got to
+      // Monday's register is the case this whole screen exists for, and a
+      // silent correction would leave that Monday reaching nobody.
+      await tellParents(marks.filter(m => m.status === 'Absent'), date, notify)
 
       // Re-pull so the Students list shows the new attendance % right away,
       // instead of staying stale until the next focus/manual refresh.
@@ -205,7 +209,7 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
           const { absent, conflicts: found } = resolveBatch(batch, saved.existing)
           conflicts.push(...found)
           written += saved.written
-          await tellParents(absent, notify)
+          await tellParents(absent, batch.date, notify)
           done.add(batch.id)
         }
       } finally {
