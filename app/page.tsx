@@ -29,6 +29,7 @@ const DevConsoleScreen = dyn(() => import('./components/DevConsole'), 'DevConsol
 
 const admin = () => import('./components/AdminScreens')
 const teaching = () => import('./components/TeachingScreens')
+const attendance = () => import('./components/AttendanceScreen')
 const people = () => import('./components/PeopleScreens')
 const utility = () => import('./components/UtilityScreens')
 const fees = () => import('./components/FeesScreens')
@@ -48,7 +49,7 @@ const notes = () => import('./components/NotesScreens')
 const SCREENS: Record<Screen, { view: ComponentType; title?: string }> = {
   home: { view: HomeScreen, title: 'Home' },
   timetable: { view: dyn(teaching, 'TimetableScreen'), title: 'Timetable' },
-  attendance: { view: dyn(teaching, 'AttendanceScreen'), title: 'Attendance' },
+  attendance: { view: dyn(attendance, 'AttendanceScreen'), title: 'Attendance' },
   results: { view: dyn(teaching, 'ResultsScreen'), title: 'Results' },
   assign: { view: dyn(teaching, 'AssignmentsScreen'), title: 'Assignments' },
   reminder: { view: dyn(teaching, 'RemindersScreen'), title: 'Reminders' },
