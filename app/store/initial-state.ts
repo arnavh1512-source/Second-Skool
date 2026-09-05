@@ -9,7 +9,7 @@ export const initialState: State = {
   // in the server render is a hydration mismatch. `syncAttQueue` fills it on
   // mount, which is a client effect and cannot disagree with the markup.
   attQueue: [], attConflicts: [], attToday: {}, atRisk: {},
-  attClass: '', att: {}, rankSubject: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
+  attClass: '', att: {}, rankSubject: '', rankClass: '', ttDay: ['Mon', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()],
   toast: '', toastKind: 'info', editId: '',
   online: typeof navigator === 'undefined' ? true : navigator.onLine,
   lastSyncedAt: null,

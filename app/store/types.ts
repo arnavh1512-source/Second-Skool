@@ -60,7 +60,7 @@ export interface NotifItem { icon: string; tint: string; title: string; detail: 
 // on the name alone merged them into one entry and highlighted the wrong child
 // as "(You)". It is null only for a board built by an older snapshot RPC that
 // did not return ids.
-export interface RankRow { id: string | null; name: string; score: number }
+export interface RankRow { id: string | null; name: string; klass: string | null; score: number }
 export interface SubjectItem { name: string; dbId: string }
 export interface BatchItem { name: string; dbId: string }
 interface BranchReport { name: string; students: number; new_students: number; staff: number; att_pct: number; fees_collected: number; fees_pending: number }
@@ -85,7 +85,7 @@ export interface SupportTicket {
 
 export interface State {
   screen: Screen; tab: Tab; role: Role; origin: string | null
-  attClass: string; att: Record<string, string>; rankSubject: string; ttDay: string
+  attClass: string; att: Record<string, string>; rankSubject: string; rankClass: string; ttDay: string
   // Today's register as the centre currently has it, indexed by student uuid.
   // Derived from rows the provider already fetches, so the Mark Attendance
   // screen can open on what was recorded instead of on a blank slate.

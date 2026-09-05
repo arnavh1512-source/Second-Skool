@@ -101,9 +101,16 @@ export function MeetingsScreen() {
 }
 
 export function RankingsScreen() {
-  const { rankSubject, rankData, subjects, back, set, go } = useDashboard()
+  const { rankSubject, rankClass, rankData, subjects, back, set, go } = useDashboard()
   const subjectNames = subjects.map(s => s.name)
-  const rows = rankData[rankSubject] || []
+  const board = rankData[rankSubject] || []
+  // A rank only means something against the same paper. Class 9 and Class 12
+  // sit different tests out of different totals, so one list of everyone is
+  // noise. Boards built before the class reached the server carry no class at
+  // all, and those still render whole rather than as an empty screen.
+  const classNames = [...new Set(board.map(r => r.klass).filter((k): k is string => !!k))]
+  const activeClass = classNames.includes(rankClass) ? rankClass : (classNames[0] ?? '')
+  const rows = activeClass ? board.filter(r => r.klass === activeClass) : board
 
   return (
     <div className="td-screen">
@@ -113,7 +120,7 @@ export function RankingsScreen() {
         <button onClick={() => go('subjects', 'more')} className="w-full text-left bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3.5 cursor-pointer text-[12.5px] text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
       )}
 
-      <div className="flex gap-[9px] overflow-x-auto mb-[18px] scrollbar-hide">
+      <div className={`flex gap-[9px] overflow-x-auto scrollbar-hide ${classNames.length > 1 ? 'mb-[9px]' : 'mb-[18px]'}`}>
         {subjectNames.map(name => {
           const active = name === rankSubject
           return (
@@ -122,8 +129,16 @@ export function RankingsScreen() {
         })}
       </div>
 
+      {classNames.length > 1 && (
+        <div className="flex gap-[9px] overflow-x-auto mb-[18px] scrollbar-hide">
+          {classNames.map(name => (
+            <Chip key={name} active={name === activeClass} onClick={() => set({ rankClass: name })}>{name}</Chip>
+          ))}
+        </div>
+      )}
+
       {rows.length === 0 ? (
-        <div className="td-none">{rankSubject ? `No results entered for ${rankSubject} yet` : 'Enter results to generate rankings'}</div>
+        <div className="td-none">{rankSubject ? `No results entered for ${rankSubject}${activeClass ? ` in ${activeClass}` : ''} yet` : 'Enter results to generate rankings'}</div>
       ) : (
         <div className="flex flex-col gap-[9px] mb-5">
           {rows.map((r, i) => (

@@ -85,8 +85,8 @@ describe('mapSnapshot', () => {
   // migration applied still sends. It has to keep working, and it has to be
   // obvious downstream that it carries no identity.
   it('reads a legacy [name, score] board and leaves its ids null', () => {
-    expect(r.rankData?.Mathematics?.[0]).toEqual({ id: null, name: 'Arjun', score: 90 })
-    expect(r.rankData?.Mathematics?.[1]).toEqual({ id: null, name: 'Neha', score: 80 })
+    expect(r.rankData?.Mathematics?.[0]).toEqual({ id: null, name: 'Arjun', klass: null, score: 90 })
+    expect(r.rankData?.Mathematics?.[1]).toEqual({ id: null, name: 'Neha', klass: null, score: 80 })
   })
 
   it('keeps two students who share a name apart on the current board', () => {
@@ -104,12 +104,25 @@ describe('mapSnapshot', () => {
     expect(board.findIndex(x => x.id === 'd1')).toBe(0)
   })
 
+  // A board spanning classes is only readable if each row says which class it
+  // belongs to; the screen groups on this.
+  it('carries the class through on a board that spans classes', () => {
+    const mapped = mapSnapshot({
+      student: { dbId: 'd1', code: 'c1' },
+      rankings: { Mathematics: [
+        { id: 'd1', name: 'Riya', klass: 'Class 10', score: 91 },
+        { id: 'd9', name: 'Aarav', klass: 'Class 9', score: 88 },
+      ] },
+    })
+    expect((mapped.rankData?.Mathematics ?? []).map(x => x.klass)).toEqual(['Class 10', 'Class 9'])
+  })
+
   it('survives a board row with neither id nor name', () => {
     const mapped = mapSnapshot({
       student: { dbId: 'd1', code: 'c1' },
       rankings: { Science: [{}] },
     })
-    expect(mapped.rankData?.Science?.[0]).toEqual({ id: null, name: '', score: 0 })
+    expect(mapped.rankData?.Science?.[0]).toEqual({ id: null, name: '', klass: null, score: 0 })
   })
 
   it('handles a sparse snapshot without throwing', () => {

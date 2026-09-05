@@ -156,14 +156,13 @@ export function HomeScreen() {
           exists only while somebody is on the list, so a centre where everyone
           is coming never sees it — an alarm that is always on is furniture. */}
       {gone > 0 && (
-        <button onClick={() => goFrom('students', 'students', 'atRisk')} className="block text-left w-full bg-td-tint-red border border-td-edge-red rounded-[18px] p-4 mb-3.5 lg:max-w-md cursor-pointer">
-          <div className="text-[11px] font-bold text-td-red uppercase tracking-[.06em]">Stopped coming</div>
-          <div className="text-2xl td-strong leading-none mt-2">{gone} {gone === 1 ? 'student' : 'students'}</div>
-          <div className="text-[12px] text-td-muted font-semibold mt-1.5">absent the last 3 classes running</div>
-          <div className="flex items-center justify-between gap-2 mt-2.5">
-            <span className="text-[11.5px] text-td-subtle font-semibold">Ask before the month ends</span>
-            <ChevronRight />
+        <button onClick={() => goFrom('students', 'students', 'atRisk')} className="flex items-center gap-3 text-left w-full bg-td-tint-red border border-td-edge-red rounded-[18px] py-3 px-4 mb-2.5 lg:max-w-md cursor-pointer">
+          <div className="text-xl td-strong leading-none text-td-red">{gone}</div>
+          <div className="flex-1">
+            <div className="text-[13px] font-bold text-td-dark">{gone === 1 ? 'student has' : 'students have'} stopped coming</div>
+            <div className="text-[11.5px] text-td-subtle font-semibold mt-0.5">Absent the last 3 classes &middot; ask before the month ends</div>
           </div>
+          <ChevronRight />
         </button>
       )}
 
@@ -171,27 +170,25 @@ export function HomeScreen() {
           names on the other side. origin='reach' is what carries the filter,
           and any later go() clears it, so the roster never stays half-hidden. */}
       {reach && (
-        <button onClick={() => goFrom('students', 'students', 'reach')} className="block text-left td-card rounded-[18px] p-4 mb-3.5 lg:max-w-md cursor-pointer">
-          <div className="text-[11px] font-bold text-td-muted uppercase tracking-[.06em]">Parent reach &middot; this week</div>
-          <div className="text-2xl td-strong leading-none mt-2">{reach.active} of {students.length}</div>
-          <div className="text-[12px] text-td-muted font-semibold mt-1.5">families opened the app</div>
-          <div role="progressbar" aria-label="Families who opened the app this week" aria-valuenow={reach.percent} className="h-1.5 rounded-full bg-td-soft mt-3 overflow-hidden">
-            <div className="h-full rounded-full bg-td-primary" style={{ width: `${reach.percent}%` }} />
-          </div>
-          <div className="flex items-center justify-between gap-2 mt-2">
-            <span className="text-[11.5px] text-td-subtle font-semibold">{reach.missed ? `${reach.missed} did not open this week` : 'Every family looked this week'}</span>
+        <button onClick={() => goFrom('students', 'students', 'reach')} className="block text-left w-full td-card rounded-[18px] py-3 px-4 mb-2.5 lg:max-w-md cursor-pointer">
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg td-strong leading-none">{reach.active} of {students.length}</span>
+            <span className="flex-1 text-[12px] text-td-muted font-semibold">families opened the app this week</span>
             <ChevronRight />
+          </div>
+          <div role="progressbar" aria-label="Families who opened the app this week" aria-valuenow={reach.percent} className="h-1.5 rounded-full bg-td-soft mt-2.5 overflow-hidden">
+            <div className="h-full rounded-full bg-td-primary" style={{ width: `${reach.percent}%` }} />
           </div>
         </button>
       )}
 
       {chips.length > 0 && (
-        <div className="grid grid-cols-3 gap-2 mb-3.5 lg:max-w-md">
+        <div className="flex flex-wrap gap-2 mb-3.5 lg:max-w-md">
           {chips.map(c => (
-            <button key={c.stage} onClick={() => goFrom('students', 'students', c.stage)} className="td-plain cursor-pointer text-left border border-td-border bg-td-card rounded-[14px] py-2.5 px-3">
-              <div className="w-6 h-1 rounded-full mb-2" style={{ background: c.tint }} />
-              <div className="text-[17px] td-strong leading-none">{c.n}</div>
-              <div className="text-[11px] text-td-muted font-semibold mt-1 leading-tight">{c.label}</div>
+            <button key={c.stage} onClick={() => goFrom('students', 'students', c.stage)} className="td-plain cursor-pointer flex items-center gap-1.5 border border-td-border bg-td-card rounded-full py-1.5 px-3">
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.tint }} />
+              <span className="text-[12px] td-strong leading-none">{c.n}</span>
+              <span className="text-[11.5px] text-td-muted font-semibold leading-none">{c.label}</span>
             </button>
           ))}
         </div>

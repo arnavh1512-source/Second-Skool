@@ -38,7 +38,7 @@ export type Snapshot = {
   // daily rows. `attendance` above only ever holds the un-archived days.
   attendanceTotals?: { present?: number | null; total?: number | null }
   teachers?: SnapRow[]; timetable?: SnapRow[]; assignments?: SnapRow[]
-  rankings?: Record<string, ([string, number] | { id?: string | null; name?: string; score?: number })[]>
+  rankings?: Record<string, ([string, number] | { id?: string | null; name?: string; klass?: string | null; score?: number })[]>
 }
 
 export function mapSnapshot(snap: Snapshot): Partial<State> {
@@ -133,8 +133,8 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
   const rankData: Record<string, RankRow[]> = {}
   for (const [subject, rows] of Object.entries(snap.rankings ?? {})) {
     rankData[subject] = (rows ?? []).map(r => Array.isArray(r)
-      ? { id: null, name: r[0] ?? '', score: r[1] ?? 0 }
-      : { id: r.id ?? null, name: r.name ?? '', score: r.score ?? 0 })
+      ? { id: null, name: r[0] ?? '', klass: null, score: r[1] ?? 0 }
+      : { id: r.id ?? null, name: r.name ?? '', klass: r.klass ?? null, score: r.score ?? 0 })
   }
 
   // Class timetable (head sets it per class; the student sees their class's).
