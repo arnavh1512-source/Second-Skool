@@ -102,8 +102,14 @@ export function MeetingsScreen() {
 
 export function RankingsScreen() {
   const { rankSubject, rankClass, rankData, subjects, back, set, go } = useDashboard()
-  const subjectNames = subjects.map(s => s.name)
-  const board = rankData[rankSubject] || []
+  // Only subjects that actually have a board. A centre teaches Physics to
+  // Class 12 alone, so a Physics chip on a screen filtered to Class 9 is a chip
+  // that can never have rows behind it — offering it is a promise of an empty
+  // screen. Ordered by the centre's own subject list so the chips do not
+  // reshuffle when a new result lands.
+  const subjectNames = subjects.map(s => s.name).filter(n => (rankData[n]?.length ?? 0) > 0)
+  const activeSubject = subjectNames.includes(rankSubject) ? rankSubject : (subjectNames[0] ?? '')
+  const board = rankData[activeSubject] || []
   // A rank only means something against the same paper. Class 9 and Class 12
   // sit different tests out of different totals, so one list of everyone is
   // noise. Boards built before the class reached the server carry no class at
@@ -116,18 +122,17 @@ export function RankingsScreen() {
     <div className="td-screen">
       <ScreenHeader title="Rankings" onBack={back} />
 
-      {subjectNames.length === 0 && (
+      {subjects.length === 0 && (
         <button onClick={() => go('subjects', 'more')} className="w-full text-left bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3.5 cursor-pointer text-[12.5px] text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
       )}
 
-      <div className={`flex gap-[9px] overflow-x-auto scrollbar-hide ${classNames.length > 1 ? 'mb-[9px]' : 'mb-[18px]'}`}>
-        {subjectNames.map(name => {
-          const active = name === rankSubject
-          return (
-            <Chip key={name} active={active} onClick={() => set({ rankSubject: name })}>{name}</Chip>
-          )
-        })}
-      </div>
+      {subjectNames.length > 0 && (
+        <div className={`flex gap-[9px] overflow-x-auto scrollbar-hide ${classNames.length > 1 ? 'mb-[9px]' : 'mb-[18px]'}`}>
+          {subjectNames.map(name => (
+            <Chip key={name} active={name === activeSubject} onClick={() => set({ rankSubject: name })}>{name}</Chip>
+          ))}
+        </div>
+      )}
 
       {classNames.length > 1 && (
         <div className="flex gap-[9px] overflow-x-auto mb-[18px] scrollbar-hide">
@@ -138,7 +143,7 @@ export function RankingsScreen() {
       )}
 
       {rows.length === 0 ? (
-        <div className="td-none">{rankSubject ? `No results entered for ${rankSubject}${activeClass ? ` in ${activeClass}` : ''} yet` : 'Enter results to generate rankings'}</div>
+        <div className="td-none">Enter results to generate rankings</div>
       ) : (
         <div className="flex flex-col gap-[9px] mb-5">
           {rows.map((r, i) => (

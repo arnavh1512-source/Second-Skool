@@ -356,8 +356,12 @@ export function StuResultsScreen() {
 export function StuRankingScreen() {
   const { stuRankSubject, rankData, subjects: subjectsList, currentStudentDbId, set } = useDashboard()
   const me = useMe()
-  const subjectNames = subjectsList.length ? subjectsList.map(s => s.name) : Object.keys(rankData)
-  const rows = (rankData[stuRankSubject] || []).map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, score: r.score }))
+  // Same rule as the staff board: a chip for a subject this child's class does
+  // not sit is a chip that opens on nothing.
+  const named = subjectsList.map(s => s.name).filter(n => (rankData[n]?.length ?? 0) > 0)
+  const subjectNames = named.length ? named : Object.keys(rankData)
+  const activeSubject = subjectNames.includes(stuRankSubject) ? stuRankSubject : (subjectNames[0] ?? '')
+  const rows = (rankData[activeSubject] || []).map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, score: r.score }))
   const top3 = rows.slice(0, 3)
   const rest = rows.slice(3)
   const medals: IconName[] = ['silver', 'gold', 'bronze']
@@ -370,12 +374,12 @@ export function StuRankingScreen() {
   return (
     <div className="td-screen">
       <div className="text-2xl td-strong mt-1.5 mb-1">Ranking</div>
-      <div className="text-[12.5px] text-td-muted mb-[18px]">{me?.klass ?? ''}{stuRankSubject ? ` · ${stuRankSubject}` : ''}</div>
+      <div className="text-[12.5px] text-td-muted mb-[18px]">{me?.klass ?? ''}{activeSubject ? ` · ${activeSubject}` : ''}</div>
 
       {subjectNames.length > 0 && (
         <div className="flex gap-[9px] overflow-x-auto mb-[22px] scrollbar-hide">
           {subjectNames.map(name => {
-            const active = name === stuRankSubject
+            const active = name === activeSubject
             return (
               <Chip key={name} active={active} onClick={() => set({ stuRankSubject: name })}>{name}</Chip>
             )

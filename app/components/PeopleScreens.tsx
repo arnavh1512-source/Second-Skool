@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
 import { parseRoster, MAX_IMPORT } from '../lib/roster-import'
-import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard } from './Shell'
+import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard, Chip, classesOf } from './Shell'
 import { whatsappShareUrl, studentCodeMessage, absenceCheckInMessage, copyText } from '../lib/share'
 import { fmtDayMonth } from '../store/format'
 import { Icon } from './Icon'
@@ -47,6 +47,12 @@ export function StudentsScreen() {
   // narrower question than "who missed?" and wants a different call made.
   const stage: Missed | null = origin === 'dark' || origin === 'once' || origin === 'quiet' ? origin : null
   const claims = firstClaims(studentDevices)
+  // A centre with three classes has three rosters that never mix — the head
+  // marks one class, calls one class, chases one class's fees. One list of
+  // everybody is the exception, so it stays the default and the class is a chip
+  // away rather than a screen away.
+  const [klass, setKlass] = useState('')
+  const classNames = classesOf(students)
   const roster = stage
     ? students.filter(s => stageOf(s, (s.dbId !== undefined ? claims[s.dbId] : undefined) ?? null) === stage)
     : missedOnly
@@ -56,7 +62,8 @@ export function StudentsScreen() {
       // reads down from the top and the top is the call that matters most.
       ? students.filter(s => atRisk[s.dbId ?? '']).sort((a, b) => atRisk[b.dbId ?? ''].missed - atRisk[a.dbId ?? ''].missed)
       : students
-  const filtered = searchQuery ? roster.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) : roster
+  const inClass = klass ? roster.filter(s => s.klass === klass) : roster
+  const filtered = searchQuery ? inClass.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase())) : inClass
 
   return (
     <div className="td-screen td-wide">
@@ -101,13 +108,24 @@ export function StudentsScreen() {
         </div>
       )}
 
+      {classNames.length > 1 && (
+        <div className="flex gap-[9px] overflow-x-auto scrollbar-hide mb-3">
+          <Chip active={!klass} onClick={() => setKlass('')}>All classes</Chip>
+          {classNames.map(name => (
+            <Chip key={name} active={name === klass} onClick={() => setKlass(name)}>{name}</Chip>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center gap-2.5 td-card rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
         <Icon name="search" size={17} color="var(--color-td-subtle)" />
         <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
-        stage && !searchQuery ? (
+        klass && !searchQuery ? (
+          <EmptyState title={`Nobody in ${klass}`} hint="Nobody on this list is in that class. Pick another class, or go back to all of them." />
+        ) : stage && !searchQuery ? (
           <EmptyState title={STAGE_COPY[stage].emptyTitle} hint={STAGE_COPY[stage].emptyHint} />
         ) : missedOnly && !searchQuery ? (
           <EmptyState
