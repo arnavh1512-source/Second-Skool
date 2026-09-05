@@ -127,14 +127,18 @@ export function RankingsScreen() {
       )}
 
       {subjectNames.length > 0 && (
-        <div className={`flex gap-[9px] overflow-x-auto scrollbar-hide ${classNames.length > 1 ? 'mb-[9px]' : 'mb-[18px]'}`}>
+        <div className="flex gap-[9px] overflow-x-auto scrollbar-hide mb-[9px]">
           {subjectNames.map(name => (
             <Chip key={name} active={name === activeSubject} onClick={() => set({ rankSubject: name })}>{name}</Chip>
           ))}
         </div>
       )}
 
-      {classNames.length > 1 && (
+      {/* Shown even when the subject is sat by one class only. A list of names
+          and percentages says nothing about whose paper it was, and Physics
+          belonging to Class 12 alone is exactly the thing the head cannot infer
+          from the rows. The chip is the label. */}
+      {classNames.length > 0 && (
         <div className="flex gap-[9px] overflow-x-auto mb-[18px] scrollbar-hide">
           {classNames.map(name => (
             <Chip key={name} active={name === activeClass} onClick={() => set({ rankClass: name })}>{name}</Chip>
