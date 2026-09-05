@@ -24,7 +24,10 @@ export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass' | 'l
     // marked at least once, and who missed at least one of those days, count.
     if (filter === 'absentees') targets = targets.filter(s => (s.attendanceMarked ?? 0) > 0 && s.attendance < 100)
     else if (filter === 'fees_due') targets = targets.filter(s => s.feeStatus !== 'Paid')
-    else if (targetClass && targetClass !== 'all') targets = targets.filter(s => s.klass === targetClass)
+    // Narrows whatever the filter left, rather than being the alternative to
+    // it. A head chasing fees inside one class asked for both conditions, and
+    // the class used to be dropped the moment a filter was present.
+    if (targetClass && targetClass !== 'all') targets = targets.filter(s => s.klass === targetClass)
 
     const label = type === 'Notice' ? 'Notice' : `${type} reminder`
 

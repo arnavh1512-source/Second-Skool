@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { indexOfStudent, studentKey } from '../lib/student-key'
 import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, parseDay, rupee, isoDay, LIMITS, clampText } from '../store'
 import { PLAN_INTERVALS, isOverdue, splitPlan, summariseFees, validatePlan, type PlanInterval } from '../lib/fee-plan'
-import { ScreenHeader, PrimaryButton, EmptyState, ConfirmDialog } from './Shell'
+import { ScreenHeader, PrimaryButton, EmptyState, ConfirmDialog, Chip, classesOf } from './Shell'
 
 // Due dates are parsed as calendar parts, not as instants: "5 Oct" is a day on
 // a wall calendar and must not slide to the 4th because of a timezone.
@@ -33,13 +33,19 @@ export function FeesScreen() {
   const [openFees, setOpenFees] = useState<string | null>(null)
   const [confirmFee, setConfirmFee] = useState<{ id: string; studentId: string; student: string; label: string } | null>(null)
   const [confirmPlan, setConfirmPlan] = useState<{ planId: string; studentId: string; student: string; count: number } | null>(null)
+  // Fees are chased one class at a time — a class shares a fee amount, a
+  // parent group and usually a collection day. The two totals follow the chip
+  // so "what is Class 10 still owing" is a tap, not arithmetic.
+  const [klass, setKlass] = useState('')
+  const classNames = classesOf(students)
   const today = isoDay()
   const isAdmin = role === 'admin'
-  const paidCount = students.filter(s => s.feeStatus === 'Paid').length
-  const pendingCount = students.length - paidCount
-  const totalCollected = students.reduce((n, s) => n + (s.feeCollected ?? 0), 0)
-  const totalRemaining = students.reduce((n, s) => n + (s.feeDue ?? 0), 0)
-  const rows = [...students.filter(d => d.feeStatus !== 'Paid'), ...students.filter(d => d.feeStatus === 'Paid')]
+  const inClass = klass ? students.filter(s => s.klass === klass) : students
+  const paidCount = inClass.filter(s => s.feeStatus === 'Paid').length
+  const pendingCount = inClass.length - paidCount
+  const totalCollected = inClass.reduce((n, s) => n + (s.feeCollected ?? 0), 0)
+  const totalRemaining = inClass.reduce((n, s) => n + (s.feeDue ?? 0), 0)
+  const rows = [...inClass.filter(d => d.feeStatus !== 'Paid'), ...inClass.filter(d => d.feeStatus === 'Paid')]
 
   const handleAdd = async () => {
     if (!selStudent) { notify('Select a student', 'error'); return }
@@ -94,6 +100,15 @@ export function FeesScreen() {
           <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add fee'}
         </button>
       } />
+
+      {classNames.length > 1 && (
+        <div className="flex gap-[9px] overflow-x-auto scrollbar-hide mb-3">
+          <Chip active={!klass} onClick={() => setKlass('')}>All classes</Chip>
+          {classNames.map(name => (
+            <Chip key={name} active={name === klass} onClick={() => setKlass(name)}>{name}</Chip>
+          ))}
+        </div>
+      )}
 
       <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
         <div className="flex-1 bg-td-tint-green rounded-2xl p-3.5">
@@ -175,9 +190,14 @@ export function FeesScreen() {
         </div>
       )}
 
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">Send alert to all pending</button>
+      {/* The class the head is looking at is the class the alert goes to. A
+          button that says "all pending" under a list showing one class would
+          message families she never meant to chase. */}
+      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
 
-      {rows.length === 0 ? (
+      {rows.length === 0 && klass ? (
+        <EmptyState title={`Nobody in ${klass}`} hint="No student in that class, so there is nothing to collect from it. Pick another class, or go back to all of them." />
+      ) : rows.length === 0 ? (
         <EmptyState
           title="No students yet"
           hint="Fees are tracked per student, so there is nothing to collect until you have added some."
