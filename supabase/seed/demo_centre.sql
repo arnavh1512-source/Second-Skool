@@ -231,9 +231,9 @@ begin
     r.code, r.name, r.klass, r.batch, r.school, r.parent,
     'Maninagar, Ahmedabad',
     r.status, 'Paid', v_branch, v_centre,
-    now() - make_interval(days => 60 + mod(abs(hashtext(r.code)::bigint), 600)),
+    now() - make_interval(days => (60 + mod(abs(hashtext(r.code)::bigint), 600))::int),
     case when mod(abs(hashtext(r.code || 'seen')::bigint), 10) < 7
-         then now() - make_interval(hours => mod(abs(hashtext(r.code || 'h')::bigint), 96))
+         then now() - make_interval(hours => mod(abs(hashtext(r.code || 'h')::bigint), 96)::int)
     end
   from demo_roster r;
 
