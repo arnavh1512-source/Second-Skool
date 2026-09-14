@@ -1,5 +1,29 @@
 import { describe, it, expect } from 'vitest'
-import { safeLink, signWithCentre, validatePushBody, validateStudentRequest, createRateLimiter, rateLimit } from '../app/lib/push-guard'
+import { safeLink, isPushServiceEndpoint, signWithCentre, validatePushBody, validateStudentRequest, createRateLimiter, rateLimit } from '../app/lib/push-guard'
+
+describe('isPushServiceEndpoint', () => {
+  it('accepts the endpoints real browsers produce', () => {
+    expect(isPushServiceEndpoint('https://fcm.googleapis.com/fcm/send/abc:APA91b')).toBe(true)
+    expect(isPushServiceEndpoint('https://updates.push.services.mozilla.com/wpush/v2/gAAAA')).toBe(true)
+    expect(isPushServiceEndpoint('https://web.push.apple.com/QGuQyavXutnMH')).toBe(true)
+    expect(isPushServiceEndpoint('https://wns2-par02p.notify.windows.com/w/?token=BQYAAA')).toBe(true)
+  })
+
+  it('rejects hosts that only look like a push service', () => {
+    expect(isPushServiceEndpoint('https://evil.com/fcm.googleapis.com')).toBe(false)
+    expect(isPushServiceEndpoint('https://fcm.googleapis.com.evil.com/x')).toBe(false)
+    expect(isPushServiceEndpoint('https://evilpush.apple.com/x')).toBe(false)
+    expect(isPushServiceEndpoint('https://fcm.googleapis.com@evil.com/x')).toBe(false)
+  })
+
+  it('rejects plain http, custom ports, credentials and junk', () => {
+    expect(isPushServiceEndpoint('http://fcm.googleapis.com/fcm/send/x')).toBe(false)
+    expect(isPushServiceEndpoint('https://fcm.googleapis.com:8443/x')).toBe(false)
+    expect(isPushServiceEndpoint('https://user:pw@fcm.googleapis.com/x')).toBe(false)
+    expect(isPushServiceEndpoint('https://169.254.169.254/latest/meta-data')).toBe(false)
+    expect(isPushServiceEndpoint('not a url at all')).toBe(false)
+  })
+})
 
 describe('safeLink', () => {
   it('keeps a same-app relative path', () => {

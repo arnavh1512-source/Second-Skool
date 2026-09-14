@@ -44,6 +44,9 @@ __pycache__/
 # generated handouts — build output of scripts/pdf, regenerate rather than commit
 /Second-Skool-*.pdf
 
+# security audit reports — local only, they describe weaknesses
+/.security-reports/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

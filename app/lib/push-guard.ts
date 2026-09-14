@@ -20,6 +20,23 @@ export function safeLink(link: unknown): string {
   return typeof link === 'string' && link.startsWith('/') && !link.startsWith('//') ? link : '/'
 }
 
+// A subscription endpoint is whatever URL the browser handed back, and anyone
+// holding a student code can register one through the anon RPC. web-push then
+// POSTs to it from the server, so an unchecked endpoint turns every send into a
+// request to a host of the attacker's choosing. Real browsers only ever produce
+// endpoints on these four push services; anything else is never deliverable.
+const PUSH_HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com']
+
+export function isPushServiceEndpoint(endpoint: string): boolean {
+  try {
+    const u = new URL(endpoint)
+    return u.protocol === 'https:' && u.port === '' && !u.username && !u.password &&
+      PUSH_HOSTS.some(h => u.hostname === h || u.hostname.endsWith(`.${h}`))
+  } catch {
+    return false
+  }
+}
+
 export type Validated = { ok: true; value: PushBody } | { ok: false; error: string }
 
 // Validates the request body. Title is required (1–120 chars); body optional

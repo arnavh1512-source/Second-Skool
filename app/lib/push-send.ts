@@ -7,6 +7,7 @@
 import webpush from 'web-push'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { logError } from './log'
+import { isPushServiceEndpoint } from './push-guard'
 
 export type Sub = { endpoint: string; p256dh: string; auth: string }
 type Group = { subs: Sub[]; payload: string }
@@ -40,6 +41,9 @@ export async function deliver(
   for (const { subs, payload } of live) {
     for (let i = 0; i < subs.length; i += BATCH) {
       await Promise.all(subs.slice(i, i + BATCH).map(async (s) => {
+        // Never POST outside the real push services; such a row can't be a
+        // browser's subscription, so it is pruned like an expired one.
+        if (!isPushServiceEndpoint(s.endpoint)) { stale.push(s.endpoint); return }
         try {
           await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload)
         } catch (e: unknown) {
