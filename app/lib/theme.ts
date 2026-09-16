@@ -17,5 +17,7 @@ export const currentTheme = (): Theme =>
 
 export function setTheme(next: Theme): void {
   document.documentElement.dataset.theme = next
+  document.querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--color-td-bg').trim())
   writeLocal(THEME_KEY, next)
 }

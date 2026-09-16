@@ -112,7 +112,7 @@ export function HomeScreen() {
       <div className="flex items-center gap-3 pb-4">
         <div className="flex-1 min-w-0">
           <div className="text-td-title font-semibold tracking-[-.01em] text-td-dark truncate">{displayName}</div>
-          <div className="td-num text-td-small text-td-muted mt-[5px]">
+          <div className="td-num text-td-small text-td-muted mt-[5px] truncate">
             {today()} · {schedule.length} {schedule.length === 1 ? 'class' : 'classes'}
           </div>
         </div>
@@ -178,12 +178,16 @@ export function HomeScreen() {
             <ChevronRight />
           </button>
         ) : (
-          <button onClick={() => go('attendance')} aria-label={`Attendance today: ${pct}%, ${present} present, ${absent} absent`} className="td-plain w-full text-left cursor-pointer block">
+          <button onClick={() => go('attendance')} aria-label={`Attendance today: ${pct}%, ${present} present, ${absent} absent, ${Math.max(0, students.length - marks.length)} not marked`} className="td-plain w-full text-left cursor-pointer block">
             <span className="flex items-end gap-3.5">
               <span className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{pct}%</span>
               <span className="pb-0.5">
                 <span className="td-num block text-td-body font-medium text-td-on-green">{present} present</span>
-                <span className="td-num block text-td-small text-td-muted">{absent} absent of {marks.length}</span>
+                {/* The figure is of the students marked so far; say how many are still
+                    waiting, or 7 of 24 marked reads as a 100% day. */}
+                <span className="td-num block text-td-small text-td-muted">
+                  {absent} absent{students.length > marks.length ? ` · ${students.length - marks.length} not marked` : ` of ${marks.length}`}
+                </span>
               </span>
             </span>
             <span className="flex gap-0.5 h-2 mt-3.5 mb-6" aria-hidden="true">

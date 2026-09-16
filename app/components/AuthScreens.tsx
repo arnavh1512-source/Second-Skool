@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, type ReactNode } from 'react'
+import Image from 'next/image'
 import { copyText, whatsappShareUrl } from '../lib/share'
 import { useDashboard } from '../store'
 import { supabase } from '../lib/supabase'
@@ -11,12 +12,9 @@ import { readLocal, writeLocal, removeLocal } from '../lib/storage'
 import { readStudentCred } from '../lib/student-cred'
 import { useBusy } from '../lib/use-busy'
 
-// A ticked register box in ink - the mark the whole app is ruled around.
-const LOGO = (
-  <div role="img" aria-label="Second Skool" className="w-12 h-12 shrink-0 bg-td-dark flex items-center justify-center">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-bg)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v15H4z" /><path d="M8 11l2.5 2.5L16 8" /></svg>
-  </div>
-)
+// The centre's own mark, the same file the installed app icon uses. It has a
+// white ground of its own, so it sits as a tile on either theme.
+const LOGO = <Image src="/icon-192.png" alt="Second Skool" width={56} height={56} priority className="shrink-0 border border-td-border" />
 
 const CLASS_OPTIONS = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12']
 

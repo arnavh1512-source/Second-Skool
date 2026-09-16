@@ -9,10 +9,14 @@ let toastTimer: ReturnType<typeof setTimeout> | null = null
 // because she walks away believing the attendance saved. Failures now stay long
 // enough to read twice and can be dismissed by tapping; successes are still a
 // glance.
+// Screens that are a bottom-nav tab. Opening any other screen (attendance from
+// Home, say) keeps the tab the teacher came from lit, instead of lighting none.
+const TAB_SCREENS = new Set<Screen>(['home', 'timetable', 'students', 'teachers', 'more', 'stuHome', 'stuResults', 'stuRanking', 'stuTeachers', 'stuProfile'])
+
 const TOAST_MS: Record<ToastKind, number> = { info: 2600, error: 9000 }
 
 export const createNavSlice: Slice<'go' | 'goFrom' | 'back' | 'notify' | 'dismissToast' | 'setOnline' | 'set' | 'exitAdmin'> = (set, get) => ({
-  go: (screen, tab) => set({ screen, tab: (tab ?? screen) as Tab, origin: null }),
+  go: (screen, tab) => set({ screen, tab: tab ?? (TAB_SCREENS.has(screen) ? screen as Tab : get().tab), origin: null }),
   goFrom: (screen, tab, origin) => set({ screen, tab, origin }),
   // Return to where the screen was opened from. More sub-screens are entered
   // with origin='more' so Back lands on More (not Home); admin keeps its own

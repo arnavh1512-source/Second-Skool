@@ -74,11 +74,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             rather than left to a media query, so the toggle can override the
             OS in both directions instead of only ever agreeing with it. Doing
             this after hydration would show every dark-mode user a white flash
-            on every single load. */}
+            on every single load. The phone's status bar is painted to match
+            (hex kept in step with --color-td-bg by hand; setTheme reads the
+            token itself). */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){var t;try{t=localStorage.getItem('td-theme')}catch(e){}if(t!=='light'&&t!=='dark')t=window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})()",
+              "(function(){var t;try{t=localStorage.getItem('td-theme')}catch(e){}if(t!=='light'&&t!=='dark')t=window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t);var m=document.createElement('meta');m.name='theme-color';m.content=t==='dark'?'#15171a':'#f2f3f0';document.head.appendChild(m)})()",
           }}
         />
       </head>

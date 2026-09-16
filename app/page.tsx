@@ -146,9 +146,9 @@ function OperatorEntry() {
     <button
       onClick={openDevConsole}
       aria-label="Open developer console"
-      className="fixed right-3 bottom-24 z-50 md:bottom-6 flex items-center gap-1.5 rounded-full bg-td-dark text-td-bg text-td-caption font-semibold py-2.5 px-4 border-none cursor-pointer shadow-td-overlay max-w-[70vw]"
+      className="fixed right-3 bottom-24 z-50 md:bottom-6 w-11 h-11 flex items-center justify-center rounded-full bg-td-dark text-td-bg border-none cursor-pointer shadow-td-overlay"
     >
-      <Icon name="console" size={15} className="shrink-0" />Console
+      <Icon name="console" size={18} />
     </button>
   )
 }
