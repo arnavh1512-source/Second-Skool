@@ -206,7 +206,7 @@ export function MoreScreen() {
         <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="td-plain w-full text-left border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
-          {!!m.badge && m.badge > 0 && <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
+          {!!m.badge && m.badge > 0 && <span className="td-count">{m.badge}</span>}
           <ChevronRight />
         </button>
       ))}
@@ -215,7 +215,7 @@ export function MoreScreen() {
 
   return (
     <div className="td-screen">
-      <div className="text-2xl td-strong mt-1.5 mb-[18px]">More tools</div>
+      <div className="td-title mt-1.5 mb-[18px]">More tools</div>
 
       <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left td-card rounded-td-lg p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
         <div className="w-[46px] h-[46px] rounded-td-md shrink-0 flex items-center justify-center text-white font-bold text-td-body" style={{ background: av(0) }}>{initials(profileName)}</div>
@@ -269,7 +269,7 @@ export function NotificationsScreen() {
         <div className="text-sm td-strong">{label}</div>
         <div className="text-td-caption text-td-muted mt-0.5">{count} waiting for your review</div>
       </div>
-      <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{count}</span>
+      <span className="td-count">{count}</span>
       <ChevronRight />
     </button>
   )

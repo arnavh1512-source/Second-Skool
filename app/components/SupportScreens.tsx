@@ -20,7 +20,7 @@ const STATUS: Record<SupportTicket['status'], { bg: string; fg: string; label: s
 function StatusPill({ status }: { status: SupportTicket['status'] }) {
   const s = STATUS[status]
   return (
-    <span className="text-td-caption font-extrabold rounded-full py-1 px-2.5 shrink-0" style={{ background: s.bg, color: s.fg }}>
+    <span className="td-tag shrink-0" style={{ background: s.bg, color: s.fg }}>
       {s.label}
     </span>
   )
@@ -39,7 +39,7 @@ export function SupportScreen() {
 
   return (
     <div className="td-screen">
-      <div className="text-2xl td-strong mt-1.5 mb-1.5">Report a problem</div>
+      <div className="td-title mt-1.5 mb-1.5">Report a problem</div>
       <div className="text-td-small text-td-muted leading-[1.5] mb-4">
         Four quick questions. We can already see which version of the app you are on and what device
         you are using — you do not need to explain that part.
@@ -152,7 +152,7 @@ export function SupportScreen() {
                     <div className="text-sm font-bold text-td-dark truncate">{t.intent}</div>
                     <div className="text-xs text-td-muted mt-0.5">{fmtDate(t.createdAt)}</div>
                   </div>
-                  {unread && <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full py-1 px-2.5 shrink-0">Reply</span>}
+                  {unread && <span className="td-tag text-white bg-td-red shrink-0">Reply</span>}
                   <StatusPill status={t.status} />
                 </button>
               )
@@ -182,7 +182,7 @@ export function SupportThreadScreen() {
   return (
     <div className="td-screen">
       <div className="flex items-start gap-3 mt-1.5 mb-1.5">
-        <div className="flex-1 text-2xl td-strong">{ticket.intent}</div>
+        <div className="flex-1 td-title">{ticket.intent}</div>
         <StatusPill status={ticket.status} />
       </div>
       <div className="text-td-small text-td-muted leading-[1.5] mb-4">{ticket.outcome}</div>

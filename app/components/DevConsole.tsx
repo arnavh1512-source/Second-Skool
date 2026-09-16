@@ -473,7 +473,7 @@ function Reports({ rows, onReply, onResolve }: {
                   </div>
                 </div>
                 <span
-                  className="text-td-caption font-extrabold rounded-full py-1 px-2.5 shrink-0"
+                  className="td-tag shrink-0"
                   style={t.status === 'open'
                     ? { background: 'var(--color-td-tint-blue)', color: 'var(--color-td-primary)' }
                     : { background: 'var(--color-td-soft)', color: 'var(--color-td-muted)' }}
@@ -566,6 +566,6 @@ function Reports({ rows, onReply, onResolve }: {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-td-caption font-bold text-td-muted bg-td-soft rounded-full py-1 px-2.5">{children}</span>
+    <span className="td-tag font-bold text-td-muted bg-td-soft">{children}</span>
   )
 }

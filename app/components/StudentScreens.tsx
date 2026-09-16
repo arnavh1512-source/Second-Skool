@@ -88,7 +88,7 @@ export function StuHomeScreen() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <ThemeToggle />
-          <button onClick={() => go('stuNotif', 'stuHome')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
+          <button onClick={() => go('stuNotif', 'stuHome')} aria-label="Notifications" className="relative td-icon-btn">
             <Icon name="reminder" size={20} color="var(--color-td-dark)" />
             {hasNewNotif && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-td-card" />}
           </button>
@@ -307,7 +307,7 @@ export function StuResultsScreen() {
 
   return (
     <div className="td-screen">
-      <div className="text-2xl td-strong mt-1.5 mb-1">Test Results</div>
+      <div className="td-title mt-1.5 mb-1">Test Results</div>
       <div className="text-td-caption text-td-muted mb-[18px]">{me?.klass ?? ''} · {me?.school ?? ''}</div>
 
       {stuResults.length === 0 ? (
@@ -319,7 +319,7 @@ export function StuResultsScreen() {
               <div className="text-2xl font-extrabold" style={{ color: overall.c }}>{overall.g}</div>
               <div className="text-td-caption font-semibold mt-1" style={{ color: overall.c, opacity: .7 }}>Overall grade</div>
             </div>
-            <div className="td-card rounded-td-lg p-3.5 text-center">
+            <div className="td-stat">
               <div className="text-2xl td-strong">{avg}%</div>
               <div className="text-td-caption text-td-muted font-semibold mt-1">Average</div>
             </div>
@@ -373,7 +373,7 @@ export function StuRankingScreen() {
 
   return (
     <div className="td-screen">
-      <div className="text-2xl td-strong mt-1.5 mb-1">Ranking</div>
+      <div className="td-title mt-1.5 mb-1">Ranking</div>
       <div className="text-td-caption text-td-muted mb-[18px]">{me?.klass ?? ''}{activeSubject ? ` · ${activeSubject}` : ''}</div>
 
       {subjectNames.length > 0 && (
@@ -460,7 +460,7 @@ export function StuTeachersScreen() {
 
   return (
     <div className="td-screen">
-      <div className="text-2xl td-strong mt-1.5 mb-1">Teachers</div>
+      <div className="td-title mt-1.5 mb-1">Teachers</div>
       <div className="text-td-caption text-td-muted mb-[18px]">{teachers.length} faculty at your branch</div>
 
       {teachers.length === 0 ? (
@@ -501,11 +501,11 @@ export function StuTeacherDetail() {
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 mb-5">
-        <div className="td-card rounded-td-lg p-3.5 text-center">
+        <div className="td-stat">
           <div className="text-2xl td-strong">{t.experience}</div>
           <div className="text-td-caption text-td-muted font-semibold mt-1">Years exp.</div>
         </div>
-        <div className="td-card rounded-td-lg p-3.5 text-center">
+        <div className="td-stat">
           <div className="text-2xl font-extrabold text-td-amber flex items-center justify-center gap-1.5"><Icon name="star" size={20} />{t.rating || '—'}</div>
           <div className="text-td-caption text-td-muted font-semibold mt-1">Rating</div>
         </div>
@@ -717,7 +717,7 @@ export function StuProfileScreen() {
   return (
     <div className="td-screen">
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
-        <div className="text-2xl td-strong">My Profile</div>
+        <div className="td-title">My Profile</div>
         <button onClick={signOut} className="td-danger text-td-caption font-bold py-2 px-3 rounded-td-sm">Sign out</button>
       </div>
 

@@ -609,7 +609,7 @@ export function RemindersScreen() {
           {reminderHistory.map(r => (
             <div key={r.dbId} className="td-card rounded-td-md p-3.5">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-td-caption font-extrabold text-td-primary bg-td-tint-blue rounded-full py-[3px] px-2.5">{r.type}</span>
+                <span className="td-tag text-td-primary bg-td-tint-blue py-[3px]">{r.type}</span>
                 <span className="text-td-caption text-td-muted">{r.when}</span>
               </div>
               <div className="text-td-small text-td-dark leading-snug">{r.message}</div>

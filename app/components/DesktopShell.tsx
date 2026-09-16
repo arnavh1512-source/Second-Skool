@@ -34,7 +34,7 @@ function NavRow({ item }: { item: NavItem }) {
       <span className="w-[30px] h-[30px] rounded-[9px] td-card flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
       <span className={`flex-1 text-td-small ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
-        <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
+        <span className="td-count">{item.badge}</span>
       )}
     </button>
   )

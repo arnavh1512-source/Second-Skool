@@ -86,7 +86,7 @@ export function HomeScreen() {
         </button>
         <div className="flex items-center gap-2 shrink-0">
           <ThemeToggle />
-          <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
+          <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative td-icon-btn">
             <Icon name="reminder" size={20} color="var(--color-td-dark)" />
             {hasAlerts && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-td-card" />}
           </button>

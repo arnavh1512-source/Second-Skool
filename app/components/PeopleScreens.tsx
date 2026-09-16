@@ -70,7 +70,7 @@ export function StudentsScreen() {
       <div className="flex items-center justify-between mt-1.5 mb-4">
         <div className="flex items-center gap-3">
           {origin === 'admin' && <BackButton onClick={back} />}
-          <div className="text-2xl td-strong">Students</div>
+          <div className="td-title">Students</div>
         </div>
         {isAdmin && (
           <div className="flex items-center gap-2">
@@ -508,7 +508,7 @@ export function StaffScreen() {
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
         <div className="flex items-center gap-3">
           {origin === 'admin' && <BackButton onClick={back} />}
-          <div className="text-2xl td-strong">Staff</div>
+          <div className="td-title">Staff</div>
         </div>
         <button onClick={() => origin === 'admin' ? goFrom('addTeacher', 'teachers', 'admin') : go('addTeacher', 'teachers')} className="td-btn-sm">
           <span className="text-base leading-none">+</span> Add

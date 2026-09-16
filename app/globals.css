@@ -248,3 +248,19 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    things are here - the seventeen disagree on width, padding, radius and type
    size, and one of them turns the pointer off while it is working. */
 .td-pill { border: none; background: var(--color-td-primary); color: #fff; }
+
+/* Shapes that were copy-pasted onto three or more elements. Layered, unlike the
+   classes above, so a utility on the same element still wins: every call site
+   that adds a margin or overrides a weight keeps working unchanged. */
+@layer components {
+  /* The top-of-screen title on screens without a ScreenHeader. */
+  .td-title { font-size: var(--text-2xl); line-height: var(--text-2xl--line-height); font-weight: 800; color: var(--color-td-dark); }
+  /* The square header button: back, bell, theme. */
+  .td-icon-btn { width: 42px; height: 42px; border-radius: var(--radius-td-md); border: 1px solid var(--color-td-border); background: var(--color-td-card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  /* An unread count. */
+  .td-count { min-width: 20px; height: 20px; padding-inline: 6px; border-radius: 9999px; background: var(--color-td-red); color: #fff; font-size: var(--text-td-caption); font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  /* A short status or type label; its colour comes from the call site. */
+  .td-tag { padding: 4px 10px; border-radius: 9999px; font-size: var(--text-td-caption); font-weight: 800; }
+  /* A number over its label. */
+  .td-stat { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 14px; text-align: center; }
+}

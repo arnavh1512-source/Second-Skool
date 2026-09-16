@@ -213,7 +213,7 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
 
 export function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
+    <button onClick={onClick} className="td-icon-btn shrink-0">
       <Icon name="back" size={18} color="var(--color-td-dark)" />
     </button>
   )

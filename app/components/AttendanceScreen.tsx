@@ -99,7 +99,7 @@ export function AttendanceScreen() {
   return (
     <div className="td-screen td-wide">
       <div className="flex items-center gap-3.5 mb-[18px]">
-        <button onClick={back} className="w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
+        <button onClick={back} className="td-icon-btn shrink-0">
           <Icon name="back" size={18} color="var(--color-td-dark)" />
         </button>
         <div>
