@@ -123,11 +123,11 @@ export function RankingsScreen() {
       <ScreenHeader title="Rankings" onBack={back} />
 
       {subjects.length === 0 && (
-        <button onClick={() => go('subjects', 'more')} className="w-full text-left bg-td-tint-blue border border-td-edge-blue rounded-td-md p-3.5 cursor-pointer text-td-caption text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
+        <button onClick={() => go('subjects', 'more')} className="td-plain w-full text-left bg-td-tint-blue border border-td-edge-blue p-3.5 mb-5 cursor-pointer text-td-small text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
       )}
 
       {subjectNames.length > 0 && (
-        <div className="flex gap-[9px] overflow-x-auto scrollbar-hide mb-[9px]">
+        <div className="flex flex-wrap gap-[7px] mb-[7px]">
           {subjectNames.map(name => (
             <Chip key={name} active={name === activeSubject} onClick={() => set({ rankSubject: name })}>{name}</Chip>
           ))}
@@ -139,31 +139,41 @@ export function RankingsScreen() {
           belonging to Class 12 alone is exactly the thing the head cannot infer
           from the rows. The chip is the label. */}
       {classNames.length > 0 && (
-        <div className="flex gap-[9px] overflow-x-auto mb-[18px] scrollbar-hide">
+        <div className="flex flex-wrap gap-[7px] mb-5">
           {classNames.map(name => (
             <Chip key={name} active={name === activeClass} onClick={() => set({ rankClass: name })}>{name}</Chip>
           ))}
         </div>
       )}
 
+      {/* The podium sits on its own sheet; everyone after it is a plain ruled
+          line, so the top three read first without shouting in colour. */}
       {rows.length === 0 ? (
         <div className="td-none">Enter results to generate rankings</div>
       ) : (
-        <div className="flex flex-col gap-[9px] mb-5">
-          {rows.map((r, i) => (
-            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] td-card rounded-td-md p-3 px-3.5">
-              <div className="w-[26px] text-center text-sm font-semibold" style={{ color: i < 3 ? 'var(--color-td-amber)' : 'var(--color-td-subtle)' }}>{i + 1}</div>
-              <div className="w-9 h-9 rounded-td-sm td-avatar" style={{ background: av(i) }}>{initials(r.name)}</div>
-              <div className="flex-1 text-td-small font-bold text-td-dark">{r.name}</div>
-              <div className="text-sm td-strong">{r.score}%</div>
+        <div className="lg:max-w-2xl">
+          <div className="td-h2 mb-0">Top three</div>
+          <div className="bg-td-card border border-td-border border-t-0 shadow-td-card">
+            {rows.slice(0, 3).map((r, i) => (
+              <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] px-[15px] py-3.5 min-h-14 border-b border-td-line last:border-b-0">
+                <div className="td-num w-[22px] shrink-0 text-td-title font-semibold text-td-dark">{i + 1}</div>
+                <div className="w-9 h-9 shrink-0 rounded-full bg-td-tint-blue text-td-primary flex items-center justify-center text-td-small font-semibold">{initials(r.name)}</div>
+                <div className="flex-1 min-w-0 truncate text-td-body font-semibold text-td-dark">{r.name}</div>
+                <div className="td-num shrink-0 text-td-title font-semibold text-td-dark">{r.score}%</div>
+              </div>
+            ))}
+          </div>
+          {rows.length > 3 && <div className="td-h2 mt-[22px] mb-0">Rest of class</div>}
+          {rows.slice(3).map((r, i) => (
+            <div key={r.id ?? `${r.name}-${i + 3}`} className="flex items-center gap-[13px] py-3 min-h-14 border-b border-td-line">
+              <div className="td-num w-[22px] shrink-0 text-td-body text-td-muted">{i + 4}</div>
+              <div className="flex-1 min-w-0 truncate text-td-body font-medium text-td-dark">{r.name}</div>
+              <div className="td-num shrink-0 text-td-body font-semibold text-td-text">{r.score}%</div>
             </div>
           ))}
         </div>
       )}
-      <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-td-md p-3.5 mt-1">
-        <Icon name="info" size={18} color="var(--color-td-primary)" />
-        <span className="text-td-caption text-td-primary font-semibold">Rankings update automatically — students always see the latest.</span>
-      </div>
+      <div className="text-td-body leading-[22px] text-td-text py-3">Rankings update automatically — students always see the latest.</div>
     </div>
   )
 }

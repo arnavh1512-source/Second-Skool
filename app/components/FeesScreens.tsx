@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { indexOfStudent, studentKey } from '../lib/student-key'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, feeColor, parseDay, rupee, isoDay, LIMITS, clampText } from '../store'
+import { studentKey } from '../lib/student-key'
+import { useDashboard, REMINDER_TEMPLATES, parseDay, rupee, isoDay, LIMITS, clampText } from '../store'
 import { PLAN_INTERVALS, isOverdue, splitPlan, summariseFees, validatePlan, type PlanInterval } from '../lib/fee-plan'
 import { ScreenHeader, PrimaryButton, EmptyState, ConfirmDialog, Chip, classesOf } from './Shell'
 
@@ -102,7 +102,7 @@ export function FeesScreen() {
       } />
 
       {classNames.length > 1 && (
-        <div className="flex gap-[9px] overflow-x-auto scrollbar-hide mb-3">
+        <div className="flex flex-wrap gap-[7px] mb-[18px]">
           <Chip active={!klass} onClick={() => setKlass('')}>All classes</Chip>
           {classNames.map(name => (
             <Chip key={name} active={name === klass} onClick={() => setKlass(name)}>{name}</Chip>
@@ -110,15 +110,18 @@ export function FeesScreen() {
         </div>
       )}
 
-      <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
-        <div className="flex-1 bg-td-tint-green rounded-td-md p-3.5">
-          <div className="text-td-heading font-semibold text-td-green leading-tight">{rupee(totalCollected)}</div>
-          <div className="text-td-caption text-td-on-green font-semibold mt-[3px]">Collected · {paidCount} paid</div>
-        </div>
-        <div className="flex-1 bg-td-tint-red rounded-td-md p-3.5">
-          <div className="text-td-heading font-semibold text-td-red leading-tight">{rupee(totalRemaining)}</div>
-          <div className="text-td-caption text-td-on-red font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
-        </div>
+      {/* What is still owed leads; what came in is the line under it, and the
+          bar shows the split without making her do the sum. */}
+      <div className="bg-td-card border border-td-border p-4 mb-[18px] shadow-td-card lg:max-w-md">
+        <div className="text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">Outstanding total</div>
+        <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-on-red mt-[9px]">{rupee(totalRemaining)}</div>
+        <div className="td-num text-td-small text-td-muted mt-2">{rupee(totalCollected)} collected of {rupee(totalCollected + totalRemaining)} · {pendingCount} pending, {paidCount} paid</div>
+        {totalCollected + totalRemaining > 0 && (
+          <div className="flex gap-0.5 h-2 mt-3" aria-hidden>
+            {totalCollected > 0 && <div className="bg-td-green" style={{ flex: totalCollected }} />}
+            {totalRemaining > 0 && <div className="bg-td-red" style={{ flex: totalRemaining }} />}
+          </div>
+        )}
       </div>
 
       {showForm && (
@@ -126,7 +129,7 @@ export function FeesScreen() {
           <div className="flex gap-1.5 p-1 bg-td-soft rounded-td-md">
             {[{ on: false, label: 'One fee' }, { on: true, label: 'Installment plan' }].map(t => (
               <button key={t.label} onClick={() => setPlanMode(t.on)}
-                className={`flex-1 text-td-caption font-bold py-2 rounded-td-sm border-none cursor-pointer ${planMode === t.on ? 'bg-td-card text-td-dark' : 'bg-transparent text-td-muted'}`}>
+                className={`flex-1 text-td-caption font-semibold py-2 min-h-11 border-none cursor-pointer ${planMode === t.on ? 'bg-td-card text-td-dark' : 'bg-transparent text-td-muted'}`}>
                 {t.label}
               </button>
             ))}
@@ -193,7 +196,7 @@ export function FeesScreen() {
       {/* The class the head is looking at is the class the alert goes to. A
           button that says "all pending" under a list showing one class would
           message families she never meant to chase. */}
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-semibold p-[13px] rounded-td-md cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
+      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md min-h-11 border border-td-red bg-td-card text-td-on-red text-td-small font-semibold p-[13px] cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
 
       {rows.length === 0 && klass ? (
         <EmptyState title={`Nobody in ${klass}`} hint="No student in that class, so there is nothing to collect from it. Pick another class, or go back to all of them." />
@@ -205,32 +208,30 @@ export function FeesScreen() {
           onAction={role === 'admin' ? () => go('addStudent', 'students') : undefined}
         />
       ) : (
-        <div className="td-list gap-2.5">
+        <div className="lg:max-w-2xl">
+          <div className="td-h2 mb-0">{rows.length} {rows.length === 1 ? 'student' : 'students'}</div>
           {rows.map(d => {
-            const realIdx = indexOfStudent(students, studentKey(d))
-            const f = feeColor(d.feeStatus)
+            const tag = d.feeStatus === 'Paid' ? 'bg-td-tint-green text-td-on-green' : d.feeStatus === 'Overdue' ? 'bg-td-tint-red text-td-on-red' : 'bg-td-tint-amber text-td-on-amber'
             const open = !!d.dbId && openFees === d.dbId
             const records = d.dbId ? feeRecords[d.dbId] : undefined
             return (
-              <div key={d.id} className="td-card rounded-td-md p-[13px] px-3.5">
-                <div className="flex items-center gap-[13px]">
-                  <div className="w-10 h-10 rounded-td-sm td-avatar" style={{ background: av(realIdx) }}>{initials(d.name)}</div>
+              <div key={d.id} className="py-3 border-b border-td-line">
+                <div className="flex items-center gap-3 min-h-11">
                   {/* The balance was a total with nothing behind it. Tapping the
                       name now opens what it is made of — which is also the only
                       place a fee can be taken back off it. */}
                   <button onClick={() => { if (!d.dbId) return; const next = open ? null : d.dbId; setOpenFees(next); if (next && !feeRecords[next]) loadStudentFees(next) }} className="td-plain flex-1 min-w-0 text-left p-0 cursor-pointer">
-                    <div className="text-td-small font-bold text-td-dark truncate">{d.name}</div>
-                    <div className="text-xs text-td-muted mt-0.5">
-                      {d.klass}
-                      {(d.feeDue ?? 0) > 0 && <span className="text-td-red font-semibold"> · {rupee(d.feeDue!)} due</span>}
-                      {(d.feeDue ?? 0) === 0 && (d.feeCollected ?? 0) > 0 && <span className="text-td-green font-semibold"> · {rupee(d.feeCollected!)} paid</span>}
-                    </div>
+                    <div className="text-td-body font-semibold text-td-dark truncate">{d.name}</div>
+                    <div className="text-td-small text-td-muted mt-px">{d.klass}</div>
                   </button>
-                  <button onClick={() => toggleFeeStatus(studentKey(d))} className="text-td-caption font-bold py-[5px] px-2.5 rounded-td-lg border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
+                  <div className="shrink-0 text-right">
+                    <div className="td-num text-td-body font-semibold text-td-dark">{rupee((d.feeDue ?? 0) > 0 ? d.feeDue! : d.feeCollected ?? 0)}</div>
+                    <button onClick={() => toggleFeeStatus(studentKey(d))} aria-label={`${d.name}: ${d.feeStatus}, tap to change`} className={`td-tag mt-1 px-[7px] py-[3px] border-none cursor-pointer ${tag}`}>{d.feeStatus}</button>
+                  </div>
                 </div>
 
                 {open && (
-                  <div className="mt-3 pt-3 border-t border-td-border flex flex-col gap-2">
+                  <div className="mt-3 pt-3 border-t border-td-line flex flex-col gap-2">
                     {records === undefined ? (
                       <div className="text-xs text-td-muted">Loading fee records...</div>
                     ) : records.length === 0 ? (
@@ -261,14 +262,14 @@ export function FeesScreen() {
                             return (
                               <div key={r.dbId} className="flex items-center gap-2.5">
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-td-caption font-bold text-td-dark truncate">{label}</div>
+                                  <div className="td-num text-td-caption font-semibold text-td-dark truncate">{label}</div>
                                   <div className={`text-td-caption mt-px ${late ? 'text-td-red font-semibold' : 'text-td-muted'}`}>
                                     {r.status === 'Paid' ? 'Paid' : late ? 'Overdue' : 'Due'}
                                     {r.dueDate && ` · ${fmtDue(r.dueDate)}`}
                                   </div>
                                 </div>
                                 {isAdmin && (
-                                  <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 td-danger text-td-caption font-bold py-1 px-2.5 rounded-td-sm">Remove</button>
+                                  <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 td-danger text-td-caption font-semibold py-1 px-2.5 min-h-11">Remove</button>
                                 )}
                               </div>
                             )
@@ -276,7 +277,7 @@ export function FeesScreen() {
                           {isAdmin && openPlans.map(planId => (
                             <button key={planId}
                               onClick={() => setConfirmPlan({ planId, studentId: d.dbId!, student: d.name, count: records.filter(r => r.planId === planId && r.status !== 'Paid').length })}
-                              className="mt-1 self-start td-danger text-td-caption font-bold py-1 px-2.5 rounded-td-sm">
+                              className="mt-1 self-start td-danger text-td-caption font-semibold py-1 px-2.5 min-h-11">
                               Remove the rest of this plan
                             </button>
                           ))}

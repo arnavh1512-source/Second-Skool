@@ -41,57 +41,48 @@ function BottomTabBar() {
   // Unapproved Google staff (register/pending/denied) get no navigation.
   if (supabaseUserId && staffStatus !== 'approved') return null
 
+  type Item = { key: Tab; label: string; screen: Screen; icon: (c: string) => React.ReactNode; alert?: boolean }
+  let items: Item[]
   if (role === 'student') {
     if (!currentStudentDbId) return null
-    const color = (t: Tab) => tab === t ? 'var(--color-td-primary)' : 'var(--color-td-subtle)'
-    const stuTabs: { key: Tab; label: string; screen: Screen; icon: (c: string) => React.ReactNode }[] = [
-      { key: 'stuHome', label: 'Home', screen: 'stuHome', icon: (c) => <Icon name="home" size={23} color={c} /> },
-      { key: 'stuResults', label: 'Results', screen: 'stuResults', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V9"/><path d="M12 21V4"/><path d="M19 21v-7"/></svg> },
-      { key: 'stuRanking', label: 'Ranking', screen: 'stuRanking', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg> },
-      { key: 'stuTeachers', label: 'Teachers', screen: 'stuTeachers', icon: (c) => <Icon name="students" size={23} color={c} /> },
-      { key: 'stuProfile', label: 'Profile', screen: 'stuProfile', icon: (c) => <Icon name="person" size={23} color={c} /> },
+    items = [
+      { key: 'stuHome', label: 'Home', screen: 'stuHome', icon: (c) => <Icon name="home" size={21} color={c} /> },
+      { key: 'stuResults', label: 'Results', screen: 'stuResults', icon: (c) => <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V9"/><path d="M12 21V4"/><path d="M19 21v-7"/></svg> },
+      { key: 'stuRanking', label: 'Ranking', screen: 'stuRanking', icon: (c) => <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg> },
+      { key: 'stuTeachers', label: 'Teachers', screen: 'stuTeachers', icon: (c) => <Icon name="students" size={21} color={c} /> },
+      { key: 'stuProfile', label: 'Profile', screen: 'stuProfile', icon: (c) => <Icon name="person" size={21} color={c} /> },
     ]
-    return (
-      <div className="shrink-0 flex justify-around items-center pt-3 px-2.5 bg-td-card border-t border-td-line pb-[max(env(safe-area-inset-bottom),16px)] md:pb-[26px]">
-        {stuTabs.map(t => (
-          <button key={t.key} onClick={() => go(t.screen, t.key)} className="td-plain cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
-            {t.icon(color(t.key))}
-            <span className="text-td-caption font-bold" style={{ color: color(t.key) }}>{t.label}</span>
-          </button>
-        ))}
-      </div>
-    )
+  } else {
+    // Red dot on "More": something in that section needs the head/teacher's action —
+    // a student self-registration waiting, a phone waiting to be allowed, or
+    // (head only) a staff access request.
+    const pendingStaff = role === 'admin' ? staffList.filter(s => s.status === 'pending').length : 0
+    const moreAlert = pendingStudents.length > 0 || pendingStaff > 0 || studentDevices.some(d => !d.allowed)
+    items = [
+      { key: 'home', label: 'Home', screen: 'home', icon: (c) => <Icon name="home" size={21} color={c} /> },
+      { key: 'timetable', label: 'Timetable', screen: 'timetable', icon: (c) => <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="17" rx="1"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> },
+      { key: 'students', label: 'Students', screen: 'students', icon: (c) => <Icon name="students" size={21} color={c} /> },
+      ...(role === 'admin' ? [{ key: 'teachers', label: 'Staff', screen: 'teachers', icon: (c: string) => <Icon name="person" size={21} color={c} /> } as Item] : []),
+      { key: 'more', label: 'More', screen: 'more', alert: moreAlert, icon: (c) => <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg> },
+    ]
   }
 
-  const color = (t: Tab) => tab === t ? 'var(--color-td-primary)' : 'var(--color-td-subtle)'
-  const allTabs: { key: Tab; label: string; headOnly?: boolean; icon: (c: string) => React.ReactNode }[] = [
-    { key: 'home', label: 'Home', icon: (c) => <Icon name="home" size={23} color={c} /> },
-    { key: 'timetable', label: 'Timetable', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> },
-    { key: 'students', label: 'Students', icon: (c) => <Icon name="students" size={23} color={c} /> },
-    { key: 'teachers', label: 'Staff', headOnly: true, icon: (c) => <Icon name="person" size={23} color={c} /> },
-    { key: 'more', label: 'More', icon: (c) => <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.4" strokeLinecap="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg> },
-  ]
-  const tabs = allTabs.filter(t => role === 'admin' || !t.headOnly)
-
-  // Red dot on "More": something in that section needs the head/teacher's action —
-  // a student self-registration waiting, a phone waiting to be allowed, or
-  // (head only) a staff access request.
-  const pendingStaff = role === 'admin' ? staffList.filter(s => s.status === 'pending').length : 0
-  const moreAlert = pendingStudents.length > 0 || pendingStaff > 0 || studentDevices.some(d => !d.allowed)
-
+  // The register's foot: a heavy ink rule, paper ground, the current tab in ink.
   return (
-    <div className="shrink-0 flex justify-around items-center pt-3 pb-[26px] px-2.5 bg-td-card border-t border-td-line">
-      {tabs.map(t => (
-        <button key={t.key} onClick={() => go(t.key === 'timetable' ? 'timetable' : t.key as Screen, t.key)} className="td-plain cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
-          <span className="relative">
-            {t.icon(color(t.key))}
-            {t.key === 'more' && moreAlert && (
-              <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-td-card" />
-            )}
-          </span>
-          <span className="text-td-caption font-bold" style={{ color: color(t.key) }}>{t.label}</span>
-        </button>
-      ))}
+    <div className="shrink-0 flex bg-td-bg border-t-2 border-td-dark pb-[env(safe-area-inset-bottom)]">
+      {items.map(t => {
+        const on = tab === t.key
+        const c = on ? 'var(--color-td-dark)' : 'var(--color-td-muted)'
+        return (
+          <button key={t.key} onClick={() => go(t.screen, t.key)} aria-current={on ? 'page' : undefined} className="td-plain cursor-pointer flex-1 min-h-14 pt-3 pb-4 flex flex-col items-center gap-[5px]">
+            <span className="relative">
+              {t.icon(c)}
+              {t.alert && <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-td-bg" />}
+            </span>
+            <span className={`text-td-caption ${on ? 'font-semibold' : 'font-normal'}`} style={{ color: c }}>{t.label}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -183,7 +174,7 @@ export function Chip({ active, onClick, children }: {
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 text-td-small font-bold py-[9px] px-4 rounded-td-lg cursor-pointer border ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}
+      className={`shrink-0 text-td-small py-[11px] px-[15px] min-h-11 rounded-full cursor-pointer border ${active ? 'font-semibold bg-td-dark text-td-bg border-td-dark' : 'font-medium bg-td-card text-td-text border-td-border'}`}
     >{children}</button>
   )
 }
@@ -224,7 +215,7 @@ export function ScreenHeader({ title, onBack, right }: { title: string; onBack: 
     <div className="flex items-center justify-between mb-[18px]">
       <div className="flex items-center gap-3.5">
         <BackButton onClick={onBack} />
-        <div className="text-xl td-strong">{title}</div>
+        <div className="text-td-title font-semibold tracking-[-.01em] text-td-dark">{title}</div>
       </div>
       {right}
     </div>
@@ -283,7 +274,7 @@ export function PrimaryButton({ onClick, children }: { onClick: () => unknown; c
       onClick={guard}
       disabled={busy}
       aria-busy={busy}
-      className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
+      className="td-pill w-full text-td-body font-semibold py-[15px] min-h-[52px] rounded-td-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
     >
       {busy && <Spinner />}
       {children}

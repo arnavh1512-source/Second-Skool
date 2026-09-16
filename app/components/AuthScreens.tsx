@@ -11,9 +11,11 @@ import { readLocal, writeLocal, removeLocal } from '../lib/storage'
 import { readStudentCred } from '../lib/student-cred'
 import { useBusy } from '../lib/use-busy'
 
+// A ticked register box in ink - the mark the whole app is ruled around.
 const LOGO = (
-  // eslint-disable-next-line @next/next/no-img-element
-  <img src="/icon-512.png" alt="Second Skool" width={72} height={72} className="rounded-td-lg object-cover shadow-td-raised" />
+  <div role="img" aria-label="Second Skool" className="w-12 h-12 shrink-0 bg-td-dark flex items-center justify-center">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-bg)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16v15H4z" /><path d="M8 11l2.5 2.5L16 8" /></svg>
+  </div>
 )
 
 const CLASS_OPTIONS = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12']
@@ -102,60 +104,55 @@ export function LoginScreen() {
   return (
     <div className="td-auth-screen">
       {LOGO}
-      <div className="text-td-display td-strong tracking-tight mt-[22px]">Second Skool</div>
+      <div className="text-td-heading font-bold tracking-[-.015em] leading-[30px] text-td-dark mt-7">Second Skool</div>
 
       {mode === 'choose' && (
         <>
           <div className="td-sub">Teachers sign in with Google. Students tap below and enter the code their teacher gave them — no account needed.</div>
 
-          <button onClick={signInWithGoogle} className="w-full border border-td-line bg-td-card rounded-td-md p-3.5 mt-8 flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
+          <div className="td-h2 mt-8 mb-4">Staff</div>
+          <button onClick={signInWithGoogle} className="w-full border border-td-border bg-td-card rounded-td-md px-4 py-3.5 min-h-[52px] flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
             <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.3 2.2 20.6 2.2 24s.8 6.7 2.3 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>
-            <span className="text-td-body font-bold text-td-text">Teacher — continue with Google</span>
+            <span className="text-td-body font-semibold text-td-dark">Continue with Google</span>
           </button>
 
-          <button onClick={() => setMode('email')} className="w-full border border-td-line bg-td-card rounded-td-md p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
-            <Icon name="lock" size={20} color="var(--color-td-primary)" />
-            <span className="text-td-body font-bold text-td-text">Teacher — sign in with password</span>
+          <button onClick={() => setMode('email')} className="w-full border border-td-border bg-td-card rounded-td-md px-4 py-3.5 min-h-[52px] mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
+            <Icon name="lock" size={20} color="var(--color-td-dark)" />
+            <span className="text-td-body font-semibold text-td-dark">Sign in with password</span>
           </button>
           <div className="text-td-caption text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
 
-          <div className="flex items-center gap-3 mt-5">
-            <div className="flex-1 h-px bg-td-border" />
-            <span className="text-td-caption text-td-subtle font-semibold">or</span>
-            <div className="flex-1 h-px bg-td-border" />
-          </div>
-
-          <button onClick={() => setMode('student')} className="w-full text-left border border-td-border rounded-td-lg p-[18px] mt-5 flex items-center gap-[15px] cursor-pointer bg-td-card">
-            <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center bg-td-tint-green">
-              <Icon name="person" size={26} color="var(--color-td-green)" />
-            </div>
+          <div className="td-h2 mt-[30px] mb-4">Student or parent</div>
+          <button onClick={() => setMode('student')} className="w-full text-left border border-td-border rounded-td-md px-4 py-3.5 min-h-[52px] flex items-center gap-3 cursor-pointer bg-td-card shadow-td-card">
+            <Icon name="person" size={20} color="var(--color-td-dark)" />
             <div className="flex-1">
-              <div className="text-base td-strong">I&apos;m a student</div>
-              <div className="text-td-caption text-td-muted mt-[3px]">Enter your code to see your updates</div>
+              <div className="text-td-body font-semibold text-td-dark">Open my dashboard</div>
+              <div className="text-td-small text-td-muted mt-0.5">Enter the code your teacher gave you</div>
             </div>
             <Icon name="next" size={20} color="var(--color-td-faint)" />
           </button>
 
-          <div className="mt-auto text-td-caption text-td-subtle text-center leading-relaxed pt-6">Your tuition centre sets up teacher access. Students only ever need their code.</div>
+          <div className="mt-auto text-td-body leading-[22px] text-td-text pt-[26px]">Your tuition centre sets up teacher access. Students only ever need their code.</div>
         </>
       )}
 
       {mode === 'student' && (
         <>
           <div className="td-sub">Enter the code your teacher gave you. We&apos;ll remember it on this device.</div>
+          <label htmlFor="stu-code" className="td-label mt-7">Access code</label>
           <input
-            autoFocus value={code}
+            id="stu-code" autoFocus value={code}
             onChange={e => setCode(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && submitCode()}
-            placeholder="e.g. TUT-7X2K9Q" aria-label="Your student code" required aria-required="true"
-            className="td-field text-center tracking-[0.2em] font-bold mt-7"
+            placeholder="e.g. TUT-7X2K9Q" required aria-required="true"
+            className="td-field td-num tracking-[.08em] font-medium !border-td-dark"
           />
-          <button onClick={submitCode} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">
-            {busy ? 'Checking…' : 'View my updates'}
+          <button onClick={submitCode} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] min-h-[52px] rounded-td-md cursor-pointer mt-5 disabled:opacity-60">
+            {busy ? 'Checking…' : 'Open my dashboard'}
           </button>
-          <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-td-md py-[13px] cursor-pointer bg-td-card text-td-small font-bold text-td-primary mt-3">New here? Register yourself</button>
-          <button onClick={() => { setMode('choose'); setCode('') }} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-td-caption text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
+          <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-td-md py-[13px] cursor-pointer bg-td-card text-td-small font-semibold text-td-dark mt-3">New here? Register yourself</button>
+          <button onClick={() => { setMode('choose'); setCode('') }} className="td-plain w-full text-td-muted text-td-small font-semibold py-3 cursor-pointer mt-1">Back</button>
+          <div className="mt-auto text-td-body leading-[22px] text-td-text pt-[26px]">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
         </>
       )}
 
@@ -176,8 +173,8 @@ export function LoginScreen() {
             className="td-field mt-3"
           />
           <button onClick={signInWithPassword} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
-          <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-td-caption text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
+          <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="td-plain w-full text-td-muted text-td-small font-semibold py-3 cursor-pointer mt-1">Back</button>
+          <div className="mt-auto text-td-body leading-[22px] text-td-text pt-[26px]">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
         </>
       )}
 
@@ -186,37 +183,37 @@ export function LoginScreen() {
           <div className="td-sub">Fill in your details. Your teacher reviews and approves them, then your code goes live.</div>
           <div className="flex flex-col gap-3 mt-6">
             <div>
-              <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-td-red">*</span></label>
-              <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="td-field mt-1.5 tracking-[0.15em] font-bold text-center" />
+              <label htmlFor="reg-code" className="td-label">Student code <span className="text-td-red">*</span></label>
+              <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="td-field td-num tracking-[.08em] font-medium" />
               <div id="reg-code-hint" className="text-td-caption text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
-              <label htmlFor="reg-name" className="text-xs font-bold text-td-muted">Full name <span className="text-td-red">*</span></label>
-              <input id="reg-name" required aria-required="true" autoComplete="name" value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="td-field mt-1.5" />
+              <label htmlFor="reg-name" className="td-label">Full name <span className="text-td-red">*</span></label>
+              <input id="reg-name" required aria-required="true" autoComplete="name" value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="td-field" />
             </div>
             <div>
-              <label htmlFor="reg-parent" className="text-xs font-bold text-td-muted">Parent&apos;s phone <span className="text-td-red">*</span></label>
-              <input id="reg-parent" required aria-required="true" type="tel" autoComplete="tel" value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="td-field mt-1.5" />
+              <label htmlFor="reg-parent" className="td-label">Parent&apos;s phone <span className="text-td-red">*</span></label>
+              <input id="reg-parent" required aria-required="true" type="tel" autoComplete="tel" value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="td-field" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label htmlFor="reg-class" className="text-xs font-bold text-td-muted">Class <span className="text-td-red">*</span></label>
-                <select id="reg-class" required aria-required="true" value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="td-field mt-1.5">
+                <label htmlFor="reg-class" className="td-label">Class <span className="text-td-red">*</span></label>
+                <select id="reg-class" required aria-required="true" value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="td-field">
                   {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="flex-1">
-                <label htmlFor="reg-school" className="text-xs font-bold text-td-muted">School <span className="text-td-red">*</span></label>
-                <input id="reg-school" required aria-required="true" value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="td-field mt-1.5" />
+                <label htmlFor="reg-school" className="td-label">School <span className="text-td-red">*</span></label>
+                <input id="reg-school" required aria-required="true" value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="td-field" />
               </div>
             </div>
             <div>
-              <label htmlFor="reg-address" className="text-xs font-bold text-td-muted">Address <span className="text-td-subtle font-semibold">(optional)</span></label>
-              <input id="reg-address" autoComplete="street-address" value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="td-field mt-1.5" />
+              <label htmlFor="reg-address" className="td-label">Address <span className="text-td-subtle font-semibold">(optional)</span></label>
+              <input id="reg-address" autoComplete="street-address" value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="td-field" />
             </div>
           </div>
           <button onClick={submitSignup} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-4 disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for approval'}</button>
-          <button onClick={() => setMode('student')} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">I already have a code</button>
+          <button onClick={() => setMode('student')} className="td-plain w-full text-td-muted text-td-small font-semibold py-3 cursor-pointer mt-1">I already have a code</button>
         </>
       )}
     </div>
@@ -530,7 +527,7 @@ export function RegisterScreen() {
 
       {mode === 'create' && (
         <div className="mt-7 flex flex-col gap-3">
-          <label className="text-xs font-bold text-td-muted">Centre name</label>
+          <label className="td-label">Centre name</label>
           <input autoFocus value={centreName} onChange={e => setCentreName(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field" />
           <PrimaryButton onClick={() => run(() => centreName.trim().length >= 2 ? createCentre(centreName) : notify('Enter your centre name', 'error'))}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
           <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
@@ -539,8 +536,8 @@ export function RegisterScreen() {
 
       {mode === 'join' && (
         <div className="mt-7 flex flex-col gap-3">
-          <label className="text-xs font-bold text-td-muted">Centre join code</label>
-          <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="td-field text-center tracking-[0.2em] font-bold" />
+          <label className="td-label">Centre join code</label>
+          <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="td-field td-num tracking-[.08em] font-medium" />
           <PrimaryButton onClick={() => run(() => code.trim().length >= 4 ? joinCentre(code) : notify('Enter the full join code', 'error'))}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
           <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
           <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
@@ -615,7 +612,7 @@ export function DeniedScreen() {
             onChange={e => setCode(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && submit()}
             placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true"
-            className="td-field text-center tracking-[0.2em] font-bold"
+            className="td-field td-num tracking-[.08em] font-medium"
           />
           <button onClick={submit} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[14px] rounded-td-md cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>
           <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get in once they approve you.</div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { isoDay, parseDay } from '../store/format'
-import { useDashboard, initials, av } from '../store'
+import { useDashboard } from '../store'
 import { PrimaryButton, EmptyState, Chip, classesOf } from './Shell'
 import { earliestMarkableDay, pickAttendanceClass, seedMarks } from '../lib/attendance'
 import { queuedMarksForDay } from '../lib/att-queue'
@@ -103,8 +103,8 @@ export function AttendanceScreen() {
           <Icon name="back" size={18} color="var(--color-td-dark)" />
         </button>
         <div>
-          <div className="text-xl td-strong">{correcting ? 'Correct Attendance' : 'Mark Attendance'}</div>
-          <div className="text-xs text-td-muted">{(parseDay(day) ?? new Date()).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
+          <div className="text-td-title font-semibold tracking-[-.01em] text-td-dark">{correcting ? 'Correct attendance' : 'Mark attendance'}</div>
+          <div className="td-num text-td-small text-td-muted mt-0.5">{(parseDay(day) ?? new Date()).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export function AttendanceScreen() {
           cannot: correcting a register the phone is unable to read back would
           mean saving a screen full of Presents over marks nobody can see. */}
       <div className="flex flex-wrap items-center gap-2.5 mb-4">
-        <label htmlFor="att-day" className="text-xs text-td-subtle font-semibold">Day</label>
+        <label htmlFor="att-day" className="text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">Day</label>
         <input
           id="att-day"
           type="date"
@@ -121,10 +121,10 @@ export function AttendanceScreen() {
           min={isoDay(earliestMarkableDay(new Date()))}
           disabled={!online}
           onChange={e => { setDay(e.target.value || today); setLoadFailed(false) }}
-          className="border border-td-border bg-td-card rounded-td-sm px-3 py-2 text-td-small text-td-dark disabled:opacity-60"
+          className="td-num border border-td-border bg-td-card rounded-td-sm px-3 py-2 min-h-11 text-td-small text-td-dark disabled:opacity-60"
         />
         {correcting && (
-          <button onClick={() => { setDay(today); setLoadFailed(false) }} className="text-td-caption font-bold text-td-muted underline cursor-pointer">
+          <button onClick={() => { setDay(today); setLoadFailed(false) }} className="td-plain text-td-small font-semibold text-td-dark underline min-h-11 cursor-pointer">
             Back to today
           </button>
         )}
@@ -135,7 +135,7 @@ export function AttendanceScreen() {
       )}
 
       {correcting && loadFailed && (
-        <div className="mb-4 rounded-td-md border p-3.5 text-td-caption text-td-on-red" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
+        <div className="mb-4 border border-td-edge-red bg-td-tint-red p-3.5 text-td-small text-td-on-red">
           That day&apos;s register could not be loaded, so it cannot be corrected right now. Try again in a moment.
         </div>
       )}
@@ -145,8 +145,8 @@ export function AttendanceScreen() {
           only she knows which of the two is right — and it sits above the
           roster so the correction is one tap away from being re-entered. */}
       {attConflicts.length > 0 && (
-        <div className="mb-4 rounded-td-md border p-3.5" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
-          <div className="text-td-small font-bold text-td-on-red">
+        <div className="mb-4 border border-td-edge-red bg-td-tint-red p-3.5">
+          <div className="text-td-small font-semibold text-td-on-red">
             {attConflicts.length} {attConflicts.length === 1 ? 'mark was' : 'marks were'} already answered by someone else
           </div>
           <div className="text-td-caption text-td-on-red mt-1 mb-2.5 opacity-90">
@@ -155,13 +155,13 @@ export function AttendanceScreen() {
           <ul className="flex flex-col gap-1.5">
             {attConflicts.map((c, i) => (
               <li key={`${c.name}-${c.date}-${i}`} className="text-td-caption text-td-on-red flex flex-wrap gap-x-1.5">
-                <span className="font-bold">{c.name}</span>
+                <span className="font-semibold">{c.name}</span>
                 <span className="opacity-80">{c.date}</span>
                 <span>· you marked {c.mine.toLowerCase()}, centre has {c.theirs.toLowerCase()}</span>
               </li>
             ))}
           </ul>
-          <button onClick={dismissAttConflicts} className="mt-3 text-td-caption font-bold underline text-td-on-red cursor-pointer">
+          <button onClick={dismissAttConflicts} className="td-plain mt-3 text-td-small font-semibold underline text-td-on-red min-h-11 cursor-pointer">
             Dismiss
           </button>
         </div>
@@ -176,7 +176,7 @@ export function AttendanceScreen() {
         />
       ) : (
         <>
-          <div className="flex gap-[9px] overflow-x-auto mb-4 scrollbar-hide">
+          <div className="flex flex-wrap gap-[7px] mb-5">
             {classes.map(name => {
               const active = name === selClass
               return (
@@ -185,44 +185,36 @@ export function AttendanceScreen() {
             })}
           </div>
 
-          <div className="flex gap-2.5 mb-4">
-            <div className="flex-1 bg-td-tint-green rounded-td-md p-3 text-center">
-              <div className="text-td-heading font-semibold text-td-green">{presentCount}</div>
-              <div className="text-td-caption text-td-on-green font-semibold">Present</div>
-            </div>
-            <div className="flex-1 bg-td-tint-red rounded-td-md p-3 text-center">
-              <div className="text-td-heading font-semibold text-td-red">{absentCount}</div>
-              <div className="text-td-caption text-td-on-red font-semibold">Absent</div>
-            </div>
+          <div className="td-h2 mb-0 flex justify-between">
+            <span>{roster.length} {roster.length === 1 ? 'student' : 'students'}</span>
+            <span className={`td-num tracking-[.06em] ${absentCount ? 'text-td-on-red' : 'text-td-muted'}`}>{absentCount} absent</span>
           </div>
-
-          <div className="text-xs text-td-subtle font-semibold mb-2.5">Tap a student to toggle present / absent</div>
-          <div className="td-list gap-[9px] mb-5">
+          <div className="lg:max-w-2xl">
             {roster.map((s, i) => {
               const key = studentKey(s)
               const absent = att[key] === 'absent'
               return (
-                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-td-md p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? 'var(--color-td-tint-red)' : 'var(--color-td-card)', borderColor: absent ? 'var(--color-td-edge-red)' : 'var(--color-td-border)' }}>
-                  <div className="w-[38px] h-[38px] rounded-td-sm shrink-0 flex items-center justify-center text-white font-bold text-td-small" style={{ background: av(i) }}>{initials(s.name)}</div>
-                  <div className="flex-1 text-td-small font-bold text-td-dark">{s.name}</div>
-                  <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: absent ? 'var(--color-td-red)' : 'var(--color-td-green)' }}>
-                    <span className="w-[9px] h-[9px] rounded-full" style={{ background: absent ? 'var(--color-td-red)' : 'var(--color-td-green)' }} />
-                    {absent ? 'Absent' : 'Present'}
-                  </span>
+                <button key={key || i} onClick={() => toggleAtt(key)} aria-pressed={absent} className={`td-plain w-full text-left flex items-center gap-3 py-[11px] border-b border-td-line min-h-14 cursor-pointer ${absent ? 'bg-td-wash-red' : ''}`}>
+                  <span className={`td-num text-td-caption text-td-muted border border-td-border px-1.5 py-[3px] ${absent ? 'ml-1.5' : ''}`}>{String(i + 1).padStart(2, '0')}</span>
+                  <span className="flex-1 text-td-body font-medium text-td-dark">{s.name}</span>
+                  <span className={`td-tag border px-2.5 py-1.5 ${absent ? 'mr-1.5 border-td-red bg-td-red text-td-on-solid' : 'border-td-green bg-td-tint-green text-td-on-green'}`}>{absent ? 'Absent' : 'Present'}</span>
                 </button>
               )
             })}
+            <div className="text-td-body leading-[22px] text-td-text py-3">Everyone starts present — tap a row to mark absent.</div>
           </div>
           {correcting && (
             <div className="text-td-caption text-td-muted mb-2.5 lg:max-w-2xl">
               This replaces what the centre has for {day}. A child newly marked absent gets a message home naming that day.
             </div>
           )}
-          <div className="lg:max-w-xs">
+          {/* The save bar rides the bottom of the register, so the count she is
+              about to send is always in view while she marks. */}
+          <div className="sticky bottom-0 -mx-5 px-5 pt-3.5 pb-5 border-t border-td-border bg-td-bg lg:static lg:mx-0 lg:px-0 lg:border-0 lg:max-w-xs">
             <PrimaryButton onClick={() => {
               if (!loaded) { notify('That day’s register has not loaded yet', 'error'); return }
               saveAttendance(roster, day)
-            }}>{correcting ? 'Save correction' : 'Save attendance'}</PrimaryButton>
+            }}>{correcting ? 'Save correction' : 'Save'} · {presentCount} present, {absentCount} absent</PrimaryButton>
           </div>
         </>
       )}

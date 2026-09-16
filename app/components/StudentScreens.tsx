@@ -73,32 +73,46 @@ export function StuHomeScreen() {
     }
   }
 
+  const monthAtt = stuMonthly && stuMonthly.attTotal > 0 ? stuMonthly : null
+
   return (
     <div className="td-screen">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between gap-3 pb-[18px]">
         <div className="flex items-center gap-3 min-w-0">
           {centreLogo
             // eslint-disable-next-line @next/next/no-img-element
-            ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-[46px] h-[46px] rounded-td-md object-cover border border-td-border shrink-0" />
-            : <div className="w-[46px] h-[46px] rounded-td-md flex items-center justify-center text-white font-semibold text-td-title shrink-0" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>{ini}</div>}
+            ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-11 h-11 rounded-full object-cover border border-td-border shrink-0" />
+            : <div className="w-11 h-11 rounded-full bg-td-tint-blue text-td-primary flex items-center justify-center text-td-small font-semibold shrink-0">{ini}</div>}
           <div className="min-w-0">
-            <div className="text-xs text-td-muted font-semibold truncate">{centreName || 'Good morning'}</div>
-            <div className="text-td-title td-strong truncate">{displayName}</div>
+            <div className="text-td-title font-semibold tracking-[-.01em] text-td-dark truncate">{displayName}</div>
+            <div className="td-num text-td-small text-td-muted mt-0.5 truncate">{[me?.klass, centreName].filter(Boolean).join(' · ') || 'Your centre'}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <ThemeToggle />
-          <button onClick={() => go('stuNotif', 'stuHome')} aria-label="Notifications" className="relative td-icon-btn">
+          <button onClick={() => go('stuNotif', 'stuHome')} aria-label={hasNewNotif ? 'Notifications, new' : 'Notifications'} className="relative td-icon-btn">
             <Icon name="reminder" size={20} color="var(--color-td-dark)" />
             {hasNewNotif && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-td-card" />}
           </button>
         </div>
       </div>
 
+      {/* Money owed is the one thing on this screen with a deadline, so it sits
+          above everything else instead of below the tiles. */}
+      {stuPendingFee && (
+        <button onClick={() => go('stuFees', 'stuHome')} className="td-plain w-full text-left cursor-pointer bg-td-tint-red border border-td-edge-red px-4 py-3.5 mb-[22px] flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-td-body font-semibold text-td-dark">Fee of {stuPendingFee.amount} is {stuPendingFee.overdue ? 'overdue' : 'due'}</div>
+            <div className="text-td-body leading-[22px] text-td-text mt-[5px]">{stuPendingFee.overdue ? 'It was due on' : 'Pay by'} {stuPendingFee.dueDate}.</div>
+          </div>
+          <Icon name="next" size={18} color="var(--color-td-on-red)" className="shrink-0" />
+        </button>
+      )}
+
       <div className="flex items-center justify-between gap-2 mb-[18px]">
-        <div className="inline-flex items-center gap-[7px] td-card rounded-td-lg py-[7px] px-[13px]">
-          <Icon name="branches" size={14} color="var(--color-td-primary)" />
-          <span className="text-td-caption font-semibold text-td-text">{me?.school || 'Your branch'}</span>
+        <div className="inline-flex items-center gap-[7px] min-w-0">
+          <Icon name="branches" size={14} color="var(--color-td-muted)" />
+          <span className="text-td-small text-td-muted truncate">{me?.school || 'Your branch'}</span>
         </div>
         {pushSupported() && me?.id && (
           <button onClick={async () => {
@@ -109,9 +123,9 @@ export function StuHomeScreen() {
             // believing the app is broken when it's a phone setting.
             const t = await testNotification(useDashboard.getState().centreName)
             useDashboard.getState().notify(t.ok ? 'Alerts on — check your notifications for a test' : (t.error || 'Alerts on'))
-          }} className="inline-flex items-center gap-1.5 bg-td-tint-blue text-td-primary text-td-caption font-bold py-[7px] px-3 rounded-td-lg cursor-pointer border-none shrink-0">
-            <Icon name="reminder" size={13} color="var(--color-td-primary)" />
-            Alerts
+          }} className="inline-flex items-center gap-1.5 bg-td-card border border-td-border text-td-dark text-td-small font-semibold min-h-11 px-3 cursor-pointer shrink-0">
+            <Icon name="reminder" size={14} color="var(--color-td-dark)" />
+            Turn on alerts
           </button>
         )}
       </div>
@@ -120,115 +134,79 @@ export function StuHomeScreen() {
         <LastUpdated />
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5 mb-3.5">
-        <button onClick={() => go('stuAttendance', 'stuHome')} className="rounded-td-lg p-3.5 text-white text-left border-none cursor-pointer" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
-          <div className="text-2xl font-semibold leading-none">{attendancePct === null ? '—' : `${attendancePct}%`}</div>
-          <div className="text-td-caption opacity-85 mt-1.5 font-semibold">Attendance</div>
-        </button>
-        <button onClick={() => go('stuRanking', 'stuRanking')} className="td-card rounded-td-lg p-3.5 text-left cursor-pointer">
-          {rankInfo.rank > 0 ? (
-            <>
-              <div className="text-2xl font-semibold leading-none text-td-dark">#{rankInfo.rank}<span className="text-sm text-td-muted font-semibold"> / {rankInfo.total}</span></div>
-              <div className="text-td-caption text-td-muted mt-1.5 font-semibold">Class Rank</div>
-            </>
-          ) : (
-            <>
-              <div className="text-2xl font-semibold leading-none text-td-dark">&mdash;</div>
-              <div className="text-td-caption text-td-muted mt-1.5 font-semibold">No rank yet</div>
-            </>
-          )}
-        </button>
-      </div>
-
-      {stuMonthly && (stuMonthly.attTotal > 0 || stuMonthly.tests > 0) && (
-        <div className="rounded-td-lg p-4 mb-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2fa36b,#4db786)' }}>
-          <div className="text-td-caption font-bold opacity-85 mb-2.5">THIS MONTH</div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <div className="text-td-title font-semibold leading-none">{stuMonthly.attTotal > 0 ? `${Math.round((stuMonthly.attPresent / stuMonthly.attTotal) * 100)}%` : '—'}</div>
-              <div className="text-td-caption opacity-80 mt-1 font-semibold">Attendance</div>
-            </div>
-            <div>
-              <div className="text-td-title font-semibold leading-none">{stuMonthly.tests}</div>
-              <div className="text-td-caption opacity-80 mt-1 font-semibold">Tests</div>
-            </div>
-            <div>
-              <div className="text-td-title font-semibold leading-none">{stuMonthly.tests > 0 ? `${stuMonthly.avgPct}%` : '—'}</div>
-              <div className="text-td-caption opacity-80 mt-1 font-semibold">Avg score</div>
-            </div>
+      <div className="td-h2 mb-4">Attendance</div>
+      <button onClick={() => go('stuAttendance', 'stuHome')} className="td-plain w-full text-left cursor-pointer block">
+        <div className="flex items-end gap-4">
+          <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{attendancePct === null ? '—' : `${attendancePct}%`}</div>
+          <div className="pb-[3px] min-w-0">
+            <div className="td-num text-td-body font-medium text-td-text">{attendancePct === null ? 'Not marked yet' : `${me?.attendanceMarked} ${me?.attendanceMarked === 1 ? 'session' : 'sessions'} marked`}</div>
+            {monthAtt && <div className="td-num text-td-small text-td-muted mt-0.5">{monthAtt.attPresent} of {monthAtt.attTotal} this month</div>}
           </div>
+        </div>
+        {attendancePct !== null && (
+          <div className="flex gap-0.5 mt-3.5" aria-hidden>
+            {attendancePct > 0 && <div className="h-2 bg-td-green" style={{ flex: attendancePct }} />}
+            {attendancePct < 100 && <div className="h-2 bg-td-red" style={{ flex: 100 - attendancePct }} />}
+          </div>
+        )}
+      </button>
+
+      <div className="td-h2 mt-6 mb-0">Standing</div>
+      <button onClick={() => go('stuRanking', 'stuRanking')} className="td-plain w-full text-left cursor-pointer flex items-center gap-3 py-3 min-h-[52px] border-b border-td-line">
+        <div className="flex-1 text-td-body font-medium text-td-dark">Class rank</div>
+        <div className="td-num text-td-body font-semibold text-td-dark">
+          {rankInfo.rank > 0 ? <>#{rankInfo.rank}<span className="text-td-muted font-normal"> / {rankInfo.total}</span></> : <span className="text-td-muted font-normal">No rank yet</span>}
+        </div>
+        <Icon name="next" size={16} color="var(--color-td-faint)" className="shrink-0" />
+      </button>
+      {stuMonthly && stuMonthly.tests > 0 && (
+        <div className="flex items-center gap-3 py-3 min-h-[52px] border-b border-td-line">
+          <div className="flex-1 text-td-body font-medium text-td-dark">Tests this month</div>
+          <div className="td-num text-td-body font-semibold text-td-dark">{stuMonthly.tests}<span className="text-td-muted font-normal"> · avg {stuMonthly.avgPct}%</span></div>
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-2.5 mb-5">
-        <button onClick={() => go('stuTimetable', 'stuHome')} className="text-left td-card rounded-td-lg p-3 cursor-pointer">
-          <div className="w-[38px] h-[38px] rounded-td-sm bg-td-tint-indigo flex items-center justify-center mb-2" style={{ color: ink('var(--color-td-tint-indigo)') }}><Icon name="timetable" size={20} /></div>
-          <div className="text-td-caption td-strong leading-tight">Timetable</div>
-        </button>
-        <button onClick={() => go('stuAssignments', 'stuHome')} className="text-left td-card rounded-td-lg p-3 cursor-pointer">
-          <div className="w-[38px] h-[38px] rounded-td-sm bg-td-tint-amber flex items-center justify-center mb-2" style={{ color: ink('var(--color-td-tint-amber)') }}><Icon name="homework" size={20} /></div>
-          <div className="text-td-caption td-strong leading-tight">Homework</div>
-        </button>
-        <button onClick={() => go('stuNotes', 'stuHome')} className="relative text-left td-card rounded-td-lg p-3 cursor-pointer">
-          <div className="w-[38px] h-[38px] rounded-td-sm bg-td-tint-green flex items-center justify-center mb-2" style={{ color: ink('var(--color-td-tint-green)') }}><Icon name="notes" size={20} /></div>
-          <div className="text-td-caption td-strong leading-tight">Material</div>
-          {newNotes > 0 && <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-td-red text-td-on-solid text-td-caption font-semibold flex items-center justify-center">{newNotes}</span>}
-        </button>
+      <div className="grid grid-cols-3 gap-2 mt-[22px] mb-[22px]">
+        {([
+          { to: 'stuTimetable', icon: 'timetable', label: 'Timetable', badge: 0 },
+          { to: 'stuAssignments', icon: 'homework', label: 'Homework', badge: 0 },
+          { to: 'stuNotes', icon: 'notes', label: 'Material', badge: newNotes },
+        ] as const).map(t => (
+          <button key={t.to} onClick={() => go(t.to, 'stuHome')} className="relative text-left bg-td-card border border-td-border shadow-td-card p-3 min-h-14 cursor-pointer">
+            <Icon name={t.icon} size={20} color="var(--color-td-dark)" />
+            <div className="text-td-small font-semibold text-td-dark mt-2">{t.label}</div>
+            {t.badge > 0 && <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-td-red text-td-on-solid text-td-caption font-semibold flex items-center justify-center">{t.badge}</span>}
+          </button>
+        ))}
       </div>
 
-      {stuPendingFee && (
-        <button onClick={() => go('stuFees', 'stuHome')} className="w-full text-left border-none cursor-pointer rounded-td-lg p-[15px] flex items-center gap-[13px] mb-5" style={{ background: 'linear-gradient(135deg,#e8553c,#ef7a64)' }}>
-          <div className="w-[42px] h-[42px] rounded-td-sm bg-white/20 flex items-center justify-center shrink-0">
-            <Icon name="fees" size={21} className="text-white" />
-          </div>
-          <div className="flex-1">
-            <div className="text-sm font-semibold text-white">{stuPendingFee.amount} fee {stuPendingFee.overdue ? 'overdue' : 'due'}</div>
-            <div className="text-xs text-white/70 mt-0.5">{stuPendingFee.overdue ? 'Was due' : 'Due by'} {stuPendingFee.dueDate}</div>
-          </div>
-          <Icon name="next" size={18} color="rgba(255,255,255,.5)" />
-        </button>
+      {recentResults.length > 0 && (
+        <div className="mb-[22px]">
+          <div className="td-h2 mb-0">Latest marks</div>
+          {recentResults.map((r, i) => (
+            <div key={`${r.subject}-${r.test}-${i}`} className="flex items-center gap-3 py-3 min-h-[52px] border-b border-td-line">
+              <div className="flex-1 min-w-0">
+                <div className="text-td-body font-medium text-td-dark truncate">{r.subject}</div>
+                <div className="td-num text-td-small text-td-muted mt-px truncate">{r.test} · {r.date}</div>
+              </div>
+              <div className="td-num text-td-body font-semibold text-td-dark">{r.marks}<span className="text-td-muted font-normal">/{r.total}</span></div>
+            </div>
+          ))}
+        </div>
       )}
 
       {stuReminders.length > 0 && (
         <>
-          <div className="td-h2">Reminders</div>
-          <div className="flex flex-col gap-2.5 mb-[22px]">
-            {stuReminders.map((r, i) => (
-              <button key={`${r.dbId ?? ''}-${i}`} onClick={() => go('stuNotif', 'stuHome')} className="td-row w-full text-left cursor-pointer">
-                <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: r.tint, color: ink(r.tint) }}><DataIcon value={r.icon} size={20} /></div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-td-small font-bold text-td-dark">{r.title}</div>
-                  <div className="text-xs text-td-muted mt-0.5 truncate">{r.detail}</div>
-                </div>
-                <span className="text-td-caption text-td-subtle font-semibold shrink-0">{r.when}</span>
-                <Icon name="next" size={16} color="var(--color-td-faint)" className="shrink-0" />
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {recentResults.length > 0 && (
-        <>
-          <div className="td-h2">Recent results</div>
-          <div className="flex flex-col gap-2.5">
-            {recentResults.map((r, i) => {
-              // A test with no max marks recorded divides to NaN, and "NaN%"
-              // is what the parent reads on their child's report.
-              const pct = r.total > 0 ? Math.round((r.marks / r.total) * 100) : 0
-              const g = stuGrade(pct)
-              return (
-                <div key={`${r.subject}-${r.test}-${i}`} className="td-row">
-                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-sm" style={{ color: g.c, background: g.t }}>{g.g}</span>
-                  <div className="flex-1">
-                    <div className="text-td-small font-bold text-td-dark">{r.subject}</div>
-                    <div className="text-xs text-td-muted mt-0.5">{r.test} · {r.date}</div>
-                  </div>
-                  <div className="text-sm td-strong">{r.marks}/{r.total}</div>
-                </div>
-              )
-            })}
-          </div>
+          <div className="td-h2 mb-0">From the centre</div>
+          {stuReminders.map((r, i) => (
+            <button key={`${r.dbId ?? ''}-${i}`} onClick={() => go('stuNotif', 'stuHome')} className="td-plain w-full text-left cursor-pointer flex items-center gap-3 py-3 min-h-14 border-b border-td-line">
+              <div className="flex-1 min-w-0">
+                <div className="text-td-body font-semibold text-td-dark">{r.title}</div>
+                <div className="text-td-small text-td-text mt-0.5 truncate">{r.detail}</div>
+              </div>
+              <span className="td-num text-td-small text-td-muted shrink-0">{r.when}</span>
+            </button>
+          ))}
         </>
       )}
 
