@@ -27,7 +27,7 @@ function HelpLine() {
     <a
       href={whatsappShareUrl('918140081461', 'Hi, I need help with Second Skool.')}
       target="_blank" rel="noreferrer"
-      className="text-td-caption font-bold text-td-primary py-3 no-underline"
+      className="text-td-caption font-semibold text-td-primary py-3 no-underline"
     >
       Stuck? Message us on WhatsApp
     </a>
@@ -96,7 +96,7 @@ export function LoginScreen() {
     return (
       <div className="td-auth-screen items-center justify-center">
         <div className="animate-pulse mb-4">{LOGO}</div>
-        <div className="text-sm text-td-muted font-semibold">Loading...</div>
+        <div className="text-td-small text-td-muted font-semibold">Loading...</div>
       </div>
     )
   }
@@ -104,7 +104,7 @@ export function LoginScreen() {
   return (
     <div className="td-auth-screen">
       {LOGO}
-      <div className="text-td-heading font-bold tracking-[-.015em] leading-[30px] text-td-dark mt-7">Second Skool</div>
+      <div className="text-td-heading font-semibold tracking-[-.015em] leading-[30px] text-td-dark mt-7">Second Skool</div>
 
       {mode === 'choose' && (
         <>
@@ -323,13 +323,13 @@ export function NotificationGateScreen() {
           <div className="text-td-caption td-strong mb-2">How to allow them</div>
           <ol className="text-td-caption text-td-muted leading-relaxed list-decimal pl-4 flex flex-col gap-1">
             <li>Tap the lock or ⓘ icon next to the web address</li>
-            <li>Open <span className="font-bold text-td-text">Permissions</span> → <span className="font-bold text-td-text">Notifications</span></li>
-            <li>Switch it to <span className="font-bold text-td-text">Allow</span></li>
+            <li>Open <span className="font-semibold text-td-text">Permissions</span> → <span className="font-semibold text-td-text">Notifications</span></li>
+            <li>Switch it to <span className="font-semibold text-td-text">Allow</span></li>
             <li>Come back here — this screen clears on its own</li>
           </ol>
           <button
             onClick={() => { writeLocal(BYPASS_KEY, '1'); window.dispatchEvent(new Event(PERM_EVENT)) }}
-            className="td-plain mt-3 w-full text-td-caption font-bold text-td-primary py-2.5 cursor-pointer"
+            className="td-plain mt-3 w-full text-td-caption font-semibold text-td-primary py-2.5 cursor-pointer"
           >
             Continue without reminders
           </button>
@@ -343,11 +343,11 @@ export function NotificationGateScreen() {
 
       {code && (
         <div className="mt-6 border border-td-border rounded-td-md px-5 py-3 bg-td-card">
-          <div className="text-td-caption font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
-          <div className="text-lg td-strong tracking-[0.15em] mt-1">{code}</div>
+          <div className="text-td-caption font-semibold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+          <div className="text-td-title td-strong tracking-[0.15em] mt-1">{code}</div>
         </div>
       )}
-      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
+      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-semibold py-3 cursor-pointer">Sign out</button>
     </GateNotice>
   )
 }
@@ -391,13 +391,13 @@ export function StuPendingScreen() {
     >
       {code && (
         <button onClick={copyCode} className="mt-6 border border-td-border rounded-td-md px-5 py-3 bg-td-card cursor-pointer">
-          <div className="text-td-caption font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
-          <div className="text-lg td-strong tracking-[0.15em] mt-1">{code}</div>
+          <div className="text-td-caption font-semibold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+          <div className="text-td-title td-strong tracking-[0.15em] mt-1">{code}</div>
         </button>
       )}
 
       <button onClick={checkNow} disabled={busy} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td-md cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
-      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Use a different code</button>
+      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer mt-2">Use a different code</button>
     </GateNotice>
   )
 }
@@ -471,7 +471,7 @@ export function ProfileSetupScreen() {
       {LOGO}
       <div className="text-td-heading td-strong tracking-tight mt-[22px]">Tell us about you</div>
       <div className="td-sub">
-        Signed in as <span className="font-bold text-td-text">{googleEmail}</span>. These details are what your centre and its students will see.
+        Signed in as <span className="font-semibold text-td-text">{googleEmail}</span>. These details are what your centre and its students will see.
       </div>
 
       <div className="flex flex-col gap-3.5 mt-7">
@@ -483,7 +483,7 @@ export function ProfileSetupScreen() {
         <PrimaryButton onClick={submit}>{busy ? 'Saving…' : 'Continue'}</PrimaryButton>
       </div>
 
-      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
+      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-semibold py-3 cursor-pointer">Sign out</button>
     </div>
   )
 }
@@ -500,16 +500,16 @@ export function RegisterScreen() {
     <div className="td-auth-screen">
       {LOGO}
       <div className="text-td-heading td-strong tracking-tight mt-[22px]">Set up your access</div>
-      <div className="td-sub">Signed in as <span className="font-bold text-td-text">{googleEmail}</span>.</div>
+      <div className="td-sub">Signed in as <span className="font-semibold text-td-text">{googleEmail}</span>.</div>
 
       {mode === 'choose' && (
         <div className="flex flex-col gap-[13px] mt-7">
           <button onClick={() => setMode('create')} className="text-left border rounded-td-lg p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-edge-blue)' }}>
-            <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center bg-td-ink">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+            <div className="w-[52px] h-[52px] shrink-0 flex items-center justify-center bg-td-dark">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-bg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
             <div className="flex-1">
-              <div className="text-base td-strong">Create a centre</div>
+              <div className="text-td-body td-strong">Create a centre</div>
               <div className="text-td-caption text-td-muted mt-[3px]">Start your own — you&apos;ll be the head teacher.</div>
             </div>
           </button>
@@ -518,7 +518,7 @@ export function RegisterScreen() {
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             </div>
             <div className="flex-1">
-              <div className="text-base td-strong">Join a centre</div>
+              <div className="text-td-body td-strong">Join a centre</div>
               <div className="text-td-caption text-td-muted mt-[3px]">As a teacher, with your centre&apos;s join code.</div>
             </div>
           </button>
@@ -530,7 +530,7 @@ export function RegisterScreen() {
           <label className="td-label">Centre name</label>
           <input autoFocus value={centreName} onChange={e => setCentreName(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field" />
           <PrimaryButton onClick={() => run(() => centreName.trim().length >= 2 ? createCentre(centreName) : notify('Enter your centre name', 'error'))}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
-          <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
+          <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-semibold py-2 cursor-pointer">Back</button>
         </div>
       )}
 
@@ -540,13 +540,13 @@ export function RegisterScreen() {
           <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="td-field td-num tracking-[.08em] font-medium" />
           <PrimaryButton onClick={() => run(() => code.trim().length >= 4 ? joinCentre(code) : notify('Enter the full join code', 'error'))}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
           <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
-          <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
+          <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-semibold py-2 cursor-pointer">Back</button>
         </div>
       )}
 
       <div className="mt-auto pt-6 flex flex-col items-center">
         <HelpLine />
-        <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
+        <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer">Sign out</button>
       </div>
     </div>
   )
@@ -575,11 +575,11 @@ export function PendingScreen() {
     <GateNotice
       tint="bg-td-tint-amber" icon="clock" color="var(--color-td-amber)"
       title="Waiting for approval"
-      sub={<>Your head teacher needs to approve <span className="font-bold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</>}
+      sub={<>Your head teacher needs to approve <span className="font-semibold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</>}
     >
       <button onClick={() => window.location.reload()} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Check again</button>
       <HelpLine />
-      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
+      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer mt-2">Sign out</button>
     </GateNotice>
   )
 }
@@ -601,7 +601,7 @@ export function DeniedScreen() {
           <div className="td-sub max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
           <button onClick={() => setMode('join')} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Enter a join code</button>
           <HelpLine />
-          <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
+          <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer mt-2">Sign out</button>
         </>
       )}
 
@@ -616,7 +616,7 @@ export function DeniedScreen() {
           />
           <button onClick={submit} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[14px] rounded-td-md cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>
           <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get in once they approve you.</div>
-          <button onClick={() => { setMode('view'); setCode('') }} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
+          <button onClick={() => { setMode('view'); setCode('') }} className="td-plain text-td-small text-td-muted font-semibold py-2 cursor-pointer">Back</button>
         </div>
       )}
     </GateNotice>

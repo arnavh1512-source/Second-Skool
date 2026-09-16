@@ -7,10 +7,10 @@ import type {
   RankRow, StuAssignmentItem, StuResultItem, Student, Teacher,
 } from './types'
 
-const STATUS_ICONS: Record<string, { icon: IconName; tint: string; color: string }> = {
-  Present: { icon: 'attendance', tint: 'var(--color-td-tint-green)', color: 'var(--color-td-green)' },
-  Absent: { icon: 'absent', tint: 'var(--color-td-tint-red)', color: 'var(--color-td-red)' },
-  Leave: { icon: 'leave', tint: 'var(--color-td-tint-amber)', color: 'var(--color-td-amber)' },
+const STATUS_ICONS: Record<string, { icon: IconName; tint: string }> = {
+  Present: { icon: 'attendance', tint: 'var(--color-td-tint-green)' },
+  Absent: { icon: 'absent', tint: 'var(--color-td-tint-red)' },
+  Leave: { icon: 'leave', tint: 'var(--color-td-tint-amber)' },
 }
 
 // Shape of the get_student_snapshot RPC payload — keys mirror the SQL

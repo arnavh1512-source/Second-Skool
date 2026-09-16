@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { isoDay, parseDay } from '../store/format'
-import { useDashboard, REMINDER_TEMPLATES, initials, av, LIMITS, clampText, isWholeNumber } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, initials, LIMITS, clampText, isWholeNumber } from '../store'
 import { ScreenHeader, PrimaryButton, EmptyState, options, classesOf } from './Shell'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
@@ -84,7 +84,7 @@ export function TimetableScreen() {
     <div className="td-screen td-wide">
       <ScreenHeader title="Timetable" onBack={back} right={isAdmin ? (
         <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="td-btn-sm">
-          <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
+          <span className="text-td-body leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
         </button>
       ) : undefined} />
 
@@ -93,8 +93,8 @@ export function TimetableScreen() {
           const active = d.s === ttDay
           return (
             <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card border-td-border text-td-text'}`}>
-              <div className="text-td-caption font-bold">{d.s}</div>
-              <div className="text-sm font-semibold mt-0.5">{d.d}</div>
+              <div className="text-td-caption font-semibold">{d.s}</div>
+              <div className="text-td-small font-semibold mt-0.5">{d.d}</div>
             </button>
           )
         })}
@@ -102,7 +102,7 @@ export function TimetableScreen() {
 
       {isAdmin && showForm && (
         <div className="td-form-card mb-[18px] lg:max-w-lg">
-          <div className="text-sm td-strong">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
+          <div className="text-td-small td-strong">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
             <label className="block"><span className="td-label">Start</span>
               <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field" />
@@ -145,7 +145,7 @@ export function TimetableScreen() {
           return (
             <div key={d.s} className={`rounded-td-md border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
               <button onClick={() => set({ ttDay: d.s })} className="td-plain w-full text-center mb-2 cursor-pointer">
-                <div className="text-td-caption font-bold text-td-muted">{d.s}</div>
+                <div className="text-td-caption font-semibold text-td-muted">{d.s}</div>
                 <div className="text-td-body td-strong">{d.d}</div>
               </button>
               {ps.length === 0 ? (
@@ -156,7 +156,7 @@ export function TimetableScreen() {
                     const s = periodStyle(p)
                     return (
                       <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="rounded-td-sm border p-2" style={{ background: s.bg, borderColor: s.border }}>
-                        <div className="text-td-caption font-bold text-td-muted">{p[0]}–{p[1]}</div>
+                        <div className="text-td-caption font-semibold text-td-muted">{p[0]}–{p[1]}</div>
                         <div className="text-td-caption font-semibold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
                         <div className="text-td-caption text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
                         {p[5] && <div className="text-td-caption text-td-primary font-semibold mt-0.5 truncate">{p[5]}</div>}
@@ -198,14 +198,14 @@ export function TimetableScreen() {
                 <div className="flex-1 pb-3.5">
                   <div className="rounded-td-md p-[13px] px-[15px] border" style={{ background: s.bg, borderColor: s.border }}>
                     <div className="flex justify-between items-center gap-2">
-                      <div className="text-sm font-semibold" style={{ color: s.titleColor }}>{p[2]}</div>
+                      <div className="text-td-small font-semibold" style={{ color: s.titleColor }}>{p[2]}</div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-td-caption font-bold py-1 px-[9px] rounded-td-lg" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
+                        <span className="text-td-caption font-semibold py-1 px-[9px] rounded-td-lg" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
                         {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-td-caption leading-none">✎</button>}
                         {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full td-danger flex items-center justify-center text-td-body leading-none">×</button>}
                       </div>
                     </div>
-                    <div className="text-xs text-td-muted mt-1">{p[3]} · {p[4]}{p[5] ? ` · ${p[5]}` : ''}</div>
+                    <div className="text-td-caption text-td-muted mt-1">{p[3]} · {p[4]}{p[5] ? ` · ${p[5]}` : ''}</div>
                   </div>
                 </div>
               </div>
@@ -445,9 +445,9 @@ export function ResultsScreen() {
         <div className="td-list gap-[9px] mb-5">
           {roster.map((s, i) => (
             <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-td-md p-[11px] px-3.5 flex items-center gap-[13px]">
-              <div className="w-9 h-9 rounded-td-sm td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
-              <div className="flex-1 text-td-small font-bold text-td-dark">{s.name}</div>
-              <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-td-sm py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
+              <div className="w-9 h-9 td-avatar">{initials(s.name)}</div>
+              <div className="flex-1 text-td-small font-semibold text-td-dark">{s.name}</div>
+              <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-td-sm py-[9px] px-1.5 text-td-small font-semibold text-td-dark outline-none focus:border-td-primary" />
               <span className="text-td-small text-td-subtle font-semibold">/{maxMarks}</span>
             </div>
           ))}
@@ -470,7 +470,7 @@ export function ResultsScreen() {
               return (
                 <button key={t.id} onClick={() => openTest(t)} className="w-full text-left td-card rounded-td-md p-[11px] px-3.5 flex items-center gap-3 cursor-pointer">
                   <div className="flex-1 min-w-0">
-                    <div className="text-td-small font-bold text-td-dark truncate">{t.name}</div>
+                    <div className="text-td-small font-semibold text-td-dark truncate">{t.name}</div>
                     <div className="text-td-caption text-td-muted">
                       {t.klass}{t.subject ? ` · ${t.subject}` : ''} · out of {t.max}{d ? ` · ${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}` : ''}
                     </div>
@@ -529,25 +529,25 @@ export function AssignmentsScreen() {
 
       <div className="td-h2">Active assignments</div>
       {assignmentsList.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-4">No assignments yet</div>
+        <div className="text-center text-td-muted text-td-small py-4">No assignments yet</div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {assignmentsList.map((a, i) => (
             <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="td-card rounded-td-md p-3.5">
               <div className="flex justify-between items-start gap-2">
-                <div className="text-td-small font-bold text-td-dark">{a.title}</div>
+                <div className="text-td-small font-semibold text-td-dark">{a.title}</div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-td-caption font-bold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-td-lg whitespace-nowrap">Due {a.due}</span>
+                  <span className="text-td-caption font-semibold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-td-lg whitespace-nowrap">Due {a.due}</span>
                   {a.dbId && (
                     <button
                       onClick={() => deleteAssignment(a.dbId!)}
                       aria-label={`Delete assignment ${a.title}`}
-                      className="td-plain text-td-muted hover:text-td-red cursor-pointer p-1 leading-none text-base"
+                      className="td-plain text-td-muted hover:text-td-red cursor-pointer p-1 leading-none text-td-body"
                     >×</button>
                   )}
                 </div>
               </div>
-              <div className="text-xs text-td-muted mt-[5px]">{a.klass} · {a.total} students</div>
+              <div className="text-td-caption text-td-muted mt-[5px]">{a.klass} · {a.total} students</div>
             </div>
           ))}
         </div>
@@ -576,14 +576,14 @@ export function RemindersScreen() {
     <div className="td-screen">
       <ScreenHeader title="Send Reminder" onBack={back} />
 
-      <label className="text-xs font-bold text-td-muted mb-2.5 block">Type</label>
+      <label className="text-td-caption font-semibold text-td-muted mb-2.5 block">Type</label>
       <div className="grid grid-cols-2 gap-2.5 mb-[18px]">
         {types.map(r => {
           const active = r.key === reminderType
           return (
             <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-td-md p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
               <Icon name={r.icon} size={21} className="shrink-0" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-muted)' }} />
-              <span className="text-td-small font-bold" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-text)' }}>{r.label}</span>
+              <span className="text-td-small font-semibold" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-text)' }}>{r.label}</span>
             </button>
           )
         })}

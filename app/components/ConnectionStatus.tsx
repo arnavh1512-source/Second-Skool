@@ -59,10 +59,6 @@ export function ConnectionStatus() {
 
   if (!role) return null
 
-  // These three keep their literal colours rather than td-* tokens: they are
-  // white on a dark ground in both themes by design, and a banner that has to
-  // be read at a glance is the one place a theme swap must not reach.
-  //
   // Deliberately at the very top and unmissable: the whole point is that she
   // finds out before she spends five minutes on a form that cannot be saved.
   // assertive, because a polite live region would wait for her to stop
@@ -75,7 +71,7 @@ export function ConnectionStatus() {
       <div
         role="status"
         aria-live="assertive"
-        className="fixed top-0 left-0 right-0 z-[70] bg-[#8f2417] text-white text-td-small font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
+        className="fixed top-0 left-0 right-0 z-[70] bg-td-tint-red text-td-on-red border-b border-td-edge-red text-td-small font-semibold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
       >
         No internet — only attendance can be saved right now
       </div>
@@ -90,7 +86,7 @@ export function ConnectionStatus() {
       <div
         role="status"
         aria-live="polite"
-        className="fixed top-0 left-0 right-0 z-[70] bg-[#8a5a08] text-white text-td-small font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
+        className="fixed top-0 left-0 right-0 z-[70] bg-td-tint-amber text-td-on-amber border-b border-td-edge-amber text-td-small font-semibold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
       >
         {waiting} attendance {waiting === 1 ? 'mark' : 'marks'} saved on this phone, syncing…
       </div>
@@ -102,7 +98,7 @@ export function ConnectionStatus() {
       <div
         role="status"
         aria-live="polite"
-        className="fixed top-0 left-0 right-0 z-[70] bg-[#1c6b45] text-white text-td-small font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
+        className="fixed top-0 left-0 right-0 z-[70] bg-td-tint-green text-td-on-green border-b border-td-green text-td-small font-semibold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
       >
         Back online
       </div>

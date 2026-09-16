@@ -1,13 +1,13 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { useDashboard, initials, av, feeColor, GRADIENTS } from '../store'
+import { useDashboard, initials, feeTag } from '../store'
 import { parseRoster, MAX_IMPORT } from '../lib/roster-import'
 import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard, Chip, classesOf } from './Shell'
 import { whatsappShareUrl, studentCodeMessage, absenceCheckInMessage, copyText } from '../lib/share'
 import { fmtDayMonth } from '../store/format'
 import { Icon } from './Icon'
-import { findStudent, indexOfStudent, studentKey } from '../lib/student-key'
+import { findStudent, studentKey } from '../lib/student-key'
 import { opened } from '../lib/reach'
 import { firstClaims, stageOf, type Missed } from '../lib/funnel'
 import { useBusy } from '../lib/use-busy'
@@ -81,7 +81,7 @@ export function StudentsScreen() {
               Import list
             </button>
             <button onClick={() => origin === 'admin' ? goFrom('addStudent', 'students', 'admin') : go('addStudent', 'students')} className="td-btn-sm">
-              <span className="text-base leading-none">+</span> Add
+              <span className="text-td-body leading-none">+</span> Add
             </button>
           </div>
         )}
@@ -89,22 +89,22 @@ export function StudentsScreen() {
 
       {missedOnly && (
         <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-td-md py-2.5 px-3.5 mb-3 lg:max-w-md">
-          <span className="text-td-caption font-bold text-td-dark">Did not open the app this week</span>
-          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+          <span className="text-td-caption font-semibold text-td-dark">Did not open the app this week</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-semibold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
         </div>
       )}
 
       {stage && (
         <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-td-md py-2.5 px-3.5 mb-3 lg:max-w-md">
-          <span className="text-td-caption font-bold text-td-dark">{STAGE_COPY[stage].banner}</span>
-          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+          <span className="text-td-caption font-semibold text-td-dark">{STAGE_COPY[stage].banner}</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-semibold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
         </div>
       )}
 
       {stoppedOnly && (
         <div className="flex items-center justify-between gap-3 bg-td-tint-red border border-td-edge-red rounded-td-md py-2.5 px-3.5 mb-3 lg:max-w-md">
-          <span className="text-td-caption font-bold text-td-dark">Absent the last few classes running</span>
-          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+          <span className="text-td-caption font-semibold text-td-dark">Absent the last few classes running</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-semibold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
         </div>
       )}
 
@@ -150,29 +150,24 @@ export function StudentsScreen() {
       ) : (
         <div className="td-list gap-2.5">
           {filtered.map((s, i) => {
-            // The avatar colour is the only thing that wants a position; which
-            // student was tapped is remembered by key, so a roster reorder
-            // while the edit screen is open cannot repoint it at someone else.
-            const idx = students.indexOf(s)
-            const f = feeColor(s.feeStatus)
             const gone = stoppedOnly ? atRisk[s.dbId ?? ''] : undefined
             return (
               <div key={studentKey(s) || i} className="flex items-center gap-2">
                 <button disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`flex-1 min-w-0 text-left td-card rounded-td-lg p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
-                  <div className="w-[46px] h-[46px] rounded-td-md shrink-0 flex items-center justify-center text-white font-bold text-td-body" style={{ background: av(idx) }}>{initials(s.name)}</div>
+                  <div className="w-[46px] h-[46px] td-avatar text-td-body">{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm td-strong">{s.name}</div>
+                    <div className="text-td-small td-strong">{s.name}</div>
                     {/* The lifetime percentage is the one number that hides
                         this: a student with two good years still reads fine
                         three weeks after they left. On this list it makes way
                         for the two facts that decide whether to call. */}
-                    <div className="text-xs text-td-muted mt-0.5">
+                    <div className="text-td-caption text-td-muted mt-0.5">
                       {gone
                         ? `Missed ${gone.missed} in a row · ${gone.lastPresent ? `last came ${fmtDayMonth(gone.lastPresent)}` : 'never attended'}`
                         : `${s.klass} · ${s.attendance}% attendance`}
                     </div>
                   </div>
-                  {isAdmin && <span className="text-td-caption font-bold py-[5px] px-[9px] rounded-td-lg" style={{ color: f.c, background: f.b }}>{s.feeStatus}</span>}
+                  {isAdmin && <span className={`td-tag px-[7px] py-[3px] ${feeTag(s.feeStatus)}`}>{s.feeStatus}</span>}
                   {isAdmin && <ChevronRight />}
                 </button>
                 {/* She opened this list because these families have not looked.
@@ -208,16 +203,15 @@ export function EditStudentScreen() {
   // another device, or their approval revoked. Say so plainly rather than
   // rendering a blank form whose saves land nowhere.
   if (!st) return <div className="p-5 text-center text-td-muted">No student selected</div>
-  const avatarIdx = indexOfStudent(students, editId)
 
   return (
     <div className="td-screen">
       <ScreenHeader title="Edit Student" onBack={() => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')} right={
-        <button onClick={deleteStudent} className="border-none bg-td-tint-red text-td-red text-td-caption font-bold py-[9px] px-[13px] rounded-td-sm cursor-pointer">Remove</button>
+        <button onClick={deleteStudent} className="border-none bg-td-tint-red text-td-red text-td-caption font-semibold py-[9px] px-[13px] rounded-td-sm cursor-pointer">Remove</button>
       } />
 
       <div className="flex items-center gap-3.5 mb-3">
-        <div className="w-16 h-16 rounded-td-lg shrink-0 flex items-center justify-center text-white font-semibold text-td-heading" style={{ background: av(avatarIdx) }}>{initials(st.name)}</div>
+        <div className="w-16 h-16 td-avatar text-td-heading">{initials(st.name)}</div>
         <div>
           <div className="text-td-title td-strong">{st.name}</div>
           <div className="text-td-caption text-td-muted mt-0.5">{st.klass}</div>
@@ -250,7 +244,7 @@ export function EditStudentScreen() {
             <label htmlFor="stu-attendance" className="td-label">Attendance %</label>
             <output
               id="stu-attendance"
-              className="w-full block border border-td-border bg-td-soft rounded-td-md p-[13px] text-sm text-td-muted"
+              className="w-full block border border-td-border bg-td-soft rounded-td-md p-[13px] text-td-small text-td-muted"
             >{st.attendance}% · from the register</output>
           </div>
         </div>
@@ -261,9 +255,8 @@ export function EditStudentScreen() {
           <div className="flex gap-[9px]">
             {(['Paid', 'Due', 'Overdue'] as const).map(label => {
               const active = label === st.feeStatus
-              const fc = feeColor(label)
               return (
-                <button key={label} onClick={() => setStudentField({ feeStatus: label })} className="flex-1 border text-td-small font-bold p-[11px] rounded-td-sm cursor-pointer" style={{ background: active ? fc.b : 'var(--color-td-card)', color: active ? fc.c : 'var(--color-td-subtle)', borderColor: active ? fc.c : 'var(--color-td-border)' }}>{label}</button>
+                <button key={label} onClick={() => setStudentField({ feeStatus: label })} aria-pressed={active} className={`flex-1 border text-td-small font-semibold min-h-11 p-[11px] cursor-pointer ${active ? `${feeTag(label)} border-current` : 'bg-td-card text-td-subtle border-td-border'}`}>{label}</button>
               )
             })}
           </div>
@@ -292,7 +285,7 @@ export function AddStudentScreen() {
         <div className="text-td-title td-strong mb-2">Student added!</div>
         <div className="text-td-small text-td-muted text-center leading-relaxed mb-5 max-w-[280px]">Share this code with the parent so the student can log in.</div>
         <div className="w-full max-w-[280px] border-2 border-dashed border-td-primary bg-td-tint-blue rounded-td-md p-4 text-center mb-5">
-          <div className="text-td-caption font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
+          <div className="text-td-caption font-semibold text-td-muted mb-1">STUDENT LINK CODE</div>
           <div className="text-td-heading font-semibold text-td-primary tracking-[0.15em]">{lastAdded.code}</div>
         </div>
         <WhatsAppButton
@@ -511,7 +504,7 @@ export function StaffScreen() {
           <div className="td-title">Staff</div>
         </div>
         <button onClick={() => origin === 'admin' ? goFrom('addTeacher', 'teachers', 'admin') : go('addTeacher', 'teachers')} className="td-btn-sm">
-          <span className="text-base leading-none">+</span> Add
+          <span className="text-td-body leading-none">+</span> Add
         </button>
       </div>
 
@@ -526,10 +519,10 @@ export function StaffScreen() {
         <div className="td-list gap-3">
           {filtered.map((t, i) => (
             <div key={t.name + i} className="td-card rounded-td-lg p-3.5 flex items-center gap-3.5">
-              <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center text-white font-semibold text-td-title" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
+              <div className="w-[52px] h-[52px] td-avatar text-td-title">{initials(t.name)}</div>
               <div className="flex-1 min-w-0">
                 <div className="text-td-body td-strong">{t.name}</div>
-                <div className="text-td-caption text-td-primary font-bold mt-0.5">{t.subject}</div>
+                <div className="text-td-caption text-td-primary font-semibold mt-0.5">{t.subject}</div>
                 <div className="text-td-caption text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { studentKey } from '../lib/student-key'
-import { useDashboard, REMINDER_TEMPLATES, parseDay, rupee, isoDay, LIMITS, clampText } from '../store'
+import { useDashboard, REMINDER_TEMPLATES, parseDay, feeTag, rupee, isoDay, LIMITS, clampText } from '../store'
 import { PLAN_INTERVALS, isOverdue, splitPlan, summariseFees, validatePlan, type PlanInterval } from '../lib/fee-plan'
 import { ScreenHeader, PrimaryButton, EmptyState, ConfirmDialog, Chip, classesOf } from './Shell'
 
@@ -97,7 +97,7 @@ export function FeesScreen() {
       />
       <ScreenHeader title="Fees" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
-          <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add fee'}
+          <span className="text-td-body leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add fee'}
         </button>
       } />
 
@@ -211,7 +211,6 @@ export function FeesScreen() {
         <div className="lg:max-w-2xl">
           <div className="td-h2 mb-0">{rows.length} {rows.length === 1 ? 'student' : 'students'}</div>
           {rows.map(d => {
-            const tag = d.feeStatus === 'Paid' ? 'bg-td-tint-green text-td-on-green' : d.feeStatus === 'Overdue' ? 'bg-td-tint-red text-td-on-red' : 'bg-td-tint-amber text-td-on-amber'
             const open = !!d.dbId && openFees === d.dbId
             const records = d.dbId ? feeRecords[d.dbId] : undefined
             return (
@@ -226,16 +225,16 @@ export function FeesScreen() {
                   </button>
                   <div className="shrink-0 text-right">
                     <div className="td-num text-td-body font-semibold text-td-dark">{rupee((d.feeDue ?? 0) > 0 ? d.feeDue! : d.feeCollected ?? 0)}</div>
-                    <button onClick={() => toggleFeeStatus(studentKey(d))} aria-label={`${d.name}: ${d.feeStatus}, tap to change`} className={`td-tag mt-1 px-[7px] py-[3px] border-none cursor-pointer ${tag}`}>{d.feeStatus}</button>
+                    <button onClick={() => toggleFeeStatus(studentKey(d))} aria-label={`${d.name}: ${d.feeStatus}, tap to change`} className={`td-tag mt-1 px-[7px] py-[3px] border-none cursor-pointer ${feeTag(d.feeStatus)}`}>{d.feeStatus}</button>
                   </div>
                 </div>
 
                 {open && (
                   <div className="mt-3 pt-3 border-t border-td-line flex flex-col gap-2">
                     {records === undefined ? (
-                      <div className="text-xs text-td-muted">Loading fee records...</div>
+                      <div className="text-td-caption text-td-muted">Loading fee records...</div>
                     ) : records.length === 0 ? (
-                      <div className="text-xs text-td-muted">No fee records for {d.name} yet.</div>
+                      <div className="text-td-caption text-td-muted">No fee records for {d.name} yet.</div>
                     ) : (() => {
                       const sum = summariseFees(records, today)
                       // Distinct plans with something still unpaid. Almost always

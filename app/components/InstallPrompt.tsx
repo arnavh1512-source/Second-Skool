@@ -128,7 +128,7 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-ink text-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex items-center gap-3 shadow-td-sheet">
+    <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-dark text-td-bg px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex items-center gap-3 shadow-td-sheet">
       <div className="flex-1 min-w-0">
         <div className="text-td-small font-semibold leading-tight">Install Second Skool</div>
         <div className="text-td-caption opacity-80 leading-tight mt-0.5">Opens like an app — and reminders only work once it&apos;s installed.</div>
@@ -140,7 +140,7 @@ export function InstallPrompt() {
       >
         {ios && !deferred ? 'How' : 'Install'}
       </button>
-      <button type="button" onClick={dismiss} aria-label="Not now" className="shrink-0 text-white/70 text-td-heading leading-none cursor-pointer px-1">×</button>
+      <button type="button" onClick={dismiss} aria-label="Not now" className="shrink-0 text-td-bg/70 text-td-heading leading-none cursor-pointer px-1">×</button>
     </div>
   )
 }

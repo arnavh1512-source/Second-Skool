@@ -24,7 +24,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
 function StatusBar() {
   return (
     // Fake status bar is only for the desktop mockup; real phones have their own.
-    <div className="hidden md:flex h-12 shrink-0 items-end justify-between px-7 pb-1.5 text-sm font-bold text-td-dark z-5">
+    <div className="hidden md:flex h-12 shrink-0 items-end justify-between px-7 pb-1.5 text-td-small font-semibold text-td-dark z-5">
       <span>9:41</span>
       <div className="absolute left-1/2 top-2 -translate-x-1/2 w-[118px] h-[30px] bg-[#0b0d12] rounded-td-lg" />
       <div className="flex items-center gap-1.5">
@@ -99,9 +99,10 @@ function BottomTabBar() {
 //      and what to do about it. Errors now hold for 9s (see nav.ts) and can be
 //      dismissed by tapping, so neither number has to be a compromise.
 //
-// The red is #8f2417 rather than the brand td-red (#e8553c): white on td-red
-// is about 3:1, which fails WCAG AA for body text, and this is the one surface
-// where the text absolutely must be readable.
+// An error is dark red text on the red tint rather than white on td-red: white
+// on td-red is about 3:1, which fails WCAG AA for body text, and this is the
+// one surface where the text absolutely must be readable. Both pairs follow the
+// theme, so neither needs a literal.
 function Toast() {
   const toast = useDashboard(s => s.toast)
   const kind = useDashboard(s => s.toastKind)
@@ -112,7 +113,7 @@ function Toast() {
     <div
       role={err ? 'alert' : 'status'}
       aria-live={err ? 'assertive' : 'polite'}
-      className={`absolute left-5 right-5 bottom-[104px] rounded-td-md text-white z-30 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
+      className={`absolute left-5 right-5 bottom-[104px] z-30 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-td-tint-red text-td-on-red border border-td-edge-red' : 'bg-td-dark text-td-bg'}`}
     >
       <button
         type="button"
@@ -306,7 +307,7 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
   if (!open) return null
   return (
     <div
-      className="fixed inset-0 z-[70] bg-[rgba(16,24,40,.55)] flex items-center justify-center p-6"
+      className="fixed inset-0 z-[70] bg-td-dark/55 flex items-center justify-center p-6"
       onClick={onCancel}
     >
       <div
@@ -322,8 +323,8 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
         <div id="confirm-title" className="text-td-title td-strong mb-2">{title}</div>
         <div id="confirm-body" className="text-td-small text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
         <div className="flex gap-2.5">
-          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-sm font-semibold py-3 rounded-td-md cursor-pointer">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-td-on-solid text-sm font-semibold py-3 rounded-td-md cursor-pointer">{confirmLabel}</button>
+          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-td-small font-semibold py-3 rounded-td-md cursor-pointer">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-td-on-solid text-td-small font-semibold py-3 rounded-td-md cursor-pointer">{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -348,11 +349,11 @@ export function CodeCard({ label, code, hint, onCopy, className = '', children }
     <div className={`w-full border-2 border-dashed border-td-primary bg-td-tint-blue p-3.5 ${className}`}>
       <button onClick={onCopy} className="w-full text-left cursor-pointer flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-td-caption font-bold text-td-muted">{label}</div>
+          <div className="text-td-caption font-semibold text-td-muted">{label}</div>
           <div className="text-td-heading font-semibold text-td-primary tracking-[0.15em] truncate">{code}</div>
           {hint && <div className="text-td-caption text-td-muted mt-0.5">{hint}</div>}
         </div>
-        <div className="text-td-caption font-bold text-td-primary flex items-center gap-1 shrink-0">
+        <div className="text-td-caption font-semibold text-td-primary flex items-center gap-1 shrink-0">
           <Icon name="copy" size={14} color="var(--color-td-primary)" />
           Copy
         </div>

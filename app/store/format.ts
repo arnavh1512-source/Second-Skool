@@ -1,13 +1,10 @@
 // Pure display helpers. No store, no Supabase — safe to import anywhere.
 
 export const initials = (name: string) => name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
-// Avatar backgrounds, always under white initials — the same eight colours in
-// either theme, so these stay literal rather than following the tokens.
-const COLORS = ['#2a6fdb','#7c5cdb','#2fa36b','#e0962f','#d94f8a','#3aa0c4','#c4683a','#5a93ef']
-export const GRADIENTS = ['linear-gradient(135deg,#2a6fdb,#5a93ef)','linear-gradient(135deg,#7c5cdb,#a487ef)','linear-gradient(135deg,#2fa36b,#56c48d)','linear-gradient(135deg,#e0962f,#efb45a)','linear-gradient(135deg,#d94f8a,#ec7cae)','linear-gradient(135deg,#3aa0c4,#62bcd8)']
-export const av = (i: number) => COLORS[i % COLORS.length]
-export const feeColor = (s: string) => s === 'Paid' ? { c: 'var(--color-td-green)', b: 'var(--color-td-tint-green)' } : s === 'Due' ? { c: 'var(--color-td-amber)', b: 'var(--color-td-tint-amber)' } : { c: 'var(--color-td-red)', b: 'var(--color-td-tint-red)' }
-export const stuGrade = (pct: number) => pct >= 90 ? { g: 'A+', c: 'var(--color-td-green)', t: 'var(--color-td-tint-green)' } : pct >= 80 ? { g: 'A', c: 'var(--color-td-primary)', t: 'var(--color-td-tint-blue)' } : pct >= 70 ? { g: 'B', c: 'var(--color-td-amber)', t: 'var(--color-td-tint-amber)' } : { g: 'C', c: 'var(--color-td-red)', t: 'var(--color-td-tint-red)' }
+// Tag classes for a fee status: a tint behind the matching on-colour text.
+export const feeTag = (s: string) => s === 'Paid' ? 'bg-td-tint-green text-td-on-green' : s === 'Due' ? 'bg-td-tint-amber text-td-on-amber' : 'bg-td-tint-red text-td-on-red'
+// A letter grade, its tag classes and the fill for its score bar.
+export const stuGrade = (pct: number) => pct >= 90 ? { g: 'A+', tag: 'bg-td-tint-green text-td-on-green', bar: 'bg-td-green' } : pct >= 80 ? { g: 'A', tag: 'bg-td-tint-blue text-td-primary', bar: 'bg-td-primary' } : pct >= 70 ? { g: 'B', tag: 'bg-td-tint-amber text-td-on-amber', bar: 'bg-td-amber' } : { g: 'C', tag: 'bg-td-tint-red text-td-on-red', bar: 'bg-td-red' }
 
 // Every date the app renders comes out of Postgres or off a device clock, and
 // a malformed or missing one used to reach the screen as the literal string

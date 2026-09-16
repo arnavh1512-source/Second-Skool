@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { copyText } from '../lib/share'
-import { useDashboard, GRADIENTS, initials, av, rupee, stuGrade, type Teacher } from '../store'
+import { useDashboard, initials, rupee, stuGrade, type Teacher } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight, Chip, CodeCard } from './Shell'
 import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
@@ -34,7 +34,7 @@ export function StuHomeScreen() {
   if (!currentStudentDbId) {
     return (
       <div className="td-screen flex flex-col items-center justify-center min-h-[450px]">
-        <button onClick={() => { useDashboard.getState().signOut() }} className="td-plain self-start cursor-pointer flex items-center gap-1.5 text-td-muted text-td-small font-bold mb-6">
+        <button onClick={() => { useDashboard.getState().signOut() }} className="td-plain self-start cursor-pointer flex items-center gap-1.5 text-td-muted text-td-small font-semibold mb-6">
           <Icon name="back" size={18} color="var(--color-td-muted)" />
           Back
         </button>
@@ -43,7 +43,7 @@ export function StuHomeScreen() {
         </div>
         <div className="text-td-title td-strong mb-2">Link your account</div>
         <div className="text-td-small text-td-muted text-center leading-relaxed mb-6 max-w-[280px]">Enter the student code your teacher gave you to link your account and see your data.</div>
-        <input value={linkCode} onChange={e => setLinkCode(e.target.value.toUpperCase())} placeholder="e.g. TUT-1234" className="td-field max-w-[260px] text-center tracking-wider font-bold mb-4" />
+        <input value={linkCode} onChange={e => setLinkCode(e.target.value.toUpperCase())} placeholder="e.g. TUT-1234" className="td-field max-w-[260px] text-center tracking-wider font-semibold mb-4" />
         <PrimaryButton onClick={() => loadStudentByCode(linkCode)}>Link account</PrimaryButton>
       </div>
     )
@@ -231,46 +231,43 @@ export function StuAttendanceScreen() {
   const recent = stuAttendanceLog.length
   const absent = stuAttendanceLog.filter(d => d.status === 'Absent').length
   const leaves = stuAttendanceLog.filter(d => d.status === 'Leave').length
-  const r = 42
-  const circ = 2 * Math.PI * r
-  const offset = circ * (1 - pct / 100)
 
   return (
     <div className="td-screen">
       <ScreenHeader title="Attendance" onBack={() => go('stuHome', 'stuHome')} />
 
-      <div className="rounded-td-lg p-5 text-white mb-5 flex items-center gap-5" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
-        <svg width="100" height="100" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r={r} fill="none" stroke="rgba(255,255,255,.2)" strokeWidth="7" />
-          <circle cx="50" cy="50" r={r} fill="none" stroke="#fff" strokeWidth="7" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} transform="rotate(-90 50 50)" />
-          <text x="50" y="46" textAnchor="middle" fill="#fff" fontSize="22" fontWeight="800">{pct}%</text>
-          <text x="50" y="62" textAnchor="middle" fill="rgba(255,255,255,.7)" fontSize="9" fontWeight="600">Present</text>
-        </svg>
-        <div>
-          <div className="text-td-body font-semibold">Present overall</div>
-          <div className="text-td-caption opacity-80 mt-1.5 leading-relaxed">
-            {total > 0 ? <>{present} of {total} class days attended.<br/>{absent} absences, {leaves} leaves in the last {recent} days.</> : 'No attendance data yet.'}
+      <div className="td-h2 mb-4">Present overall</div>
+      {total > 0 ? (
+        <div className="mb-6">
+          <div className="flex items-end gap-4">
+            <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{pct}%</div>
+            <div className="pb-[3px] min-w-0">
+              <div className="td-num text-td-body font-medium text-td-text">{present} of {total} class days</div>
+              {recent > 0 && <div className="td-num text-td-small text-td-muted mt-0.5">{absent} absences, {leaves} leaves in the last {recent} days</div>}
+            </div>
+          </div>
+          <div className="flex gap-0.5 h-2 mt-3.5" aria-hidden>
+            {pct > 0 && <div className="bg-td-green" style={{ flex: pct }} />}
+            {pct < 100 && <div className="bg-td-red" style={{ flex: 100 - pct }} />}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="td-none">No attendance data yet.</div>
+      )}
 
-      <div className="td-h2">Recent days</div>
+      <div className="td-h2 mb-0">Recent days</div>
       {stuAttendanceLog.length === 0 ? (
         <div className="td-none">No attendance records yet</div>
-      ) : (
-        <div className="flex flex-col gap-2.5">
-          {stuAttendanceLog.map((d, i) => (
-            <div key={`${d.date}-${i}`} className="td-row">
-              <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: d.tint, color: ink(d.tint) }}><DataIcon value={d.icon} size={20} /></div>
-              <div className="flex-1">
-                <div className="text-td-small font-bold text-td-dark">{d.day}</div>
-                <div className="text-xs text-td-muted mt-0.5">{d.date}</div>
-              </div>
-              <span className="text-td-caption font-bold" style={{ color: d.color }}>{d.status}</span>
-            </div>
-          ))}
+      ) : stuAttendanceLog.map((d, i) => (
+        <div key={`${d.date}-${i}`} className="td-row">
+          <div className="w-10 h-10 shrink-0 flex items-center justify-center" style={{ background: d.tint, color: ink(d.tint) }}><DataIcon value={d.icon} size={20} /></div>
+          <div className="flex-1">
+            <div className="text-td-body font-medium text-td-dark">{d.day}</div>
+            <div className="td-num text-td-small text-td-muted mt-px">{d.date}</div>
+          </div>
+          <span className="text-td-small font-semibold" style={{ color: ink(d.tint) }}>{d.status}</span>
         </div>
-      )}
+      ))}
     </div>
   )
 }
@@ -285,46 +282,39 @@ export function StuResultsScreen() {
 
   return (
     <div className="td-screen">
-      <div className="td-title mt-1.5 mb-1">Test Results</div>
+      <div className="td-title mt-1.5 mb-1">Test results</div>
       <div className="text-td-caption text-td-muted mb-[18px]">{me?.klass ?? ''} · {me?.school ?? ''}</div>
 
       {stuResults.length === 0 ? (
         <div className="td-none">No results available yet</div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-2.5 mb-5">
-            <div className="rounded-td-lg p-3.5 text-center" style={{ background: overall.t }}>
-              <div className="text-2xl font-semibold" style={{ color: overall.c }}>{overall.g}</div>
-              <div className="text-td-caption font-semibold mt-1" style={{ color: overall.c, opacity: .7 }}>Overall grade</div>
-            </div>
-            <div className="td-stat">
-              <div className="text-2xl td-strong">{avg}%</div>
-              <div className="text-td-caption text-td-muted font-semibold mt-1">Average</div>
-            </div>
+          <div className="td-h2 mb-4">Average</div>
+          <div className="flex items-end gap-4 mb-6">
+            <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{avg}%</div>
+            <span className={`td-tag px-[7px] py-[3px] mb-[5px] ${overall.tag}`}>Grade {overall.g}</span>
           </div>
 
-          <div className="td-h2">All subjects</div>
-          <div className="flex flex-col gap-2.5">
-            {stuResults.map((r, i) => {
-              const pct = r.total > 0 ? Math.round((r.marks / r.total) * 100) : 0
-              const g = stuGrade(pct)
-              return (
-                <div key={`${r.subject}-${r.test}-${i}`} className="td-card rounded-td-lg p-3.5">
-                  <div className="flex items-center gap-[13px] mb-2.5">
-                    <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-sm" style={{ color: g.c, background: g.t }}>{g.g}</span>
-                    <div className="flex-1">
-                      <div className="text-td-small font-bold text-td-dark">{r.subject}</div>
-                      <div className="text-xs text-td-muted mt-0.5">{r.test} · {r.date}</div>
-                    </div>
-                    <div className="text-sm td-strong">{r.marks}/{r.total}</div>
+          <div className="td-h2 mb-0">All subjects</div>
+          {stuResults.map((r, i) => {
+            const pct = r.total > 0 ? Math.round((r.marks / r.total) * 100) : 0
+            const g = stuGrade(pct)
+            return (
+              <div key={`${r.subject}-${r.test}-${i}`} className="py-3 border-b border-td-line">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-td-body font-medium text-td-dark truncate">{r.subject}</div>
+                    <div className="td-num text-td-small text-td-muted mt-px truncate">{r.test} · {r.date}</div>
                   </div>
-                  <div className="w-full h-[7px] bg-td-soft rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: g.c }} />
-                  </div>
+                  <div className="td-num text-td-body font-semibold text-td-dark">{r.marks}<span className="text-td-muted font-normal">/{r.total}</span></div>
+                  <span className={`td-tag px-[7px] py-[3px] ${g.tag}`}>{g.g}</span>
                 </div>
-              )
-            })}
-          </div>
+                <div className="h-1 bg-td-soft" aria-hidden>
+                  <div className={`h-full ${g.bar}`} style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            )
+          })}
         </>
       )}
     </div>
@@ -342,12 +332,15 @@ export function StuRankingScreen() {
   const rows = (rankData[activeSubject] || []).map((r, i) => ({ rank: i + 1, id: r.id, name: r.name, score: r.score }))
   const top3 = rows.slice(0, 3)
   const rest = rows.slice(3)
-  const medals: IconName[] = ['silver', 'gold', 'bronze']
-  const podiumOrder = top3.length >= 3 ? [top3[1], top3[0], top3[2]] : top3
-  const podiumHeights = [88, 110, 72]
-  const podiumBg = ['#c0cfe8', 'var(--color-td-primary)', '#d4c9a8']
-  // Silver, gold, bronze — podium order, not rank order.
-  const MEDAL_INK = ['#8f9bb3', 'var(--color-td-amber)', '#b06a3a']
+  const isYou = (r: { id: string | null; name: string }) => r.id ? r.id === currentStudentDbId : me?.name === r.name
+  const line = (r: typeof rows[number]) => (
+    <div key={r.id ?? `${r.name}-${r.rank}`} className={`flex items-center gap-3 py-3 min-h-[52px] border-b border-td-line ${isYou(r) ? 'bg-td-tint-blue -mx-2 px-2' : ''}`}>
+      <div className="td-num w-6 text-td-small font-semibold text-td-muted">{r.rank}</div>
+      <div className="w-9 h-9 td-avatar">{initials(r.name)}</div>
+      <div className="flex-1 min-w-0 text-td-body font-medium text-td-dark truncate">{r.name}{isYou(r) && <span className="text-td-primary"> (You)</span>}</div>
+      <div className="td-num text-td-body font-semibold text-td-dark">{r.score}%</div>
+    </div>
+  )
 
   return (
     <div className="td-screen">
@@ -355,7 +348,7 @@ export function StuRankingScreen() {
       <div className="text-td-caption text-td-muted mb-[18px]">{me?.klass ?? ''}{activeSubject ? ` · ${activeSubject}` : ''}</div>
 
       {subjectNames.length > 0 && (
-        <div className="flex gap-[9px] overflow-x-auto mb-[22px] scrollbar-hide">
+        <div className="flex flex-wrap gap-[7px] mb-5">
           {subjectNames.map(name => {
             const active = name === activeSubject
             return (
@@ -366,40 +359,17 @@ export function StuRankingScreen() {
       )}
 
       {rows.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-10 leading-relaxed">No rankings published yet.<br />They&apos;ll appear once your teacher enters results.</div>
+        <div className="td-none leading-relaxed">No rankings published yet.<br />They&apos;ll appear once your teacher enters results.</div>
       ) : (
         <>
-          {top3.length >= 3 && (
-            <div className="flex justify-center items-end gap-[7px] mb-6">
-              {podiumOrder.map((p, pi) => {
-                const isYou = p.id ? p.id === currentStudentDbId : me?.name === p.name
-                return (
-                  <div key={p.id ?? `${p.name}-${pi}`} className="flex flex-col items-center">
-                    <Icon name={medals[pi]} size={26} className="mb-1" style={{ color: MEDAL_INK[pi] }} />
-                    <div className="w-[52px] h-[52px] rounded-td-md flex items-center justify-center text-white font-semibold text-td-title mb-1.5" style={{ background: GRADIENTS[pi] }}>{initials(p.name)}</div>
-                    <div className="text-td-caption td-strong text-center leading-tight mb-0.5">{p.name.split(' ')[0]}{isYou && <span className="text-td-primary"> (You)</span>}</div>
-                    <div className="text-td-caption font-bold text-td-primary mb-1.5">{p.score}%</div>
-                    <div className="w-[72px] rounded-t-td-sm" style={{ height: podiumHeights[pi], background: podiumBg[pi] }} />
-                  </div>
-                )
-              })}
-            </div>
+          <div className="td-h2 mb-0">Top three</div>
+          <div className="mb-6">{top3.map(line)}</div>
+          {rest.length > 0 && (
+            <>
+              <div className="td-h2 mb-0">Rest of class</div>
+              {rest.map(line)}
+            </>
           )}
-
-          <div className="text-td-small td-strong mb-[11px]">Leaderboard</div>
-          <div className="flex flex-col gap-[9px]">
-            {rest.map((r, i) => {
-              const isYou = r.id ? r.id === currentStudentDbId : me?.name === r.name
-              return (
-                <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] border rounded-td-md p-3 px-3.5" style={{ background: isYou ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: isYou ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
-                  <div className="w-[26px] text-center text-sm font-semibold text-td-subtle">{r.rank}</div>
-                  <div className="w-9 h-9 rounded-td-sm td-avatar" style={{ background: av(r.rank) }}>{initials(r.name)}</div>
-                  <div className="flex-1 text-td-small font-bold text-td-dark">{r.name}{isYou && <span className="text-td-primary text-xs"> (You)</span>}</div>
-                  <div className="text-sm td-strong">{r.score}%</div>
-                </div>
-              )
-            })}
-          </div>
         </>
       )}
     </div>
@@ -425,12 +395,12 @@ export function StuTeachersScreen() {
   })()
 
   const row = (t: Teacher, caption: string) => (
-    <button key={teacherKey(t)} onClick={() => { set({ stuTeacherId: teacherKey(t) }); go('stuTeacher', 'stuTeachers') }} className="text-left td-card rounded-td-lg p-3.5 flex items-center gap-3.5 cursor-pointer">
-      <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center text-white font-semibold text-td-title" style={{ background: GRADIENTS[teachers.indexOf(t) % GRADIENTS.length] }}>{initials(t.name)}</div>
+    <button key={teacherKey(t)} onClick={() => { set({ stuTeacherId: teacherKey(t) }); go('stuTeacher', 'stuTeachers') }} className="td-plain w-full text-left flex items-center gap-3 py-3 min-h-14 border-b border-td-line cursor-pointer">
+      <div className="w-11 h-11 td-avatar">{initials(t.name)}</div>
       <div className="flex-1 min-w-0">
-        <div className="text-td-body td-strong">{t.name}</div>
-        <div className="text-td-caption text-td-primary font-bold mt-0.5">{caption}</div>
-        <div className="text-td-caption text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
+        <div className="text-td-body font-medium text-td-dark truncate">{t.name}</div>
+        <div className="text-td-small text-td-primary mt-px truncate">{caption}</div>
+        <div className="td-num text-td-small text-td-muted mt-px truncate">{t.experience} yrs · {t.qualification}</div>
       </div>
       <ChevronRight />
     </button>
@@ -447,12 +417,12 @@ export function StuTeachersScreen() {
         <>
           {mine.length > 0 && (
             <>
-              <div className="text-td-small td-strong mb-2.5">Your teachers</div>
-              <div className="flex flex-col gap-3 mb-6">{mine.map(m => row(m.t, m.caption))}</div>
-              <div className="text-td-small td-strong mb-2.5">Everyone at your branch</div>
+              <div className="td-h2 mb-0">Your teachers</div>
+              <div className="mb-6">{mine.map(m => row(m.t, m.caption))}</div>
+              <div className="td-h2 mb-0">Everyone at your branch</div>
             </>
           )}
-          <div className="flex flex-col gap-3">{teachers.map(t => row(t, t.subject))}</div>
+          {teachers.map(t => row(t, t.subject))}
         </>
       )}
     </div>
@@ -465,7 +435,6 @@ export function StuTeacherDetail() {
   // re-pulled on every background refresh, so a position captured a moment ago
   // points at a different person as soon as anyone is added.
   const t = teachers.find(x => teacherKey(x) === stuTeacherId) || teachers[0]
-  const gradIdx = Math.max(0, teachers.indexOf(t))
   if (!t) return <div className="text-center text-td-muted py-8">No teacher data</div>
 
   return (
@@ -473,29 +442,29 @@ export function StuTeacherDetail() {
       <ScreenHeader title="Teacher Profile" onBack={() => go('stuTeachers', 'stuTeachers')} />
 
       <div className="flex flex-col items-center mb-5">
-        <div className="w-[80px] h-[80px] rounded-3xl flex items-center justify-center text-white font-semibold text-td-display mb-3" style={{ background: GRADIENTS[gradIdx % GRADIENTS.length] }}>{initials(t.name)}</div>
+        <div className="w-20 h-20 td-avatar text-td-display mb-3">{initials(t.name)}</div>
         <div className="text-td-heading td-strong">{t.name}</div>
-        <span className="text-td-caption font-bold text-td-primary bg-td-tint-blue py-[5px] px-3 rounded-td-lg mt-2">{t.subject}</span>
+        <span className="td-tag px-[7px] py-[3px] bg-td-tint-blue text-td-primary mt-2">{t.subject}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 mb-5">
         <div className="td-stat">
-          <div className="text-2xl td-strong">{t.experience}</div>
+          <div className="td-num text-td-heading td-strong">{t.experience}</div>
           <div className="text-td-caption text-td-muted font-semibold mt-1">Years exp.</div>
         </div>
         <div className="td-stat">
-          <div className="text-2xl font-semibold text-td-amber flex items-center justify-center gap-1.5"><Icon name="star" size={20} />{t.rating || '—'}</div>
+          <div className="td-num text-td-heading font-semibold text-td-on-amber flex items-center justify-center gap-1.5"><Icon name="star" size={20} />{t.rating || '—'}</div>
           <div className="text-td-caption text-td-muted font-semibold mt-1">Rating</div>
         </div>
       </div>
 
-      <div className="td-card rounded-td-lg p-4 mb-3">
+      <div className="td-card p-4 mb-3">
         <div className="text-td-small td-strong mb-2">Qualification</div>
         <div className="text-td-small text-td-muted">{t.qualification}</div>
       </div>
 
       {t.about && (
-        <div className="td-card rounded-td-lg p-4">
+        <div className="td-card p-4">
           <div className="text-td-small td-strong mb-2">About</div>
           <div className="text-td-small text-td-muted leading-relaxed">{t.about}</div>
         </div>
@@ -516,45 +485,38 @@ export function StuFeesScreen() {
       <ScreenHeader title="Fees" onBack={() => go('stuHome', 'stuHome')} />
 
       {stuPendingFee ? (
-        <div className="rounded-td-lg p-5 text-white mb-5" style={{ background: 'linear-gradient(135deg,#e8553c,#ef7a64)' }}>
-          <div className="text-xs opacity-70 font-semibold">{plan ? 'Next installment' : 'Amount due'}</div>
-          <div className="text-td-display font-semibold mt-1">{stuPendingFee.amount}</div>
-          <div className="text-td-caption opacity-80 mt-1">
+        <div className="bg-td-card border border-td-border shadow-td-card p-4 mb-6">
+          <div className="text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">{plan ? 'Next installment' : 'Amount due'}</div>
+          <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-on-red mt-[9px]">{stuPendingFee.amount}</div>
+          <div className="td-num text-td-small text-td-muted mt-2">
             {stuPendingFee.period} · {stuPendingFee.overdue ? 'Was due' : 'Due'} {stuPendingFee.dueDate}
           </div>
           {plan && (
-            <div className="text-td-caption opacity-80 mt-2 pt-2 border-t border-white/25">
+            <div className="td-num text-td-small text-td-text mt-3 pt-3 border-t border-td-line">
               {plan.paidCount} of {plan.count} paid · {rupee(plan.outstanding)} left in total
             </div>
           )}
-          <button onClick={() => notify('Contact your teacher to arrange payment')} className="w-full mt-4 border-none bg-td-card text-td-red text-sm font-semibold py-3.5 rounded-td-md cursor-pointer">Pay now</button>
+          <button onClick={() => notify('Contact your teacher to arrange payment')} className="w-full mt-4 min-h-11 border-none bg-td-dark text-td-bg text-td-small font-semibold cursor-pointer">Pay now</button>
         </div>
       ) : (
-        <div className="rounded-td-lg p-5 text-white mb-5 text-center" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>
-          <div className="text-td-heading font-semibold">All clear!</div>
-          <div className="text-td-caption opacity-80 mt-1">No pending fees</div>
+        <div className="bg-td-card border border-td-border shadow-td-card p-4 mb-6">
+          <div className="text-td-title font-semibold text-td-on-green">All clear</div>
+          <div className="text-td-small text-td-muted mt-1">No pending fees</div>
         </div>
       )}
 
-      <div className="td-h2">Payment history</div>
+      <div className="td-h2 mb-0">Payment history</div>
       {stuFeeHistory.length === 0 ? (
         <div className="td-none">No payment history yet</div>
-      ) : (
-        <div className="flex flex-col gap-2.5">
-          {stuFeeHistory.map((f, i) => (
-            <div key={`${f.period}-${i}`} className="td-row">
-              <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center bg-td-tint-green">
-                <Icon name="check" size={18} color="var(--color-td-green)" />
-              </div>
-              <div className="flex-1">
-                <div className="text-td-small font-bold text-td-dark">{f.period}</div>
-                <div className="text-xs text-td-muted mt-0.5">Paid on {f.date}</div>
-              </div>
-              <div className="text-sm font-semibold text-td-green">{f.amount}</div>
-            </div>
-          ))}
+      ) : stuFeeHistory.map((f, i) => (
+        <div key={`${f.period}-${i}`} className="td-row">
+          <div className="flex-1 min-w-0">
+            <div className="text-td-body font-medium text-td-dark">{f.period}</div>
+            <div className="td-num text-td-small text-td-muted mt-px">Paid on {f.date}</div>
+          </div>
+          <div className="td-num text-td-body font-semibold text-td-on-green">{f.amount}</div>
         </div>
-      )}
+      ))}
     </div>
   )
 }
@@ -573,18 +535,16 @@ export function StuNotifScreen() {
       {stuNotifications.length === 0 ? (
         <div className="td-none">No notifications yet</div>
       ) : (
-        <div className="flex flex-col gap-2.5">
-          {stuNotifications.map((n, i) => (
-            <div key={`${n.dbId ?? ''}-${i}`} className="td-card rounded-td-lg p-3.5 flex items-start gap-[13px]">
-              <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center mt-0.5" style={{ background: n.tint, color: ink(n.tint) }}><DataIcon value={n.icon} size={20} /></div>
-              <div className="flex-1 min-w-0">
-                <div className="text-td-small font-bold text-td-dark">{n.title}</div>
-                <div className="text-xs text-td-muted mt-1 leading-relaxed">{n.detail}</div>
-                <div className="text-td-caption text-td-subtle font-semibold mt-1.5">{n.when}</div>
-              </div>
+        stuNotifications.map((n, i) => (
+          <div key={`${n.dbId ?? ''}-${i}`} className="flex items-start gap-3 py-3 border-b border-td-line">
+            <div className="w-10 h-10 shrink-0 flex items-center justify-center" style={{ background: n.tint, color: ink(n.tint) }}><DataIcon value={n.icon} size={20} /></div>
+            <div className="flex-1 min-w-0">
+              <div className="text-td-body font-semibold text-td-dark">{n.title}</div>
+              <div className="text-td-small text-td-text mt-0.5 leading-relaxed">{n.detail}</div>
+              <div className="td-num text-td-small text-td-muted mt-1">{n.when}</div>
             </div>
-          ))}
-        </div>
+          </div>
+        ))
       )}
     </div>
   )
@@ -604,8 +564,8 @@ export function StuTimetableScreen() {
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => {
           const active = d === day
           return (
-            <button key={d} onClick={() => setDay(d)} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-3 cursor-pointer text-center ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card border-td-border text-td-text'}`}>
-              <div className="text-td-caption font-bold">{d}</div>
+            <button key={d} onClick={() => setDay(d)} className={`shrink-0 min-w-12 min-h-11 border py-[9px] px-3 cursor-pointer text-center ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card border-td-border text-td-text'}`}>
+              <div className="text-td-caption font-semibold">{d}</div>
             </button>
           )
         })}
@@ -614,27 +574,19 @@ export function StuTimetableScreen() {
       <div className="text-td-small text-td-muted font-semibold mb-3.5">{dayNames[day]} · {periods.length} {periods.length === 1 ? 'class' : 'classes'}</div>
 
       {periods.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-10">No classes scheduled for {dayNames[day]}</div>
-      ) : (
-        <div className="flex flex-col gap-2.5">
-          {periods.map((p, i) => {
-            const free = p[2] === 'Free period'
-            return (
-              <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="td-row">
-                <div className="text-center shrink-0 w-[56px]">
-                  <div className="text-td-caption font-semibold text-td-primary">{p[0]}</div>
-                  <div className="text-td-caption text-td-subtle font-semibold">{p[1]}</div>
-                </div>
-                <div className="w-px h-[34px] bg-td-soft" />
-                <div className="flex-1 min-w-0">
-                  <div className="text-td-small font-bold" style={{ color: free ? 'var(--color-td-subtle)' : 'var(--color-td-dark)' }}>{p[2]}</div>
-                  {p[4] && <div className="text-xs text-td-muted mt-0.5">{p[4]}</div>}
-                </div>
-              </div>
-            )
-          })}
+        <div className="td-none">No classes scheduled for {dayNames[day]}</div>
+      ) : periods.map((p, i) => (
+        <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="td-row">
+          <div className="td-num shrink-0 w-14">
+            <div className="text-td-small font-semibold text-td-dark">{p[0]}</div>
+            <div className="text-td-small text-td-muted">{p[1]}</div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className={`text-td-body font-medium ${p[2] === 'Free period' ? 'text-td-subtle' : 'text-td-dark'}`}>{p[2]}</div>
+            {p[4] && <div className="text-td-small text-td-muted mt-px">{p[4]}</div>}
+          </div>
         </div>
-      )}
+      ))}
     </div>
   )
 }
@@ -648,18 +600,18 @@ export function StuAssignmentsScreen() {
       <ScreenHeader title="Homework" onBack={() => go('stuHome', 'stuHome')} />
 
       {stuAssignments.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-12 leading-relaxed">No homework assigned yet.<br />New assignments from your teacher will appear here.</div>
+        <div className="td-none leading-relaxed">No homework assigned yet.<br />New assignments from your teacher will appear here.</div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div>
           {stuAssignments.map((a) => {
             const akey = `${a.due}-${a.subject}-${a.title}`
             return (
-            <button key={akey} onClick={() => setOpen(open === akey ? null : akey)} className="w-full text-left td-card rounded-td-lg p-4 cursor-pointer">
-              <div className="flex items-center gap-[13px]">
-                <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center bg-td-tint-amber" style={{ color: ink('var(--color-td-tint-amber)') }}><Icon name="homework" size={20} /></div>
+            <button key={akey} onClick={() => setOpen(open === akey ? null : akey)} className="td-plain w-full text-left py-3 border-b border-td-line cursor-pointer">
+              <div className="flex items-center gap-3 min-h-11">
+                <div className="w-10 h-10 shrink-0 flex items-center justify-center bg-td-tint-amber" style={{ color: ink('var(--color-td-tint-amber)') }}><Icon name="homework" size={20} /></div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-td-body td-strong">{a.title}</div>
-                  <div className="text-td-caption text-td-muted mt-0.5">{a.subject}{a.due ? ` · due ${a.due}` : ''}</div>
+                  <div className="text-td-body font-medium text-td-dark">{a.title}</div>
+                  <div className="td-num text-td-small text-td-muted mt-px">{a.subject}{a.due ? ` · due ${a.due}` : ''}</div>
                 </div>
                 {a.instructions && <Icon name="next" size={16} color="var(--color-td-faint)" className={`shrink-0 transition-transform ${open === akey ? 'rotate-90' : ''}`} />}
               </div>
@@ -696,16 +648,16 @@ export function StuProfileScreen() {
     <div className="td-screen">
       <div className="flex items-center justify-between mt-1.5 mb-[18px]">
         <div className="td-title">My Profile</div>
-        <button onClick={signOut} className="td-danger text-td-caption font-bold py-2 px-3 rounded-td-sm">Sign out</button>
+        <button onClick={signOut} className="td-danger text-td-small font-semibold min-h-11 px-3">Sign out</button>
       </div>
 
-      <div className="rounded-td-lg p-5 text-white flex items-center gap-4 mb-5" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
-        <div className="w-[64px] h-[64px] rounded-td-md bg-white/20 flex items-center justify-center text-white font-semibold text-td-heading shrink-0">{ini}</div>
-        <div>
-          <div className="text-td-title font-semibold">{displayName}</div>
-          <div className="text-td-caption opacity-80 mt-0.5">{me?.klass ?? ''}</div>
+      <div className="flex items-center gap-4 mb-5">
+        <div className="w-16 h-16 td-avatar text-td-heading">{ini}</div>
+        <div className="min-w-0">
+          <div className="text-td-title font-semibold text-td-dark truncate">{displayName}</div>
+          <div className="td-num text-td-small text-td-muted mt-0.5">{me?.klass ?? ''}</div>
           {stuResults.length > 0 && (
-            <span className="inline-block text-td-caption font-bold bg-white/20 py-1 px-2.5 rounded-td-lg mt-1.5">{grade.g} · {avg}%</span>
+            <span className={`inline-block td-tag px-[7px] py-[3px] mt-1.5 ${grade.tag}`}>{grade.g} · {avg}%</span>
           )}
         </div>
       </div>
@@ -716,7 +668,7 @@ export function StuProfileScreen() {
           didn't write it down was locked out. It belongs here permanently. */}
       {me?.id && (
         <CodeCard
-          className="rounded-td-lg mb-5"
+          className="mb-5"
           label="YOUR STUDENT CODE"
           code={me.id}
           hint="Use this to sign in on any device. Keep it private."
@@ -724,13 +676,13 @@ export function StuProfileScreen() {
         />
       )}
 
-      <div className="flex flex-col gap-2.5 mb-5">
+      <div className="mb-5">
         {fields.map(f => (
           <div key={f.label} className="td-row">
             <Icon name={f.icon} size={20} className="text-td-muted shrink-0" />
             <div className="flex-1">
-              <div className="text-td-caption text-td-subtle font-semibold">{f.label}</div>
-              <div className="text-td-small font-bold text-td-dark mt-0.5">{f.value}</div>
+              <div className="text-td-small text-td-muted">{f.label}</div>
+              <div className="text-td-body font-medium text-td-dark mt-px">{f.value}</div>
             </div>
             {f.locked && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-faint)" strokeWidth="2.2" strokeLinecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>}
           </div>
@@ -739,10 +691,10 @@ export function StuProfileScreen() {
 
       <button
         onClick={() => goFrom('support', 'stuProfile', 'stuProfile')}
-        className="td-row w-full text-left mb-5 cursor-pointer"
+        className="td-plain td-row w-full text-left mb-5 cursor-pointer"
       >
-        <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center bg-td-tint-red"><Icon name="warning" size={20} /></div>
-        <div className="flex-1 text-sm font-bold text-td-dark">Report a problem</div>
+        <div className="w-10 h-10 shrink-0 flex items-center justify-center bg-td-tint-red text-td-on-red"><Icon name="warning" size={20} /></div>
+        <div className="flex-1 text-td-body font-medium text-td-dark">Report a problem</div>
       </button>
 
       <div className="text-td-caption text-td-subtle text-center leading-relaxed">Your details are managed by your tuition centre and can&apos;t be changed here. Ask your teacher if something needs updating.</div>

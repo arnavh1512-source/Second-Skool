@@ -47,7 +47,7 @@ export function NotesScreen() {
     <div className="td-screen">
       <ScreenHeader title="Study Material" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
-          <span className="text-base leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Share'}
+          <span className="text-td-body leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Share'}
         </button>
       } />
 
@@ -69,7 +69,7 @@ export function NotesScreen() {
           </div>
           <label className="block"><span className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></span><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field resize-none" /></label>
           <label className="block"><span className="td-label">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></span>
-            <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-td-caption text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-td-sm file:border-none file:bg-td-tint-blue file:text-td-primary file:font-bold file:text-td-caption" />
+            <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-td-caption text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-td-sm file:border-none file:bg-td-tint-blue file:text-td-primary file:font-semibold file:text-td-caption" />
           </label>
           <label className="block"><span className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></span><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field" /></label>
           <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
@@ -77,7 +77,7 @@ export function NotesScreen() {
       )}
 
       {notesList.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-10 leading-relaxed">No study material yet.<br />Tap Share to send notes to a class.</div>
+        <div className="text-center text-td-muted text-td-small py-10 leading-relaxed">No study material yet.<br />Tap Share to send notes to a class.</div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {notesList.map(n => (
@@ -87,12 +87,12 @@ export function NotesScreen() {
                   <div className="text-td-body td-strong">{n.title}</div>
                   <div className="text-td-caption text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
                 </div>
-                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="td-danger text-td-caption font-bold py-1.5 px-3 rounded-td-sm shrink-0">Remove</button>
+                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="td-danger text-td-caption font-semibold py-1.5 px-3 rounded-td-sm shrink-0">Remove</button>
               </div>
               {n.body && <div className="text-td-small text-td-text leading-relaxed mt-2">{n.body}</div>}
               <div className="flex gap-2 mt-2.5">
-                {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="text-td-caption font-bold text-td-primary flex items-center gap-1.5"><FileIcon url={n.fileUrl} /> File</a>}
-                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="text-td-caption font-bold text-td-primary flex items-center gap-1.5"><Icon name="next" size={13} />Video</a>}
+                {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="text-td-caption font-semibold text-td-primary flex items-center gap-1.5"><FileIcon url={n.fileUrl} /> File</a>}
+                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="text-td-caption font-semibold text-td-primary flex items-center gap-1.5"><Icon name="next" size={13} />Video</a>}
               </div>
             </div>
           ))}
@@ -116,7 +116,7 @@ export function StuNotesScreen() {
       <ScreenHeader title="Study Material" onBack={() => go('stuHome', 'stuHome')} />
 
       {stuNotes.length === 0 ? (
-        <div className="text-center text-td-muted text-sm py-12 leading-relaxed">No study material yet.<br />Notes your teacher shares will appear here.</div>
+        <div className="text-center text-td-muted text-td-small py-12 leading-relaxed">No study material yet.<br />Notes your teacher shares will appear here.</div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {stuNotes.map((n, i) => (
@@ -130,8 +130,8 @@ export function StuNotesScreen() {
               </div>
               {n.body && <div className="text-td-small text-td-text leading-relaxed mt-2.5">{n.body}</div>}
               <div className="flex gap-2.5 mt-2.5">
-                {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border border-td-primary text-td-primary text-td-caption font-bold py-2 rounded-td-sm">Open file</a>}
-                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-td-red text-td-on-solid text-td-caption font-bold py-2 rounded-td-sm flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
+                {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border border-td-primary text-td-primary text-td-caption font-semibold py-2 rounded-td-sm">Open file</a>}
+                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-td-red text-td-on-solid text-td-caption font-semibold py-2 rounded-td-sm flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
               </div>
             </div>
           ))}

@@ -32,7 +32,7 @@ function NavRow({ item }: { item: NavItem }) {
       }`}
     >
       <span className="w-[30px] h-[30px] rounded-[9px] td-card flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
-      <span className={`flex-1 text-td-small ${on ? 'font-semibold' : 'font-bold'}`}>{item.label}</span>
+      <span className={`flex-1 text-td-small ${on ? 'font-semibold' : 'font-semibold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
         <span className="td-count">{item.badge}</span>
       )}
@@ -83,7 +83,7 @@ function Sidebar() {
         {centreLogo
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-td-sm object-cover shrink-0" />
-          : <div className="w-9 h-9 rounded-td-sm flex items-center justify-center text-white font-semibold text-td-body shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
+          : <div className="w-9 h-9 flex items-center justify-center bg-td-dark text-td-bg font-semibold text-td-body shrink-0">S</div>}
         <div className="min-w-0">
           <div className="text-td-body td-strong truncate">{centreName || 'Second Skool'}</div>
           <div className="text-td-caption text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
@@ -104,7 +104,7 @@ function Sidebar() {
 
       <div className="border-t border-td-border p-3">
         <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-td-sm hover:bg-td-soft cursor-pointer mb-1">
-          <div className="w-9 h-9 rounded-td-sm flex items-center justify-center text-white font-bold text-td-small shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{initials(name)}</div>
+          <div className="w-9 h-9 td-avatar">{initials(name)}</div>
           <div className="min-w-0 flex-1">
             <div className="text-td-small td-strong truncate">{name}</div>
             <div className="text-td-caption text-td-muted truncate">{googleEmail}</div>
@@ -134,7 +134,7 @@ function DesktopToast() {
     <div
       role={err ? 'alert' : 'status'}
       aria-live={err ? 'assertive' : 'polite'}
-      className={`fixed left-1/2 -translate-x-1/2 bottom-8 max-w-[440px] rounded-td-md text-white z-50 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
+      className={`fixed left-1/2 -translate-x-1/2 bottom-8 max-w-[440px] z-50 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-td-tint-red text-td-on-red border border-td-edge-red' : 'bg-td-dark text-td-bg'}`}
     >
       <button
         type="button"
@@ -145,7 +145,7 @@ function DesktopToast() {
         {err && (
           <Icon name="info" size={18} className="shrink-0 mt-px" />
         )}
-        <span className="text-sm font-semibold leading-snug">{toast}</span>
+        <span className="text-td-small font-semibold leading-snug">{toast}</span>
       </button>
     </div>
   )
@@ -175,36 +175,34 @@ const AUTH_FEATURES = [
 export function DesktopAuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-[100dvh] bg-td-card overflow-hidden">
-      <aside className="hidden lg:flex flex-col justify-between w-[46%] max-w-[640px] p-14 text-white relative overflow-hidden" style={{ background: 'linear-gradient(150deg,#2a6fdb 0%,#1f56ad 58%,#173f88 100%)' }}>
-        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute bottom-[-6rem] left-[-4rem] w-72 h-72 rounded-full bg-white/10 blur-2xl" />
+      <aside className="hidden lg:flex flex-col justify-between w-[46%] max-w-[640px] p-14 bg-td-dark text-td-bg">
 
-        <div className="relative flex items-center gap-3">
+        <div className="flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon-512.png" alt="Second Skool" width={42} height={42} className="rounded-td-sm object-cover shadow-td-raised" />
+          <img src="/icon-512.png" alt="Second Skool" width={42} height={42} className="object-cover" />
           <span className="text-td-title font-semibold tracking-tight">Second Skool</span>
         </div>
 
-        <div className="relative">
+        <div>
           <h1 className="text-[38px] font-semibold leading-[1.12] tracking-tight">Run your whole tuition centre from one screen.</h1>
-          <p className="text-td-body text-white/80 mt-5 max-w-[430px] leading-relaxed">Attendance, results, fees and parent updates — for every branch, every teacher, every student.</p>
+          <p className="text-td-body text-td-bg/80 mt-5 max-w-[430px] leading-relaxed">Attendance, results, fees and parent updates — for every branch, every teacher, every student.</p>
           <ul className="mt-9 flex flex-col gap-[18px]">
             {AUTH_FEATURES.map(f => (
               <li key={f} className="flex items-center gap-3.5">
-                <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                  <Icon name="check" size={15} color="#fff" />
+                <span className="w-7 h-7 rounded-full bg-td-bg/15 flex items-center justify-center shrink-0">
+                  <Icon name="check" size={15} color="var(--color-td-bg)" />
                 </span>
-                <span className="text-td-body font-semibold text-white/95">{f}</span>
+                <span className="text-td-body font-medium">{f}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="relative text-td-caption text-white/60">Built for tuition centres to stay organised every day.</div>
+        <div className="text-td-caption text-td-bg/60">Built for tuition centres to stay organised every day.</div>
       </aside>
 
       <main className="flex-1 flex items-center justify-center overflow-y-auto h-[100dvh] bg-td-soft lg:bg-td-card px-5 py-8">
-        <div className="w-full max-w-[440px] bg-td-card rounded-[28px] shadow-[0_18px_50px_-24px_rgba(20,30,60,.28)] lg:shadow-none lg:rounded-none">
+        <div className="w-full max-w-[440px] bg-td-card border border-td-border lg:border-0">
           {children}
         </div>
       </main>

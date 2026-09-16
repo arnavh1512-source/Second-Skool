@@ -9,7 +9,7 @@ import type { SupportTicket } from '../store/types'
 // students go through anon RPCs, staff through RLS — so nothing here needs to
 // know which kind of user is looking at it.
 
-const INPUT = 'td-field text-sm'
+const INPUT = 'td-field text-td-small'
 const LABEL = 'td-label'
 
 const STATUS: Record<SupportTicket['status'], { bg: string; fg: string; label: string }> = {
@@ -129,7 +129,7 @@ export function SupportScreen() {
         <button
           onClick={send}
           disabled={busy}
-          className="td-pill w-full text-sm font-semibold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-td-small font-semibold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send report'}
         </button>
@@ -149,8 +149,8 @@ export function SupportScreen() {
                   className="td-plain w-full text-left border-b border-td-line p-[15px] px-[17px] flex items-center gap-3 cursor-pointer last:border-b-0"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold text-td-dark truncate">{t.intent}</div>
-                    <div className="text-xs text-td-muted mt-0.5">{fmtDate(t.createdAt)}</div>
+                    <div className="text-td-small font-semibold text-td-dark truncate">{t.intent}</div>
+                    <div className="text-td-caption text-td-muted mt-0.5">{fmtDate(t.createdAt)}</div>
                   </div>
                   {unread && <span className="td-tag text-td-on-solid bg-td-red shrink-0">Reply</span>}
                   <StatusPill status={t.status} />
@@ -193,8 +193,8 @@ export function SupportThreadScreen() {
           return (
             <div key={i} className={`max-w-[85%] rounded-td-md p-3 px-3.5 ${ours ? 'td-card self-start' : 'bg-td-primary text-td-on-solid self-end'}`}>
               {ours && <div className="text-td-caption font-semibold text-td-muted mb-1">Second Skool</div>}
-              <div className="text-sm leading-[1.5] whitespace-pre-wrap">{m.body}</div>
-              <div className={`text-td-caption mt-1 ${ours ? 'text-td-muted' : 'text-white/70'}`}>{fmtDate(m.createdAt)}</div>
+              <div className="text-td-small leading-[1.5] whitespace-pre-wrap">{m.body}</div>
+              <div className={`text-td-caption mt-1 ${ours ? 'text-td-muted' : 'text-td-on-solid/70'}`}>{fmtDate(m.createdAt)}</div>
             </div>
           )
         })}
@@ -214,7 +214,7 @@ export function SupportThreadScreen() {
         <button
           onClick={send}
           disabled={busy || !draft.trim()}
-          className="td-pill w-full text-sm font-semibold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-td-small font-semibold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send message'}
         </button>

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useBusy } from '../lib/use-busy'
-import { useDashboard, initials, av, fmtDate, rupee, timeAgo } from '../store'
+import { useDashboard, initials, fmtDate, rupee, timeAgo } from '../store'
 import { ScreenHeader, EmptyState, ConfirmDialog, WhatsAppButton, CodeCard } from './Shell'
 import { supabase } from '../lib/supabase'
 import { weeklyReportMessage, studentReportMessage, copyText } from '../lib/share'
@@ -51,7 +51,7 @@ export function StaffApprovalsScreen() {
           onCopy={() => copyText(joinCode, notify, 'Join code copied!')}
         >
           {role === 'admin' && (
-            <button onClick={() => setConfirmRotate(true)} className="text-td-caption font-bold text-td-muted underline mt-2 cursor-pointer">
+            <button onClick={() => setConfirmRotate(true)} className="text-td-caption font-semibold text-td-muted underline mt-2 cursor-pointer">
               Generate a new code
             </button>
           )}
@@ -63,12 +63,12 @@ export function StaffApprovalsScreen() {
         <div className="text-center text-td-muted text-td-small py-4 td-card rounded-td-md mb-6">No one waiting</div>
       ) : (
         <div className="td-list gap-2.5 mb-6">
-          {pending.map((s, i) => (
+          {pending.map(s => (
             <div key={s.id} className="td-card rounded-td-md p-3.5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-td-sm td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
+                <div className="w-10 h-10 td-avatar">{initials(s.name)}</div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm td-strong truncate">{s.name}</div>
+                  <div className="text-td-small td-strong truncate">{s.name}</div>
                   <div className="text-td-caption text-td-muted truncate">{s.email}</div>
                 </div>
               </div>
@@ -80,26 +80,26 @@ export function StaffApprovalsScreen() {
                   {s.phone && (
                     <div className="flex items-center gap-2 text-td-caption">
                       <span className="text-td-subtle w-[68px] shrink-0">Phone</span>
-                      <a href={`tel:${s.phone.replace(/\s/g, '')}`} className="font-bold text-td-primary truncate">{s.phone}</a>
+                      <a href={`tel:${s.phone.replace(/\s/g, '')}`} className="font-semibold text-td-primary truncate">{s.phone}</a>
                     </div>
                   )}
                   {s.subject && (
                     <div className="flex items-center gap-2 text-td-caption">
                       <span className="text-td-subtle w-[68px] shrink-0">Teaches</span>
-                      <span className="font-bold text-td-dark truncate">{s.subject}</span>
+                      <span className="font-semibold text-td-dark truncate">{s.subject}</span>
                     </div>
                   )}
                   {s.qualification && (
                     <div className="flex items-center gap-2 text-td-caption">
                       <span className="text-td-subtle w-[68px] shrink-0">Qualified</span>
-                      <span className="font-bold text-td-dark truncate">{s.qualification}</span>
+                      <span className="font-semibold text-td-dark truncate">{s.qualification}</span>
                     </div>
                   )}
                 </div>
               )}
               <div className="flex gap-2.5">
-                <button onClick={() => approveTeacher(s.id)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
-                <button onClick={() => rejectTeacher(s.id)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Reject</button>
+                <button onClick={() => approveTeacher(s.id)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
+                <button onClick={() => rejectTeacher(s.id)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Reject</button>
               </div>
             </div>
           ))}
@@ -111,25 +111,25 @@ export function StaffApprovalsScreen() {
         <div className="text-center text-td-muted text-td-small py-4 td-card rounded-td-md">No active staff yet</div>
       ) : (
         <div className="td-list gap-2.5">
-          {active.map((s, i) => {
+          {active.map(s => {
             const isHead = s.role === 'admin'
             const isSelf = s.id === supabaseUserId
             return (
               <div key={s.id} className="td-card rounded-td-md p-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-td-sm td-avatar" style={{ background: av(i + 3) }}>{initials(s.name)}</div>
+                  <div className="w-10 h-10 td-avatar">{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm td-strong truncate">{s.name}{isSelf && <span className="text-td-muted font-semibold"> · you</span>}</div>
+                    <div className="text-td-small td-strong truncate">{s.name}{isSelf && <span className="text-td-muted font-semibold"> · you</span>}</div>
                     <div className="text-td-caption text-td-muted truncate">{s.email}</div>
                   </div>
-                  <span className="text-td-caption font-bold py-[5px] px-2.5 rounded-td-lg" style={{ color: isHead ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: isHead ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{isHead ? 'Head' : 'Teacher'}</span>
+                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-lg" style={{ color: isHead ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: isHead ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{isHead ? 'Head' : 'Teacher'}</span>
                 </div>
                 {!isHead && (
                   <div className="flex gap-2.5 mt-3">
-                    <button onClick={() => grantHead(s.id)} className="flex-1 border border-td-primary bg-td-card text-td-primary text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer">
+                    <button onClick={() => grantHead(s.id)} className="flex-1 border border-td-primary bg-td-card text-td-primary text-td-caption font-semibold py-2.5 rounded-td-sm cursor-pointer">
                       Make head teacher
                     </button>
-                    <button onClick={() => removeStaff(s.id)} className="td-danger text-td-caption font-bold py-2.5 px-4 rounded-td-sm">Remove</button>
+                    <button onClick={() => removeStaff(s.id)} className="td-danger text-td-caption font-semibold py-2.5 px-4 rounded-td-sm">Remove</button>
                   </div>
                 )}
               </div>
@@ -175,7 +175,7 @@ export function StudentRequestsScreen() {
           {role === 'admin' && (
             <button
               onClick={() => setConfirmRotate(true)}
-              className="text-td-caption font-bold text-td-muted underline mt-2 cursor-pointer"
+              className="text-td-caption font-semibold text-td-muted underline mt-2 cursor-pointer"
             >
               Generate a new code
             </button>
@@ -188,8 +188,8 @@ export function StudentRequestsScreen() {
         <div className="text-center text-td-muted text-td-small py-6 td-card rounded-td-md">No requests waiting</div>
       ) : (
         <div className="td-list gap-2.5">
-          {pendingStudents.map((s, i) => (
-            <StudentRequestCard key={s.dbId} s={s} idx={i} branches={branchesList} batchList={batches} onApprove={approveStudent} onReject={rejectStudent} />
+          {pendingStudents.map(s => (
+            <StudentRequestCard key={s.dbId} s={s} branches={branchesList} batchList={batches} onApprove={approveStudent} onReject={rejectStudent} />
           ))}
         </div>
       )}
@@ -240,9 +240,8 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
   )
 }
 
-function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }: {
+function StudentRequestCard({ s, branches, batchList, onApprove, onReject }: {
   s: import('../store').PendingStudent
-  idx: number
   branches: import('../store').BranchItem[]
   batchList: import('../store').BatchItem[]
   onApprove: (dbId: string, klass: string, branchId: string | null, fee: string, feeDue: string, batch?: string) => Promise<void>
@@ -264,9 +263,9 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
   return (
     <div className="td-card rounded-td-md p-3.5 self-start">
       <div className="flex items-center gap-3 mb-2.5">
-        <div className="w-10 h-10 rounded-td-sm td-avatar" style={{ background: av(idx) }}>{initials(s.name)}</div>
+        <div className="w-10 h-10 td-avatar">{initials(s.name)}</div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm td-strong truncate">{s.name}</div>
+          <div className="text-td-small td-strong truncate">{s.name}</div>
           <div className="text-td-caption text-td-muted truncate">{s.klass} · {s.school}</div>
         </div>
         {s.when && <span className="text-td-caption text-td-subtle shrink-0">{s.when}</span>}
@@ -274,24 +273,24 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
       <div className="text-td-caption text-td-muted leading-relaxed mb-3 bg-td-soft rounded-td-sm p-2.5">
         <div>Parent: <span className="font-semibold text-td-text">{s.parent || '—'}</span></div>
         {s.address && <div>Address: <span className="font-semibold text-td-text">{s.address}</span></div>}
-        <div>Code: <span className="font-bold text-td-text tracking-wide">{s.code}</span></div>
+        <div>Code: <span className="font-semibold text-td-text tracking-wide">{s.code}</span></div>
       </div>
 
       {!open ? (
         <div className="flex gap-2.5">
-          <button onClick={() => setOpen(true)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
-          <button onClick={() => onReject(s.dbId)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Decline</button>
+          <button onClick={() => setOpen(true)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
+          <button onClick={() => onReject(s.dbId)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Decline</button>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
           <div className="flex gap-2.5">
             <div className="flex-1">
-              <label className="text-td-caption font-bold text-td-muted">Batch / class</label>
+              <label className="text-td-caption font-semibold text-td-muted">Batch / class</label>
               <input value={klass} onChange={e => setKlass(e.target.value)} className="td-field mt-1" />
             </div>
             {branches.length > 0 && (
               <div className="flex-1">
-                <label className="text-td-caption font-bold text-td-muted">Branch</label>
+                <label className="text-td-caption font-semibold text-td-muted">Branch</label>
                 <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field mt-1">
                   <option value="">—</option>
                   {branches.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
@@ -301,7 +300,7 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           </div>
           {batchList.length > 0 && (
             <div>
-              <label className="text-td-caption font-bold text-td-muted">Batch</label>
+              <label className="text-td-caption font-semibold text-td-muted">Batch</label>
               <select value={batch} onChange={e => setBatch(e.target.value)} className="td-field mt-1">
                 <option value="">No batch</option>
                 {batchList.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
@@ -310,17 +309,17 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           )}
           <div className="flex gap-2.5">
             <div className="flex-1">
-              <label className="text-td-caption font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
+              <label className="text-td-caption font-semibold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
               <input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="e.g. 800" className="td-field mt-1" />
             </div>
             <div className="flex-1">
-              <label className="text-td-caption font-bold text-td-muted">Due date</label>
+              <label className="text-td-caption font-semibold text-td-muted">Due date</label>
               <input type="date" value={feeDue} onChange={e => setFeeDue(e.target.value)} className="td-field mt-1" />
             </div>
           </div>
           <div className="flex gap-2.5 mt-0.5">
-            <button onClick={confirm} disabled={busy} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-60">{busy ? 'Approving…' : 'Confirm approval'}</button>
-            <button onClick={() => setOpen(false)} className="border border-td-border bg-td-card text-td-muted text-td-small font-bold py-2.5 px-4 rounded-td-sm cursor-pointer">Cancel</button>
+            <button onClick={confirm} disabled={busy} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-60">{busy ? 'Approving…' : 'Confirm approval'}</button>
+            <button onClick={() => setOpen(false)} className="border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-2.5 px-4 rounded-td-sm cursor-pointer">Cancel</button>
           </div>
         </div>
       )}
@@ -339,22 +338,22 @@ export function ReportsScreen() {
       <ScreenHeader title={period === 7 ? 'Weekly Report' : 'Monthly Report'} onBack={back} right={
         <div className="flex bg-td-soft rounded-td-sm p-[3px]">
           {([7, 30] as const).map(d => (
-            <button key={d} onClick={() => setPeriod(d)} className="text-td-caption font-bold py-[7px] px-3 rounded-td-sm cursor-pointer border-none" style={{ background: period === d ? 'var(--color-td-card)' : 'transparent', color: period === d ? 'var(--color-td-primary)' : 'var(--color-td-muted)', boxShadow: period === d ? '0 1px 3px rgba(20,30,60,.12)' : 'none' }}>{d === 7 ? 'Week' : 'Month'}</button>
+            <button key={d} onClick={() => setPeriod(d)} className="text-td-caption font-semibold py-[7px] px-3 rounded-td-sm cursor-pointer border-none" style={{ background: period === d ? 'var(--color-td-card)' : 'transparent', color: period === d ? 'var(--color-td-primary)' : 'var(--color-td-muted)', boxShadow: period === d ? 'var(--shadow-td-card)' : 'none' }}>{d === 7 ? 'Week' : 'Month'}</button>
           ))}
         </div>
       } />
 
       <div className="flex gap-2 mb-4 lg:max-w-md">
         {(['branches', 'students', 'teachers'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}>{t}</button>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 text-td-caption font-semibold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}>{t}</button>
         ))}
       </div>
 
       {tab === 'teachers' ? (
         !teacherActivity ? (
-          <div className="text-center text-td-muted text-sm py-12">Loading activity…</div>
+          <div className="text-center text-td-muted text-td-small py-12">Loading activity…</div>
         ) : teacherActivity.length === 0 ? (
-          <div className="text-center text-td-muted text-sm py-10 td-card rounded-td-md">No approved staff yet.</div>
+          <div className="text-center text-td-muted text-td-small py-10 td-card rounded-td-md">No approved staff yet.</div>
         ) : (
           <div className="td-list gap-3">
             <div className="text-td-caption text-td-muted mb-1 lg:col-span-full">What each staff member logged in the last {period} days.</div>
@@ -365,7 +364,7 @@ export function ReportsScreen() {
                     <div className="text-td-body td-strong">{t.name || t.email}</div>
                     <div className="text-td-caption text-td-muted">{t.email}</div>
                   </div>
-                  <span className="text-td-caption font-bold py-[5px] px-2.5 rounded-td-lg" style={{ color: t.is_head ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: t.is_head ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{t.is_head ? 'Head' : 'Teacher'}</span>
+                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-lg" style={{ color: t.is_head ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: t.is_head ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{t.is_head ? 'Head' : 'Teacher'}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {[
@@ -386,7 +385,7 @@ export function ReportsScreen() {
         )
       ) : tab === 'students' ? (
         !studentReports ? (
-          <div className="text-center text-td-muted text-sm py-12">Generating reports…</div>
+          <div className="text-center text-td-muted text-td-small py-12">Generating reports…</div>
         ) : studentReports.length === 0 ? (
           <EmptyState
             title="No students yet"
@@ -406,9 +405,9 @@ export function ReportsScreen() {
                       <div className="text-td-body td-strong">{s.name}</div>
                       <div className="text-td-caption text-td-muted">{s.klass}</div>
                     </div>
-                    <span className="text-td-caption font-bold py-[5px] px-[9px] rounded-td-lg" style={{ color: s.fee_status === 'Paid' ? 'var(--color-td-green)' : 'var(--color-td-amber)', background: s.fee_status === 'Paid' ? 'var(--color-td-tint-green)' : 'var(--color-td-tint-amber)' }}>{s.fee_status}</span>
+                    <span className="text-td-caption font-semibold py-[5px] px-[9px] rounded-td-lg" style={{ color: s.fee_status === 'Paid' ? 'var(--color-td-green)' : 'var(--color-td-amber)', background: s.fee_status === 'Paid' ? 'var(--color-td-tint-green)' : 'var(--color-td-tint-amber)' }}>{s.fee_status}</span>
                   </div>
-                  <div className="text-td-caption text-td-muted mb-3">Attendance: <span className="font-bold text-td-text">{attPct === null ? '—' : `${attPct}%`}</span> · Tests: <span className="font-bold text-td-text">{s.tests}{s.tests > 0 ? ` (avg ${s.avg_pct}%)` : ''}</span></div>
+                  <div className="text-td-caption text-td-muted mb-3">Attendance: <span className="font-semibold text-td-text">{attPct === null ? '—' : `${attPct}%`}</span> · Tests: <span className="font-semibold text-td-text">{s.tests}{s.tests > 0 ? ` (avg ${s.avg_pct}%)` : ''}</span></div>
                   <WhatsAppButton
                     phone={s.parent}
                     message={studentReportMessage(s, centreName || undefined, period)}
@@ -422,7 +421,7 @@ export function ReportsScreen() {
           </div>
         )
       ) : !r ? (
-        <div className="text-center text-td-muted text-sm py-12">Generating report…</div>
+        <div className="text-center text-td-muted text-td-small py-12">Generating report…</div>
       ) : (
         <>
           <div className="text-td-caption text-td-muted mb-4">Last {period} days · as of {fmtDate(r.generated_at)}</div>
@@ -459,11 +458,11 @@ export function ReportsScreen() {
                 grey footnote this read as "complete"; it now looks like the
                 caveat it is. */}
             {r.unassigned_students > 0 && (
-              <div className="bg-td-tint-amber border border-td-edge-amber rounded-td-sm p-2.5 text-td-amber font-bold">
+              <div className="bg-td-tint-amber border border-td-edge-amber rounded-td-sm p-2.5 text-td-amber font-semibold">
                 {r.unassigned_students} student{r.unassigned_students === 1 ? '' : 's'} not assigned to any branch — they are not counted in the per-branch totals above.
               </div>
             )}
-            <div>Tests conducted this {period === 7 ? 'week' : 'month'}: <span className="font-bold text-td-text">{r.tests_this_week}</span></div>
+            <div>Tests conducted this {period === 7 ? 'week' : 'month'}: <span className="font-semibold text-td-text">{r.tests_this_week}</span></div>
           </div>
 
           <WhatsAppButton

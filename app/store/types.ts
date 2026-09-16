@@ -39,7 +39,7 @@ export interface MeetingItem { day: string; mon: string; title: string; time: st
 export interface AssignmentItem { title: string; due: string; klass: string; submitted: number; total: number; dbId?: string }
 export interface BranchItem { name: string; address: string; students: number; staff: number; main: boolean; dbId?: string }
 export interface StuResultItem { subject: string; test: string; date: string; marks: number; total: number }
-export interface AttLogItem { day: string; date: string; status: string; icon: string; tint: string; color: string }
+export interface AttLogItem { day: string; date: string; status: string; icon: string; tint: string }
 export interface StuAssignmentItem { title: string; subject: string; due: string; instructions: string }
 interface NoteItem { dbId?: string; title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }
 interface StuNoteItem { title: string; subject: string; body: string; fileUrl: string; linkUrl: string; date: string }

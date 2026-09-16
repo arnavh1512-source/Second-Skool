@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useBusy } from '../lib/use-busy'
-import { useDashboard, initials, av, MIN_PASSWORD_LENGTH, type Screen } from '../store'
+import { useDashboard, initials, MIN_PASSWORD_LENGTH, type Screen } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog, Chip } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
@@ -28,7 +28,7 @@ function EnablePushButton() {
 
   if (!pushSupported()) return null
   return (
-    <button onClick={turnOn} disabled={on || busy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-semibold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+    <button onClick={turnOn} disabled={on || busy} className="w-full border border-td-border bg-td-card text-td-dark text-td-small font-semibold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
       <Icon name="reminder" size={17} color="var(--color-td-primary)" />
       {on ? 'Notifications enabled' : busy ? 'Enabling…' : 'Enable notifications on this device'}
     </button>
@@ -60,7 +60,7 @@ export function MeetingsScreen() {
       <ScreenHeader title="Meetings" onBack={back} />
 
       <div className="td-form-card mb-[22px]">
-        <div className="text-sm td-strong">Schedule new</div>
+        <div className="text-td-small td-strong">Schedule new</div>
         <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field" /></label>
         <label className="block"><span className="td-label">Type</span>
           <select value={type} onChange={e => setType(e.target.value)} className="td-field">
@@ -82,15 +82,15 @@ export function MeetingsScreen() {
           {meetingsList.map((m, i) => (
             <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="td-card rounded-td-md p-3.5 flex items-center gap-[13px]">
               <div className="w-[46px] text-center shrink-0 bg-td-tint-blue rounded-td-sm py-2">
-                <div className="text-base font-semibold text-td-primary leading-none">{m.day}</div>
+                <div className="text-td-body font-semibold text-td-primary leading-none">{m.day}</div>
                 <div className="text-td-caption text-td-primary font-semibold mt-0.5">{m.mon}</div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-td-small font-bold text-td-dark">{m.title}</div>
-                <div className="text-xs text-td-muted mt-0.5">{m.time} · {m.kind}</div>
+                <div className="text-td-small font-semibold text-td-dark">{m.title}</div>
+                <div className="text-td-caption text-td-muted mt-0.5">{m.time} · {m.kind}</div>
               </div>
               {isAdmin && m.dbId && (
-                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 td-danger text-td-caption font-bold py-1.5 px-3 rounded-td-sm">Cancel</button>
+                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 td-danger text-td-caption font-semibold py-1.5 px-3 rounded-td-sm">Cancel</button>
               )}
             </div>
           ))}
@@ -215,7 +215,7 @@ export function MoreScreen() {
       {list.map(m => (
         <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="td-plain w-full text-left border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
           <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
-          <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
+          <div className="flex-1 text-td-small font-semibold text-td-dark">{m.label}</div>
           {!!m.badge && m.badge > 0 && <span className="td-count">{m.badge}</span>}
           <ChevronRight />
         </button>
@@ -228,10 +228,10 @@ export function MoreScreen() {
       <div className="td-title mt-1.5 mb-[18px]">More tools</div>
 
       <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left td-card rounded-td-lg p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
-        <div className="w-[46px] h-[46px] rounded-td-md shrink-0 flex items-center justify-center text-white font-bold text-td-body" style={{ background: av(0) }}>{initials(profileName)}</div>
+        <div className="w-[46px] h-[46px] td-avatar text-td-body">{initials(profileName)}</div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm td-strong truncate">{profileName}</div>
-          <div className="text-xs text-td-muted mt-0.5 truncate">{googleEmail} · {isAdmin ? 'Head teacher' : 'Teacher'}</div>
+          <div className="text-td-small td-strong truncate">{profileName}</div>
+          <div className="text-td-caption text-td-muted mt-0.5 truncate">{googleEmail} · {isAdmin ? 'Head teacher' : 'Teacher'}</div>
         </div>
         <ChevronRight />
       </button>
@@ -250,7 +250,7 @@ export function MoreScreen() {
         {card([{ icon: 'warning', label: 'Report a problem', tint: 'var(--color-td-tint-red)', screen: 'support' }])}
       </div>
 
-      <button onClick={signOut} className="w-full td-danger text-sm font-semibold p-[15px] rounded-td-md mt-4 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td-md mt-4 flex items-center justify-center gap-[9px]">
         <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>
@@ -276,7 +276,7 @@ export function NotificationsScreen() {
     <button onClick={() => go(screen, 'home')} className="w-full text-left border-none td-card rounded-td-lg p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
       <div className="w-11 h-11 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm td-strong">{label}</div>
+        <div className="text-td-small td-strong">{label}</div>
         <div className="text-td-caption text-td-muted mt-0.5">{count} waiting for your review</div>
       </div>
       <span className="td-count">{count}</span>
@@ -357,12 +357,12 @@ export function StaffProfileScreen() {
       <ScreenHeader title="My Profile" onBack={() => go('more', 'more')} />
 
       <div className="flex flex-col items-center text-center mb-6">
-        <div className="w-[76px] h-[76px] rounded-td-lg flex items-center justify-center text-white font-semibold text-td-display mb-3" style={{ background: av(0) }}>{initials(displayName)}</div>
+        <div className="w-[76px] h-[76px] td-avatar text-td-display mb-3">{initials(displayName)}</div>
         <div className="text-td-title td-strong">{displayName}</div>
         <div className="text-td-caption text-td-muted mt-0.5">{googleEmail}</div>
         <div className="inline-flex items-center gap-[6px] bg-td-tint-green rounded-td-lg py-[5px] px-[11px] mt-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-td-green" />
-          <span className="text-td-caption font-bold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
+          <span className="text-td-caption font-semibold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
         </div>
       </div>
 
@@ -382,7 +382,7 @@ export function StaffProfileScreen() {
                 {centreLogo
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={centreLogo} alt="Centre logo" className="w-full h-full object-cover" />
-                  : <span className="font-semibold text-td-primary text-xl">{initials(centre || centreName || 'S')}</span>}
+                  : <span className="font-semibold text-td-primary text-td-title">{initials(centre || centreName || 'S')}</span>}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex gap-2">
@@ -408,24 +408,24 @@ export function StaffProfileScreen() {
       <EnablePushButton />
 
       {!pwOpen ? (
-        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-semibold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2">
+        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-td-small font-semibold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2">
           <Icon name="lock" size={17} color="var(--color-td-primary)" />
           Set password for phone login
         </button>
       ) : (
         <div className="border border-td-border rounded-td-md p-4 mt-3">
-          <div className="text-sm td-strong">Set a password</div>
+          <div className="text-td-small td-strong">Set a password</div>
           <p className="text-td-caption text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
           <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="td-field mt-3" />
           <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="td-field mt-2.5" />
           <div className="flex gap-2 mt-3">
             <button onClick={savePassword} disabled={pwBusy} className="td-pill flex-1 text-td-small font-semibold py-[12px] rounded-td-sm cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
-            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-td-small font-bold py-[12px] px-4 rounded-td-sm cursor-pointer">Cancel</button>
+            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-[12px] px-4 rounded-td-sm cursor-pointer">Cancel</button>
           </div>
         </div>
       )}
 
-      <button onClick={signOut} className="w-full td-danger text-sm font-semibold p-[15px] rounded-td-md mt-3 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td-md mt-3 flex items-center justify-center gap-[9px]">
         <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>

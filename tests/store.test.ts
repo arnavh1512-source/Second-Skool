@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { genStudentCode, mapSnapshot, initials, feeColor, stuGrade } from '../app/store'
+import { genStudentCode, mapSnapshot, initials, feeTag, stuGrade } from '../app/store'
 
 describe('genStudentCode', () => {
   it('has the TUT- prefix and 8 code characters', () => {
@@ -26,13 +26,11 @@ describe('initials', () => {
   })
 })
 
-describe('feeColor', () => {
-  // Tokens, not hex: these colours differ between light and dark, and the only
-  // thing worth pinning is that each status still gets its own one.
-  it('maps each fee status to its colour', () => {
-    expect(feeColor('Paid').c).toBe('var(--color-td-green)')
-    expect(feeColor('Due').c).toBe('var(--color-td-amber)')
-    expect(feeColor('Overdue').c).toBe('var(--color-td-red)')
+describe('feeTag', () => {
+  it('gives each fee status its own colour', () => {
+    expect(feeTag('Paid')).toContain('text-td-on-green')
+    expect(feeTag('Due')).toContain('text-td-on-amber')
+    expect(feeTag('Overdue')).toContain('text-td-on-red')
   })
 })
 

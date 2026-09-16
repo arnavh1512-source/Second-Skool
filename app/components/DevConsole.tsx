@@ -151,7 +151,7 @@ export function DevConsoleScreen() {
           <button
             onClick={refresh}
             disabled={loading}
-            className="text-td-caption font-bold py-[7px] px-3 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-primary disabled:opacity-50"
+            className="text-td-caption font-semibold py-[7px] px-3 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-primary disabled:opacity-50"
           >
             {loading ? '…' : 'Refresh'}
           </button>
@@ -176,7 +176,7 @@ export function DevConsoleScreen() {
         </div>
       )}
 
-      {loading && !data && !error && <div className="text-center text-td-muted text-sm py-12">Loading every centre…</div>}
+      {loading && !data && !error && <div className="text-center text-td-muted text-td-small py-12">Loading every centre…</div>}
 
       {data && (
         <>
@@ -240,7 +240,7 @@ export function DevConsoleScreen() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}
+                className={`flex-1 text-td-caption font-semibold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}
               >
                 {t === 'reports' && openReports > 0 ? `reports (${openReports})` : t}
               </button>
@@ -277,7 +277,7 @@ export function DevConsoleScreen() {
               attendance record, result, fee and note belonging to this centre. Its members go back to being
               unregistered accounts. It cannot be undone from here.
             </p>
-            <label className="block text-td-caption font-bold text-td-muted mt-3.5 mb-1.5">
+            <label className="block text-td-caption font-semibold text-td-muted mt-3.5 mb-1.5">
               Type <span className="text-td-dark">{doomed.name}</span> to confirm
             </label>
             <input
@@ -290,7 +290,7 @@ export function DevConsoleScreen() {
               <button
                 onClick={() => { setDoomed(null); setTyped('') }}
                 disabled={deleting}
-                className="flex-1 text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-text disabled:opacity-50"
+                className="flex-1 text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-text disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -315,7 +315,7 @@ export function DevConsoleScreen() {
 function Stat({ label, value, sub, calm }: { label: string; value: number | string; sub?: string; calm?: boolean }) {
   return (
     <div className="td-card rounded-td-md p-3.5">
-      <div className="text-td-caption font-bold text-td-muted">{label}</div>
+      <div className="text-td-caption font-semibold text-td-muted">{label}</div>
       <div className="text-td-heading td-strong mt-0.5 leading-tight">{value}</div>
       {sub && <div className={`text-td-caption mt-0.5 ${calm ? 'text-td-subtle' : 'text-td-amber'}`}>{sub}</div>}
     </div>
@@ -429,7 +429,7 @@ function People({ rows }: { rows: StaffRow[] }) {
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="text-center text-td-muted text-sm py-10 td-card rounded-td-md">{children}</div>
+  return <div className="text-center text-td-muted text-td-small py-10 td-card rounded-td-md">{children}</div>
 }
 
 // The inbox. Collapsed, a report is who and what; expanded it is everything the
@@ -445,7 +445,7 @@ function Reports({ rows, onReply, onResolve }: {
   const [busy, setBusy] = useState(false)
 
   if (rows.length === 0)
-    return <div className="text-center text-td-muted text-sm py-10">No reports yet.</div>
+    return <div className="text-center text-td-muted text-td-small py-10">No reports yet.</div>
 
   const send = (id: string) => {
     const text = draft.trim()
@@ -467,7 +467,7 @@ function Reports({ rows, onReply, onResolve }: {
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm td-strong">{t.intent}</div>
+                  <div className="text-td-small td-strong">{t.intent}</div>
                   <div className="text-td-caption text-td-muted mt-0.5 truncate">
                     {t.reporter_name || 'Someone'} · {t.reporter_role || 'unknown role'} · {t.centre_name || 'no centre'}
                   </div>
@@ -566,6 +566,6 @@ function Reports({ rows, onReply, onResolve }: {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="td-tag font-bold text-td-muted bg-td-soft">{children}</span>
+    <span className="td-tag font-semibold text-td-muted bg-td-soft">{children}</span>
   )
 }

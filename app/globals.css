@@ -233,11 +233,7 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 .td-sub { font-size: .875rem; line-height: 1.625; color: var(--color-td-muted); margin-top: 8px; }
 
 /* "Nothing here yet", on its own line inside a frame that already exists. */
-.td-none { text-align: center; color: var(--color-td-muted); font-size: .875rem; line-height: 1.25rem; padding: 32px 0; }
-
-/* The initials square beside a name. It comes in two sizes, so size and radius
-   stay on the element. */
-.td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: var(--text-td-small); }
+.td-none { text-align: center; color: var(--color-td-muted); font-size: var(--text-td-small); line-height: 1.25rem; padding: 32px 0; }
 
 /* The small solid button that lives in a card header, as opposed to
    PrimaryButton at the foot of a form. */
@@ -262,9 +258,9 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    on the element. */
 .td-form-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 17px; display: flex; flex-direction: column; gap: 14px; }
 
-/* The card a single row sits in: an icon or avatar, then text, laid out in a
-   line. The student app is built almost entirely out of these. */
-.td-row { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 14px; display: flex; align-items: center; gap: 13px; }
+/* One ruled line of a register: an icon or avatar, then text, with a hairline
+   under it. The student app is built almost entirely out of these. */
+.td-row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 12px 0; border-bottom: 1px solid var(--color-td-line); }
 
 /* A button that is not shaped like a button: a text link, a tappable row, a nav
    tab. Only the chrome the browser adds is taken away - the type, the colour,
@@ -290,7 +286,10 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    that adds a margin or overrides a weight keeps working unchanged. */
 @layer components {
   /* The top-of-screen title on screens without a ScreenHeader. */
-  .td-title { font-size: var(--text-td-heading); line-height: 1.2; letter-spacing: -.015em; font-weight: 700; color: var(--color-td-dark); }
+  .td-title { font-size: var(--text-td-heading); line-height: 1.2; letter-spacing: -.01em; font-weight: 600; color: var(--color-td-dark); }
+  /* Round initials beside a name. Every size is set at the call site, which is
+     why this sits in the layer: a text or width utility has to win. */
+  .td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: var(--color-td-tint-blue); color: var(--color-td-primary); font-weight: 600; font-size: var(--text-td-small); }
   /* The square header button: back, bell, theme. */
   .td-icon-btn { width: 44px; height: 44px; border-radius: var(--radius-td-md); border: 1px solid var(--color-td-border); background: var(--color-td-card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
   /* An unread count. */
