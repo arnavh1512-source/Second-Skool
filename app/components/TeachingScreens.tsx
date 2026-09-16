@@ -104,35 +104,35 @@ export function TimetableScreen() {
         <div className="td-form-card mb-[18px] lg:max-w-lg">
           <div className="text-sm td-strong">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="td-label">Start</label>
+            <label className="block"><span className="td-label">Start</span>
               <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field text-sm" />
-            </div>
-            <div><label className="td-label">End</label>
+            </label>
+            <label className="block"><span className="td-label">End</span>
               <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="td-field text-sm" />
-            </div>
+            </label>
           </div>
-          <div><label className="td-label">Subject</label>
+          <label className="block"><span className="td-label">Subject</span>
             <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="td-field text-td-small bg-td-card">
               {subjectNames.map(s => <option key={s}>{s}</option>)}
               <option>Free period</option>
             </select>
-          </div>
+          </label>
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="td-label">Class</label>
+            <label className="block"><span className="td-label">Class</span>
               <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
                 {options(classes, 'Add students first')}
               </select>
-            </div>
-            <div><label className="td-label">Room</label>
+            </label>
+            <label className="block"><span className="td-label">Room</span>
               <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="td-field text-sm" />
-            </div>
+            </label>
           </div>
-          <div><label className="td-label">Teacher</label>
+          <label className="block"><span className="td-label">Teacher</span>
             <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="td-field text-td-small bg-td-card">
               <option value="">Not set</option>
               {teachers.map(t => <option key={t.dbId} value={t.dbId}>{t.name} &middot; {t.subject}</option>)}
             </select>
-          </div>
+          </label>
           <PrimaryButton onClick={handleAdd}>{editing ? 'Save changes' : 'Add period'}</PrimaryButton>
         </div>
       )}
@@ -410,22 +410,22 @@ export function ResultsScreen() {
       <ScreenHeader title={editing ? 'Edit Results' : 'Enter Results'} onBack={editing ? closeTest : back} />
 
       <div className="grid grid-cols-2 gap-[11px] mb-[13px]">
-        <div><label className="td-label">Class</label>
+        <label className="block"><span className="td-label">Class</span>
           {/* Locked while editing: the test belongs to a class, and moving it to
               another one would hand a set of marks to students who never sat it. */}
           <select value={selKlass} disabled={!!editing} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field text-td-small bg-td-card disabled:opacity-60">
             {editing ? <option>{editing.klass}</option> : classes.map(c => <option key={c}>{c}</option>)}
           </select>
-        </div>
-        <div><label className="td-label">Subject</label>
+        </label>
+        <label className="block"><span className="td-label">Subject</span>
           <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={!!editing || subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
             {editing ? <option>{editing.subject || '—'}</option> : options(subjectNames, 'Add subjects first')}
           </select>
-        </div>
+        </label>
       </div>
       <div className="grid grid-cols-[2fr_1fr] gap-[11px] mb-[18px]">
-        <div><label className="td-label">Test name</label><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-td-small" /></div>
-        <div><label className="td-label">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-td-small" /></div>
+        <label className="block"><span className="td-label">Test name</span><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-td-small" /></label>
+        <label className="block"><span className="td-label">Max</span><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-td-small" /></label>
       </div>
 
       <div className="td-h2">{editing ? 'Correct marks' : 'Enter marks'}</div>
@@ -503,21 +503,21 @@ export function AssignmentsScreen() {
       <ScreenHeader title="New Assignment" onBack={back} />
 
       <div className="td-form-card mb-[22px]">
-        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm" /></div>
+        <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm" /></label>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Subject</label>
+          <label className="block"><span className="td-label">Subject</span>
             <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
               {options(subjectNames, 'Add subjects first')}
             </select>
-          </div>
-          <div><label className="td-label">Class</label>
+          </label>
+          <label className="block"><span className="td-label">Class</span>
             <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
               {options(classes, 'Add students first')}
             </select>
-          </div>
+          </label>
         </div>
-        <div><label className="td-label">Due date</label><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm" /></div>
-        <div><label className="td-label">Instructions</label><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="td-field text-sm resize-none" /></div>
+        <label className="block"><span className="td-label">Due date</span><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Instructions</span><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="td-field text-sm resize-none" /></label>
         <PrimaryButton onClick={async () => {
           // Same silent swallow as the timetable: with no students on the
           // roster the class select has nothing to offer, and Create used to
@@ -589,15 +589,19 @@ export function RemindersScreen() {
         })}
       </div>
 
-      <label className="td-label">Send to</label>
-      <select value={filter} onChange={e => setFilter(e.target.value)} className="td-field text-td-small bg-td-card mb-4">
-        <option value="all">All students</option>
-        <option value="absentees">Absentees only</option>
-        <option value="fees_due">Students with fees due</option>
-      </select>
+      <label className="block">
+        <span className="td-label">Send to</span>
+        <select value={filter} onChange={e => setFilter(e.target.value)} className="td-field text-td-small bg-td-card mb-4">
+          <option value="all">All students</option>
+          <option value="absentees">Absentees only</option>
+          <option value="fees_due">Students with fees due</option>
+        </select>
+      </label>
 
-      <label className="td-label">Message</label>
-      <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field text-sm resize-none mb-[18px]" />
+      <label className="block">
+        <span className="td-label">Message</span>
+        <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field text-sm resize-none mb-[18px]" />
+      </label>
 
       <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>
 

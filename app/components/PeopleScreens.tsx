@@ -119,7 +119,7 @@ export function StudentsScreen() {
 
       <div className="flex items-center gap-2.5 td-card rounded-td-md p-[11px] px-3.5 mb-[18px] lg:max-w-md">
         <Icon name="search" size={17} color="var(--color-td-subtle)" />
-        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-td-small text-td-dark outline-none bg-transparent" />
+        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." aria-label="Search students" className="flex-1 text-td-small text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
@@ -238,9 +238,9 @@ export function EditStudentScreen() {
       />
 
       <div className="flex flex-col gap-3.5 mb-[18px]">
-        <div><label className="td-label">Full name</label><input value={st.name} onChange={e => setStudentField({ name: e.target.value })} className="td-field text-sm" /></div>
+        <label className="block"><span className="td-label">Full name</span><input value={st.name} onChange={e => setStudentField({ name: e.target.value })} className="td-field text-sm" /></label>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Class / batch</label><input value={st.klass} onChange={e => setStudentField({ klass: e.target.value })} className="td-field text-sm" /></div>
+          <label className="block"><span className="td-label">Class / batch</span><input value={st.klass} onChange={e => setStudentField({ klass: e.target.value })} className="td-field text-sm" /></label>
           {/* Attendance is computed from the attendance register, not stored on
               the student. It used to be an editable box that wrote to nothing:
               setStudentField never persisted it and the next refresh recomputed
@@ -254,10 +254,10 @@ export function EditStudentScreen() {
             >{st.attendance}% · from the register</output>
           </div>
         </div>
-        <div><label className="td-label">School</label><input value={st.school} onChange={e => setStudentField({ school: e.target.value })} className="td-field text-sm" /></div>
-        <div><label className="td-label">Parent contact</label><input value={st.parent} onChange={e => setStudentField({ parent: e.target.value })} className="td-field text-sm" /></div>
-        <div>
-          <label className="td-label">Fee status</label>
+        <label className="block"><span className="td-label">School</span><input value={st.school} onChange={e => setStudentField({ school: e.target.value })} className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Parent contact</span><input value={st.parent} onChange={e => setStudentField({ parent: e.target.value })} className="td-field text-sm" /></label>
+        <div role="group" aria-label="Fee status">
+          <div className="td-label">Fee status</div>
           <div className="flex gap-[9px]">
             {(['Paid', 'Due', 'Overdue'] as const).map(label => {
               const active = label === st.feeStatus
@@ -315,38 +315,38 @@ export function AddStudentScreen() {
       <ScreenHeader title="Add Student" onBack={backToList} />
 
       <div className="flex flex-col gap-3.5 mb-[22px]">
-        <div><label className="td-label">Full name</label><input value={newStudent.name} onChange={e => setNewStudent({ name: e.target.value })} placeholder="Student name" className="td-field text-sm" /></div>
+        <label className="block"><span className="td-label">Full name</span><input value={newStudent.name} onChange={e => setNewStudent({ name: e.target.value })} placeholder="Student name" className="td-field text-sm" /></label>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">School</label><input value={newStudent.school} onChange={e => setNewStudent({ school: e.target.value })} placeholder="School" className="td-field text-sm" /></div>
-          <div><label className="td-label">Standard</label>
+          <label className="block"><span className="td-label">School</span><input value={newStudent.school} onChange={e => setNewStudent({ school: e.target.value })} placeholder="School" className="td-field text-sm" /></label>
+          <label className="block"><span className="td-label">Standard</span>
             <select value={newStudent.klass} onChange={e => setNewStudent({ klass: e.target.value })} className="td-field text-td-small bg-td-card">
               {STANDARDS.map(c => <option key={c}>{c}</option>)}
             </select>
-          </div>
+          </label>
         </div>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Batch</label>
+          <label className="block"><span className="td-label">Batch</span>
             <select value={newStudent.batch} onChange={e => setNewStudent({ batch: e.target.value })} className="td-field text-td-small bg-td-card">
               <option value="">No batch</option>
               {batches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>
-          </div>
-          <div><label className="td-label">Branch</label>
+          </label>
+          <label className="block"><span className="td-label">Branch</span>
             <select value={newStudent.branch} onChange={e => setNewStudent({ branch: e.target.value })} className="td-field text-td-small bg-td-card">
               {branchesList.length ? branchesList.map(b => <option key={b.name}>{b.name}</option>) : <option>No branches</option>}
             </select>
-          </div>
+          </label>
         </div>
-        <div><label className="td-label">Parent contact</label><input value={newStudent.parent} onChange={e => setNewStudent({ parent: e.target.value })} placeholder="+91" className="td-field text-sm" /></div>
-        <div><label className="td-label">Address</label><input value={newStudent.address} onChange={e => setNewStudent({ address: e.target.value })} placeholder="Address" className="td-field text-sm" /></div>
+        <label className="block"><span className="td-label">Parent contact</span><input value={newStudent.parent} onChange={e => setNewStudent({ parent: e.target.value })} placeholder="+91" className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Address</span><input value={newStudent.address} onChange={e => setNewStudent({ address: e.target.value })} placeholder="Address" className="td-field text-sm" /></label>
         {/* Fees are the head's to set — fees_head is the database policy, so a
             teacher who filled these in had the whole save refused. Hiding the
             fields costs a teacher nothing they could do anyway: they add the
             student, the head adds the fee. */}
         {role === 'admin' && (
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="td-label">Monthly fee (&#8377;) <span className="text-td-subtle font-semibold">· optional</span></label><input type="number" value={newStudent.fee} onChange={e => setNewStudent({ fee: e.target.value })} placeholder="e.g. 2000" className="td-field text-sm" /></div>
-            <div><label className="td-label">Fee due date</label><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="td-field text-sm" /></div>
+            <label className="block"><span className="td-label">Monthly fee (&#8377;) <span className="text-td-subtle font-semibold">· optional</span></span><input type="number" value={newStudent.fee} onChange={e => setNewStudent({ fee: e.target.value })} placeholder="e.g. 2000" className="td-field text-sm" /></label>
+            <label className="block"><span className="td-label">Fee due date</span><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="td-field text-sm" /></label>
           </div>
         )}
         <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-td-md p-3">
@@ -432,19 +432,19 @@ export function ImportStudentsScreen() {
       />
 
       <div className="grid grid-cols-2 gap-[11px] mb-4">
-        <div>
-          <label className="td-label">Class for rows that don&#39;t say</label>
+        <label className="block">
+          <span className="td-label">Class for rows that don&#39;t say</span>
           <select value={klass} onChange={e => setKlass(e.target.value)} className="td-field text-td-small bg-td-card">
             {STANDARDS.map(c => <option key={c}>{c}</option>)}
           </select>
-        </div>
-        <div>
-          <label className="td-label">Branch</label>
+        </label>
+        <label className="block">
+          <span className="td-label">Branch</span>
           <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field text-td-small bg-td-card">
             <option value="">No branch</option>
             {branchesList.map(b => <option key={b.name}>{b.name}</option>)}
           </select>
-        </div>
+        </label>
       </div>
 
       {overflow > 0 && (
@@ -517,7 +517,7 @@ export function StaffScreen() {
 
       <div className="flex items-center gap-[11px] td-card rounded-td-md p-[11px] px-[15px] mb-4 lg:max-w-md">
         <Icon name="search" size={17} color="var(--color-td-subtle)" />
-        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search staff..." className="flex-1 text-td-small text-td-dark outline-none bg-transparent" />
+        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search staff..." aria-label="Search staff" className="flex-1 text-td-small text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
@@ -550,21 +550,21 @@ export function AddTeacherScreen() {
       <ScreenHeader title="Add Teacher" onBack={backToList} />
 
       <div className="flex flex-col gap-3.5 mb-[22px]">
-        <div><label className="td-label">Full name</label><input value={nt.name} onChange={e => setNewTeacher({ name: e.target.value })} placeholder="Teacher name" className="td-field text-sm" /></div>
-        <div><label className="td-label">Subject</label>
+        <label className="block"><span className="td-label">Full name</span><input value={nt.name} onChange={e => setNewTeacher({ name: e.target.value })} placeholder="Teacher name" className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Subject</span>
           <select value={nt.subject || subjectNames[0] || ''} onChange={e => setNewTeacher({ subject: e.target.value })} disabled={subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
             {options(subjectNames, 'Add subjects first')}
           </select>
-        </div>
-        <div><label className="td-label">Qualification</label><input value={nt.qualification} onChange={e => setNewTeacher({ qualification: e.target.value })} placeholder="e.g. M.Sc, B.Ed" className="td-field text-sm" /></div>
+        </label>
+        <label className="block"><span className="td-label">Qualification</span><input value={nt.qualification} onChange={e => setNewTeacher({ qualification: e.target.value })} placeholder="e.g. M.Sc, B.Ed" className="td-field text-sm" /></label>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Years of exp.</label><input value={nt.experience} onChange={e => setNewTeacher({ experience: e.target.value })} placeholder="0" className="td-field text-sm" /></div>
-          <div><label className="td-label">Branch</label>
+          <label className="block"><span className="td-label">Years of exp.</span><input value={nt.experience} onChange={e => setNewTeacher({ experience: e.target.value })} placeholder="0" className="td-field text-sm" /></label>
+          <label className="block"><span className="td-label">Branch</span>
             <select value={nt.branch} onChange={e => setNewTeacher({ branch: e.target.value })} className="td-field text-td-small bg-td-card">
               <option value="">All branches</option>
               {branchesList.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>
-          </div>
+          </label>
         </div>
       </div>
       <PrimaryButton onClick={saveTeacher}>Save teacher</PrimaryButton>

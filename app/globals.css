@@ -194,6 +194,9 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    three utilities before this. Radius and padding stay on the element - the app
    uses four different radii on purpose and one rule does not get to pick. */
 .td-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); }
+/* A card that is itself the field (the search bars): the input inside turns its
+   own outline off, so the card's border is the only place focus can show. */
+.td-card:has(> input:focus) { border-color: var(--color-td-primary); }
 
 /* One weight and one colour, worn together 91 times: the app's strong text.
    Size is not part of it - six different ones sit on top. */
@@ -248,6 +251,13 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    things are here - the seventeen disagree on width, padding, radius and type
    size, and one of them turns the pointer off while it is working. */
 .td-pill { border: none; background: var(--color-td-primary); color: #fff; }
+
+/* A visible ring for keyboard users on anything focusable. Layered as base so
+   every outline-none utility and every .td-* rule that draws its own focus state
+   still wins; mouse and touch taps never trigger :focus-visible on buttons. */
+@layer base {
+  :focus-visible { outline: 2px solid var(--color-td-primary); outline-offset: 2px; }
+}
 
 /* Shapes that were copy-pasted onto three or more elements. Layered, unlike the
    classes above, so a utility on the same element still wins: every call site

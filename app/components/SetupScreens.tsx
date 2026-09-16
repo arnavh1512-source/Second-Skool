@@ -53,12 +53,12 @@ export function BranchesScreen() {
       {showForm && (
         <div className="td-form-card mb-[18px]">
           <div className="text-sm td-strong">New branch</div>
-          <div><label className="td-label">Branch name</label>
+          <label className="block"><span className="td-label">Branch name</span>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="td-field text-sm" />
-          </div>
-          <div><label className="td-label">Address</label>
+          </label>
+          <label className="block"><span className="td-label">Address</span>
             <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="td-field text-sm" />
-          </div>
+          </label>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-td-primary rounded" />
             <span className="text-td-small font-bold text-td-dark">Set as main branch</span>

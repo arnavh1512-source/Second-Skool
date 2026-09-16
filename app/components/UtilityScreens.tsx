@@ -61,15 +61,15 @@ export function MeetingsScreen() {
 
       <div className="td-form-card mb-[22px]">
         <div className="text-sm td-strong">Schedule new</div>
-        <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field text-sm" /></div>
-        <div><label className="td-label">Type</label>
+        <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Type</span>
           <select value={type} onChange={e => setType(e.target.value)} className="td-field text-td-small bg-td-card">
             <option>Parent-teacher meeting</option><option>Staff meeting</option>
           </select>
-        </div>
+        </label>
         <div className="grid grid-cols-2 gap-[11px]">
-          <div><label className="td-label">Date</label><input type="date" value={date} onChange={e => setDate(e.target.value)} className="td-field text-sm" /></div>
-          <div><label className="td-label">Time</label><input value={time} onChange={e => setTime(e.target.value)} className="td-field text-sm" /></div>
+          <label className="block"><span className="td-label">Date</span><input type="date" value={date} onChange={e => setDate(e.target.value)} className="td-field text-sm" /></label>
+          <label className="block"><span className="td-label">Time</span><input value={time} onChange={e => setTime(e.target.value)} className="td-field text-sm" /></label>
         </div>
         <PrimaryButton onClick={async () => { if (await saveMeeting(title, type, date, time)) { setTitle(''); setDate('') } }}>Schedule &amp; invite</PrimaryButton>
       </div>
@@ -357,16 +357,16 @@ export function StaffProfileScreen() {
       </div>
 
       <div className="flex flex-col gap-3.5 mb-[18px]">
-        <div><label className="td-label">Full name</label><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="td-field text-sm" /></div>
-        <div><label className="td-label">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="td-field text-sm" /></div>
-        <div><label className="td-label">Subject you teach</label><input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Mathematics, Physics" className="td-field text-sm" /></div>
-        <div><label className="td-label">Qualification</label><input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="e.g. M.Sc. Mathematics" className="td-field text-sm" /></div>
+        <label className="block"><span className="td-label">Full name</span><input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Phone</span><input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91" className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Subject you teach</span><input value={subject} onChange={e => setSubject(e.target.value)} placeholder="e.g. Mathematics, Physics" className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Qualification</span><input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="e.g. M.Sc. Mathematics" className="td-field text-sm" /></label>
         {isAdmin && (
-          <div><label className="td-label">Centre name</label><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field text-sm" /></div>
+          <label className="block"><span className="td-label">Centre name</span><input value={centre} onChange={e => setCentre(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field text-sm" /></label>
         )}
         {isAdmin && (
-          <div>
-            <label className="td-label">Centre logo</label>
+          <div role="group" aria-label="Centre logo">
+            <div className="td-label">Centre logo</div>
             <div className="flex items-center gap-3.5 border border-td-border rounded-td-md p-3">
               <div className="w-14 h-14 rounded-td-md overflow-hidden shrink-0 flex items-center justify-center bg-td-soft border border-td-border">
                 {centreLogo

@@ -131,50 +131,50 @@ export function FeesScreen() {
               </button>
             ))}
           </div>
-          <div><label className="td-label">Student</label>
+          <label className="block"><span className="td-label">Student</span>
             <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field text-td-small bg-td-card">
               <option value="">Select student</option>
               {students.map(s => <option key={s.dbId ?? s.id} value={s.dbId ?? ''}>{s.name} — {s.klass}</option>)}
             </select>
-          </div>
+          </label>
           {!planMode ? (
             <>
               <div className="grid grid-cols-2 gap-[11px]">
-                <div><label className="td-label">Amount (&#8377;)</label>
+                <label className="block"><span className="td-label">Amount (&#8377;)</span>
                   <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field text-sm" />
-                </div>
-                <div><label className="td-label">Period</label>
+                </label>
+                <label className="block"><span className="td-label">Period</span>
                   <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field text-sm" />
-                </div>
+                </label>
               </div>
-              <div><label className="td-label">Due date</label>
+              <label className="block"><span className="td-label">Due date</span>
                 <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm" />
-              </div>
+              </label>
               <PrimaryButton onClick={handleAdd}>Add fee record</PrimaryButton>
             </>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-[11px]">
-                <div><label className="td-label">Total for the year (&#8377;)</label>
+                <label className="block"><span className="td-label">Total for the year (&#8377;)</span>
                   <input type="number" value={planTotal} onChange={e => setPlanTotal(e.target.value)} placeholder="e.g. 12000" className="td-field text-sm" />
-                </div>
-                <div><label className="td-label">Discount (&#8377;)</label>
+                </label>
+                <label className="block"><span className="td-label">Discount (&#8377;)</span>
                   <input type="number" value={planDiscount} onChange={e => setPlanDiscount(e.target.value)} placeholder="0" className="td-field text-sm" />
-                </div>
+                </label>
               </div>
               <div className="grid grid-cols-2 gap-[11px]">
-                <div><label className="td-label">Installments</label>
+                <label className="block"><span className="td-label">Installments</span>
                   <input type="number" value={planCount} onChange={e => setPlanCount(e.target.value)} placeholder="6" className="td-field text-sm" />
-                </div>
-                <div><label className="td-label">Every</label>
+                </label>
+                <label className="block"><span className="td-label">Every</span>
                   <select value={planInterval} onChange={e => setPlanInterval(e.target.value as PlanInterval)} className="td-field text-td-small bg-td-card">
                     {PLAN_INTERVALS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
                   </select>
-                </div>
+                </label>
               </div>
-              <div><label className="td-label">First due date</label>
+              <label className="block"><span className="td-label">First due date</span>
                 <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field text-sm" />
-              </div>
+              </label>
               {planPreview.length > 0 && (
                 <div className="bg-td-soft rounded-td-md p-3 text-td-caption text-td-muted leading-relaxed">
                   <span className="td-strong text-td-dark">{planPreview.length} installments</span>

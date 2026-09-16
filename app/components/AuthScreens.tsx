@@ -459,9 +459,9 @@ export function ProfileSetupScreen() {
 
   const field = (label: string, value: string, onChange: (v: string) => void, placeholder: string, hint?: string) => (
     <div>
-      <label className="td-label">{label}</label>
+      <div className="td-label">{label}</div>
       <input
-        value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} aria-label={label}
         onKeyDown={e => e.key === 'Enter' && submit()}
         className="td-field text-sm"
       />

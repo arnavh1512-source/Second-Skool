@@ -53,25 +53,25 @@ export function NotesScreen() {
 
       {showForm && (
         <div className="td-form-card mb-[18px]">
-          <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field text-sm" /></div>
+          <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field text-sm" /></label>
           <div className="grid grid-cols-2 gap-[11px]">
-            <div><label className="td-label">Subject</label>
+            <label className="block"><span className="td-label">Subject</span>
               <select value={subject} onChange={e => setSubject(e.target.value)} className="td-field text-td-small bg-td-card">
                 <option value="">General</option>
                 {subjects.map(s => <option key={s.name}>{s.name}</option>)}
               </select>
-            </div>
-            <div><label className="td-label">Class</label>
+            </label>
+            <label className="block"><span className="td-label">Class</span>
               <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
                 {options(classes, 'Add students first')}
               </select>
-            </div>
+            </label>
           </div>
-          <div><label className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></label><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field text-sm resize-none" /></div>
-          <div><label className="td-label">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></label>
+          <label className="block"><span className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></span><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field text-sm resize-none" /></label>
+          <label className="block"><span className="td-label">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></span>
             <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-td-caption text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-td-sm file:border-none file:bg-td-tint-blue file:text-td-primary file:font-bold file:text-td-caption" />
-          </div>
-          <div><label className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></label><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field text-sm" /></div>
+          </label>
+          <label className="block"><span className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></span><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field text-sm" /></label>
           <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
         </div>
       )}
