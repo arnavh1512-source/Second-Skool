@@ -75,7 +75,7 @@ export function ConnectionStatus() {
       <div
         role="status"
         aria-live="assertive"
-        className="fixed top-0 left-0 right-0 z-[70] bg-[#8f2417] text-white text-[13px] font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-[0_2px_12px_rgba(0,0,0,.2)]"
+        className="fixed top-0 left-0 right-0 z-[70] bg-[#8f2417] text-white text-td-small font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
       >
         No internet — only attendance can be saved right now
       </div>
@@ -90,7 +90,7 @@ export function ConnectionStatus() {
       <div
         role="status"
         aria-live="polite"
-        className="fixed top-0 left-0 right-0 z-[70] bg-[#8a5a08] text-white text-[13px] font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-[0_2px_12px_rgba(0,0,0,.2)]"
+        className="fixed top-0 left-0 right-0 z-[70] bg-[#8a5a08] text-white text-td-small font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
       >
         {waiting} attendance {waiting === 1 ? 'mark' : 'marks'} saved on this phone, syncing…
       </div>
@@ -102,7 +102,7 @@ export function ConnectionStatus() {
       <div
         role="status"
         aria-live="polite"
-        className="fixed top-0 left-0 right-0 z-[70] bg-[#1c6b45] text-white text-[13px] font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-[0_2px_12px_rgba(0,0,0,.2)]"
+        className="fixed top-0 left-0 right-0 z-[70] bg-[#1c6b45] text-white text-td-small font-bold text-center py-2 px-4 pt-[calc(env(safe-area-inset-top)+8px)] shadow-td-raised"
       >
         Back online
       </div>

@@ -13,7 +13,7 @@ import { useBusy } from '../lib/use-busy'
 
 const LOGO = (
   // eslint-disable-next-line @next/next/no-img-element
-  <img src="/icon-512.png" alt="Second Skool" width={72} height={72} className="rounded-[18px] object-cover shadow-[0_2px_10px_rgba(20,30,60,.12)]" />
+  <img src="/icon-512.png" alt="Second Skool" width={72} height={72} className="rounded-td-lg object-cover shadow-td-raised" />
 )
 
 const CLASS_OPTIONS = ['Class 1', 'Class 2', 'Class 3', 'Class 4', 'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12']
@@ -25,7 +25,7 @@ function HelpLine() {
     <a
       href={whatsappShareUrl('918140081461', 'Hi, I need help with Second Skool.')}
       target="_blank" rel="noreferrer"
-      className="text-[12.5px] font-bold text-td-primary py-3 no-underline"
+      className="text-td-caption font-bold text-td-primary py-3 no-underline"
     >
       Stuck? Message us on WhatsApp
     </a>
@@ -45,10 +45,10 @@ function GateNotice({ tint, icon, color, title, sub, children }: {
 }) {
   return (
     <div className="td-auth-screen items-center justify-center text-center">
-      <div className={`w-[72px] h-[72px] rounded-[22px] ${tint} flex items-center justify-center mb-5`}>
+      <div className={`w-[72px] h-[72px] rounded-td-lg ${tint} flex items-center justify-center mb-5`}>
         <Icon name={icon} size={32} color={color} />
       </div>
-      <div className="text-[20px] td-strong">{title}</div>
+      <div className="text-td-heading td-strong">{title}</div>
       {sub && <div className="td-sub max-w-[300px]">{sub}</div>}
       {children}
     </div>
@@ -102,41 +102,41 @@ export function LoginScreen() {
   return (
     <div className="td-auth-screen">
       {LOGO}
-      <div className="text-[26px] td-strong tracking-tight mt-[22px]">Second Skool</div>
+      <div className="text-td-display td-strong tracking-tight mt-[22px]">Second Skool</div>
 
       {mode === 'choose' && (
         <>
           <div className="td-sub">Teachers sign in with Google. Students tap below and enter the code their teacher gave them — no account needed.</div>
 
-          <button onClick={signInWithGoogle} className="w-full border border-td-line bg-td-card rounded-[14px] p-3.5 mt-8 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
+          <button onClick={signInWithGoogle} className="w-full border border-td-line bg-td-card rounded-td-md p-3.5 mt-8 flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
             <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.3 2.2 20.6 2.2 24s.8 6.7 2.3 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>
-            <span className="text-[14.5px] font-bold text-td-text">Teacher — continue with Google</span>
+            <span className="text-td-body font-bold text-td-text">Teacher — continue with Google</span>
           </button>
 
-          <button onClick={() => setMode('email')} className="w-full border border-td-line bg-td-card rounded-[14px] p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-[0_1px_2px_rgba(20,30,60,.06)]">
+          <button onClick={() => setMode('email')} className="w-full border border-td-line bg-td-card rounded-td-md p-3.5 mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
             <Icon name="lock" size={20} color="var(--color-td-primary)" />
-            <span className="text-[14.5px] font-bold text-td-text">Teacher — sign in with password</span>
+            <span className="text-td-body font-bold text-td-text">Teacher — sign in with password</span>
           </button>
-          <div className="text-[12px] text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
+          <div className="text-td-caption text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
 
           <div className="flex items-center gap-3 mt-5">
             <div className="flex-1 h-px bg-td-border" />
-            <span className="text-[12px] text-td-subtle font-semibold">or</span>
+            <span className="text-td-caption text-td-subtle font-semibold">or</span>
             <div className="flex-1 h-px bg-td-border" />
           </div>
 
-          <button onClick={() => setMode('student')} className="w-full text-left border border-td-border rounded-[18px] p-[18px] mt-5 flex items-center gap-[15px] cursor-pointer bg-td-card">
-            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-tint-green">
+          <button onClick={() => setMode('student')} className="w-full text-left border border-td-border rounded-td-lg p-[18px] mt-5 flex items-center gap-[15px] cursor-pointer bg-td-card">
+            <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center bg-td-tint-green">
               <Icon name="person" size={26} color="var(--color-td-green)" />
             </div>
             <div className="flex-1">
               <div className="text-base td-strong">I&apos;m a student</div>
-              <div className="text-[12.5px] text-td-muted mt-[3px]">Enter your code to see your updates</div>
+              <div className="text-td-caption text-td-muted mt-[3px]">Enter your code to see your updates</div>
             </div>
             <Icon name="next" size={20} color="var(--color-td-faint)" />
           </button>
 
-          <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">Your tuition centre sets up teacher access. Students only ever need their code.</div>
+          <div className="mt-auto text-td-caption text-td-subtle text-center leading-relaxed pt-6">Your tuition centre sets up teacher access. Students only ever need their code.</div>
         </>
       )}
 
@@ -150,12 +150,12 @@ export function LoginScreen() {
             placeholder="e.g. TUT-7X2K9Q" aria-label="Your student code" required aria-required="true"
             className="td-field text-base text-center tracking-[0.2em] font-bold mt-7"
           />
-          <button onClick={submitCode} disabled={busy} className="td-pill w-full text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">
+          <button onClick={submitCode} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">
             {busy ? 'Checking…' : 'View my updates'}
           </button>
-          <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-[14px] py-[13px] cursor-pointer bg-td-card text-[13.5px] font-bold text-td-primary mt-3">New here? Register yourself</button>
-          <button onClick={() => { setMode('choose'); setCode('') }} className="td-plain w-full text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
+          <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-td-md py-[13px] cursor-pointer bg-td-card text-td-small font-bold text-td-primary mt-3">New here? Register yourself</button>
+          <button onClick={() => { setMode('choose'); setCode('') }} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">Back</button>
+          <div className="mt-auto text-td-caption text-td-subtle text-center leading-relaxed pt-6">Don&apos;t have a code? Register with your centre code and your teacher will approve you.</div>
         </>
       )}
 
@@ -175,9 +175,9 @@ export function LoginScreen() {
             placeholder="Password"
             className="td-field text-base mt-3"
           />
-          <button onClick={signInWithPassword} disabled={busy} className="td-pill w-full text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
-          <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="td-plain w-full text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-[12px] text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
+          <button onClick={signInWithPassword} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
+          <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">Back</button>
+          <div className="mt-auto text-td-caption text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
         </>
       )}
 
@@ -188,7 +188,7 @@ export function LoginScreen() {
             <div>
               <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-td-red">*</span></label>
               <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="td-field text-sm mt-1.5 tracking-[0.15em] font-bold text-center" />
-              <div id="reg-code-hint" className="text-[12px] text-td-subtle mt-1">The code your teacher shared with you to register.</div>
+              <div id="reg-code-hint" className="text-td-caption text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
               <label htmlFor="reg-name" className="text-xs font-bold text-td-muted">Full name <span className="text-td-red">*</span></label>
@@ -215,8 +215,8 @@ export function LoginScreen() {
               <input id="reg-address" autoComplete="street-address" value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="td-field text-sm mt-1.5" />
             </div>
           </div>
-          <button onClick={submitSignup} disabled={busy} className="td-pill w-full text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer mt-4 disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for approval'}</button>
-          <button onClick={() => setMode('student')} className="td-plain w-full text-td-muted text-[13px] font-bold py-3 cursor-pointer mt-1">I already have a code</button>
+          <button onClick={submitSignup} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer mt-4 disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for approval'}</button>
+          <button onClick={() => setMode('student')} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">I already have a code</button>
         </>
       )}
     </div>
@@ -322,9 +322,9 @@ export function NotificationGateScreen() {
         : `${centreName || 'Your coaching centre'} needs to send you reminders about tests, homework and fees. Turn them on to continue.`}
     >
       {blocked ? (
-        <div className="mt-6 w-full max-w-[320px] td-card rounded-[16px] p-4 text-left">
-          <div className="text-[12px] td-strong mb-2">How to allow them</div>
-          <ol className="text-[12.5px] text-td-muted leading-relaxed list-decimal pl-4 flex flex-col gap-1">
+        <div className="mt-6 w-full max-w-[320px] td-card rounded-td-md p-4 text-left">
+          <div className="text-td-caption td-strong mb-2">How to allow them</div>
+          <ol className="text-td-caption text-td-muted leading-relaxed list-decimal pl-4 flex flex-col gap-1">
             <li>Tap the lock or ⓘ icon next to the web address</li>
             <li>Open <span className="font-bold text-td-text">Permissions</span> → <span className="font-bold text-td-text">Notifications</span></li>
             <li>Switch it to <span className="font-bold text-td-text">Allow</span></li>
@@ -332,11 +332,11 @@ export function NotificationGateScreen() {
           </ol>
           <button
             onClick={() => { writeLocal(BYPASS_KEY, '1'); window.dispatchEvent(new Event(PERM_EVENT)) }}
-            className="td-plain mt-3 w-full text-[12.5px] font-bold text-td-primary py-2.5 cursor-pointer"
+            className="td-plain mt-3 w-full text-td-caption font-bold text-td-primary py-2.5 cursor-pointer"
           >
             Continue without reminders
           </button>
-          <div className="text-[12px] text-td-subtle leading-relaxed mt-1">You will not be told about tests, homework or fees until you allow them.</div>
+          <div className="text-td-caption text-td-subtle leading-relaxed mt-1">You will not be told about tests, homework or fees until you allow them.</div>
         </div>
       ) : (
         <div className="mt-7 w-full max-w-[320px]">
@@ -345,12 +345,12 @@ export function NotificationGateScreen() {
       )}
 
       {code && (
-        <div className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-td-card">
-          <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+        <div className="mt-6 border border-td-border rounded-td-md px-5 py-3 bg-td-card">
+          <div className="text-td-caption font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
           <div className="text-lg td-strong tracking-[0.15em] mt-1">{code}</div>
         </div>
       )}
-      <button onClick={signOut} className="td-plain mt-auto text-[12.5px] text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
+      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
     </GateNotice>
   )
 }
@@ -393,14 +393,14 @@ export function StuPendingScreen() {
       sub={<>Your teacher{stuPending?.centre ? ` at ${stuPending.centre}` : ''} is reviewing your details. You&apos;ll get in the moment they approve you.</>}
     >
       {code && (
-        <button onClick={copyCode} className="mt-6 border border-td-border rounded-[14px] px-5 py-3 bg-td-card cursor-pointer">
-          <div className="text-[12px] font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
+        <button onClick={copyCode} className="mt-6 border border-td-border rounded-td-md px-5 py-3 bg-td-card cursor-pointer">
+          <div className="text-td-caption font-bold text-td-subtle uppercase tracking-wide">Your code — save it</div>
           <div className="text-lg td-strong tracking-[0.15em] mt-1">{code}</div>
         </button>
       )}
 
-      <button onClick={checkNow} disabled={busy} className="td-pill text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
-      <button onClick={signOut} className="td-plain text-[12.5px] text-td-muted font-bold py-3 cursor-pointer mt-2">Use a different code</button>
+      <button onClick={checkNow} disabled={busy} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
+      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Use a different code</button>
     </GateNotice>
   )
 }
@@ -435,7 +435,7 @@ export function StuDeniedScreen() {
       title={copy.title}
       sub={copy.sub}
     >
-      <button onClick={signOut} className="td-pill text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Back to start</button>
+      <button onClick={signOut} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Back to start</button>
     </GateNotice>
   )
 }
@@ -465,14 +465,14 @@ export function ProfileSetupScreen() {
         onKeyDown={e => e.key === 'Enter' && submit()}
         className="td-field text-sm"
       />
-      {hint && <div className="text-[12px] text-td-subtle mt-1.5">{hint}</div>}
+      {hint && <div className="text-td-caption text-td-subtle mt-1.5">{hint}</div>}
     </div>
   )
 
   return (
     <div className="td-auth-screen">
       {LOGO}
-      <div className="text-[24px] td-strong tracking-tight mt-[22px]">Tell us about you</div>
+      <div className="text-td-heading td-strong tracking-tight mt-[22px]">Tell us about you</div>
       <div className="td-sub">
         Signed in as <span className="font-bold text-td-text">{googleEmail}</span>. These details are what your centre and its students will see.
       </div>
@@ -482,11 +482,11 @@ export function ProfileSetupScreen() {
         {field('Phone', phone, setPhone, '+91 98765 43210', 'Your head teacher uses this to reach you.')}
         {field('Subject you teach', subject, setSubject, 'e.g. Mathematics, Physics')}
         {field('Qualification', qualification, setQualification, 'e.g. M.Sc. Mathematics')}
-        <div className="text-[12px] text-td-subtle">All four are required — your students see them on your teacher profile.</div>
+        <div className="text-td-caption text-td-subtle">All four are required — your students see them on your teacher profile.</div>
         <PrimaryButton onClick={submit}>{busy ? 'Saving…' : 'Continue'}</PrimaryButton>
       </div>
 
-      <button onClick={signOut} className="td-plain mt-auto text-[12.5px] text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
+      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
     </div>
   )
 }
@@ -502,27 +502,27 @@ export function RegisterScreen() {
   return (
     <div className="td-auth-screen">
       {LOGO}
-      <div className="text-[24px] td-strong tracking-tight mt-[22px]">Set up your access</div>
+      <div className="text-td-heading td-strong tracking-tight mt-[22px]">Set up your access</div>
       <div className="td-sub">Signed in as <span className="font-bold text-td-text">{googleEmail}</span>.</div>
 
       {mode === 'choose' && (
         <div className="flex flex-col gap-[13px] mt-7">
-          <button onClick={() => setMode('create')} className="text-left border rounded-[20px] p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-edge-blue)' }}>
-            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-ink">
+          <button onClick={() => setMode('create')} className="text-left border rounded-td-lg p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-edge-blue)' }}>
+            <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center bg-td-ink">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
             </div>
             <div className="flex-1">
               <div className="text-base td-strong">Create a centre</div>
-              <div className="text-[12.5px] text-td-muted mt-[3px]">Start your own — you&apos;ll be the head teacher.</div>
+              <div className="text-td-caption text-td-muted mt-[3px]">Start your own — you&apos;ll be the head teacher.</div>
             </div>
           </button>
-          <button onClick={() => setMode('join')} className="text-left border rounded-[20px] p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-border)' }}>
-            <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center bg-td-tint-blue">
+          <button onClick={() => setMode('join')} className="text-left border rounded-td-lg p-[18px] flex items-center gap-[15px] cursor-pointer bg-td-card" style={{ borderColor: 'var(--color-td-border)' }}>
+            <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center bg-td-tint-blue">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             </div>
             <div className="flex-1">
               <div className="text-base td-strong">Join a centre</div>
-              <div className="text-[12.5px] text-td-muted mt-[3px]">As a teacher, with your centre&apos;s join code.</div>
+              <div className="text-td-caption text-td-muted mt-[3px]">As a teacher, with your centre&apos;s join code.</div>
             </div>
           </button>
         </div>
@@ -533,7 +533,7 @@ export function RegisterScreen() {
           <label className="text-xs font-bold text-td-muted">Centre name</label>
           <input autoFocus value={centreName} onChange={e => setCentreName(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field text-sm" />
           <PrimaryButton onClick={() => run(() => centreName.trim().length >= 2 ? createCentre(centreName) : notify('Enter your centre name', 'error'))}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
-          <button onClick={() => setMode('choose')} className="td-plain text-[13px] text-td-muted font-bold py-2 cursor-pointer">Back</button>
+          <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
         </div>
       )}
 
@@ -542,14 +542,14 @@ export function RegisterScreen() {
           <label className="text-xs font-bold text-td-muted">Centre join code</label>
           <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="td-field text-sm text-center tracking-[0.2em] font-bold" />
           <PrimaryButton onClick={() => run(() => code.trim().length >= 4 ? joinCentre(code) : notify('Enter the full join code', 'error'))}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
-          <div className="text-[12px] text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
-          <button onClick={() => setMode('choose')} className="td-plain text-[13px] text-td-muted font-bold py-2 cursor-pointer">Back</button>
+          <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
+          <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
         </div>
       )}
 
       <div className="mt-auto pt-6 flex flex-col items-center">
         <HelpLine />
-        <button onClick={signOut} className="td-plain text-[12.5px] text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
+        <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer">Sign out</button>
       </div>
     </div>
   )
@@ -580,9 +580,9 @@ export function PendingScreen() {
       title="Waiting for approval"
       sub={<>Your head teacher needs to approve <span className="font-bold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</>}
     >
-      <button onClick={() => window.location.reload()} className="td-pill text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Check again</button>
+      <button onClick={() => window.location.reload()} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Check again</button>
       <HelpLine />
-      <button onClick={signOut} className="td-plain text-[12.5px] text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
+      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
     </GateNotice>
   )
 }
@@ -602,9 +602,9 @@ export function DeniedScreen() {
       {mode === 'view' && (
         <>
           <div className="td-sub max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
-          <button onClick={() => setMode('join')} className="td-pill text-[14px] font-extrabold py-[13px] px-8 rounded-2xl cursor-pointer mt-7">Enter a join code</button>
+          <button onClick={() => setMode('join')} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Enter a join code</button>
           <HelpLine />
-          <button onClick={signOut} className="td-plain text-[12.5px] text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
+          <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
         </>
       )}
 
@@ -617,9 +617,9 @@ export function DeniedScreen() {
             placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true"
             className="td-field text-sm text-center tracking-[0.2em] font-bold"
           />
-          <button onClick={submit} disabled={busy} className="td-pill w-full text-[15px] font-extrabold py-[14px] rounded-2xl cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>
-          <div className="text-[12px] text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get in once they approve you.</div>
-          <button onClick={() => { setMode('view'); setCode('') }} className="td-plain text-[13px] text-td-muted font-bold py-2 cursor-pointer">Back</button>
+          <button onClick={submit} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[14px] rounded-td-md cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>
+          <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get in once they approve you.</div>
+          <button onClick={() => { setMode('view'); setCode('') }} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
         </div>
       )}
     </GateNotice>

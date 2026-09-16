@@ -111,28 +111,28 @@ export function FeesScreen() {
       )}
 
       <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
-        <div className="flex-1 bg-td-tint-green rounded-2xl p-3.5">
-          <div className="text-[21px] font-extrabold text-td-green leading-tight">{rupee(totalCollected)}</div>
-          <div className="text-[12px] text-td-on-green font-semibold mt-[3px]">Collected · {paidCount} paid</div>
+        <div className="flex-1 bg-td-tint-green rounded-td-md p-3.5">
+          <div className="text-td-heading font-extrabold text-td-green leading-tight">{rupee(totalCollected)}</div>
+          <div className="text-td-caption text-td-on-green font-semibold mt-[3px]">Collected · {paidCount} paid</div>
         </div>
-        <div className="flex-1 bg-td-tint-red rounded-2xl p-3.5">
-          <div className="text-[21px] font-extrabold text-td-red leading-tight">{rupee(totalRemaining)}</div>
-          <div className="text-[12px] text-td-on-red font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
+        <div className="flex-1 bg-td-tint-red rounded-td-md p-3.5">
+          <div className="text-td-heading font-extrabold text-td-red leading-tight">{rupee(totalRemaining)}</div>
+          <div className="text-td-caption text-td-on-red font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
         </div>
       </div>
 
       {showForm && (
         <div className="td-form-card mb-[18px] lg:max-w-lg">
-          <div className="flex gap-1.5 p-1 bg-td-soft rounded-[14px]">
+          <div className="flex gap-1.5 p-1 bg-td-soft rounded-td-md">
             {[{ on: false, label: 'One fee' }, { on: true, label: 'Installment plan' }].map(t => (
               <button key={t.label} onClick={() => setPlanMode(t.on)}
-                className={`flex-1 text-[12.5px] font-bold py-2 rounded-[10px] border-none cursor-pointer ${planMode === t.on ? 'bg-td-card text-td-dark' : 'bg-transparent text-td-muted'}`}>
+                className={`flex-1 text-td-caption font-bold py-2 rounded-td-sm border-none cursor-pointer ${planMode === t.on ? 'bg-td-card text-td-dark' : 'bg-transparent text-td-muted'}`}>
                 {t.label}
               </button>
             ))}
           </div>
           <div><label className="td-label">Student</label>
-            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field text-td-small bg-td-card">
               <option value="">Select student</option>
               {students.map(s => <option key={s.dbId ?? s.id} value={s.dbId ?? ''}>{s.name} — {s.klass}</option>)}
             </select>
@@ -167,7 +167,7 @@ export function FeesScreen() {
                   <input type="number" value={planCount} onChange={e => setPlanCount(e.target.value)} placeholder="6" className="td-field text-sm" />
                 </div>
                 <div><label className="td-label">Every</label>
-                  <select value={planInterval} onChange={e => setPlanInterval(e.target.value as PlanInterval)} className="td-field text-[13.5px] bg-td-card">
+                  <select value={planInterval} onChange={e => setPlanInterval(e.target.value as PlanInterval)} className="td-field text-td-small bg-td-card">
                     {PLAN_INTERVALS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
                   </select>
                 </div>
@@ -176,7 +176,7 @@ export function FeesScreen() {
                 <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field text-sm" />
               </div>
               {planPreview.length > 0 && (
-                <div className="bg-td-soft rounded-[14px] p-3 text-[12px] text-td-muted leading-relaxed">
+                <div className="bg-td-soft rounded-td-md p-3 text-td-caption text-td-muted leading-relaxed">
                   <span className="td-strong text-td-dark">{planPreview.length} installments</span>
                   {' · '}{planPreview[0].period} to {planPreview[planPreview.length - 1].period}
                   <div className="mt-1">
@@ -193,7 +193,7 @@ export function FeesScreen() {
       {/* The class the head is looking at is the class the alert goes to. A
           button that says "all pending" under a list showing one class would
           message families she never meant to chase. */}
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-extrabold p-[13px] rounded-[14px] cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
+      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-extrabold p-[13px] rounded-td-md cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
 
       {rows.length === 0 && klass ? (
         <EmptyState title={`Nobody in ${klass}`} hint="No student in that class, so there is nothing to collect from it. Pick another class, or go back to all of them." />
@@ -212,21 +212,21 @@ export function FeesScreen() {
             const open = !!d.dbId && openFees === d.dbId
             const records = d.dbId ? feeRecords[d.dbId] : undefined
             return (
-              <div key={d.id} className="td-card rounded-2xl p-[13px] px-3.5">
+              <div key={d.id} className="td-card rounded-td-md p-[13px] px-3.5">
                 <div className="flex items-center gap-[13px]">
-                  <div className="w-10 h-10 rounded-xl td-avatar" style={{ background: av(realIdx) }}>{initials(d.name)}</div>
+                  <div className="w-10 h-10 rounded-td-sm td-avatar" style={{ background: av(realIdx) }}>{initials(d.name)}</div>
                   {/* The balance was a total with nothing behind it. Tapping the
                       name now opens what it is made of — which is also the only
                       place a fee can be taken back off it. */}
                   <button onClick={() => { if (!d.dbId) return; const next = open ? null : d.dbId; setOpenFees(next); if (next && !feeRecords[next]) loadStudentFees(next) }} className="td-plain flex-1 min-w-0 text-left p-0 cursor-pointer">
-                    <div className="text-[13.5px] font-bold text-td-dark truncate">{d.name}</div>
+                    <div className="text-td-small font-bold text-td-dark truncate">{d.name}</div>
                     <div className="text-xs text-td-muted mt-0.5">
                       {d.klass}
                       {(d.feeDue ?? 0) > 0 && <span className="text-td-red font-semibold"> · {rupee(d.feeDue!)} due</span>}
                       {(d.feeDue ?? 0) === 0 && (d.feeCollected ?? 0) > 0 && <span className="text-td-green font-semibold"> · {rupee(d.feeCollected!)} paid</span>}
                     </div>
                   </button>
-                  <button onClick={() => toggleFeeStatus(studentKey(d))} className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px] border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
+                  <button onClick={() => toggleFeeStatus(studentKey(d))} className="text-td-caption font-bold py-[5px] px-2.5 rounded-td-lg border-none cursor-pointer shrink-0" style={{ color: f.c, background: f.b }}>{d.feeStatus}</button>
                 </div>
 
                 {open && (
@@ -247,7 +247,7 @@ export function FeesScreen() {
                               this family?" — the question every fee conversation
                               actually starts with. */}
                           {records.length > 1 && (
-                            <div className="text-[11.5px] text-td-muted leading-relaxed pb-1">
+                            <div className="text-td-caption text-td-muted leading-relaxed pb-1">
                               <span className="td-strong text-td-dark">{rupee(sum.total)}</span>
                               {` · ${sum.paidCount} of ${sum.count} paid`}
                               {sum.outstanding > 0 && ` · ${rupee(sum.outstanding)} outstanding`}
@@ -261,14 +261,14 @@ export function FeesScreen() {
                             return (
                               <div key={r.dbId} className="flex items-center gap-2.5">
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-[12.5px] font-bold text-td-dark truncate">{label}</div>
-                                  <div className={`text-[11.5px] mt-px ${late ? 'text-td-red font-semibold' : 'text-td-muted'}`}>
+                                  <div className="text-td-caption font-bold text-td-dark truncate">{label}</div>
+                                  <div className={`text-td-caption mt-px ${late ? 'text-td-red font-semibold' : 'text-td-muted'}`}>
                                     {r.status === 'Paid' ? 'Paid' : late ? 'Overdue' : 'Due'}
                                     {r.dueDate && ` · ${fmtDue(r.dueDate)}`}
                                   </div>
                                 </div>
                                 {isAdmin && (
-                                  <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 td-danger text-[11.5px] font-bold py-1 px-2.5 rounded-[10px]">Remove</button>
+                                  <button onClick={() => setConfirmFee({ id: r.dbId, studentId: d.dbId!, student: d.name, label })} className="shrink-0 td-danger text-td-caption font-bold py-1 px-2.5 rounded-td-sm">Remove</button>
                                 )}
                               </div>
                             )
@@ -276,7 +276,7 @@ export function FeesScreen() {
                           {isAdmin && openPlans.map(planId => (
                             <button key={planId}
                               onClick={() => setConfirmPlan({ planId, studentId: d.dbId!, student: d.name, count: records.filter(r => r.planId === planId && r.status !== 'Paid').length })}
-                              className="mt-1 self-start td-danger text-[11.5px] font-bold py-1 px-2.5 rounded-[10px]">
+                              className="mt-1 self-start td-danger text-td-caption font-bold py-1 px-2.5 rounded-td-sm">
                               Remove the rest of this plan
                             </button>
                           ))}

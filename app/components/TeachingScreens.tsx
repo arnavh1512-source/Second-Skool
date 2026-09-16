@@ -92,8 +92,8 @@ export function TimetableScreen() {
         {days.map(d => {
           const active = d.s === ttDay
           return (
-            <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-[14px] py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-primary border-td-primary text-white' : 'bg-td-card border-td-border text-td-text'}`}>
-              <div className="text-[12px] font-bold">{d.s}</div>
+            <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-primary border-td-primary text-white' : 'bg-td-card border-td-border text-td-text'}`}>
+              <div className="text-td-caption font-bold">{d.s}</div>
               <div className="text-sm font-extrabold mt-0.5">{d.d}</div>
             </button>
           )
@@ -112,14 +112,14 @@ export function TimetableScreen() {
             </div>
           </div>
           <div><label className="td-label">Subject</label>
-            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="td-field text-td-small bg-td-card">
               {subjectNames.map(s => <option key={s}>{s}</option>)}
               <option>Free period</option>
             </select>
           </div>
           <div className="grid grid-cols-2 gap-[11px]">
             <div><label className="td-label">Class</label>
-              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
                 {options(classes, 'Add students first')}
               </select>
             </div>
@@ -128,7 +128,7 @@ export function TimetableScreen() {
             </div>
           </div>
           <div><label className="td-label">Teacher</label>
-            <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+            <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="td-field text-td-small bg-td-card">
               <option value="">Not set</option>
               {teachers.map(t => <option key={t.dbId} value={t.dbId}>{t.name} &middot; {t.subject}</option>)}
             </select>
@@ -143,27 +143,27 @@ export function TimetableScreen() {
         {days.map(d => {
           const ps = timetableData[d.s] || []
           return (
-            <div key={d.s} className={`rounded-2xl border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
+            <div key={d.s} className={`rounded-td-md border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
               <button onClick={() => set({ ttDay: d.s })} className="td-plain w-full text-center mb-2 cursor-pointer">
-                <div className="text-[12px] font-bold text-td-muted">{d.s}</div>
-                <div className="text-[15px] td-strong">{d.d}</div>
+                <div className="text-td-caption font-bold text-td-muted">{d.s}</div>
+                <div className="text-td-body td-strong">{d.d}</div>
               </button>
               {ps.length === 0 ? (
-                <div className="text-center text-td-subtle text-[12px] py-3">—</div>
+                <div className="text-center text-td-subtle text-td-caption py-3">—</div>
               ) : (
                 <div className="flex flex-col gap-1.5">
                   {ps.map((p, i) => {
                     const s = periodStyle(p)
                     return (
-                      <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="rounded-[11px] border p-2" style={{ background: s.bg, borderColor: s.border }}>
-                        <div className="text-[12px] font-bold text-td-muted">{p[0]}–{p[1]}</div>
-                        <div className="text-[12px] font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
-                        <div className="text-[12px] text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
-                        {p[5] && <div className="text-[12px] text-td-primary font-semibold mt-0.5 truncate">{p[5]}</div>}
+                      <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="rounded-td-sm border p-2" style={{ background: s.bg, borderColor: s.border }}>
+                        <div className="text-td-caption font-bold text-td-muted">{p[0]}–{p[1]}</div>
+                        <div className="text-td-caption font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
+                        <div className="text-td-caption text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
+                        {p[5] && <div className="text-td-caption text-td-primary font-semibold mt-0.5 truncate">{p[5]}</div>}
                         {isAdmin && (
                           <div className="flex gap-1 mt-1.5">
-                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-td-edge-blue bg-td-tint-blue text-td-primary text-[12px] cursor-pointer">✎</button>
-                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg td-danger text-[12px]">×</button>
+                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-td-edge-blue bg-td-tint-blue text-td-primary text-td-caption cursor-pointer">✎</button>
+                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg td-danger text-td-caption">×</button>
                           </div>
                         )}
                       </div>
@@ -177,7 +177,7 @@ export function TimetableScreen() {
       </div>
 
       <div className="lg:hidden">
-      <div className="text-[13px] text-td-muted font-semibold mb-3.5">{dayNames[ttDay]} · {periods.length} periods</div>
+      <div className="text-td-small text-td-muted font-semibold mb-3.5">{dayNames[ttDay]} · {periods.length} periods</div>
 
       {periods.length === 0 ? (
         <div className="td-none">No periods scheduled for {dayNames[ttDay]}</div>
@@ -188,21 +188,21 @@ export function TimetableScreen() {
             return (
               <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="flex gap-[13px] items-stretch">
                 <div className="shrink-0 w-[58px] text-right pt-1">
-                  <div className="text-[12.5px] td-strong">{p[0]}</div>
-                  <div className="text-[12px] text-td-subtle font-semibold">{p[1]}</div>
+                  <div className="text-td-caption td-strong">{p[0]}</div>
+                  <div className="text-td-caption text-td-subtle font-semibold">{p[1]}</div>
                 </div>
                 <div className="shrink-0 flex flex-col items-center">
                   <div className="w-[11px] h-[11px] rounded-full border-2 border-td-card" style={{ background: s.dot, boxShadow: `0 0 0 2px ${s.dot}` }} />
                   <div className="flex-1 w-0.5 bg-td-border" />
                 </div>
                 <div className="flex-1 pb-3.5">
-                  <div className="rounded-2xl p-[13px] px-[15px] border" style={{ background: s.bg, borderColor: s.border }}>
+                  <div className="rounded-td-md p-[13px] px-[15px] border" style={{ background: s.bg, borderColor: s.border }}>
                     <div className="flex justify-between items-center gap-2">
                       <div className="text-sm font-extrabold" style={{ color: s.titleColor }}>{p[2]}</div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[12px] font-bold py-1 px-[9px] rounded-[20px]" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
-                        {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-[12px] leading-none">✎</button>}
-                        {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full td-danger flex items-center justify-center text-[15px] leading-none">×</button>}
+                        <span className="text-td-caption font-bold py-1 px-[9px] rounded-td-lg" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
+                        {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-td-caption leading-none">✎</button>}
+                        {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full td-danger flex items-center justify-center text-td-body leading-none">×</button>}
                       </div>
                     </div>
                     <div className="text-xs text-td-muted mt-1">{p[3]} · {p[4]}{p[5] ? ` · ${p[5]}` : ''}</div>
@@ -413,24 +413,24 @@ export function ResultsScreen() {
         <div><label className="td-label">Class</label>
           {/* Locked while editing: the test belongs to a class, and moving it to
               another one would hand a set of marks to students who never sat it. */}
-          <select value={selKlass} disabled={!!editing} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+          <select value={selKlass} disabled={!!editing} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field text-td-small bg-td-card disabled:opacity-60">
             {editing ? <option>{editing.klass}</option> : classes.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div><label className="td-label">Subject</label>
-          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={!!editing || subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={!!editing || subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
             {editing ? <option>{editing.subject || '—'}</option> : options(subjectNames, 'Add subjects first')}
           </select>
         </div>
       </div>
       <div className="grid grid-cols-[2fr_1fr] gap-[11px] mb-[18px]">
-        <div><label className="td-label">Test name</label><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-[13.5px]" /></div>
-        <div><label className="td-label">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-[13.5px]" /></div>
+        <div><label className="td-label">Test name</label><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-td-small" /></div>
+        <div><label className="td-label">Max</label><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-td-small" /></div>
       </div>
 
       <div className="td-h2">{editing ? 'Correct marks' : 'Enter marks'}</div>
       {editing && (
-        <div className="text-[12.5px] text-td-subtle mb-2.5">
+        <div className="text-td-caption text-td-subtle mb-2.5">
           A published mark can be corrected but never removed — clearing a box leaves that mark as it is. The class is told when you save.
         </div>
       )}
@@ -444,11 +444,11 @@ export function ResultsScreen() {
       ) : (
         <div className="td-list gap-[9px] mb-5">
           {roster.map((s, i) => (
-            <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-2xl p-[11px] px-3.5 flex items-center gap-[13px]">
-              <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
-              <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
-              <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-[11px] py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
-              <span className="text-[13px] text-td-subtle font-semibold">/{maxMarks}</span>
+            <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-td-md p-[11px] px-3.5 flex items-center gap-[13px]">
+              <div className="w-9 h-9 rounded-td-sm td-avatar" style={{ background: av(i) }}>{initials(s.name)}</div>
+              <div className="flex-1 text-td-small font-bold text-td-dark">{s.name}</div>
+              <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-td-sm py-[9px] px-1.5 text-sm font-bold text-td-dark outline-none focus:border-td-primary" />
+              <span className="text-td-small text-td-subtle font-semibold">/{maxMarks}</span>
             </div>
           ))}
         </div>
@@ -463,19 +463,19 @@ export function ResultsScreen() {
       {!editing && tests.length > 0 && (
         <>
           <div className="td-h2 mt-[26px]">Published tests</div>
-          <div className="text-[12.5px] text-td-subtle mb-2.5">Tap a test to correct a mark. Nothing here can be deleted.</div>
+          <div className="text-td-caption text-td-subtle mb-2.5">Tap a test to correct a mark. Nothing here can be deleted.</div>
           <div className="td-list gap-[9px]">
             {tests.map(t => {
               const d = parseDay(t.date)
               return (
-                <button key={t.id} onClick={() => openTest(t)} className="w-full text-left td-card rounded-2xl p-[11px] px-3.5 flex items-center gap-3 cursor-pointer">
+                <button key={t.id} onClick={() => openTest(t)} className="w-full text-left td-card rounded-td-md p-[11px] px-3.5 flex items-center gap-3 cursor-pointer">
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13.5px] font-bold text-td-dark truncate">{t.name}</div>
-                    <div className="text-[12px] text-td-muted">
+                    <div className="text-td-small font-bold text-td-dark truncate">{t.name}</div>
+                    <div className="text-td-caption text-td-muted">
                       {t.klass}{t.subject ? ` · ${t.subject}` : ''} · out of {t.max}{d ? ` · ${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}` : ''}
                     </div>
                   </div>
-                  <span className="text-[12.5px] text-td-primary font-semibold shrink-0">Edit</span>
+                  <span className="text-td-caption text-td-primary font-semibold shrink-0">Edit</span>
                 </button>
               )
             })}
@@ -506,12 +506,12 @@ export function AssignmentsScreen() {
         <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm" /></div>
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="td-label">Subject</label>
-            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
               {options(subjectNames, 'Add subjects first')}
             </select>
           </div>
           <div><label className="td-label">Class</label>
-            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
               {options(classes, 'Add students first')}
             </select>
           </div>
@@ -533,11 +533,11 @@ export function AssignmentsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {assignmentsList.map((a, i) => (
-            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="td-card rounded-2xl p-3.5">
+            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="td-card rounded-td-md p-3.5">
               <div className="flex justify-between items-start gap-2">
-                <div className="text-[13.5px] font-bold text-td-dark">{a.title}</div>
+                <div className="text-td-small font-bold text-td-dark">{a.title}</div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[12px] font-bold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-[20px] whitespace-nowrap">Due {a.due}</span>
+                  <span className="text-td-caption font-bold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-td-lg whitespace-nowrap">Due {a.due}</span>
                   {a.dbId && (
                     <button
                       onClick={() => deleteAssignment(a.dbId!)}
@@ -581,16 +581,16 @@ export function RemindersScreen() {
         {types.map(r => {
           const active = r.key === reminderType
           return (
-            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-2xl p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
+            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-td-md p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
               <Icon name={r.icon} size={21} className="shrink-0" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-muted)' }} />
-              <span className="text-[13.5px] font-bold" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-text)' }}>{r.label}</span>
+              <span className="text-td-small font-bold" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-text)' }}>{r.label}</span>
             </button>
           )
         })}
       </div>
 
       <label className="td-label">Send to</label>
-      <select value={filter} onChange={e => setFilter(e.target.value)} className="td-field text-[13.5px] bg-td-card mb-4">
+      <select value={filter} onChange={e => setFilter(e.target.value)} className="td-field text-td-small bg-td-card mb-4">
         <option value="all">All students</option>
         <option value="absentees">Absentees only</option>
         <option value="fees_due">Students with fees due</option>
@@ -601,18 +601,18 @@ export function RemindersScreen() {
 
       <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>
 
-      <div className="text-[15px] td-strong mt-7 mb-3">Recently sent</div>
+      <div className="text-td-body td-strong mt-7 mb-3">Recently sent</div>
       {reminderHistory.length === 0 ? (
         <EmptyState title="Nothing sent yet" hint="Reminders you send appear here, so you can check what has already gone out before sending it again." />
       ) : (
         <div className="flex flex-col gap-2.5">
           {reminderHistory.map(r => (
-            <div key={r.dbId} className="td-card rounded-2xl p-3.5">
+            <div key={r.dbId} className="td-card rounded-td-md p-3.5">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[11.5px] font-extrabold text-td-primary bg-td-tint-blue rounded-full py-[3px] px-2.5">{r.type}</span>
-                <span className="text-[11.5px] text-td-muted">{r.when}</span>
+                <span className="text-td-caption font-extrabold text-td-primary bg-td-tint-blue rounded-full py-[3px] px-2.5">{r.type}</span>
+                <span className="text-td-caption text-td-muted">{r.when}</span>
               </div>
-              <div className="text-[13px] text-td-dark leading-snug">{r.message}</div>
+              <div className="text-td-small text-td-dark leading-snug">{r.message}</div>
             </div>
           ))}
         </div>

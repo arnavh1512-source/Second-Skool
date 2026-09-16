@@ -151,7 +151,7 @@ export function DevConsoleScreen() {
           <button
             onClick={refresh}
             disabled={loading}
-            className="text-[12px] font-bold py-[7px] px-3 rounded-[10px] cursor-pointer border border-td-border bg-td-card text-td-primary disabled:opacity-50"
+            className="text-td-caption font-bold py-[7px] px-3 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-primary disabled:opacity-50"
           >
             {loading ? '…' : 'Refresh'}
           </button>
@@ -163,12 +163,12 @@ export function DevConsoleScreen() {
           because the console sits outside the router and nothing here could
           reach the sign-in screen. Say what to do and provide the way to do it. */}
       {error && (
-        <div className="bg-td-wash-red border border-td-edge-red text-td-red text-[13px] rounded-[14px] p-3.5 mb-4 flex items-center gap-3">
+        <div className="bg-td-wash-red border border-td-edge-red text-td-red text-td-small rounded-td-md p-3.5 mb-4 flex items-center gap-3">
           <span className="flex-1 min-w-0">{error}</span>
           {error === SESSION_EXPIRED && (
             <button
               onClick={signOut}
-              className="text-[12px] font-extrabold py-2 px-3 rounded-[10px] cursor-pointer border-none bg-td-red text-white shrink-0"
+              className="text-td-caption font-extrabold py-2 px-3 rounded-td-sm cursor-pointer border-none bg-td-red text-white shrink-0"
             >
               Sign in again
             </button>
@@ -181,7 +181,7 @@ export function DevConsoleScreen() {
       {data && (
         <>
           {data.errors.length > 0 && (
-            <div className="bg-td-wash-amber border border-td-edge-amber text-td-on-amber text-[12px] rounded-[14px] p-3 mb-4">
+            <div className="bg-td-wash-amber border border-td-edge-amber text-td-on-amber text-td-caption rounded-td-md p-3 mb-4">
               Partial data — could not read: {data.errors.join(', ')}
             </div>
           )}
@@ -223,11 +223,11 @@ export function DevConsoleScreen() {
           </div>
 
           {data.alerts.length > 0 && (
-            <div className="td-card rounded-[16px] p-4 mb-4">
-              <div className="text-[13px] td-strong mb-2">Needs attention</div>
+            <div className="td-card rounded-td-md p-4 mb-4">
+              <div className="text-td-small td-strong mb-2">Needs attention</div>
               <ul className="flex flex-col gap-1.5">
                 {data.alerts.map(a => (
-                  <li key={a} className="text-[12.5px] text-td-text flex gap-2">
+                  <li key={a} className="text-td-caption text-td-text flex gap-2">
                     <span className="text-td-amber">•</span>{a}
                   </li>
                 ))}
@@ -240,7 +240,7 @@ export function DevConsoleScreen() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 text-[12.5px] font-bold py-2.5 rounded-[12px] cursor-pointer border capitalize ${tab === t ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
+                className={`flex-1 text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
               >
                 {t === 'reports' && openReports > 0 ? `reports (${openReports})` : t}
               </button>
@@ -262,7 +262,7 @@ export function DevConsoleScreen() {
             />
           )}
 
-          <div className="text-[12px] text-td-subtle text-center mt-5">
+          <div className="text-td-caption text-td-subtle text-center mt-5">
             Snapshot {ago(data.generatedAt)} · this console reads aggregates only — it cannot open a centre or read its data.
           </div>
         </>
@@ -270,34 +270,34 @@ export function DevConsoleScreen() {
 
       {doomed && (
         <div className="fixed inset-0 z-[80] bg-black/45 flex items-end md:items-center justify-center p-4">
-          <div className="bg-td-card rounded-[18px] p-5 w-full max-w-sm">
-            <div className="text-[16px] td-strong">Delete {doomed.name}?</div>
-            <p className="text-[12.5px] text-td-text mt-2 leading-relaxed">
+          <div className="bg-td-card rounded-td-lg p-5 w-full max-w-sm">
+            <div className="text-td-title td-strong">Delete {doomed.name}?</div>
+            <p className="text-td-caption text-td-text mt-2 leading-relaxed">
               This erases {doomed.students.approved} students, {doomed.staff.approved} staff memberships and every
               attendance record, result, fee and note belonging to this centre. Its members go back to being
               unregistered accounts. It cannot be undone from here.
             </p>
-            <label className="block text-[12px] font-bold text-td-muted mt-3.5 mb-1.5">
+            <label className="block text-td-caption font-bold text-td-muted mt-3.5 mb-1.5">
               Type <span className="text-td-dark">{doomed.name}</span> to confirm
             </label>
             <input
               value={typed}
               onChange={e => setTyped(e.target.value)}
               autoFocus
-              className="td-field text-[13.5px]"
+              className="td-field text-td-small"
             />
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => { setDoomed(null); setTyped('') }}
                 disabled={deleting}
-                className="flex-1 text-[13px] font-bold py-2.5 rounded-[12px] cursor-pointer border border-td-border bg-td-card text-td-text disabled:opacity-50"
+                className="flex-1 text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-text disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleting || typed.trim() !== doomed.name}
-                className="flex-1 text-[13px] font-extrabold py-2.5 rounded-[12px] cursor-pointer border-none bg-td-red text-white disabled:opacity-40"
+                className="flex-1 text-td-small font-extrabold py-2.5 rounded-td-sm cursor-pointer border-none bg-td-red text-white disabled:opacity-40"
               >
                 {deleting ? 'Deleting…' : 'Delete for ever'}
               </button>
@@ -314,10 +314,10 @@ export function DevConsoleScreen() {
 // quiet — and amber for good news is a false alarm every time the console opens.
 function Stat({ label, value, sub, calm }: { label: string; value: number | string; sub?: string; calm?: boolean }) {
   return (
-    <div className="td-card rounded-[16px] p-3.5">
-      <div className="text-[12px] font-bold text-td-muted">{label}</div>
-      <div className="text-[20px] td-strong mt-0.5 leading-tight">{value}</div>
-      {sub && <div className={`text-[12px] mt-0.5 ${calm ? 'text-td-subtle' : 'text-td-amber'}`}>{sub}</div>}
+    <div className="td-card rounded-td-md p-3.5">
+      <div className="text-td-caption font-bold text-td-muted">{label}</div>
+      <div className="text-td-heading td-strong mt-0.5 leading-tight">{value}</div>
+      {sub && <div className={`text-td-caption mt-0.5 ${calm ? 'text-td-subtle' : 'text-td-amber'}`}>{sub}</div>}
     </div>
   )
 }
@@ -325,9 +325,9 @@ function Stat({ label, value, sub, calm }: { label: string; value: number | stri
 function Field({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div>
-      <div className="text-[12px] text-td-muted">{label}</div>
-      <div className="text-[13px] td-strong">{value}</div>
-      {sub && <div className="text-[12px] text-td-amber">{sub}</div>}
+      <div className="text-td-caption text-td-muted">{label}</div>
+      <div className="text-td-small td-strong">{value}</div>
+      {sub && <div className="text-td-caption text-td-amber">{sub}</div>}
     </div>
   )
 }
@@ -342,20 +342,20 @@ function Centres({ rows, onDelete }: CentresProps) {
   return (
     <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2">
       {rows.map(c => (
-        <div key={c.id} className="td-card rounded-[16px] p-4">
+        <div key={c.id} className="td-card rounded-td-md p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-[15px] td-strong truncate">{c.name}</div>
-              <div className="text-[12px] text-td-muted truncate">
+              <div className="text-td-body td-strong truncate">{c.name}</div>
+              <div className="text-td-caption text-td-muted truncate">
                 {c.owner?.name ?? 'no owner'}{c.owner?.email ? ` · ${c.owner.email}` : ''}
               </div>
-              <div className="text-[12px] text-td-subtle">head last signed in {ago(c.owner?.lastSignIn ?? null)}</div>
+              <div className="text-td-caption text-td-subtle">head last signed in {ago(c.owner?.lastSignIn ?? null)}</div>
             </div>
             <div className="text-right shrink-0">
-              <div className={`text-[13px] font-extrabold ${c.activity7d.total ? 'text-td-green' : 'text-td-subtle'}`}>
+              <div className={`text-td-small font-extrabold ${c.activity7d.total ? 'text-td-green' : 'text-td-subtle'}`}>
                 {c.activity7d.total} · 7d
               </div>
-              <div className="text-[12px] text-td-muted">active {ago(c.lastActive)}</div>
+              <div className="text-td-caption text-td-muted">active {ago(c.lastActive)}</div>
             </div>
           </div>
 
@@ -366,7 +366,7 @@ function Centres({ rows, onDelete }: CentresProps) {
             <Field label="Branches" value={`${c.branches}`} />
           </div>
 
-          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-td-line text-[12px] text-td-muted">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-3 pt-3 border-t border-td-line text-td-caption text-td-muted">
             <span>attendance {c.activity30d.attendance}</span>
             <span>results {c.activity30d.results}</span>
             <span>assignments {c.activity30d.assignments}</span>
@@ -376,7 +376,7 @@ function Centres({ rows, onDelete }: CentresProps) {
             <span className="text-td-subtle">(30d)</span>
           </div>
 
-          <div className="text-[12px] text-td-subtle mt-2">
+          <div className="text-td-caption text-td-subtle mt-2">
             created {fmtDate(c.createdAt)} · staff code {c.joinCode ?? '—'} · student code {c.studentJoinCode ?? '—'}
           </div>
 
@@ -384,7 +384,7 @@ function Centres({ rows, onDelete }: CentresProps) {
             <button
               onClick={() => onDelete(c)}
               aria-label={`Delete ${c.name}`}
-              className="w-full text-[12.5px] font-extrabold py-2.5 rounded-[12px] td-danger"
+              className="w-full text-td-caption font-extrabold py-2.5 rounded-td-sm td-danger"
             >
               Delete centre
             </button>
@@ -400,17 +400,17 @@ function People({ rows }: { rows: StaffRow[] }) {
   return (
     <div className="flex flex-col gap-2.5">
       {rows.map(s => (
-        <div key={s.id} className="td-card rounded-[16px] p-3.5 flex items-center gap-3">
+        <div key={s.id} className="td-card rounded-td-md p-3.5 flex items-center gap-3">
           <div className="flex-1 min-w-0">
-            <div className="text-[13.5px] td-strong truncate">{s.name ?? '—'}</div>
-            <div className="text-[12px] text-td-muted truncate">{s.email ?? '—'}</div>
-            <div className="text-[12px] text-td-subtle truncate">
+            <div className="text-td-small td-strong truncate">{s.name ?? '—'}</div>
+            <div className="text-td-caption text-td-muted truncate">{s.email ?? '—'}</div>
+            <div className="text-td-caption text-td-subtle truncate">
               {s.centre ?? 'unattached'} · {s.role === 'admin' ? 'head' : s.role} · joined {fmtDate(s.createdAt)}
             </div>
           </div>
           <div className="text-right shrink-0">
             <span
-              className="text-[12px] font-extrabold rounded-md px-2 py-0.5 inline-block"
+              className="text-td-caption font-extrabold rounded-md px-2 py-0.5 inline-block"
               style={
                 s.status === 'approved' ? { background: 'var(--color-td-tint-green)', color: 'var(--color-td-green)' }
                   : s.status === 'pending' ? { background: 'var(--color-td-tint-amber)', color: 'var(--color-td-amber)' }
@@ -420,7 +420,7 @@ function People({ rows }: { rows: StaffRow[] }) {
             >
               {s.status}
             </span>
-            <div className="text-[12px] text-td-muted mt-1">{ago(s.lastSignIn)}</div>
+            <div className="text-td-caption text-td-muted mt-1">{ago(s.lastSignIn)}</div>
           </div>
         </div>
       ))}
@@ -429,7 +429,7 @@ function People({ rows }: { rows: StaffRow[] }) {
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="text-center text-td-muted text-sm py-10 td-card rounded-[16px]">{children}</div>
+  return <div className="text-center text-td-muted text-sm py-10 td-card rounded-td-md">{children}</div>
 }
 
 // The inbox. Collapsed, a report is who and what; expanded it is everything the
@@ -460,7 +460,7 @@ function Reports({ rows, onReply, onResolve }: {
         const open = openId === t.id
         const d = t.diagnostics ?? {}
         return (
-          <div key={t.id} className="td-card rounded-[16px] overflow-hidden">
+          <div key={t.id} className="td-card rounded-td-md overflow-hidden">
             <button
               onClick={() => { setOpenId(open ? null : t.id); setDraft('') }}
               className="td-plain w-full text-left p-4 cursor-pointer"
@@ -468,12 +468,12 @@ function Reports({ rows, onReply, onResolve }: {
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm td-strong">{t.intent}</div>
-                  <div className="text-[12px] text-td-muted mt-0.5 truncate">
+                  <div className="text-td-caption text-td-muted mt-0.5 truncate">
                     {t.reporter_name || 'Someone'} · {t.reporter_role || 'unknown role'} · {t.centre_name || 'no centre'}
                   </div>
                 </div>
                 <span
-                  className="text-[11px] font-extrabold rounded-full py-1 px-2.5 shrink-0"
+                  className="text-td-caption font-extrabold rounded-full py-1 px-2.5 shrink-0"
                   style={t.status === 'open'
                     ? { background: 'var(--color-td-tint-blue)', color: 'var(--color-td-primary)' }
                     : { background: 'var(--color-td-soft)', color: 'var(--color-td-muted)' }}
@@ -492,22 +492,22 @@ function Reports({ rows, onReply, onResolve }: {
             {open && (
               <div className="border-t border-td-line p-4 flex flex-col gap-3">
                 <div>
-                  <div className="text-[11px] font-extrabold text-td-muted mb-1">What happened instead</div>
-                  <div className="text-[13px] text-td-text leading-[1.55] whitespace-pre-wrap">{t.outcome}</div>
+                  <div className="text-td-caption font-extrabold text-td-muted mb-1">What happened instead</div>
+                  <div className="text-td-small text-td-text leading-[1.55] whitespace-pre-wrap">{t.outcome}</div>
                 </div>
 
-                <div className="text-[11px] text-td-muted font-mono leading-[1.6] break-all">
+                <div className="text-td-caption text-td-muted font-mono leading-[1.6] break-all">
                   {d.version ?? '?'} · {d.viewport ?? '?'} · {d.userAgent ?? '?'}
                 </div>
                 {d.lastError && (
-                  <div className="text-td-red font-mono text-[11px] break-all bg-td-wash-red rounded-[10px] p-2.5">
+                  <div className="text-td-red font-mono text-td-caption break-all bg-td-wash-red rounded-td-sm p-2.5">
                     {d.lastError}
                   </div>
                 )}
 
                 {t.shot && (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={t.shot} alt="Reporter's screenshot" className="w-full rounded-[12px] border border-td-border" />
+                  <img src={t.shot} alt="Reporter's screenshot" className="w-full rounded-td-sm border border-td-border" />
                 )}
 
                 {t.support_messages.length > 0 && (
@@ -517,9 +517,9 @@ function Reports({ rows, onReply, onResolve }: {
                       .map((m, i) => (
                         <div
                           key={i}
-                          className={`text-[13px] leading-[1.5] rounded-[12px] p-2.5 px-3 whitespace-pre-wrap ${m.author === 'operator' ? 'bg-td-tint-blue text-td-dark' : 'bg-td-soft text-td-text'}`}
+                          className={`text-td-small leading-[1.5] rounded-td-sm p-2.5 px-3 whitespace-pre-wrap ${m.author === 'operator' ? 'bg-td-tint-blue text-td-dark' : 'bg-td-soft text-td-text'}`}
                         >
-                          <div className="text-[11px] font-extrabold text-td-muted mb-1">
+                          <div className="text-td-caption font-extrabold text-td-muted mb-1">
                             {m.author === 'operator' ? 'You' : t.reporter_name || 'Reporter'} · {fmtDate(m.created_at)}
                           </div>
                           {m.body}
@@ -533,27 +533,27 @@ function Reports({ rows, onReply, onResolve }: {
                   onChange={e => setDraft(e.target.value)}
                   placeholder="Reply — they see this inside the app"
                   rows={3}
-                  className="td-field text-[13px] resize-none"
+                  className="td-field text-td-small resize-none"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => send(t.id)}
                     disabled={busy || !draft.trim()}
-                    className="td-pill flex-1 text-[12.5px] font-extrabold py-2.5 rounded-[12px] cursor-pointer disabled:opacity-50"
+                    className="td-pill flex-1 text-td-caption font-extrabold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-50"
                   >
                     {busy ? 'Sending…' : 'Send reply'}
                   </button>
                   {t.status === 'open' && (
                     <button
                       onClick={() => onResolve(t.id)}
-                      className="text-[12.5px] font-extrabold py-2.5 px-3.5 rounded-[12px] cursor-pointer border border-td-border bg-td-card text-td-muted"
+                      className="text-td-caption font-extrabold py-2.5 px-3.5 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-muted"
                     >
                       Close report
                     </button>
                   )}
                 </div>
                 {t.status === 'open' && t.shot && (
-                  <div className="text-[11px] text-td-subtle">Closing also deletes the screenshot.</div>
+                  <div className="text-td-caption text-td-subtle">Closing also deletes the screenshot.</div>
                 )}
               </div>
             )}
@@ -566,6 +566,6 @@ function Reports({ rows, onReply, onResolve }: {
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[11px] font-bold text-td-muted bg-td-soft rounded-full py-1 px-2.5">{children}</span>
+    <span className="text-td-caption font-bold text-td-muted bg-td-soft rounded-full py-1 px-2.5">{children}</span>
   )
 }

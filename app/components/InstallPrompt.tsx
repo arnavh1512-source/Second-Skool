@@ -110,15 +110,15 @@ export function InstallPrompt() {
 
   if (showIosSteps) {
     return (
-      <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-card border-t border-td-border rounded-t-[20px] px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)] shadow-[0_-10px_40px_rgba(20,30,60,.18)]">
+      <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-card border-t border-td-border rounded-t-td-lg px-5 pt-4 pb-[calc(env(safe-area-inset-bottom)+18px)] shadow-td-sheet">
         <div className="flex items-start justify-between gap-3 mb-2.5">
-          <h2 className="text-[15px] td-strong">Add Second Skool to your Home Screen</h2>
-          <button type="button" onClick={dismiss} aria-label="Close" className="shrink-0 text-td-muted text-[20px] leading-none cursor-pointer px-1">×</button>
+          <h2 className="text-td-body td-strong">Add Second Skool to your Home Screen</h2>
+          <button type="button" onClick={dismiss} aria-label="Close" className="shrink-0 text-td-muted text-td-heading leading-none cursor-pointer px-1">×</button>
         </div>
-        <p className="text-[13px] text-td-muted mb-3 leading-relaxed">
+        <p className="text-td-small text-td-muted mb-3 leading-relaxed">
           Reminders and alerts only work once the app is on your Home Screen.
         </p>
-        <ol className="text-[13px] text-td-dark space-y-2 mb-1">
+        <ol className="text-td-small text-td-dark space-y-2 mb-1">
           <li className="flex gap-2.5"><span className="font-extrabold text-td-primary">1.</span><span>Tap the <strong>Share</strong> button at the bottom of Safari.</span></li>
           <li className="flex gap-2.5"><span className="font-extrabold text-td-primary">2.</span><span>Scroll down and tap <strong>Add to Home Screen</strong>.</span></li>
           <li className="flex gap-2.5"><span className="font-extrabold text-td-primary">3.</span><span>Tap <strong>Add</strong>. Open Second Skool from the icon after that.</span></li>
@@ -128,19 +128,19 @@ export function InstallPrompt() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-ink text-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex items-center gap-3 shadow-[0_-8px_30px_rgba(0,0,0,.24)]">
+    <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-ink text-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex items-center gap-3 shadow-td-sheet">
       <div className="flex-1 min-w-0">
-        <div className="text-[13.5px] font-extrabold leading-tight">Install Second Skool</div>
-        <div className="text-[12px] opacity-80 leading-tight mt-0.5">Opens like an app — and reminders only work once it&apos;s installed.</div>
+        <div className="text-td-small font-extrabold leading-tight">Install Second Skool</div>
+        <div className="text-td-caption opacity-80 leading-tight mt-0.5">Opens like an app — and reminders only work once it&apos;s installed.</div>
       </div>
       <button
         type="button"
         onClick={ios && !deferred ? () => setShowIosSteps(true) : install}
-        className="shrink-0 bg-td-card text-td-dark text-[13px] font-extrabold px-4 py-2 rounded-[11px] cursor-pointer"
+        className="shrink-0 bg-td-card text-td-dark text-td-small font-extrabold px-4 py-2 rounded-td-sm cursor-pointer"
       >
         {ios && !deferred ? 'How' : 'Install'}
       </button>
-      <button type="button" onClick={dismiss} aria-label="Not now" className="shrink-0 text-white/70 text-[22px] leading-none cursor-pointer px-1">×</button>
+      <button type="button" onClick={dismiss} aria-label="Not now" className="shrink-0 text-white/70 text-td-heading leading-none cursor-pointer px-1">×</button>
     </div>
   )
 }

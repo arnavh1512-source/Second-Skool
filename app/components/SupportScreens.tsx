@@ -20,7 +20,7 @@ const STATUS: Record<SupportTicket['status'], { bg: string; fg: string; label: s
 function StatusPill({ status }: { status: SupportTicket['status'] }) {
   const s = STATUS[status]
   return (
-    <span className="text-[11px] font-extrabold rounded-full py-1 px-2.5 shrink-0" style={{ background: s.bg, color: s.fg }}>
+    <span className="text-td-caption font-extrabold rounded-full py-1 px-2.5 shrink-0" style={{ background: s.bg, color: s.fg }}>
       {s.label}
     </span>
   )
@@ -40,12 +40,12 @@ export function SupportScreen() {
   return (
     <div className="td-screen">
       <div className="text-2xl td-strong mt-1.5 mb-1.5">Report a problem</div>
-      <div className="text-[13px] text-td-muted leading-[1.5] mb-4">
+      <div className="text-td-small text-td-muted leading-[1.5] mb-4">
         Four quick questions. We can already see which version of the app you are on and what device
         you are using — you do not need to explain that part.
       </div>
 
-      <div className="td-card rounded-[20px] p-4 grid gap-3.5">
+      <div className="td-card rounded-td-lg p-4 grid gap-3.5">
         <div>
           <label className={LABEL}>What were you trying to do?</label>
           <input
@@ -88,7 +88,7 @@ export function SupportScreen() {
                 <button
                   key={f.value}
                   onClick={() => setReportDraft({ frequency: f.value as Frequency })}
-                  className={`flex-1 text-[13px] font-extrabold rounded-[14px] py-2.5 cursor-pointer border ${on ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-dark border-td-border'}`}
+                  className={`flex-1 text-td-small font-extrabold rounded-td-md py-2.5 cursor-pointer border ${on ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-dark border-td-border'}`}
                 >
                   {f.label}
                 </button>
@@ -101,17 +101,17 @@ export function SupportScreen() {
           <label className={LABEL}>Screenshot (optional)</label>
           {/* Said out loud, because the picker is the last moment where the
               reporter can decide not to send their students' names to us. */}
-          <div className="text-[12px] text-td-muted leading-[1.5] mb-2">
+          <div className="text-td-caption text-td-muted leading-[1.5] mb-2">
             We will see whatever is on your screen, including student names. It is deleted when your
             report is closed.
           </div>
           {reportShot ? (
             <div className="grid gap-2 justify-items-start">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={reportShot} alt="Attached screenshot" className="max-h-40 rounded-[12px] border border-td-border" />
+              <img src={reportShot} alt="Attached screenshot" className="max-h-40 rounded-td-sm border border-td-border" />
               <button
                 onClick={() => setReportShot(null)}
-                className="td-plain text-[12.5px] font-extrabold text-td-red p-0 cursor-pointer"
+                className="td-plain text-td-caption font-extrabold text-td-red p-0 cursor-pointer"
               >
                 Remove
               </button>
@@ -121,7 +121,7 @@ export function SupportScreen() {
               type="file"
               accept="image/*"
               onChange={e => setReportShot(e.target.files?.[0] ?? null)}
-              className="text-[13px] text-td-muted w-full"
+              className="text-td-small text-td-muted w-full"
             />
           )}
         </div>
@@ -129,7 +129,7 @@ export function SupportScreen() {
         <button
           onClick={send}
           disabled={busy}
-          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send report'}
         </button>
@@ -137,8 +137,8 @@ export function SupportScreen() {
 
       {myTickets.length > 0 && (
         <>
-          <div className="text-[13px] font-extrabold text-td-muted mt-5 mb-[11px] px-1">Your reports</div>
-          <div className="td-card rounded-[20px] overflow-hidden">
+          <div className="text-td-small font-extrabold text-td-muted mt-5 mb-[11px] px-1">Your reports</div>
+          <div className="td-card rounded-td-lg overflow-hidden">
             {myTickets.map(t => {
               const last = t.messages[t.messages.length - 1]
               const unread = last?.author === 'operator'
@@ -152,7 +152,7 @@ export function SupportScreen() {
                     <div className="text-sm font-bold text-td-dark truncate">{t.intent}</div>
                     <div className="text-xs text-td-muted mt-0.5">{fmtDate(t.createdAt)}</div>
                   </div>
-                  {unread && <span className="text-[11px] font-extrabold text-white bg-td-red rounded-full py-1 px-2.5 shrink-0">Reply</span>}
+                  {unread && <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full py-1 px-2.5 shrink-0">Reply</span>}
                   <StatusPill status={t.status} />
                 </button>
               )
@@ -185,21 +185,21 @@ export function SupportThreadScreen() {
         <div className="flex-1 text-2xl td-strong">{ticket.intent}</div>
         <StatusPill status={ticket.status} />
       </div>
-      <div className="text-[13px] text-td-muted leading-[1.5] mb-4">{ticket.outcome}</div>
+      <div className="text-td-small text-td-muted leading-[1.5] mb-4">{ticket.outcome}</div>
 
       <div className="grid gap-2.5 mb-4">
         {ticket.messages.map((m, i) => {
           const ours = m.author === 'operator'
           return (
-            <div key={i} className={`max-w-[85%] rounded-[16px] p-3 px-3.5 ${ours ? 'td-card self-start' : 'bg-td-primary text-white self-end'}`}>
-              {ours && <div className="text-[11px] font-extrabold text-td-muted mb-1">Second Skool</div>}
+            <div key={i} className={`max-w-[85%] rounded-td-md p-3 px-3.5 ${ours ? 'td-card self-start' : 'bg-td-primary text-white self-end'}`}>
+              {ours && <div className="text-td-caption font-extrabold text-td-muted mb-1">Second Skool</div>}
               <div className="text-sm leading-[1.5] whitespace-pre-wrap">{m.body}</div>
-              <div className={`text-[11px] mt-1 ${ours ? 'text-td-muted' : 'text-white/70'}`}>{fmtDate(m.createdAt)}</div>
+              <div className={`text-td-caption mt-1 ${ours ? 'text-td-muted' : 'text-white/70'}`}>{fmtDate(m.createdAt)}</div>
             </div>
           )
         })}
         {ticket.messages.length === 0 && (
-          <div className="text-[13px] text-td-muted">No replies yet. We will answer here.</div>
+          <div className="text-td-small text-td-muted">No replies yet. We will answer here.</div>
         )}
       </div>
 
@@ -214,7 +214,7 @@ export function SupportThreadScreen() {
         <button
           onClick={send}
           disabled={busy || !draft.trim()}
-          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send message'}
         </button>

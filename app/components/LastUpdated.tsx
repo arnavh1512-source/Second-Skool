@@ -68,7 +68,7 @@ export function LastUpdated() {
         <path d="M20 12a8 8 0 1 1-2.3-5.6" />
         <path d="M20 4v4.5h-4.5" />
       </svg>
-      <span className={`text-[12px] font-semibold ${stale ? 'text-td-on-amber' : 'text-td-muted'}`}>
+      <span className={`text-td-caption font-semibold ${stale ? 'text-td-on-amber' : 'text-td-muted'}`}>
         {busy ? 'Refreshing…' : label(lastSyncedAt, now)}
       </span>
     </button>

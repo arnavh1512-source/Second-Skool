@@ -88,23 +88,23 @@ export function StudentsScreen() {
       </div>
 
       {missedOnly && (
-        <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
-          <span className="text-[12.5px] font-bold text-td-dark">Did not open the app this week</span>
-          <button onClick={() => go('students', 'students')} className="td-plain text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+        <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-td-md py-2.5 px-3.5 mb-3 lg:max-w-md">
+          <span className="text-td-caption font-bold text-td-dark">Did not open the app this week</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
         </div>
       )}
 
       {stage && (
-        <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
-          <span className="text-[12.5px] font-bold text-td-dark">{STAGE_COPY[stage].banner}</span>
-          <button onClick={() => go('students', 'students')} className="td-plain text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+        <div className="flex items-center justify-between gap-3 bg-td-tint-amber border border-td-edge-amber rounded-td-md py-2.5 px-3.5 mb-3 lg:max-w-md">
+          <span className="text-td-caption font-bold text-td-dark">{STAGE_COPY[stage].banner}</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
         </div>
       )}
 
       {stoppedOnly && (
-        <div className="flex items-center justify-between gap-3 bg-td-tint-red border border-td-edge-red rounded-[14px] py-2.5 px-3.5 mb-3 lg:max-w-md">
-          <span className="text-[12.5px] font-bold text-td-dark">Absent the last few classes running</span>
-          <button onClick={() => go('students', 'students')} className="td-plain text-[12.5px] font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
+        <div className="flex items-center justify-between gap-3 bg-td-tint-red border border-td-edge-red rounded-td-md py-2.5 px-3.5 mb-3 lg:max-w-md">
+          <span className="text-td-caption font-bold text-td-dark">Absent the last few classes running</span>
+          <button onClick={() => go('students', 'students')} className="td-plain text-td-caption font-bold text-td-primary cursor-pointer shrink-0 p-0">Show all</button>
         </div>
       )}
 
@@ -117,9 +117,9 @@ export function StudentsScreen() {
         </div>
       )}
 
-      <div className="flex items-center gap-2.5 td-card rounded-[14px] p-[11px] px-3.5 mb-[18px] lg:max-w-md">
+      <div className="flex items-center gap-2.5 td-card rounded-td-md p-[11px] px-3.5 mb-[18px] lg:max-w-md">
         <Icon name="search" size={17} color="var(--color-td-subtle)" />
-        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
+        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search students..." className="flex-1 text-td-small text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
@@ -158,8 +158,8 @@ export function StudentsScreen() {
             const gone = stoppedOnly ? atRisk[s.dbId ?? ''] : undefined
             return (
               <div key={studentKey(s) || i} className="flex items-center gap-2">
-                <button disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`flex-1 min-w-0 text-left td-card rounded-[18px] p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
-                  <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(idx) }}>{initials(s.name)}</div>
+                <button disabled={!isAdmin} onClick={() => set({ editId: studentKey(s), screen: 'editStudent', tab: 'students', ...(origin === 'admin' ? { origin: 'admin' } : {}) })} className={`flex-1 min-w-0 text-left td-card rounded-td-lg p-3.5 flex items-center gap-[13px] ${isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
+                  <div className="w-[46px] h-[46px] rounded-td-md shrink-0 flex items-center justify-center text-white font-bold text-td-body" style={{ background: av(idx) }}>{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm td-strong">{s.name}</div>
                     {/* The lifetime percentage is the one number that hides
@@ -172,14 +172,14 @@ export function StudentsScreen() {
                         : `${s.klass} · ${s.attendance}% attendance`}
                     </div>
                   </div>
-                  {isAdmin && <span className="text-[12px] font-bold py-[5px] px-[9px] rounded-[20px]" style={{ color: f.c, background: f.b }}>{s.feeStatus}</span>}
+                  {isAdmin && <span className="text-td-caption font-bold py-[5px] px-[9px] rounded-td-lg" style={{ color: f.c, background: f.b }}>{s.feeStatus}</span>}
                   {isAdmin && <ChevronRight />}
                 </button>
                 {/* She opened this list because these families have not looked.
                     What they need is the code, which is the message the student's
                     own screen already sends — put it one tap from the name. */}
                 {missedOnly && isAdmin && s.parent && (
-                  <a href={whatsappShareUrl(s.parent, studentCodeMessage(s.name, s.id))} target="_blank" rel="noopener noreferrer" aria-label={`Send ${s.name}'s code on WhatsApp`} className="shrink-0 w-11 h-11 rounded-[14px] bg-[#25D366] text-white flex items-center justify-center">
+                  <a href={whatsappShareUrl(s.parent, studentCodeMessage(s.name, s.id))} target="_blank" rel="noopener noreferrer" aria-label={`Send ${s.name}'s code on WhatsApp`} className="shrink-0 w-11 h-11 rounded-td-md bg-[#25D366] text-white flex items-center justify-center">
                     <WhatsAppIcon />
                   </a>
                 )}
@@ -187,7 +187,7 @@ export function StudentsScreen() {
                     ask is one message, so it sits on the row rather than
                     behind a screen the head has to decide to open. */}
                 {gone && isAdmin && s.parent && (
-                  <a href={whatsappShareUrl(s.parent, absenceCheckInMessage(s.name, gone.missed, centreName))} target="_blank" rel="noopener noreferrer" aria-label={`Ask ${s.name}'s family what happened, on WhatsApp`} className="shrink-0 w-11 h-11 rounded-[14px] bg-[#25D366] text-white flex items-center justify-center">
+                  <a href={whatsappShareUrl(s.parent, absenceCheckInMessage(s.name, gone.missed, centreName))} target="_blank" rel="noopener noreferrer" aria-label={`Ask ${s.name}'s family what happened, on WhatsApp`} className="shrink-0 w-11 h-11 rounded-td-md bg-[#25D366] text-white flex items-center justify-center">
                     <WhatsAppIcon />
                   </a>
                 )}
@@ -213,19 +213,19 @@ export function EditStudentScreen() {
   return (
     <div className="td-screen">
       <ScreenHeader title="Edit Student" onBack={() => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')} right={
-        <button onClick={deleteStudent} className="border-none bg-td-tint-red text-td-red text-[12.5px] font-bold py-[9px] px-[13px] rounded-[13px] cursor-pointer">Remove</button>
+        <button onClick={deleteStudent} className="border-none bg-td-tint-red text-td-red text-td-caption font-bold py-[9px] px-[13px] rounded-td-sm cursor-pointer">Remove</button>
       } />
 
       <div className="flex items-center gap-3.5 mb-3">
-        <div className="w-16 h-16 rounded-[18px] shrink-0 flex items-center justify-center text-white font-extrabold text-[22px]" style={{ background: av(avatarIdx) }}>{initials(st.name)}</div>
+        <div className="w-16 h-16 rounded-td-lg shrink-0 flex items-center justify-center text-white font-extrabold text-td-heading" style={{ background: av(avatarIdx) }}>{initials(st.name)}</div>
         <div>
-          <div className="text-[17px] td-strong">{st.name}</div>
-          <div className="text-[12.5px] text-td-muted mt-0.5">{st.klass}</div>
+          <div className="text-td-title td-strong">{st.name}</div>
+          <div className="text-td-caption text-td-muted mt-0.5">{st.klass}</div>
         </div>
       </div>
 
       <CodeCard
-        className="rounded-[14px] mb-2.5"
+        className="rounded-td-md mb-2.5"
         label="STUDENT LINK CODE"
         code={st.id}
         onCopy={() => copyText(st.id, notify, 'Code copied!')}
@@ -234,7 +234,7 @@ export function EditStudentScreen() {
         phone={st.parent}
         message={studentCodeMessage(st.name, st.id)}
         label="Send code on WhatsApp"
-        className="w-full text-[13px] py-3 rounded-[14px] mb-[22px]"
+        className="w-full text-td-small py-3 rounded-td-md mb-[22px]"
       />
 
       <div className="flex flex-col gap-3.5 mb-[18px]">
@@ -250,7 +250,7 @@ export function EditStudentScreen() {
             <label htmlFor="stu-attendance" className="td-label">Attendance %</label>
             <output
               id="stu-attendance"
-              className="w-full block border border-td-border bg-td-soft rounded-[14px] p-[13px] text-sm text-td-muted"
+              className="w-full block border border-td-border bg-td-soft rounded-td-md p-[13px] text-sm text-td-muted"
             >{st.attendance}% · from the register</output>
           </div>
         </div>
@@ -263,7 +263,7 @@ export function EditStudentScreen() {
               const active = label === st.feeStatus
               const fc = feeColor(label)
               return (
-                <button key={label} onClick={() => setStudentField({ feeStatus: label })} className="flex-1 border text-[13px] font-bold p-[11px] rounded-[13px] cursor-pointer" style={{ background: active ? fc.b : 'var(--color-td-card)', color: active ? fc.c : 'var(--color-td-subtle)', borderColor: active ? fc.c : 'var(--color-td-border)' }}>{label}</button>
+                <button key={label} onClick={() => setStudentField({ feeStatus: label })} className="flex-1 border text-td-small font-bold p-[11px] rounded-td-sm cursor-pointer" style={{ background: active ? fc.b : 'var(--color-td-card)', color: active ? fc.c : 'var(--color-td-subtle)', borderColor: active ? fc.c : 'var(--color-td-border)' }}>{label}</button>
               )
             })}
           </div>
@@ -286,26 +286,26 @@ export function AddStudentScreen() {
   if (lastAdded) {
     return (
       <div className="td-screen flex flex-col items-center justify-center min-h-[450px]">
-        <div className="w-[72px] h-[72px] rounded-[22px] bg-td-tint-green flex items-center justify-center mb-5">
+        <div className="w-[72px] h-[72px] rounded-td-lg bg-td-tint-green flex items-center justify-center mb-5">
           <Icon name="check" size={32} color="var(--color-td-green)" />
         </div>
-        <div className="text-[18px] td-strong mb-2">Student added!</div>
-        <div className="text-[13px] text-td-muted text-center leading-relaxed mb-5 max-w-[280px]">Share this code with the parent so the student can log in.</div>
-        <div className="w-full max-w-[280px] border-2 border-dashed border-td-primary bg-td-tint-blue rounded-[16px] p-4 text-center mb-5">
-          <div className="text-[12px] font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
-          <div className="text-[24px] font-extrabold text-td-primary tracking-[0.15em]">{lastAdded.code}</div>
+        <div className="text-td-title td-strong mb-2">Student added!</div>
+        <div className="text-td-small text-td-muted text-center leading-relaxed mb-5 max-w-[280px]">Share this code with the parent so the student can log in.</div>
+        <div className="w-full max-w-[280px] border-2 border-dashed border-td-primary bg-td-tint-blue rounded-td-md p-4 text-center mb-5">
+          <div className="text-td-caption font-bold text-td-muted mb-1">STUDENT LINK CODE</div>
+          <div className="text-td-heading font-extrabold text-td-primary tracking-[0.15em]">{lastAdded.code}</div>
         </div>
         <WhatsAppButton
           phone={lastAdded.parent}
           message={studentCodeMessage(lastAdded.name, lastAdded.code)}
           label="Send on WhatsApp"
-          className="w-full max-w-[280px] text-[14px] py-[13px] rounded-[14px] mb-3"
+          className="w-full max-w-[280px] text-td-body py-[13px] rounded-td-md mb-3"
         />
-        <button onClick={() => copyText(lastAdded.code, notify, 'Code copied!')} className="w-full max-w-[280px] border border-td-primary bg-td-card text-td-primary text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer mb-3 flex items-center justify-center gap-2">
+        <button onClick={() => copyText(lastAdded.code, notify, 'Code copied!')} className="w-full max-w-[280px] border border-td-primary bg-td-card text-td-primary text-td-body font-extrabold py-[13px] rounded-td-md cursor-pointer mb-3 flex items-center justify-center gap-2">
           <Icon name="copy" size={16} color="var(--color-td-primary)" />
           Copy code
         </button>
-        <button onClick={() => { set({ lastAdded: null }); backToList() }} className="td-pill w-full max-w-[280px] text-[14px] font-extrabold py-[13px] rounded-[14px] cursor-pointer">Done</button>
+        <button onClick={() => { set({ lastAdded: null }); backToList() }} className="td-pill w-full max-w-[280px] text-td-body font-extrabold py-[13px] rounded-td-md cursor-pointer">Done</button>
       </div>
     )
   }
@@ -319,20 +319,20 @@ export function AddStudentScreen() {
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="td-label">School</label><input value={newStudent.school} onChange={e => setNewStudent({ school: e.target.value })} placeholder="School" className="td-field text-sm" /></div>
           <div><label className="td-label">Standard</label>
-            <select value={newStudent.klass} onChange={e => setNewStudent({ klass: e.target.value })} className="td-field text-[13.5px] bg-td-card">
+            <select value={newStudent.klass} onChange={e => setNewStudent({ klass: e.target.value })} className="td-field text-td-small bg-td-card">
               {STANDARDS.map(c => <option key={c}>{c}</option>)}
             </select>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="td-label">Batch</label>
-            <select value={newStudent.batch} onChange={e => setNewStudent({ batch: e.target.value })} className="td-field text-[13.5px] bg-td-card">
+            <select value={newStudent.batch} onChange={e => setNewStudent({ batch: e.target.value })} className="td-field text-td-small bg-td-card">
               <option value="">No batch</option>
               {batches.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>
           </div>
           <div><label className="td-label">Branch</label>
-            <select value={newStudent.branch} onChange={e => setNewStudent({ branch: e.target.value })} className="td-field text-[13.5px] bg-td-card">
+            <select value={newStudent.branch} onChange={e => setNewStudent({ branch: e.target.value })} className="td-field text-td-small bg-td-card">
               {branchesList.length ? branchesList.map(b => <option key={b.name}>{b.name}</option>) : <option>No branches</option>}
             </select>
           </div>
@@ -349,9 +349,9 @@ export function AddStudentScreen() {
             <div><label className="td-label">Fee due date</label><input type="date" value={newStudent.feeDue} onChange={e => setNewStudent({ feeDue: e.target.value })} className="td-field text-sm" /></div>
           </div>
         )}
-        <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3">
+        <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-td-md p-3">
           <Icon name="lock" size={16} color="var(--color-td-primary)" />
-          <span className="text-[12px] text-td-primary font-semibold">A secure login code is generated automatically and shown after you save.</span>
+          <span className="text-td-caption text-td-primary font-semibold">A secure login code is generated automatically and shown after you save.</span>
         </div>
       </div>
       <PrimaryButton onClick={() => runAdd(addStudent)}>{adding ? 'Saving…' : 'Save student'}</PrimaryButton>
@@ -388,22 +388,22 @@ export function ImportStudentsScreen() {
     return (
       <div className="td-screen">
         <ScreenHeader title="Send the codes" onBack={backToList} />
-        <p className="text-[13px] text-td-muted leading-relaxed mb-4">
+        <p className="text-td-small text-td-muted leading-relaxed mb-4">
           {added.length} student{added.length === 1 ? ' is' : 's are'} on your roster. Each parent needs their child&#39;s code to log in — send them now, or later from any student&#39;s page.
         </p>
         <div className="td-list gap-2 mb-5">
           {added.map(s => (
-            <div key={s.code} className="td-card rounded-[14px] p-3 flex items-center gap-2.5">
+            <div key={s.code} className="td-card rounded-td-md p-3 flex items-center gap-2.5">
               <div className="flex-1 min-w-0">
-                <div className="text-[13.5px] td-strong truncate">{s.name}</div>
-                <div className="text-[12px] text-td-muted font-mono tracking-[0.08em] mt-0.5">{s.code}</div>
+                <div className="text-td-small td-strong truncate">{s.name}</div>
+                <div className="text-td-caption text-td-muted font-mono tracking-[0.08em] mt-0.5">{s.code}</div>
               </div>
               {s.parent ? (
-                <a href={whatsappShareUrl(s.parent, studentCodeMessage(s.name, s.code))} target="_blank" rel="noopener noreferrer" aria-label={`Send ${s.name}'s code on WhatsApp`} className="shrink-0 w-10 h-10 rounded-[12px] bg-[#25D366] text-white flex items-center justify-center">
+                <a href={whatsappShareUrl(s.parent, studentCodeMessage(s.name, s.code))} target="_blank" rel="noopener noreferrer" aria-label={`Send ${s.name}'s code on WhatsApp`} className="shrink-0 w-10 h-10 rounded-td-sm bg-[#25D366] text-white flex items-center justify-center">
                   <WhatsAppIcon />
                 </a>
               ) : (
-                <button onClick={() => copyText(s.code, notify, 'Code copied!')} aria-label={`Copy ${s.name}'s code`} className="shrink-0 w-10 h-10 rounded-[12px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
+                <button onClick={() => copyText(s.code, notify, 'Code copied!')} aria-label={`Copy ${s.name}'s code`} className="shrink-0 w-10 h-10 rounded-td-sm border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
                   <Icon name="copy" size={15} color="var(--color-td-primary)" />
                 </button>
               )}
@@ -419,7 +419,7 @@ export function ImportStudentsScreen() {
     <div className="td-screen">
       <ScreenHeader title="Import students" onBack={backToList} />
 
-      <p className="text-[13px] text-td-muted leading-relaxed mb-3">
+      <p className="text-td-small text-td-muted leading-relaxed mb-3">
         Paste your list — one student per line, from Excel, WhatsApp or anywhere else. Name, class and parent&#39;s number are picked out wherever they sit on the line.
       </p>
 
@@ -428,19 +428,19 @@ export function ImportStudentsScreen() {
         onChange={e => setText(e.target.value)}
         rows={7}
         placeholder={'Rahul Sharma, 10, 9876543210\nPriya Patel, Class 9, 91234 56780'}
-        className="td-field text-[13px] font-mono leading-relaxed mb-3.5 resize-y"
+        className="td-field text-td-small font-mono leading-relaxed mb-3.5 resize-y"
       />
 
       <div className="grid grid-cols-2 gap-[11px] mb-4">
         <div>
           <label className="td-label">Class for rows that don&#39;t say</label>
-          <select value={klass} onChange={e => setKlass(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+          <select value={klass} onChange={e => setKlass(e.target.value)} className="td-field text-td-small bg-td-card">
             {STANDARDS.map(c => <option key={c}>{c}</option>)}
           </select>
         </div>
         <div>
           <label className="td-label">Branch</label>
-          <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+          <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field text-td-small bg-td-card">
             <option value="">No branch</option>
             {branchesList.map(b => <option key={b.name}>{b.name}</option>)}
           </select>
@@ -448,7 +448,7 @@ export function ImportStudentsScreen() {
       </div>
 
       {overflow > 0 && (
-        <div className="bg-td-tint-amber border border-td-edge-amber rounded-[14px] p-3 mb-3 text-[12.5px] font-semibold text-td-dark leading-relaxed">
+        <div className="bg-td-tint-amber border border-td-edge-amber rounded-td-md p-3 mb-3 text-td-caption font-semibold text-td-dark leading-relaxed">
           Only the first {MAX_IMPORT} lines are read. The last {overflow} were left out — import these, then paste the rest.
         </div>
       )}
@@ -458,12 +458,12 @@ export function ImportStudentsScreen() {
           <div className="td-label mb-2">Ready to add · {rows.length}</div>
           <div className="td-list gap-2 mb-4">
             {rows.map(s => (
-              <div key={s.name} className="td-card rounded-[13px] py-2.5 px-3 flex items-center gap-2.5">
+              <div key={s.name} className="td-card rounded-td-sm py-2.5 px-3 flex items-center gap-2.5">
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13px] td-strong truncate">{s.name}</div>
-                  <div className="text-[11.5px] text-td-muted mt-0.5 truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
+                  <div className="text-td-small td-strong truncate">{s.name}</div>
+                  <div className="text-td-caption text-td-muted mt-0.5 truncate">{s.klass}{s.school ? ` · ${s.school}` : ''}</div>
                 </div>
-                <span className={`text-[11.5px] font-semibold shrink-0 ${s.parent ? 'text-td-muted' : 'text-td-amber'}`}>
+                <span className={`text-td-caption font-semibold shrink-0 ${s.parent ? 'text-td-muted' : 'text-td-amber'}`}>
                   {s.parent || 'no number'}
                 </span>
               </div>
@@ -477,9 +477,9 @@ export function ImportStudentsScreen() {
           <div className="td-label mb-2">Skipped · {skipped.length}</div>
           <div className="td-list gap-1.5 mb-4">
             {skipped.map(s => (
-              <div key={s.line} className="bg-td-soft border border-td-border rounded-[13px] py-2.5 px-3">
-                <div className="text-[12.5px] text-td-dark truncate">Line {s.line}: {s.text}</div>
-                <div className="text-[11.5px] text-td-muted mt-0.5">{s.reason}</div>
+              <div key={s.line} className="bg-td-soft border border-td-border rounded-td-sm py-2.5 px-3">
+                <div className="text-td-caption text-td-dark truncate">Line {s.line}: {s.text}</div>
+                <div className="text-td-caption text-td-muted mt-0.5">{s.reason}</div>
               </div>
             ))}
           </div>
@@ -515,9 +515,9 @@ export function StaffScreen() {
         </button>
       </div>
 
-      <div className="flex items-center gap-[11px] td-card rounded-2xl p-[11px] px-[15px] mb-4 lg:max-w-md">
+      <div className="flex items-center gap-[11px] td-card rounded-td-md p-[11px] px-[15px] mb-4 lg:max-w-md">
         <Icon name="search" size={17} color="var(--color-td-subtle)" />
-        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search staff..." className="flex-1 text-[13.5px] text-td-dark outline-none bg-transparent" />
+        <input value={searchQuery} onChange={e => set({ searchQuery: e.target.value })} placeholder="Search staff..." className="flex-1 text-td-small text-td-dark outline-none bg-transparent" />
       </div>
 
       {filtered.length === 0 ? (
@@ -525,12 +525,12 @@ export function StaffScreen() {
       ) : (
         <div className="td-list gap-3">
           {filtered.map((t, i) => (
-            <div key={t.name + i} className="td-card rounded-[18px] p-3.5 flex items-center gap-3.5">
-              <div className="w-[52px] h-[52px] rounded-2xl shrink-0 flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
+            <div key={t.name + i} className="td-card rounded-td-lg p-3.5 flex items-center gap-3.5">
+              <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center text-white font-extrabold text-td-title" style={{ background: GRADIENTS[i % GRADIENTS.length] }}>{initials(t.name)}</div>
               <div className="flex-1 min-w-0">
-                <div className="text-[15px] td-strong">{t.name}</div>
-                <div className="text-[12.5px] text-td-primary font-bold mt-0.5">{t.subject}</div>
-                <div className="text-[12px] text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
+                <div className="text-td-body td-strong">{t.name}</div>
+                <div className="text-td-caption text-td-primary font-bold mt-0.5">{t.subject}</div>
+                <div className="text-td-caption text-td-muted mt-[3px]">{t.experience} yrs · {t.qualification}</div>
               </div>
             </div>
           ))}
@@ -552,7 +552,7 @@ export function AddTeacherScreen() {
       <div className="flex flex-col gap-3.5 mb-[22px]">
         <div><label className="td-label">Full name</label><input value={nt.name} onChange={e => setNewTeacher({ name: e.target.value })} placeholder="Teacher name" className="td-field text-sm" /></div>
         <div><label className="td-label">Subject</label>
-          <select value={nt.subject || subjectNames[0] || ''} onChange={e => setNewTeacher({ subject: e.target.value })} disabled={subjectNames.length === 0} className="td-field text-[13.5px] bg-td-card disabled:opacity-60">
+          <select value={nt.subject || subjectNames[0] || ''} onChange={e => setNewTeacher({ subject: e.target.value })} disabled={subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
             {options(subjectNames, 'Add subjects first')}
           </select>
         </div>
@@ -560,7 +560,7 @@ export function AddTeacherScreen() {
         <div className="grid grid-cols-2 gap-[11px]">
           <div><label className="td-label">Years of exp.</label><input value={nt.experience} onChange={e => setNewTeacher({ experience: e.target.value })} placeholder="0" className="td-field text-sm" /></div>
           <div><label className="td-label">Branch</label>
-            <select value={nt.branch} onChange={e => setNewTeacher({ branch: e.target.value })} className="td-field text-[13.5px] bg-td-card">
+            <select value={nt.branch} onChange={e => setNewTeacher({ branch: e.target.value })} className="td-field text-td-small bg-td-card">
               <option value="">All branches</option>
               {branchesList.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
             </select>

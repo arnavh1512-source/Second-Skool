@@ -99,7 +99,7 @@ export function AttendanceScreen() {
   return (
     <div className="td-screen td-wide">
       <div className="flex items-center gap-3.5 mb-[18px]">
-        <button onClick={back} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
+        <button onClick={back} className="w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
           <Icon name="back" size={18} color="var(--color-td-dark)" />
         </button>
         <div>
@@ -121,21 +121,21 @@ export function AttendanceScreen() {
           min={isoDay(earliestMarkableDay(new Date()))}
           disabled={!online}
           onChange={e => { setDay(e.target.value || today); setLoadFailed(false) }}
-          className="border border-td-border bg-td-card rounded-[12px] px-3 py-2 text-[13px] text-td-dark disabled:opacity-60"
+          className="border border-td-border bg-td-card rounded-td-sm px-3 py-2 text-td-small text-td-dark disabled:opacity-60"
         />
         {correcting && (
-          <button onClick={() => { setDay(today); setLoadFailed(false) }} className="text-[12px] font-bold text-td-muted underline cursor-pointer">
+          <button onClick={() => { setDay(today); setLoadFailed(false) }} className="text-td-caption font-bold text-td-muted underline cursor-pointer">
             Back to today
           </button>
         )}
       </div>
 
       {!online && (
-        <div className="text-[12px] text-td-muted mb-4">An earlier day can only be corrected while you are online.</div>
+        <div className="text-td-caption text-td-muted mb-4">An earlier day can only be corrected while you are online.</div>
       )}
 
       {correcting && loadFailed && (
-        <div className="mb-4 rounded-[14px] border p-3.5 text-[12px] text-td-on-red" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
+        <div className="mb-4 rounded-td-md border p-3.5 text-td-caption text-td-on-red" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
           That day&apos;s register could not be loaded, so it cannot be corrected right now. Try again in a moment.
         </div>
       )}
@@ -145,23 +145,23 @@ export function AttendanceScreen() {
           only she knows which of the two is right — and it sits above the
           roster so the correction is one tap away from being re-entered. */}
       {attConflicts.length > 0 && (
-        <div className="mb-4 rounded-[14px] border p-3.5" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
-          <div className="text-[13px] font-bold text-td-on-red">
+        <div className="mb-4 rounded-td-md border p-3.5" style={{ background: 'var(--color-td-tint-red)', borderColor: 'var(--color-td-edge-red)' }}>
+          <div className="text-td-small font-bold text-td-on-red">
             {attConflicts.length} {attConflicts.length === 1 ? 'mark was' : 'marks were'} already answered by someone else
           </div>
-          <div className="text-[12px] text-td-on-red mt-1 mb-2.5 opacity-90">
+          <div className="text-td-caption text-td-on-red mt-1 mb-2.5 opacity-90">
             These were marked on this phone while it was offline. The centre already had a different answer, so yours was not applied. Mark them again if yours is right.
           </div>
           <ul className="flex flex-col gap-1.5">
             {attConflicts.map((c, i) => (
-              <li key={`${c.name}-${c.date}-${i}`} className="text-[12px] text-td-on-red flex flex-wrap gap-x-1.5">
+              <li key={`${c.name}-${c.date}-${i}`} className="text-td-caption text-td-on-red flex flex-wrap gap-x-1.5">
                 <span className="font-bold">{c.name}</span>
                 <span className="opacity-80">{c.date}</span>
                 <span>· you marked {c.mine.toLowerCase()}, centre has {c.theirs.toLowerCase()}</span>
               </li>
             ))}
           </ul>
-          <button onClick={dismissAttConflicts} className="mt-3 text-[12px] font-bold underline text-td-on-red cursor-pointer">
+          <button onClick={dismissAttConflicts} className="mt-3 text-td-caption font-bold underline text-td-on-red cursor-pointer">
             Dismiss
           </button>
         </div>
@@ -186,13 +186,13 @@ export function AttendanceScreen() {
           </div>
 
           <div className="flex gap-2.5 mb-4">
-            <div className="flex-1 bg-td-tint-green rounded-[14px] p-3 text-center">
-              <div className="text-[22px] font-extrabold text-td-green">{presentCount}</div>
-              <div className="text-[12px] text-td-on-green font-semibold">Present</div>
+            <div className="flex-1 bg-td-tint-green rounded-td-md p-3 text-center">
+              <div className="text-td-heading font-extrabold text-td-green">{presentCount}</div>
+              <div className="text-td-caption text-td-on-green font-semibold">Present</div>
             </div>
-            <div className="flex-1 bg-td-tint-red rounded-[14px] p-3 text-center">
-              <div className="text-[22px] font-extrabold text-td-red">{absentCount}</div>
-              <div className="text-[12px] text-td-on-red font-semibold">Absent</div>
+            <div className="flex-1 bg-td-tint-red rounded-td-md p-3 text-center">
+              <div className="text-td-heading font-extrabold text-td-red">{absentCount}</div>
+              <div className="text-td-caption text-td-on-red font-semibold">Absent</div>
             </div>
           </div>
 
@@ -202,9 +202,9 @@ export function AttendanceScreen() {
               const key = studentKey(s)
               const absent = att[key] === 'absent'
               return (
-                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-2xl p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? 'var(--color-td-tint-red)' : 'var(--color-td-card)', borderColor: absent ? 'var(--color-td-edge-red)' : 'var(--color-td-border)' }}>
-                  <div className="w-[38px] h-[38px] rounded-[11px] shrink-0 flex items-center justify-center text-white font-bold text-[13px]" style={{ background: av(i) }}>{initials(s.name)}</div>
-                  <div className="flex-1 text-[13.5px] font-bold text-td-dark">{s.name}</div>
+                <button key={key || i} onClick={() => toggleAtt(key)} className="text-left border rounded-td-md p-3 px-3.5 flex items-center gap-[13px] cursor-pointer" style={{ background: absent ? 'var(--color-td-tint-red)' : 'var(--color-td-card)', borderColor: absent ? 'var(--color-td-edge-red)' : 'var(--color-td-border)' }}>
+                  <div className="w-[38px] h-[38px] rounded-td-sm shrink-0 flex items-center justify-center text-white font-bold text-td-small" style={{ background: av(i) }}>{initials(s.name)}</div>
+                  <div className="flex-1 text-td-small font-bold text-td-dark">{s.name}</div>
                   <span className="text-xs font-bold flex items-center gap-1.5" style={{ color: absent ? 'var(--color-td-red)' : 'var(--color-td-green)' }}>
                     <span className="w-[9px] h-[9px] rounded-full" style={{ background: absent ? 'var(--color-td-red)' : 'var(--color-td-green)' }} />
                     {absent ? 'Absent' : 'Present'}
@@ -214,7 +214,7 @@ export function AttendanceScreen() {
             })}
           </div>
           {correcting && (
-            <div className="text-[12px] text-td-muted mb-2.5 lg:max-w-2xl">
+            <div className="text-td-caption text-td-muted mb-2.5 lg:max-w-2xl">
               This replaces what the centre has for {day}. A child newly marked absent gets a message home naming that day.
             </div>
           )}

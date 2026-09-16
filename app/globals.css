@@ -52,6 +52,28 @@
   --color-td-on-red: #a35545;
   --color-td-on-green: #5a8a72;
   --color-td-on-amber: #8a6414;
+
+  /* Every size, corner and shadow comes from here too. Before this the tree
+     used twenty-one font sizes and eleven radii that were all trying to say one
+     of six and three, so a reskin had to touch 600 call sites instead of one
+     block. No line-height companions on purpose: the arbitrary sizes these
+     replace set font-size alone, and a companion would move every row. */
+  --text-td-caption: 12px;
+  --text-td-small: 13px;
+  --text-td-body: 15px;
+  --text-td-title: 18px;
+  --text-td-heading: 22px;
+  --text-td-display: 28px;
+
+  --radius-td-sm: 12px;
+  --radius-td-md: 16px;
+  --radius-td-lg: 20px;
+
+  --shadow-td-card: 0 1px 2px rgba(20,30,60,.06);
+  --shadow-td-raised: 0 2px 10px rgba(20,30,60,.14);
+  --shadow-td-overlay: 0 14px 36px rgba(16,24,40,.28);
+  /* Bottom sheets cast upward, so they cannot share the overlay shadow. */
+  --shadow-td-sheet: 0 -10px 40px rgba(20,30,60,.2);
 }
 
 /* Dark. Only the tokens change; not one component knows which theme it is in.
@@ -153,14 +175,14 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 
 /* The one section heading in the app: the label above a list or a card group.
    It used to be three sizes that meant the same thing. */
-.td-h2 { font-size: 15px; font-weight: 800; color: var(--color-td-dark); margin-bottom: 12px; }
+.td-h2 { font-size: var(--text-td-body); font-weight: 800; color: var(--color-td-dark); margin-bottom: 12px; }
 
 /* The two halves of every form row in the app, written out 120-odd times
    before this. Each carries only what all of its sites agree on - the font
    size, the fill and the focus ring stay utilities on the element, so a
    `td-field text-[13.5px]` still says 13.5px and nothing here can override it. */
-.td-label { display: block; font-size: .75rem; line-height: 1rem; font-weight: 700; color: var(--color-td-muted); margin-bottom: 7px; }
-.td-field { width: 100%; border: 1px solid var(--color-td-border); border-radius: 14px; padding: 13px; color: var(--color-td-dark); outline: none; }
+.td-label { display: block; font-size: var(--text-td-caption); line-height: 1rem; font-weight: 700; color: var(--color-td-muted); margin-bottom: 7px; }
+.td-field { width: 100%; border: 1px solid var(--color-td-border); border-radius: var(--radius-td-md); padding: 13px; color: var(--color-td-dark); outline: none; }
 /* The focus line belongs to the field, not to every site that uses one. Sixty-odd
    elements carried a `focus:border-td-primary` utility that never fired: a rule
    outside a cascade layer beats one inside Tailwind's, so .td-field's own border
@@ -186,11 +208,11 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 
 /* The initials square beside a name. It comes in two sizes, so size and radius
    stay on the element. */
-.td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 13px; }
+.td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: var(--text-td-small); }
 
 /* The small solid button that lives in a card header, as opposed to
    PrimaryButton at the foot of a form. */
-.td-btn-sm { border: none; background: var(--color-td-primary); color: #fff; font-size: 13px; font-weight: 700; padding: 10px 15px; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.td-btn-sm { border: none; background: var(--color-td-primary); color: #fff; font-size: var(--text-td-small); font-weight: 700; padding: 10px 15px; border-radius: var(--radius-td-md); cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
 /* Every Remove / Delete / Sign out button: the outlined red one that asks to be
    read twice. Only the colours and the pointer are here - these come in five
@@ -209,11 +231,11 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    seven agree on the radius, the padding and the spacing between rows, so those
    are here; the margin below, and the desktop width cap two of them want, stay
    on the element. */
-.td-form-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: 20px; padding: 17px; display: flex; flex-direction: column; gap: 14px; }
+.td-form-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 17px; display: flex; flex-direction: column; gap: 14px; }
 
 /* The card a single row sits in: an icon or avatar, then text, laid out in a
    line. The student app is built almost entirely out of these. */
-.td-row { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: 18px; padding: 14px; display: flex; align-items: center; gap: 13px; }
+.td-row { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 14px; display: flex; align-items: center; gap: 13px; }
 
 /* A button that is not shaped like a button: a text link, a tappable row, a nav
    tab. Only the chrome the browser adds is taken away - the type, the colour,

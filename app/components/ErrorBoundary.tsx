@@ -29,7 +29,7 @@ export class ErrorBoundary extends Component<Props, EState> {
       return (
         <div className="min-h-screen flex items-center justify-center bg-td-soft p-6">
           <div className="text-center max-w-xs">
-            <div className="w-16 h-16 rounded-[20px] bg-td-tint-red flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-td-lg bg-td-tint-red flex items-center justify-center mx-auto mb-4">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-red)" strokeWidth="2.2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><circle cx="12" cy="16" r="0.5" fill="var(--color-td-red)"/></svg>
             </div>
             <div className="text-lg td-strong mb-2">Something went wrong</div>
@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, EState> {
             <div className="text-sm text-td-muted mb-5 leading-relaxed">This screen failed to load. Your data is safe — try again, and if it keeps happening, close and reopen the app.</div>
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="td-pill text-sm font-bold py-3 px-8 rounded-2xl cursor-pointer"
+              className="td-pill text-sm font-bold py-3 px-8 rounded-td-md cursor-pointer"
             >
               Try again
             </button>

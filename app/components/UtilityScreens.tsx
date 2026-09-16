@@ -28,7 +28,7 @@ function EnablePushButton() {
 
   if (!pushSupported()) return null
   return (
-    <button onClick={turnOn} disabled={on || busy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+    <button onClick={turnOn} disabled={on || busy} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
       <Icon name="reminder" size={17} color="var(--color-td-primary)" />
       {on ? 'Notifications enabled' : busy ? 'Enabling…' : 'Enable notifications on this device'}
     </button>
@@ -63,7 +63,7 @@ export function MeetingsScreen() {
         <div className="text-sm td-strong">Schedule new</div>
         <div><label className="td-label">Title</label><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Parent-teacher meeting" className="td-field text-sm" /></div>
         <div><label className="td-label">Type</label>
-          <select value={type} onChange={e => setType(e.target.value)} className="td-field text-[13.5px] bg-td-card">
+          <select value={type} onChange={e => setType(e.target.value)} className="td-field text-td-small bg-td-card">
             <option>Parent-teacher meeting</option><option>Staff meeting</option>
           </select>
         </div>
@@ -80,17 +80,17 @@ export function MeetingsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {meetingsList.map((m, i) => (
-            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="td-card rounded-2xl p-3.5 flex items-center gap-[13px]">
-              <div className="w-[46px] text-center shrink-0 bg-td-tint-blue rounded-xl py-2">
+            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="td-card rounded-td-md p-3.5 flex items-center gap-[13px]">
+              <div className="w-[46px] text-center shrink-0 bg-td-tint-blue rounded-td-sm py-2">
                 <div className="text-base font-extrabold text-td-primary leading-none">{m.day}</div>
-                <div className="text-[12px] text-td-primary font-semibold mt-0.5">{m.mon}</div>
+                <div className="text-td-caption text-td-primary font-semibold mt-0.5">{m.mon}</div>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[13.5px] font-bold text-td-dark">{m.title}</div>
+                <div className="text-td-small font-bold text-td-dark">{m.title}</div>
                 <div className="text-xs text-td-muted mt-0.5">{m.time} · {m.kind}</div>
               </div>
               {isAdmin && m.dbId && (
-                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 td-danger text-[12px] font-bold py-1.5 px-3 rounded-[11px]">Cancel</button>
+                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 td-danger text-td-caption font-bold py-1.5 px-3 rounded-td-sm">Cancel</button>
               )}
             </div>
           ))}
@@ -123,7 +123,7 @@ export function RankingsScreen() {
       <ScreenHeader title="Rankings" onBack={back} />
 
       {subjects.length === 0 && (
-        <button onClick={() => go('subjects', 'more')} className="w-full text-left bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3.5 cursor-pointer text-[12.5px] text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
+        <button onClick={() => go('subjects', 'more')} className="w-full text-left bg-td-tint-blue border border-td-edge-blue rounded-td-md p-3.5 cursor-pointer text-td-caption text-td-primary font-semibold">Add subjects first (More → Subjects) so rankings can be grouped by subject.</button>
       )}
 
       {subjectNames.length > 0 && (
@@ -151,18 +151,18 @@ export function RankingsScreen() {
       ) : (
         <div className="flex flex-col gap-[9px] mb-5">
           {rows.map((r, i) => (
-            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] td-card rounded-2xl p-3 px-3.5">
+            <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] td-card rounded-td-md p-3 px-3.5">
               <div className="w-[26px] text-center text-sm font-extrabold" style={{ color: i < 3 ? 'var(--color-td-amber)' : 'var(--color-td-subtle)' }}>{i + 1}</div>
-              <div className="w-9 h-9 rounded-[11px] td-avatar" style={{ background: av(i) }}>{initials(r.name)}</div>
-              <div className="flex-1 text-[13.5px] font-bold text-td-dark">{r.name}</div>
+              <div className="w-9 h-9 rounded-td-sm td-avatar" style={{ background: av(i) }}>{initials(r.name)}</div>
+              <div className="flex-1 text-td-small font-bold text-td-dark">{r.name}</div>
               <div className="text-sm td-strong">{r.score}%</div>
             </div>
           ))}
         </div>
       )}
-      <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-[14px] p-3.5 mt-1">
+      <div className="flex items-center gap-2.5 bg-td-tint-blue border border-td-edge-blue rounded-td-md p-3.5 mt-1">
         <Icon name="info" size={18} color="var(--color-td-primary)" />
-        <span className="text-[12.5px] text-td-primary font-semibold">Rankings update automatically — students always see the latest.</span>
+        <span className="text-td-caption text-td-primary font-semibold">Rankings update automatically — students always see the latest.</span>
       </div>
     </div>
   )
@@ -201,12 +201,12 @@ export function MoreScreen() {
   ]
 
   const card = (list: MoreItem[]) => (
-    <div className="td-card rounded-[20px] overflow-hidden">
+    <div className="td-card rounded-td-lg overflow-hidden">
       {list.map(m => (
         <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="td-plain w-full text-left border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
-          <div className="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
+          <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
           <div className="flex-1 text-sm font-bold text-td-dark">{m.label}</div>
-          {!!m.badge && m.badge > 0 && <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
+          {!!m.badge && m.badge > 0 && <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{m.badge}</span>}
           <ChevronRight />
         </button>
       ))}
@@ -217,8 +217,8 @@ export function MoreScreen() {
     <div className="td-screen">
       <div className="text-2xl td-strong mt-1.5 mb-[18px]">More tools</div>
 
-      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left td-card rounded-[20px] p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
-        <div className="w-[46px] h-[46px] rounded-[14px] shrink-0 flex items-center justify-center text-white font-bold text-[15px]" style={{ background: av(0) }}>{initials(profileName)}</div>
+      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left td-card rounded-td-lg p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
+        <div className="w-[46px] h-[46px] rounded-td-md shrink-0 flex items-center justify-center text-white font-bold text-td-body" style={{ background: av(0) }}>{initials(profileName)}</div>
         <div className="flex-1 min-w-0">
           <div className="text-sm td-strong truncate">{profileName}</div>
           <div className="text-xs text-td-muted mt-0.5 truncate">{googleEmail} · {isAdmin ? 'Head teacher' : 'Teacher'}</div>
@@ -230,7 +230,7 @@ export function MoreScreen() {
 
       {isAdmin && (
         <>
-          <div className="text-[13px] font-extrabold text-td-muted mt-5 mb-[11px] px-1">Management</div>
+          <div className="text-td-small font-extrabold text-td-muted mt-5 mb-[11px] px-1">Management</div>
           {card(management)}
         </>
       )}
@@ -240,7 +240,7 @@ export function MoreScreen() {
         {card([{ icon: 'warning', label: 'Report a problem', tint: 'var(--color-td-tint-red)', screen: 'support' }])}
       </div>
 
-      <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-2xl mt-4 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-td-md mt-4 flex items-center justify-center gap-[9px]">
         <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>
@@ -263,13 +263,13 @@ export function NotificationsScreen() {
   const empty = studentCount === 0 && staffCount === 0
 
   const row = (icon: IconName, tint: string, label: string, count: number, screen: Screen) => (
-    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none td-card rounded-[18px] p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
-      <div className="w-11 h-11 rounded-[13px] shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
+    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none td-card rounded-td-lg p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
+      <div className="w-11 h-11 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
       <div className="flex-1 min-w-0">
         <div className="text-sm td-strong">{label}</div>
-        <div className="text-[12px] text-td-muted mt-0.5">{count} waiting for your review</div>
+        <div className="text-td-caption text-td-muted mt-0.5">{count} waiting for your review</div>
       </div>
-      <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{count}</span>
+      <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{count}</span>
       <ChevronRight />
     </button>
   )
@@ -280,11 +280,11 @@ export function NotificationsScreen() {
 
       {empty ? (
         <div className="flex flex-col items-center text-center py-14">
-          <div className="w-16 h-16 rounded-[20px] bg-td-tint-green flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-td-lg bg-td-tint-green flex items-center justify-center mb-4">
             <Icon name="reminder" size={30} color="var(--color-td-green)" />
           </div>
-          <div className="text-[16px] td-strong">You&apos;re all caught up</div>
-          <div className="text-[13px] text-td-muted mt-1 max-w-[240px]">New student and staff requests will show up here.</div>
+          <div className="text-td-title td-strong">You&apos;re all caught up</div>
+          <div className="text-td-small text-td-muted mt-1 max-w-[240px]">New student and staff requests will show up here.</div>
         </div>
       ) : (
         <>
@@ -347,12 +347,12 @@ export function StaffProfileScreen() {
       <ScreenHeader title="My Profile" onBack={() => go('more', 'more')} />
 
       <div className="flex flex-col items-center text-center mb-6">
-        <div className="w-[76px] h-[76px] rounded-[24px] flex items-center justify-center text-white font-extrabold text-[26px] mb-3" style={{ background: av(0) }}>{initials(displayName)}</div>
-        <div className="text-[18px] td-strong">{displayName}</div>
-        <div className="text-[12.5px] text-td-muted mt-0.5">{googleEmail}</div>
-        <div className="inline-flex items-center gap-[6px] bg-td-tint-green rounded-[20px] py-[5px] px-[11px] mt-2.5">
+        <div className="w-[76px] h-[76px] rounded-td-lg flex items-center justify-center text-white font-extrabold text-td-display mb-3" style={{ background: av(0) }}>{initials(displayName)}</div>
+        <div className="text-td-title td-strong">{displayName}</div>
+        <div className="text-td-caption text-td-muted mt-0.5">{googleEmail}</div>
+        <div className="inline-flex items-center gap-[6px] bg-td-tint-green rounded-td-lg py-[5px] px-[11px] mt-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-td-green" />
-          <span className="text-[12px] font-bold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
+          <span className="text-td-caption font-bold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
         </div>
       </div>
 
@@ -367,8 +367,8 @@ export function StaffProfileScreen() {
         {isAdmin && (
           <div>
             <label className="td-label">Centre logo</label>
-            <div className="flex items-center gap-3.5 border border-td-border rounded-[14px] p-3">
-              <div className="w-14 h-14 rounded-[14px] overflow-hidden shrink-0 flex items-center justify-center bg-td-soft border border-td-border">
+            <div className="flex items-center gap-3.5 border border-td-border rounded-td-md p-3">
+              <div className="w-14 h-14 rounded-td-md overflow-hidden shrink-0 flex items-center justify-center bg-td-soft border border-td-border">
                 {centreLogo
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={centreLogo} alt="Centre logo" className="w-full h-full object-cover" />
@@ -376,20 +376,20 @@ export function StaffProfileScreen() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex gap-2">
-                  <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-td-card text-td-dark text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px] cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
+                  <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-td-card text-td-dark text-td-caption font-extrabold py-2 px-3.5 rounded-td-sm cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
                   {centreLogo && !logoBusy && (
-                    <button onClick={() => saveCentreLogo('')} className="td-danger text-[12.5px] font-extrabold py-2 px-3.5 rounded-[11px]">Remove</button>
+                    <button onClick={() => saveCentreLogo('')} className="td-danger text-td-caption font-extrabold py-2 px-3.5 rounded-td-sm">Remove</button>
                   )}
                 </div>
-                <p className="text-[12px] text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
+                <p className="text-td-caption text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
               </div>
               <input ref={logoInput} type="file" accept="image/*" className="hidden" onChange={e => pickLogo(e.target.files?.[0])} />
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2.5 bg-td-soft border border-td-border rounded-[14px] p-3">
+        <div className="flex items-center gap-2.5 bg-td-soft border border-td-border rounded-td-md p-3">
           <Icon name="info" size={15} color="var(--color-td-subtle)" />
-          <span className="text-[12px] text-td-muted">Your email is managed by Google and can&apos;t be changed here.</span>
+          <span className="text-td-caption text-td-muted">Your email is managed by Google and can&apos;t be changed here.</span>
         </div>
       </div>
 
@@ -398,24 +398,24 @@ export function StaffProfileScreen() {
       <EnablePushButton />
 
       {!pwOpen ? (
-        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-2xl cursor-pointer mt-3 flex items-center justify-center gap-2">
+        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-sm font-extrabold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2">
           <Icon name="lock" size={17} color="var(--color-td-primary)" />
           Set password for phone login
         </button>
       ) : (
-        <div className="border border-td-border rounded-2xl p-4 mt-3">
+        <div className="border border-td-border rounded-td-md p-4 mt-3">
           <div className="text-sm td-strong">Set a password</div>
-          <p className="text-[12px] text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
+          <p className="text-td-caption text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
           <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="td-field text-sm mt-3" />
           <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="td-field text-sm mt-2.5" />
           <div className="flex gap-2 mt-3">
-            <button onClick={savePassword} disabled={pwBusy} className="td-pill flex-1 text-[13.5px] font-extrabold py-[12px] rounded-[12px] cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
-            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-[13.5px] font-bold py-[12px] px-4 rounded-[12px] cursor-pointer">Cancel</button>
+            <button onClick={savePassword} disabled={pwBusy} className="td-pill flex-1 text-td-small font-extrabold py-[12px] rounded-td-sm cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
+            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-td-small font-bold py-[12px] px-4 rounded-td-sm cursor-pointer">Cancel</button>
           </div>
         </div>
       )}
 
-      <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-2xl mt-3 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-sm font-extrabold p-[15px] rounded-td-md mt-3 flex items-center justify-center gap-[9px]">
         <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>

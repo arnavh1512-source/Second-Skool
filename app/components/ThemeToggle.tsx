@@ -18,7 +18,7 @@ export function ThemeToggle() {
       onClick={flip}
       aria-label="Switch between light and dark mode"
       title="Light / dark"
-      className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0"
+      className="w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0"
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-td-dark)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="dark:hidden">
         <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8" />

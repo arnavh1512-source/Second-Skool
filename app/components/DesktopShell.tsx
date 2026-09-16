@@ -27,21 +27,21 @@ function NavRow({ item }: { item: NavItem }) {
   return (
     <button
       onClick={() => go(item.screen, item.tab)}
-      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-[13px] cursor-pointer transition-colors ${
+      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-td-sm cursor-pointer transition-colors ${
         on ? 'bg-td-tint-blue text-td-primary' : 'text-td-text hover:bg-td-soft'
       }`}
     >
       <span className="w-[30px] h-[30px] rounded-[9px] td-card flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
-      <span className={`flex-1 text-[13.5px] ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
+      <span className={`flex-1 text-td-small ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
-        <span className="text-[12px] font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
+        <span className="text-td-caption font-extrabold text-white bg-td-red rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center">{item.badge}</span>
       )}
     </button>
   )
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-[12px] font-extrabold text-td-muted uppercase tracking-wide px-3 mt-5 mb-1.5">{children}</div>
+  return <div className="text-td-caption font-extrabold text-td-muted uppercase tracking-wide px-3 mt-5 mb-1.5">{children}</div>
 }
 
 function Sidebar() {
@@ -82,11 +82,11 @@ function Sidebar() {
       <div className="flex items-center gap-2.5 px-5 pt-6 pb-4">
         {centreLogo
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-[11px] object-cover shrink-0" />
-          : <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-extrabold text-[15px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
+          ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-td-sm object-cover shrink-0" />
+          : <div className="w-9 h-9 rounded-td-sm flex items-center justify-center text-white font-extrabold text-td-body shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
         <div className="min-w-0">
-          <div className="text-[14.5px] td-strong truncate">{centreName || 'Second Skool'}</div>
-          <div className="text-[12px] text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
+          <div className="text-td-body td-strong truncate">{centreName || 'Second Skool'}</div>
+          <div className="text-td-caption text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
         </div>
       </div>
 
@@ -103,17 +103,17 @@ function Sidebar() {
       </nav>
 
       <div className="border-t border-td-border p-3">
-        <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-[12px] hover:bg-td-soft cursor-pointer mb-1">
-          <div className="w-9 h-9 rounded-[11px] flex items-center justify-center text-white font-bold text-[13px] shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{initials(name)}</div>
+        <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-td-sm hover:bg-td-soft cursor-pointer mb-1">
+          <div className="w-9 h-9 rounded-td-sm flex items-center justify-center text-white font-bold text-td-small shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{initials(name)}</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] td-strong truncate">{name}</div>
-            <div className="text-[12px] text-td-muted truncate">{googleEmail}</div>
+            <div className="text-td-small td-strong truncate">{name}</div>
+            <div className="text-td-caption text-td-muted truncate">{googleEmail}</div>
           </div>
         </button>
         {/* On a phone this lives on More; the desktop shell has no More, so
             without this row a laptop user has no way to report anything. */}
         <NavRow item={{ icon: 'warning', label: 'Report a problem', screen: 'support' }} />
-        <button onClick={signOut} className="w-full td-danger text-[13px] font-extrabold py-2.5 rounded-[12px] flex items-center justify-center gap-2 mt-1">
+        <button onClick={signOut} className="w-full td-danger text-td-small font-extrabold py-2.5 rounded-td-sm flex items-center justify-center gap-2 mt-1">
           <Icon name="signOut" size={16} color="var(--color-td-red)" />
           Sign out
         </button>
@@ -134,7 +134,7 @@ function DesktopToast() {
     <div
       role={err ? 'alert' : 'status'}
       aria-live={err ? 'assertive' : 'polite'}
-      className={`fixed left-1/2 -translate-x-1/2 bottom-8 max-w-[440px] rounded-[14px] text-white z-50 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
+      className={`fixed left-1/2 -translate-x-1/2 bottom-8 max-w-[440px] rounded-td-md text-white z-50 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
     >
       <button
         type="button"
@@ -181,26 +181,26 @@ export function DesktopAuthShell({ children }: { children: React.ReactNode }) {
 
         <div className="relative flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon-512.png" alt="Second Skool" width={42} height={42} className="rounded-[12px] object-cover shadow-[0_2px_10px_rgba(0,0,0,.18)]" />
-          <span className="text-[19px] font-extrabold tracking-tight">Second Skool</span>
+          <img src="/icon-512.png" alt="Second Skool" width={42} height={42} className="rounded-td-sm object-cover shadow-td-raised" />
+          <span className="text-td-title font-extrabold tracking-tight">Second Skool</span>
         </div>
 
         <div className="relative">
           <h1 className="text-[38px] font-extrabold leading-[1.12] tracking-tight">Run your whole tuition centre from one screen.</h1>
-          <p className="text-[15px] text-white/80 mt-5 max-w-[430px] leading-relaxed">Attendance, results, fees and parent updates — for every branch, every teacher, every student.</p>
+          <p className="text-td-body text-white/80 mt-5 max-w-[430px] leading-relaxed">Attendance, results, fees and parent updates — for every branch, every teacher, every student.</p>
           <ul className="mt-9 flex flex-col gap-[18px]">
             {AUTH_FEATURES.map(f => (
               <li key={f} className="flex items-center gap-3.5">
                 <span className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center shrink-0">
                   <Icon name="check" size={15} color="#fff" />
                 </span>
-                <span className="text-[14.5px] font-semibold text-white/95">{f}</span>
+                <span className="text-td-body font-semibold text-white/95">{f}</span>
               </li>
             ))}
           </ul>
         </div>
 
-        <div className="relative text-[12.5px] text-white/60">Built for tuition centres to stay organised every day.</div>
+        <div className="relative text-td-caption text-white/60">Built for tuition centres to stay organised every day.</div>
       </aside>
 
       <main className="flex-1 flex items-center justify-center overflow-y-auto h-[100dvh] bg-td-soft lg:bg-td-card px-5 py-8">

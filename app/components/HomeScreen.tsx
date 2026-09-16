@@ -9,11 +9,11 @@ import { Icon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { ThemeToggle } from './ThemeToggle'
 
-const CHIP = 'inline-flex items-center gap-[7px] td-card rounded-[20px] py-[7px] px-[13px]'
+const CHIP = 'inline-flex items-center gap-[7px] td-card rounded-td-lg py-[7px] px-[13px]'
 const chip = (name: string) => (
   <>
     <Icon name="branches" size={14} color="var(--color-td-primary)" />
-    <span className="text-[12.5px] font-semibold text-td-text">{name}</span>
+    <span className="text-td-caption font-semibold text-td-text">{name}</span>
   </>
 )
 
@@ -78,15 +78,15 @@ export function HomeScreen() {
     <div className="td-wide td-screen">
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => go('staffProfile')} aria-label="Open my profile" className="td-plain flex items-center gap-3 p-0 cursor-pointer text-left">
-          <div className="w-[46px] h-[46px] rounded-2xl flex items-center justify-center text-white font-extrabold text-[17px]" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
+          <div className="w-[46px] h-[46px] rounded-td-md flex items-center justify-center text-white font-extrabold text-td-title" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
           <div>
             <div className="text-xs text-td-muted font-semibold">{isAdmin ? 'Head Teacher' : 'Teacher'}</div>
-            <div className="text-[17px] td-strong">{displayName}</div>
+            <div className="text-td-title td-strong">{displayName}</div>
           </div>
         </button>
         <div className="flex items-center gap-2 shrink-0">
           <ThemeToggle />
-          <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
+          <button onClick={() => go('notifications', 'home')} aria-label="Notifications" className="relative w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer">
             <Icon name="reminder" size={20} color="var(--color-td-dark)" />
             {hasAlerts && <span className="absolute top-[9px] right-[10px] w-2 h-2 rounded-full bg-td-red border-2 border-td-card" />}
           </button>
@@ -108,9 +108,9 @@ export function HomeScreen() {
       </div>
 
       {steps.length > 0 && (
-        <div className="td-card rounded-[18px] p-4 mb-3.5 lg:max-w-md">
-          <div className="text-[11px] font-bold text-td-muted uppercase tracking-[.06em]">Get your centre running</div>
-          <p className="text-[12.5px] text-td-muted leading-relaxed mt-1.5 mb-3">
+        <div className="td-card rounded-td-lg p-4 mb-3.5 lg:max-w-md">
+          <div className="text-td-caption font-bold text-td-muted uppercase tracking-[.06em]">Get your centre running</div>
+          <p className="text-td-caption text-td-muted leading-relaxed mt-1.5 mb-3">
             Three things, once. After that the app fills itself in as you teach.
           </p>
           <div className="flex flex-col gap-2">
@@ -124,14 +124,14 @@ export function HomeScreen() {
                 className="td-plain flex items-center gap-3 text-left w-full p-0 cursor-pointer"
               >
                 <span
-                  className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-[12px] font-extrabold ${s.done ? 'bg-td-tint-green text-td-green' : 'bg-td-soft text-td-subtle'}`}
+                  className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-td-caption font-extrabold ${s.done ? 'bg-td-tint-green text-td-green' : 'bg-td-soft text-td-subtle'}`}
                   aria-hidden="true"
                 >
                   {s.done ? <Icon name="check" size={15} color="var(--color-td-green)" /> : i + 1}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className={`block text-[13px] font-bold ${s.done ? 'text-td-subtle line-through' : 'text-td-dark'}`}>{s.label}</span>
-                  {!s.done && <span className="block text-[11.5px] text-td-muted mt-0.5">{s.hint}</span>}
+                  <span className={`block text-td-small font-bold ${s.done ? 'text-td-subtle line-through' : 'text-td-dark'}`}>{s.label}</span>
+                  {!s.done && <span className="block text-td-caption text-td-muted mt-0.5">{s.hint}</span>}
                 </span>
                 {!s.done && <ChevronRight />}
               </button>
@@ -141,13 +141,13 @@ export function HomeScreen() {
       )}
 
       <div className="grid grid-cols-2 gap-2.5 mb-3.5 lg:max-w-md">
-        <div className="rounded-[18px] p-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
+        <div className="rounded-td-lg p-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
           <div className="text-2xl font-extrabold leading-none">{schedule.length}</div>
-          <div className="text-[12px] opacity-85 mt-1.5 font-semibold">Classes today</div>
+          <div className="text-td-caption opacity-85 mt-1.5 font-semibold">Classes today</div>
         </div>
-        <div className="td-card rounded-[18px] p-3.5">
+        <div className="td-card rounded-td-lg p-3.5">
           <div className="text-2xl font-extrabold leading-none text-td-dark">{students.length}</div>
-          <div className="text-[12px] text-td-muted mt-1.5 font-semibold">Students</div>
+          <div className="text-td-caption text-td-muted mt-1.5 font-semibold">Students</div>
         </div>
       </div>
 
@@ -156,11 +156,11 @@ export function HomeScreen() {
           exists only while somebody is on the list, so a centre where everyone
           is coming never sees it — an alarm that is always on is furniture. */}
       {gone > 0 && (
-        <button onClick={() => goFrom('students', 'students', 'atRisk')} className="flex items-center gap-3 text-left w-full bg-td-tint-red border border-td-edge-red rounded-[18px] py-3 px-4 mb-2.5 lg:max-w-md cursor-pointer">
+        <button onClick={() => goFrom('students', 'students', 'atRisk')} className="flex items-center gap-3 text-left w-full bg-td-tint-red border border-td-edge-red rounded-td-lg py-3 px-4 mb-2.5 lg:max-w-md cursor-pointer">
           <div className="text-xl td-strong leading-none text-td-red">{gone}</div>
           <div className="flex-1">
-            <div className="text-[13px] font-bold text-td-dark">{gone === 1 ? 'student has' : 'students have'} stopped coming</div>
-            <div className="text-[11.5px] text-td-subtle font-semibold mt-0.5">Absent the last 3 classes &middot; ask before the month ends</div>
+            <div className="text-td-small font-bold text-td-dark">{gone === 1 ? 'student has' : 'students have'} stopped coming</div>
+            <div className="text-td-caption text-td-subtle font-semibold mt-0.5">Absent the last 3 classes &middot; ask before the month ends</div>
           </div>
           <ChevronRight />
         </button>
@@ -170,10 +170,10 @@ export function HomeScreen() {
           names on the other side. origin='reach' is what carries the filter,
           and any later go() clears it, so the roster never stays half-hidden. */}
       {reach && (
-        <button onClick={() => goFrom('students', 'students', 'reach')} className="block text-left w-full td-card rounded-[18px] py-3 px-4 mb-2.5 lg:max-w-md cursor-pointer">
+        <button onClick={() => goFrom('students', 'students', 'reach')} className="block text-left w-full td-card rounded-td-lg py-3 px-4 mb-2.5 lg:max-w-md cursor-pointer">
           <div className="flex items-baseline gap-2">
             <span className="text-lg td-strong leading-none">{reach.active} of {students.length}</span>
-            <span className="flex-1 text-[12px] text-td-muted font-semibold">families opened the app this week</span>
+            <span className="flex-1 text-td-caption text-td-muted font-semibold">families opened the app this week</span>
             <ChevronRight />
           </div>
           <div role="progressbar" aria-label="Families who opened the app this week" aria-valuenow={reach.percent} className="h-1.5 rounded-full bg-td-soft mt-2.5 overflow-hidden">
@@ -187,8 +187,8 @@ export function HomeScreen() {
           {chips.map(c => (
             <button key={c.stage} onClick={() => goFrom('students', 'students', c.stage)} className="td-plain cursor-pointer flex items-center gap-1.5 border border-td-border bg-td-card rounded-full py-1.5 px-3">
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.tint }} />
-              <span className="text-[12px] td-strong leading-none">{c.n}</span>
-              <span className="text-[11.5px] text-td-muted font-semibold leading-none">{c.label}</span>
+              <span className="text-td-caption td-strong leading-none">{c.n}</span>
+              <span className="text-td-caption text-td-muted font-semibold leading-none">{c.label}</span>
             </button>
           ))}
         </div>
@@ -197,9 +197,9 @@ export function HomeScreen() {
       <div className="td-h2">Quick actions</div>
       <div className="grid grid-cols-4 gap-2 mb-[26px] lg:max-w-2xl">
         {quickActions.map(a => (
-          <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-td-card rounded-[18px] py-3 px-0.5 cursor-pointer flex flex-col items-center gap-[7px]">
-            <div className="w-[42px] h-[42px] rounded-[13px] flex items-center justify-center" style={{ background: a.tint, color: ink(a.tint) }}><Icon name={a.icon} size={21} /></div>
-            <span className="text-[12px] font-bold text-td-text text-center leading-tight tracking-tight">{a.label}</span>
+          <button key={a.label} onClick={() => go(a.screen, (a.tab || 'home') as never)} className="border border-td-border bg-td-card rounded-td-lg py-3 px-0.5 cursor-pointer flex flex-col items-center gap-[7px]">
+            <div className="w-[42px] h-[42px] rounded-td-sm flex items-center justify-center" style={{ background: a.tint, color: ink(a.tint) }}><Icon name={a.icon} size={21} /></div>
+            <span className="text-td-caption font-bold text-td-text text-center leading-tight tracking-tight">{a.label}</span>
           </button>
         ))}
       </div>
@@ -210,17 +210,17 @@ export function HomeScreen() {
       ) : (
         <div className="td-list gap-2.5 mb-[26px]">
           {schedule.map((c, i) => (
-            <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="flex items-center gap-[13px] td-card rounded-[18px] py-3.5 px-[15px]">
+            <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="flex items-center gap-[13px] td-card rounded-td-lg py-3.5 px-[15px]">
               <div className="text-center shrink-0 w-[52px]">
                 <div className="text-sm font-extrabold text-td-primary">{c.time}</div>
-                <div className="text-[12px] text-td-subtle font-semibold">{c.ampm}</div>
+                <div className="text-td-caption text-td-subtle font-semibold">{c.ampm}</div>
               </div>
               <div className="w-px h-[34px] bg-td-soft" />
               <div className="flex-1">
-                <div className="text-[13.5px] font-bold text-td-dark">{c.subject}</div>
+                <div className="text-td-small font-bold text-td-dark">{c.subject}</div>
                 <div className="text-xs text-td-muted mt-0.5">{c.klass} · {c.room}</div>
               </div>
-              <span className="text-[12px] font-bold py-[5px] px-2.5 rounded-[20px]" style={{ color: c.statusColor, background: c.statusBg }}>{c.status}</span>
+              <span className="text-td-caption font-bold py-[5px] px-2.5 rounded-td-lg" style={{ color: c.statusColor, background: c.statusBg }}>{c.status}</span>
             </div>
           ))}
         </div>

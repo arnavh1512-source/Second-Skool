@@ -26,7 +26,7 @@ function StatusBar() {
     // Fake status bar is only for the desktop mockup; real phones have their own.
     <div className="hidden md:flex h-12 shrink-0 items-end justify-between px-7 pb-1.5 text-sm font-bold text-td-dark z-5">
       <span>9:41</span>
-      <div className="absolute left-1/2 top-2 -translate-x-1/2 w-[118px] h-[30px] bg-[#0b0d12] rounded-[18px]" />
+      <div className="absolute left-1/2 top-2 -translate-x-1/2 w-[118px] h-[30px] bg-[#0b0d12] rounded-td-lg" />
       <div className="flex items-center gap-1.5">
         <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="var(--color-td-dark)"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="var(--color-td-dark)"/><rect x="9" y="2" width="3" height="10" rx="1" fill="var(--color-td-dark)"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="var(--color-td-dark)"/></svg>
         <svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="var(--color-td-dark)" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="1.5" fill="var(--color-td-dark)"/><rect x="24" y="4" width="2" height="5" rx="1" fill="var(--color-td-dark)" opacity="0.4"/></svg>
@@ -56,7 +56,7 @@ function BottomTabBar() {
         {stuTabs.map(t => (
           <button key={t.key} onClick={() => go(t.screen, t.key)} className="td-plain cursor-pointer flex flex-col items-center gap-[5px] px-2.5 py-1">
             {t.icon(color(t.key))}
-            <span className="text-[12px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
+            <span className="text-td-caption font-bold" style={{ color: color(t.key) }}>{t.label}</span>
           </button>
         ))}
       </div>
@@ -89,7 +89,7 @@ function BottomTabBar() {
               <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-td-card" />
             )}
           </span>
-          <span className="text-[12px] font-bold" style={{ color: color(t.key) }}>{t.label}</span>
+          <span className="text-td-caption font-bold" style={{ color: color(t.key) }}>{t.label}</span>
         </button>
       ))}
     </div>
@@ -121,7 +121,7 @@ function Toast() {
     <div
       role={err ? 'alert' : 'status'}
       aria-live={err ? 'assertive' : 'polite'}
-      className={`absolute left-5 right-5 bottom-[104px] rounded-[14px] text-white z-30 shadow-[0_14px_36px_rgba(0,0,0,.28)] animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
+      className={`absolute left-5 right-5 bottom-[104px] rounded-td-md text-white z-30 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-[#8f2417]' : 'bg-td-ink'}`}
     >
       <button
         type="button"
@@ -132,7 +132,7 @@ function Toast() {
         {err && (
           <Icon name="info" size={17} className="shrink-0 mt-px" />
         )}
-        <span className="text-[13.5px] font-semibold leading-snug">{toast}</span>
+        <span className="text-td-small font-semibold leading-snug">{toast}</span>
       </button>
     </div>
   )
@@ -183,7 +183,7 @@ export function Chip({ active, onClick, children }: {
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 text-[13px] font-bold py-[9px] px-4 rounded-[20px] cursor-pointer border ${active ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
+      className={`shrink-0 text-td-small font-bold py-[9px] px-4 rounded-td-lg cursor-pointer border ${active ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
     >{children}</button>
   )
 }
@@ -195,14 +195,14 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
   onAction?: () => void
 }) {
   return (
-    <div className="text-center td-card rounded-[16px] py-9 px-6">
-      <div className="text-[15px] td-strong mb-1.5">{title}</div>
-      {hint && <p className="text-[13px] text-td-muted leading-relaxed max-w-[290px] mx-auto mb-0">{hint}</p>}
+    <div className="text-center td-card rounded-td-md py-9 px-6">
+      <div className="text-td-body td-strong mb-1.5">{title}</div>
+      {hint && <p className="text-td-small text-td-muted leading-relaxed max-w-[290px] mx-auto mb-0">{hint}</p>}
       {actionLabel && onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="td-pill mt-4 text-[13.5px] font-extrabold px-5 py-2.5 rounded-[12px] cursor-pointer"
+          className="td-pill mt-4 text-td-small font-extrabold px-5 py-2.5 rounded-td-sm cursor-pointer"
         >
           {actionLabel}
         </button>
@@ -213,7 +213,7 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
 
 export function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-[42px] h-[42px] rounded-[14px] border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
+    <button onClick={onClick} className="w-[42px] h-[42px] rounded-td-md border border-td-border bg-td-card flex items-center justify-center cursor-pointer shrink-0">
       <Icon name="back" size={18} color="var(--color-td-dark)" />
     </button>
   )
@@ -283,7 +283,7 @@ export function PrimaryButton({ onClick, children }: { onClick: () => unknown; c
       onClick={guard}
       disabled={busy}
       aria-busy={busy}
-      className="td-pill w-full text-[15px] font-extrabold py-[15px] rounded-2xl cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
+      className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
     >
       {busy && <Spinner />}
       {children}
@@ -326,13 +326,13 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
         aria-describedby="confirm-body"
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-[380px] bg-td-card rounded-[20px] p-[21px] outline-none shadow-[0_20px_50px_rgba(16,24,40,.3)] animate-[pop_.2s_ease]"
+        className="w-full max-w-[380px] bg-td-card rounded-td-lg p-[21px] outline-none shadow-td-overlay animate-[pop_.2s_ease]"
       >
-        <div id="confirm-title" className="text-[16px] td-strong mb-2">{title}</div>
-        <div id="confirm-body" className="text-[13.5px] text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
+        <div id="confirm-title" className="text-td-title td-strong mb-2">{title}</div>
+        <div id="confirm-body" className="text-td-small text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
         <div className="flex gap-2.5">
-          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-white text-sm font-extrabold py-3 rounded-[14px] cursor-pointer">{confirmLabel}</button>
+          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-sm font-extrabold py-3 rounded-td-md cursor-pointer">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-white text-sm font-extrabold py-3 rounded-td-md cursor-pointer">{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -357,11 +357,11 @@ export function CodeCard({ label, code, hint, onCopy, className = '', children }
     <div className={`w-full border-2 border-dashed border-td-primary bg-td-tint-blue p-3.5 ${className}`}>
       <button onClick={onCopy} className="w-full text-left cursor-pointer flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[12px] font-bold text-td-muted">{label}</div>
-          <div className="text-[20px] font-extrabold text-td-primary tracking-[0.15em] truncate">{code}</div>
-          {hint && <div className="text-[12px] text-td-muted mt-0.5">{hint}</div>}
+          <div className="text-td-caption font-bold text-td-muted">{label}</div>
+          <div className="text-td-heading font-extrabold text-td-primary tracking-[0.15em] truncate">{code}</div>
+          {hint && <div className="text-td-caption text-td-muted mt-0.5">{hint}</div>}
         </div>
-        <div className="text-[12px] font-bold text-td-primary flex items-center gap-1 shrink-0">
+        <div className="text-td-caption font-bold text-td-primary flex items-center gap-1 shrink-0">
           <Icon name="copy" size={14} color="var(--color-td-primary)" />
           Copy
         </div>
