@@ -88,7 +88,7 @@ export function SupportScreen() {
                 <button
                   key={f.value}
                   onClick={() => setReportDraft({ frequency: f.value as Frequency })}
-                  className={`flex-1 text-td-small font-extrabold rounded-td-md py-2.5 cursor-pointer border ${on ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-dark border-td-border'}`}
+                  className={`flex-1 text-td-small font-semibold rounded-td-md py-2.5 cursor-pointer border ${on ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-dark border-td-border'}`}
                 >
                   {f.label}
                 </button>
@@ -111,7 +111,7 @@ export function SupportScreen() {
               <img src={reportShot} alt="Attached screenshot" className="max-h-40 rounded-td-sm border border-td-border" />
               <button
                 onClick={() => setReportShot(null)}
-                className="td-plain text-td-caption font-extrabold text-td-red p-0 cursor-pointer"
+                className="td-plain text-td-caption font-semibold text-td-red p-0 cursor-pointer"
               >
                 Remove
               </button>
@@ -129,7 +129,7 @@ export function SupportScreen() {
         <button
           onClick={send}
           disabled={busy}
-          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-sm font-semibold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send report'}
         </button>
@@ -137,7 +137,7 @@ export function SupportScreen() {
 
       {myTickets.length > 0 && (
         <>
-          <div className="text-td-small font-extrabold text-td-muted mt-5 mb-[11px] px-1">Your reports</div>
+          <div className="text-td-small font-semibold text-td-muted mt-5 mb-[11px] px-1">Your reports</div>
           <div className="td-card rounded-td-lg overflow-hidden">
             {myTickets.map(t => {
               const last = t.messages[t.messages.length - 1]
@@ -152,7 +152,7 @@ export function SupportScreen() {
                     <div className="text-sm font-bold text-td-dark truncate">{t.intent}</div>
                     <div className="text-xs text-td-muted mt-0.5">{fmtDate(t.createdAt)}</div>
                   </div>
-                  {unread && <span className="td-tag text-white bg-td-red shrink-0">Reply</span>}
+                  {unread && <span className="td-tag text-td-on-solid bg-td-red shrink-0">Reply</span>}
                   <StatusPill status={t.status} />
                 </button>
               )
@@ -191,8 +191,8 @@ export function SupportThreadScreen() {
         {ticket.messages.map((m, i) => {
           const ours = m.author === 'operator'
           return (
-            <div key={i} className={`max-w-[85%] rounded-td-md p-3 px-3.5 ${ours ? 'td-card self-start' : 'bg-td-primary text-white self-end'}`}>
-              {ours && <div className="text-td-caption font-extrabold text-td-muted mb-1">Second Skool</div>}
+            <div key={i} className={`max-w-[85%] rounded-td-md p-3 px-3.5 ${ours ? 'td-card self-start' : 'bg-td-primary text-td-on-solid self-end'}`}>
+              {ours && <div className="text-td-caption font-semibold text-td-muted mb-1">Second Skool</div>}
               <div className="text-sm leading-[1.5] whitespace-pre-wrap">{m.body}</div>
               <div className={`text-td-caption mt-1 ${ours ? 'text-td-muted' : 'text-white/70'}`}>{fmtDate(m.createdAt)}</div>
             </div>
@@ -214,7 +214,7 @@ export function SupportThreadScreen() {
         <button
           onClick={send}
           disabled={busy || !draft.trim()}
-          className="td-pill w-full text-sm font-extrabold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
+          className="td-pill w-full text-sm font-semibold p-[15px] rounded-td-md cursor-pointer disabled:opacity-60"
         >
           {busy ? 'Sending…' : 'Send message'}
         </button>

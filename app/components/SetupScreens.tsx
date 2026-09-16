@@ -54,10 +54,10 @@ export function BranchesScreen() {
         <div className="td-form-card mb-[18px]">
           <div className="text-sm td-strong">New branch</div>
           <label className="block"><span className="td-label">Branch name</span>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="td-field text-sm" />
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Satellite Centre" className="td-field" />
           </label>
           <label className="block"><span className="td-label">Address</span>
-            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="td-field text-sm" />
+            <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="td-field" />
           </label>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-td-primary rounded" />
@@ -138,7 +138,7 @@ function NameListScreen({ noun, plural, placeholder, rows, add, remove, confirmB
       <div className="td-form-card mb-[18px]">
         <div className="text-sm td-strong">Add {noun}</div>
         <div className="flex gap-[11px]">
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="td-field flex-1 text-sm" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          <input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="td-field flex-1" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
           <button onClick={handleAdd} className="td-pill text-sm font-bold py-[13px] px-5 rounded-td-md cursor-pointer shrink-0">Add</button>
         </div>
       </div>

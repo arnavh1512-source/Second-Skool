@@ -11,47 +11,58 @@
    white text (gradients, toast backgrounds, the WhatsApp green, Google's four)
    stay literal on purpose: they are the same colour in both themes. */
 @theme {
-  --color-td-primary: #2a6fdb;
-  --color-td-dark: #1a2332;
-  --color-td-green: #2fa36b;
-  --color-td-red: #e8553c;
-  --color-td-amber: #e0962f;
-  --color-td-bg: #f4f6fb;
-  --color-td-border: #e6eaf2;
-  --color-td-muted: #6b7689;
-  --color-td-subtle: #7d879a;
-  --color-td-text: #3a4456;
+  /* The Register: ruled paper and ink. Brand weight comes from the ink, not a
+     hue - the solid button, the selected chip and the heavy section rule are
+     all td-dark, and the one blue is kept for links, focus and progress. */
+  --color-td-primary: #2c3e8f;
+  --color-td-dark: #14161a;
+  --color-td-green: #1f7a4d;
+  --color-td-red: #c8463c;
+  --color-td-amber: #b7791f;
+  --color-td-bg: #f2f3f0;
+  --color-td-border: #c9ccc6;
+  --color-td-muted: #5e646b;
+  --color-td-subtle: #6e757e;
+  --color-td-text: #33373d;
 
   /* Surfaces. td-card is what `bg-white` used to be: the raised sheet a list,
      a form or a stat sits on. td-soft is a fill *on* that sheet; td-line is the
      hairline between two rows of one, always lighter than td-border. */
   --color-td-card: #ffffff;
-  --color-td-soft: #f4f6fb;
-  --color-td-line: #f0f2f7;
-  --color-td-faint: #c2cad8;
+  --color-td-soft: #f2f3f0;
+  --color-td-line: #dde0da;
+  --color-td-faint: #9098a1;
+
+  /* The heavy rule above a section label. Ink on paper, but softened in dark:
+     a full-white 2px line reads as a divider shouting over the content. */
+  --color-td-rule: #14161a;
 
   /* The one surface that is dark in both themes: white text sits on it.
      It is not td-dark — that is an ink, and an ink inverts. */
-  --color-td-ink: #1a2332;
+  --color-td-ink: #14161a;
+
+  /* Text on a solid green, red or blue fill. White on the light theme's deep
+     fills; near-black on the dark theme's, which are lifted too far for white. */
+  --color-td-on-solid: #ffffff;
 
   /* Icon-tile tints, and the deeper wash/edge pair a banner uses. */
-  --color-td-tint-blue: #eaf1fc;
-  --color-td-tint-green: #e7f5ee;
-  --color-td-tint-red: #fdecea;
-  --color-td-tint-amber: #fcf3e3;
-  --color-td-tint-indigo: #eef0fc;
-  --color-td-indigo: #5a63c9;
-  --color-td-wash-red: #fdf3f0;
-  --color-td-edge-red: #f4d8cf;
-  --color-td-edge-blue: #dbe6fa;
-  --color-td-wash-amber: #fdf7ea;
-  --color-td-edge-amber: #f2e2c0;
+  --color-td-tint-blue: #e6e9f4;
+  --color-td-tint-green: #e1f0e8;
+  --color-td-tint-red: #f7e3e0;
+  --color-td-tint-amber: #f6ecd9;
+  --color-td-tint-indigo: #e6e9f4;
+  --color-td-indigo: #2c3e8f;
+  --color-td-wash-red: #fcefec;
+  --color-td-edge-red: #e2a79f;
+  --color-td-edge-blue: #b9c2e6;
+  --color-td-wash-amber: #fbf3e4;
+  --color-td-edge-amber: #dcbe86;
 
-  /* Ink for text that sits on one of those tints — a muted sibling of the
-     brand colour, dark enough to read on a pale wash. */
-  --color-td-on-red: #a35545;
-  --color-td-on-green: #5a8a72;
-  --color-td-on-amber: #8a6414;
+  /* Ink for text that sits on one of those tints — a deep sibling of the
+     solid colour, dark enough to read on a pale wash. */
+  --color-td-on-red: #8a3229;
+  --color-td-on-green: #145c39;
+  --color-td-on-amber: #7a5211;
 
   /* Every size, corner and shadow comes from here too. Before this the tree
      used twenty-one font sizes and eleven radii that were all trying to say one
@@ -62,26 +73,30 @@
   --text-td-small: 13px;
   --text-td-body: 15px;
   --text-td-title: 18px;
-  --text-td-heading: 22px;
+  --text-td-heading: 24px;
   --text-td-display: 28px;
 
-  --radius-td-sm: 12px;
-  --radius-td-md: 16px;
-  --radius-td-lg: 20px;
+  /* A register is ruled, not rounded: 4px on anything you press or type into,
+     pills only where the design draws a pill. */
+  --radius-td-sm: 4px;
+  --radius-td-md: 4px;
+  --radius-td-lg: 4px;
 
-  --shadow-td-card: 0 1px 2px rgba(20,30,60,.06);
-  --shadow-td-raised: 0 2px 10px rgba(20,30,60,.14);
-  --shadow-td-overlay: 0 14px 36px rgba(16,24,40,.28);
+  --shadow-td-card: 0 1px 2px rgba(20,22,26,.06);
+  --shadow-td-raised: 0 2px 10px rgba(20,22,26,.14);
+  --shadow-td-overlay: 0 14px 36px rgba(20,22,26,.28);
   /* Bottom sheets cast upward, so they cannot share the overlay shadow. */
-  --shadow-td-sheet: 0 -10px 40px rgba(20,30,60,.2);
+  --shadow-td-sheet: 0 -10px 40px rgba(20,22,26,.2);
+
+  /* Set on <body> by next/font in layout.tsx. */
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 /* Dark. Only the tokens change; not one component knows which theme it is in.
-   The blues, greens and reds are lifted rather than reused — the brand blue is
-   4.9:1 on white and 2.4:1 on a dark card, so carrying it across unchanged
-   would have made every link and every rupee figure unreadable. The values
-   below trade a little contrast under white button text to buy a lot back for
-   the text, which is where these colours are used three times as often.
+   The solids are lifted rather than reused: the light theme's deep green and
+   red are unreadable as text on a near-black card, so dark gets pale fills with
+   dark text on them (td-on-solid) and pastel inks for text on the tints.
 
    Stamped by the inline script in layout.tsx, so the first paint is already
    the right theme. `data-theme` is always set: the OS preference is resolved
@@ -90,39 +105,45 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --color-td-primary: #4b8bee;
-  --color-td-green: #38b27e;
-  --color-td-red: #f0705a;
-  --color-td-amber: #e8a33d;
+  --color-td-primary: #a6b2ee;
+  --color-td-green: #3fa873;
+  --color-td-red: #e8695e;
+  --color-td-amber: #e0a94a;
 
-  --color-td-bg: #0e1219;
-  --color-td-card: #171c26;
-  --color-td-soft: #1f2531;
-  --color-td-line: #262d3a;
-  --color-td-border: #2a323f;
-  --color-td-faint: #4a5364;
-  --color-td-ink: #3b4557;
+  --color-td-bg: #15171a;
+  --color-td-card: #1d2024;
+  --color-td-soft: #2a2e33;
+  --color-td-line: #2a2e33;
+  --color-td-border: #383d43;
+  --color-td-faint: #6e757e;
+  --color-td-rule: #6e757e;
+  --color-td-ink: #33373d;
+  --color-td-on-solid: #15171a;
 
-  --color-td-dark: #e8ecf3;
-  --color-td-text: #b9c2d1;
-  --color-td-muted: #8a94a6;
-  --color-td-subtle: #818ba1;
+  --color-td-dark: #f2f3f0;
+  --color-td-text: #c9cdd2;
+  --color-td-muted: #9098a1;
+  --color-td-subtle: #9098a1;
 
-  --color-td-tint-blue: #1b2b46;
-  --color-td-tint-green: #163227;
-  --color-td-tint-red: #362220;
-  --color-td-tint-amber: #34291a;
-  --color-td-tint-indigo: #232748;
-  --color-td-indigo: #8b93e8;
-  --color-td-wash-red: #2b1e1b;
-  --color-td-edge-red: #4a2f28;
-  --color-td-edge-blue: #2c3f61;
-  --color-td-wash-amber: #2e2617;
-  --color-td-edge-amber: #4a3c1e;
+  --color-td-tint-blue: #1e2438;
+  --color-td-tint-green: #143024;
+  --color-td-tint-red: #3d1e1a;
+  --color-td-tint-amber: #3a2c13;
+  --color-td-tint-indigo: #1e2438;
+  --color-td-indigo: #a6b2ee;
+  --color-td-wash-red: #2a1513;
+  --color-td-edge-red: #7a3a33;
+  --color-td-edge-blue: #2f3a66;
+  --color-td-wash-amber: #2a2112;
+  --color-td-edge-amber: #5c4720;
 
-  --color-td-on-red: #e0917f;
-  --color-td-on-green: #7fc4a4;
-  --color-td-on-amber: #d9b165;
+  --color-td-on-red: #ffb3aa;
+  --color-td-on-green: #7fd3a5;
+  --color-td-on-amber: #f0cc8a;
+
+  /* A shadow on a near-black ground is invisible, and a lighter one reads as a
+     glow. Cards in dark are separated by their border alone. */
+  --shadow-td-card: none;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -161,6 +182,10 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { scrollbar-width: none; }
 
+/* Figures: IBM Plex Mono with tabular digits, so a column of rupees or marks
+   lines up without a table. */
+.td-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
 /* Desktop staff console: every screen renders as a readable centered column by
    default (forms, lists), while data-heavy screens opt into full width with the
    .td-wide class. Only applies inside the desktop shell — the phone layout and
@@ -173,22 +198,23 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 .td-screen { animation: pop .35s ease; padding: 6px 20px 24px; }
 .td-auth-screen { animation: pop .35s ease; padding: 40px 24px 24px; min-height: 700px; display: flex; flex-direction: column; }
 
-/* The one section heading in the app: the label above a list or a card group.
-   It used to be three sizes that meant the same thing. */
-.td-h2 { font-size: var(--text-td-body); font-weight: 800; color: var(--color-td-dark); margin-bottom: 12px; }
+/* The one section heading in the app: the label above a list or a card group,
+   set as a register's column head - a heavy rule above, a hairline below. */
+.td-h2 { border-top: 2px solid var(--color-td-rule); border-bottom: 1px solid var(--color-td-border); padding: 6px 0; font-size: var(--text-td-caption); line-height: 1rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-td-text); margin-bottom: 12px; }
 
 /* The two halves of every form row in the app, written out 120-odd times
-   before this. Each carries only what all of its sites agree on - the font
-   size, the fill and the focus ring stay utilities on the element, so a
-   `td-field text-[13.5px]` still says 13.5px and nothing here can override it. */
-.td-label { display: block; font-size: var(--text-td-caption); line-height: 1rem; font-weight: 700; color: var(--color-td-muted); margin-bottom: 7px; }
-.td-field { width: 100%; border: 1px solid var(--color-td-border); border-radius: var(--radius-td-md); padding: 13px; color: var(--color-td-dark); outline: none; }
+   before this. The field owns its size and fill: this rule is unlayered, so a
+   size or background utility on a .td-field would lose to it silently. */
+.td-label { display: block; font-size: var(--text-td-small); line-height: 1.125rem; font-weight: 500; letter-spacing: .01em; color: var(--color-td-muted); margin-bottom: 7px; }
+/* 16px, not the design's 15: iOS zooms the page into any input under 16px on
+   focus, and the viewport cannot turn that off without also blocking pinch. */
+.td-field { width: 100%; background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-md); padding: 14px 16px; min-height: 52px; font-size: 16px; color: var(--color-td-dark); outline: none; }
 /* The focus line belongs to the field, not to every site that uses one. Sixty-odd
    elements carried a `focus:border-td-primary` utility that never fired: a rule
    outside a cascade layer beats one inside Tailwind's, so .td-field's own border
    won every time and no field in the app ever showed focus. This is the rule
    those sixty-odd meant to write. */
-.td-field:focus { border-color: var(--color-td-primary); }
+.td-field:focus { border-color: var(--color-td-dark); }
 
 /* The card: a filled panel with a hairline round it, written out 74 times as
    three utilities before this. Radius and padding stay on the element - the app
@@ -196,11 +222,11 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 .td-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); }
 /* A card that is itself the field (the search bars): the input inside turns its
    own outline off, so the card's border is the only place focus can show. */
-.td-card:has(> input:focus) { border-color: var(--color-td-primary); }
+.td-card:has(> input:focus) { border-color: var(--color-td-dark); }
 
 /* One weight and one colour, worn together 91 times: the app's strong text.
    Size is not part of it - six different ones sit on top. */
-.td-strong { font-weight: 800; color: var(--color-td-dark); }
+.td-strong { font-weight: 600; color: var(--color-td-dark); }
 
 /* The muted paragraph under a heading. Where it is width-capped, that stays
    a utility, because only half of them are. */
@@ -211,11 +237,11 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 
 /* The initials square beside a name. It comes in two sizes, so size and radius
    stay on the element. */
-.td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: var(--text-td-small); }
+.td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: var(--text-td-small); }
 
 /* The small solid button that lives in a card header, as opposed to
    PrimaryButton at the foot of a form. */
-.td-btn-sm { border: none; background: var(--color-td-primary); color: #fff; font-size: var(--text-td-small); font-weight: 700; padding: 10px 15px; border-radius: var(--radius-td-md); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.td-btn-sm { border: none; background: var(--color-td-dark); color: var(--color-td-bg); font-size: var(--text-td-small); font-weight: 600; padding: 10px 15px; border-radius: var(--radius-td-md); cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
 /* Every Remove / Delete / Sign out button: the outlined red one that asks to be
    read twice. Only the colours and the pointer are here - these come in five
@@ -246,11 +272,11 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    agree on them and one of them turns the cursor off when disabled. */
 .td-plain { border: none; background: transparent; }
 
-/* The one button on a screen that carries the action: solid brand blue, white
+/* The one button on a screen that carries the action: solid ink, paper-coloured
    type, no border. Seventeen of them wrote that out by hand. Only those three
    things are here - the seventeen disagree on width, padding, radius and type
    size, and one of them turns the pointer off while it is working. */
-.td-pill { border: none; background: var(--color-td-primary); color: #fff; }
+.td-pill { border: none; background: var(--color-td-dark); color: var(--color-td-bg); }
 
 /* A visible ring for keyboard users on anything focusable. Layered as base so
    every outline-none utility and every .td-* rule that draws its own focus state
@@ -264,13 +290,13 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    that adds a margin or overrides a weight keeps working unchanged. */
 @layer components {
   /* The top-of-screen title on screens without a ScreenHeader. */
-  .td-title { font-size: var(--text-2xl); line-height: var(--text-2xl--line-height); font-weight: 800; color: var(--color-td-dark); }
+  .td-title { font-size: var(--text-td-heading); line-height: 1.2; letter-spacing: -.015em; font-weight: 700; color: var(--color-td-dark); }
   /* The square header button: back, bell, theme. */
-  .td-icon-btn { width: 42px; height: 42px; border-radius: var(--radius-td-md); border: 1px solid var(--color-td-border); background: var(--color-td-card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .td-icon-btn { width: 44px; height: 44px; border-radius: var(--radius-td-md); border: 1px solid var(--color-td-border); background: var(--color-td-card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
   /* An unread count. */
-  .td-count { min-width: 20px; height: 20px; padding-inline: 6px; border-radius: 9999px; background: var(--color-td-red); color: #fff; font-size: var(--text-td-caption); font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .td-count { min-width: 20px; height: 20px; padding-inline: 6px; border-radius: 9999px; background: var(--color-td-red); color: var(--color-td-on-solid); font-size: var(--text-td-caption); font-weight: 600; font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
   /* A short status or type label; its colour comes from the call site. */
-  .td-tag { padding: 4px 10px; border-radius: 9999px; font-size: var(--text-td-caption); font-weight: 800; }
+  .td-tag { padding: 4px 8px; border-radius: 2px; font-family: var(--font-mono); font-size: var(--text-td-caption); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
   /* A number over its label. */
   .td-stat { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 14px; text-align: center; }
 }

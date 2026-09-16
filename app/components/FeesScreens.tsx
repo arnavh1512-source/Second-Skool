@@ -112,11 +112,11 @@ export function FeesScreen() {
 
       <div className="flex gap-2.5 mb-[18px] lg:max-w-md">
         <div className="flex-1 bg-td-tint-green rounded-td-md p-3.5">
-          <div className="text-td-heading font-extrabold text-td-green leading-tight">{rupee(totalCollected)}</div>
+          <div className="text-td-heading font-semibold text-td-green leading-tight">{rupee(totalCollected)}</div>
           <div className="text-td-caption text-td-on-green font-semibold mt-[3px]">Collected · {paidCount} paid</div>
         </div>
         <div className="flex-1 bg-td-tint-red rounded-td-md p-3.5">
-          <div className="text-td-heading font-extrabold text-td-red leading-tight">{rupee(totalRemaining)}</div>
+          <div className="text-td-heading font-semibold text-td-red leading-tight">{rupee(totalRemaining)}</div>
           <div className="text-td-caption text-td-on-red font-semibold mt-[3px]">Remaining · {pendingCount} pending</div>
         </div>
       </div>
@@ -132,7 +132,7 @@ export function FeesScreen() {
             ))}
           </div>
           <label className="block"><span className="td-label">Student</span>
-            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field text-td-small bg-td-card">
+            <select value={selStudent} onChange={e => setSelStudent(e.target.value)} className="td-field">
               <option value="">Select student</option>
               {students.map(s => <option key={s.dbId ?? s.id} value={s.dbId ?? ''}>{s.name} — {s.klass}</option>)}
             </select>
@@ -141,14 +141,14 @@ export function FeesScreen() {
             <>
               <div className="grid grid-cols-2 gap-[11px]">
                 <label className="block"><span className="td-label">Amount (&#8377;)</span>
-                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field text-sm" />
+                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 5000" className="td-field" />
                 </label>
                 <label className="block"><span className="td-label">Period</span>
-                  <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field text-sm" />
+                  <input value={period} onChange={e => setPeriod(e.target.value)} placeholder="e.g. July 2026" className="td-field" />
                 </label>
               </div>
               <label className="block"><span className="td-label">Due date</span>
-                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm" />
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field" />
               </label>
               <PrimaryButton onClick={handleAdd}>Add fee record</PrimaryButton>
             </>
@@ -156,24 +156,24 @@ export function FeesScreen() {
             <>
               <div className="grid grid-cols-2 gap-[11px]">
                 <label className="block"><span className="td-label">Total for the year (&#8377;)</span>
-                  <input type="number" value={planTotal} onChange={e => setPlanTotal(e.target.value)} placeholder="e.g. 12000" className="td-field text-sm" />
+                  <input type="number" value={planTotal} onChange={e => setPlanTotal(e.target.value)} placeholder="e.g. 12000" className="td-field" />
                 </label>
                 <label className="block"><span className="td-label">Discount (&#8377;)</span>
-                  <input type="number" value={planDiscount} onChange={e => setPlanDiscount(e.target.value)} placeholder="0" className="td-field text-sm" />
+                  <input type="number" value={planDiscount} onChange={e => setPlanDiscount(e.target.value)} placeholder="0" className="td-field" />
                 </label>
               </div>
               <div className="grid grid-cols-2 gap-[11px]">
                 <label className="block"><span className="td-label">Installments</span>
-                  <input type="number" value={planCount} onChange={e => setPlanCount(e.target.value)} placeholder="6" className="td-field text-sm" />
+                  <input type="number" value={planCount} onChange={e => setPlanCount(e.target.value)} placeholder="6" className="td-field" />
                 </label>
                 <label className="block"><span className="td-label">Every</span>
-                  <select value={planInterval} onChange={e => setPlanInterval(e.target.value as PlanInterval)} className="td-field text-td-small bg-td-card">
+                  <select value={planInterval} onChange={e => setPlanInterval(e.target.value as PlanInterval)} className="td-field">
                     {PLAN_INTERVALS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}
                   </select>
                 </label>
               </div>
               <label className="block"><span className="td-label">First due date</span>
-                <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field text-sm" />
+                <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field" />
               </label>
               {planPreview.length > 0 && (
                 <div className="bg-td-soft rounded-td-md p-3 text-td-caption text-td-muted leading-relaxed">
@@ -193,7 +193,7 @@ export function FeesScreen() {
       {/* The class the head is looking at is the class the alert goes to. A
           button that says "all pending" under a list showing one class would
           message families she never meant to chase. */}
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-extrabold p-[13px] rounded-td-md cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
+      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md border border-td-red bg-td-card text-td-red text-sm font-semibold p-[13px] rounded-td-md cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
 
       {rows.length === 0 && klass ? (
         <EmptyState title={`Nobody in ${klass}`} hint="No student in that class, so there is nothing to collect from it. Pick another class, or go back to all of them." />

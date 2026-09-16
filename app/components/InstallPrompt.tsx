@@ -119,9 +119,9 @@ export function InstallPrompt() {
           Reminders and alerts only work once the app is on your Home Screen.
         </p>
         <ol className="text-td-small text-td-dark space-y-2 mb-1">
-          <li className="flex gap-2.5"><span className="font-extrabold text-td-primary">1.</span><span>Tap the <strong>Share</strong> button at the bottom of Safari.</span></li>
-          <li className="flex gap-2.5"><span className="font-extrabold text-td-primary">2.</span><span>Scroll down and tap <strong>Add to Home Screen</strong>.</span></li>
-          <li className="flex gap-2.5"><span className="font-extrabold text-td-primary">3.</span><span>Tap <strong>Add</strong>. Open Second Skool from the icon after that.</span></li>
+          <li className="flex gap-2.5"><span className="font-semibold text-td-primary">1.</span><span>Tap the <strong>Share</strong> button at the bottom of Safari.</span></li>
+          <li className="flex gap-2.5"><span className="font-semibold text-td-primary">2.</span><span>Scroll down and tap <strong>Add to Home Screen</strong>.</span></li>
+          <li className="flex gap-2.5"><span className="font-semibold text-td-primary">3.</span><span>Tap <strong>Add</strong>. Open Second Skool from the icon after that.</span></li>
         </ol>
       </div>
     )
@@ -130,13 +130,13 @@ export function InstallPrompt() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-[65] bg-td-ink text-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex items-center gap-3 shadow-td-sheet">
       <div className="flex-1 min-w-0">
-        <div className="text-td-small font-extrabold leading-tight">Install Second Skool</div>
+        <div className="text-td-small font-semibold leading-tight">Install Second Skool</div>
         <div className="text-td-caption opacity-80 leading-tight mt-0.5">Opens like an app — and reminders only work once it&apos;s installed.</div>
       </div>
       <button
         type="button"
         onClick={ios && !deferred ? () => setShowIosSteps(true) : install}
-        className="shrink-0 bg-td-card text-td-dark text-td-small font-extrabold px-4 py-2 rounded-td-sm cursor-pointer"
+        className="shrink-0 bg-td-card text-td-dark text-td-small font-semibold px-4 py-2 rounded-td-sm cursor-pointer"
       >
         {ios && !deferred ? 'How' : 'Install'}
       </button>

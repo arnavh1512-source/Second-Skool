@@ -98,7 +98,7 @@ export function StaffApprovalsScreen() {
                 </div>
               )}
               <div className="flex gap-2.5">
-                <button onClick={() => approveTeacher(s.id)} className="flex-1 border-none bg-td-green text-white text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
+                <button onClick={() => approveTeacher(s.id)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
                 <button onClick={() => rejectTeacher(s.id)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Reject</button>
               </div>
             </div>
@@ -220,7 +220,7 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
   return (
     <div className="td-card rounded-td-md p-3.5 flex items-center gap-3">
       <div className="min-w-0 flex-1">
-        <div className="font-extrabold text-td-body truncate">{d.studentName}</div>
+        <div className="font-semibold text-td-body truncate">{d.studentName}</div>
         <div className="text-td-caption text-td-subtle truncate">{d.label}</div>
         <div className="text-td-caption text-td-subtle">
           Added {fmtDate(d.when)}{d.lastSeen ? ` · last used ${timeAgo(d.lastSeen)}` : ''}
@@ -229,12 +229,12 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
       {!d.allowed && (
         <button
           onClick={() => run(() => onAllow(d.dbId))} disabled={busy}
-          className="td-pill text-td-small font-extrabold py-2 px-4 rounded-td-sm cursor-pointer disabled:opacity-50"
+          className="td-pill text-td-small font-semibold py-2 px-4 rounded-td-sm cursor-pointer disabled:opacity-50"
         >Allow</button>
       )}
       <button
         onClick={() => run(() => onRemove(d.dbId))} disabled={busy}
-        className="text-td-small font-extrabold text-td-red underline cursor-pointer disabled:opacity-50"
+        className="text-td-small font-semibold text-td-red underline cursor-pointer disabled:opacity-50"
       >Remove</button>
     </div>
   )
@@ -279,7 +279,7 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
 
       {!open ? (
         <div className="flex gap-2.5">
-          <button onClick={() => setOpen(true)} className="flex-1 border-none bg-td-green text-white text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
+          <button onClick={() => setOpen(true)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
           <button onClick={() => onReject(s.dbId)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer">Decline</button>
         </div>
       ) : (
@@ -287,12 +287,12 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           <div className="flex gap-2.5">
             <div className="flex-1">
               <label className="text-td-caption font-bold text-td-muted">Batch / class</label>
-              <input value={klass} onChange={e => setKlass(e.target.value)} className="td-field text-td-small mt-1" />
+              <input value={klass} onChange={e => setKlass(e.target.value)} className="td-field mt-1" />
             </div>
             {branches.length > 0 && (
               <div className="flex-1">
                 <label className="text-td-caption font-bold text-td-muted">Branch</label>
-                <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field text-td-small mt-1 bg-td-card">
+                <select value={branch} onChange={e => setBranch(e.target.value)} className="td-field mt-1">
                   <option value="">—</option>
                   {branches.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
                 </select>
@@ -302,7 +302,7 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           {batchList.length > 0 && (
             <div>
               <label className="text-td-caption font-bold text-td-muted">Batch</label>
-              <select value={batch} onChange={e => setBatch(e.target.value)} className="td-field text-td-small mt-1 bg-td-card">
+              <select value={batch} onChange={e => setBatch(e.target.value)} className="td-field mt-1">
                 <option value="">No batch</option>
                 {batchList.map(b => <option key={b.dbId ?? b.name} value={b.name}>{b.name}</option>)}
               </select>
@@ -311,15 +311,15 @@ function StudentRequestCard({ s, idx, branches, batchList, onApprove, onReject }
           <div className="flex gap-2.5">
             <div className="flex-1">
               <label className="text-td-caption font-bold text-td-muted">Fee ₹ <span className="text-td-subtle font-semibold">(optional)</span></label>
-              <input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="e.g. 800" className="td-field text-td-small mt-1" />
+              <input value={fee} onChange={e => setFee(e.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="e.g. 800" className="td-field mt-1" />
             </div>
             <div className="flex-1">
               <label className="text-td-caption font-bold text-td-muted">Due date</label>
-              <input type="date" value={feeDue} onChange={e => setFeeDue(e.target.value)} className="td-field text-td-small mt-1" />
+              <input type="date" value={feeDue} onChange={e => setFeeDue(e.target.value)} className="td-field mt-1" />
             </div>
           </div>
           <div className="flex gap-2.5 mt-0.5">
-            <button onClick={confirm} disabled={busy} className="flex-1 border-none bg-td-green text-white text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-60">{busy ? 'Approving…' : 'Confirm approval'}</button>
+            <button onClick={confirm} disabled={busy} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-bold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-60">{busy ? 'Approving…' : 'Confirm approval'}</button>
             <button onClick={() => setOpen(false)} className="border border-td-border bg-td-card text-td-muted text-td-small font-bold py-2.5 px-4 rounded-td-sm cursor-pointer">Cancel</button>
           </div>
         </div>
@@ -346,7 +346,7 @@ export function ReportsScreen() {
 
       <div className="flex gap-2 mb-4 lg:max-w-md">
         {(['branches', 'students', 'teachers'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}>{t}</button>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}>{t}</button>
         ))}
       </div>
 

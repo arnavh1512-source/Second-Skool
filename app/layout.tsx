@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from 'next'
-import { Plus_Jakarta_Sans } from 'next/font/google'
+import { Archivo, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-})
+// Exposed as CSS variables on <html>, where globals.css maps them onto
+// --font-sans and --font-mono. They must sit on the root: a variable a token
+// refers to has to exist where the token is declared, not further down.
+const archivo = Archivo({ subsets: ['latin'], weight: ['400', '500', '600', '700'], display: 'swap', variable: '--font-archivo' })
+const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500', '600'], display: 'swap', variable: '--font-plex-mono' })
 
 // Absolute base so og:image / manifest / canonical resolve to full URLs in
 // production. Prefer an explicit site URL, fall back to Vercel's production
@@ -48,9 +48,7 @@ export const viewport: Viewport = {
   // No maximumScale. It was here to stop iOS zooming on input focus, but it
   // also blocks pinch-zoom outright — and the people most likely to pinch a
   // fee table or a marks row are parents reading small text on an old phone.
-  // The cost is that iOS zooms in when focusing an input under 16px, which
-  // several forms use — a cosmetic nuisance, and the right fix is 16px inputs,
-  // not taking pinch-zoom away from everyone.
+  // iOS zooms in when focusing an input under 16px, so .td-field is 16px.
   viewportFit: 'cover', // lets the app use safe-area insets on notched phones
 }
 
@@ -59,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // it before React hydrates, so the element's style intentionally differs from
   // the server markup. Scoped to this one node (React ignores it one level deep).
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${archivo.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
         {/* Drive the app-shell height from the real visible viewport height.
             Runs before paint (no flash) and re-syncs when the URL bar toggles,
@@ -84,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={jakarta.className}>{children}</body>
+      <body>{children}</body>
     </html>
   )
 }

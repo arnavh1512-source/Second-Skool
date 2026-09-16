@@ -161,7 +161,7 @@ export function WhatsAppButton({ phone, message, label, unavailableLabel, classN
   unavailableLabel?: string
   className?: string
 }) {
-  const base = `bg-[#25D366] text-white font-extrabold flex items-center justify-center gap-2 ${className}`
+  const base = `bg-[#25D366] text-white font-semibold flex items-center justify-center gap-2 ${className}`
   // No number on file. Say so in place of the button rather than offering a
   // link that opens WhatsApp with nobody in the To field.
   if (!phone) return <div className={`${base} opacity-50`}><WhatsAppIcon />{unavailableLabel ?? label}</div>
@@ -183,7 +183,7 @@ export function Chip({ active, onClick, children }: {
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 text-td-small font-bold py-[9px] px-4 rounded-td-lg cursor-pointer border ${active ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
+      className={`shrink-0 text-td-small font-bold py-[9px] px-4 rounded-td-lg cursor-pointer border ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}
     >{children}</button>
   )
 }
@@ -202,7 +202,7 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
         <button
           type="button"
           onClick={onAction}
-          className="td-pill mt-4 text-td-small font-extrabold px-5 py-2.5 rounded-td-sm cursor-pointer"
+          className="td-pill mt-4 text-td-small font-semibold px-5 py-2.5 rounded-td-sm cursor-pointer"
         >
           {actionLabel}
         </button>
@@ -283,7 +283,7 @@ export function PrimaryButton({ onClick, children }: { onClick: () => unknown; c
       onClick={guard}
       disabled={busy}
       aria-busy={busy}
-      className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
+      className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
     >
       {busy && <Spinner />}
       {children}
@@ -331,8 +331,8 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
         <div id="confirm-title" className="text-td-title td-strong mb-2">{title}</div>
         <div id="confirm-body" className="text-td-small text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
         <div className="flex gap-2.5">
-          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-sm font-extrabold py-3 rounded-td-md cursor-pointer">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-white text-sm font-extrabold py-3 rounded-td-md cursor-pointer">{confirmLabel}</button>
+          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-sm font-semibold py-3 rounded-td-md cursor-pointer">Cancel</button>
+          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-td-on-solid text-sm font-semibold py-3 rounded-td-md cursor-pointer">{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -358,7 +358,7 @@ export function CodeCard({ label, code, hint, onCopy, className = '', children }
       <button onClick={onCopy} className="w-full text-left cursor-pointer flex items-center justify-between gap-3">
         <div className="min-w-0">
           <div className="text-td-caption font-bold text-td-muted">{label}</div>
-          <div className="text-td-heading font-extrabold text-td-primary tracking-[0.15em] truncate">{code}</div>
+          <div className="text-td-heading font-semibold text-td-primary tracking-[0.15em] truncate">{code}</div>
           {hint && <div className="text-td-caption text-td-muted mt-0.5">{hint}</div>}
         </div>
         <div className="text-td-caption font-bold text-td-primary flex items-center gap-1 shrink-0">

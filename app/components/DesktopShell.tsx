@@ -32,7 +32,7 @@ function NavRow({ item }: { item: NavItem }) {
       }`}
     >
       <span className="w-[30px] h-[30px] rounded-[9px] td-card flex items-center justify-center shrink-0"><Icon name={item.icon} size={17} /></span>
-      <span className={`flex-1 text-td-small ${on ? 'font-extrabold' : 'font-bold'}`}>{item.label}</span>
+      <span className={`flex-1 text-td-small ${on ? 'font-semibold' : 'font-bold'}`}>{item.label}</span>
       {!!item.badge && item.badge > 0 && (
         <span className="td-count">{item.badge}</span>
       )}
@@ -41,7 +41,7 @@ function NavRow({ item }: { item: NavItem }) {
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-td-caption font-extrabold text-td-muted uppercase tracking-wide px-3 mt-5 mb-1.5">{children}</div>
+  return <div className="text-td-caption font-semibold text-td-muted uppercase tracking-wide px-3 mt-5 mb-1.5">{children}</div>
 }
 
 function Sidebar() {
@@ -83,7 +83,7 @@ function Sidebar() {
         {centreLogo
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-td-sm object-cover shrink-0" />
-          : <div className="w-9 h-9 rounded-td-sm flex items-center justify-center text-white font-extrabold text-td-body shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
+          : <div className="w-9 h-9 rounded-td-sm flex items-center justify-center text-white font-semibold text-td-body shrink-0" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>S</div>}
         <div className="min-w-0">
           <div className="text-td-body td-strong truncate">{centreName || 'Second Skool'}</div>
           <div className="text-td-caption text-td-muted font-semibold">{isAdmin ? 'Head teacher' : 'Teacher'}</div>
@@ -113,7 +113,7 @@ function Sidebar() {
         {/* On a phone this lives on More; the desktop shell has no More, so
             without this row a laptop user has no way to report anything. */}
         <NavRow item={{ icon: 'warning', label: 'Report a problem', screen: 'support' }} />
-        <button onClick={signOut} className="w-full td-danger text-td-small font-extrabold py-2.5 rounded-td-sm flex items-center justify-center gap-2 mt-1">
+        <button onClick={signOut} className="w-full td-danger text-td-small font-semibold py-2.5 rounded-td-sm flex items-center justify-center gap-2 mt-1">
           <Icon name="signOut" size={16} color="var(--color-td-red)" />
           Sign out
         </button>
@@ -182,11 +182,11 @@ export function DesktopAuthShell({ children }: { children: React.ReactNode }) {
         <div className="relative flex items-center gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icon-512.png" alt="Second Skool" width={42} height={42} className="rounded-td-sm object-cover shadow-td-raised" />
-          <span className="text-td-title font-extrabold tracking-tight">Second Skool</span>
+          <span className="text-td-title font-semibold tracking-tight">Second Skool</span>
         </div>
 
         <div className="relative">
-          <h1 className="text-[38px] font-extrabold leading-[1.12] tracking-tight">Run your whole tuition centre from one screen.</h1>
+          <h1 className="text-[38px] font-semibold leading-[1.12] tracking-tight">Run your whole tuition centre from one screen.</h1>
           <p className="text-td-body text-white/80 mt-5 max-w-[430px] leading-relaxed">Attendance, results, fees and parent updates — for every branch, every teacher, every student.</p>
           <ul className="mt-9 flex flex-col gap-[18px]">
             {AUTH_FEATURES.map(f => (

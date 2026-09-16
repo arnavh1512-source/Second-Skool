@@ -43,7 +43,7 @@ export function StuHomeScreen() {
         </div>
         <div className="text-td-title td-strong mb-2">Link your account</div>
         <div className="text-td-small text-td-muted text-center leading-relaxed mb-6 max-w-[280px]">Enter the student code your teacher gave you to link your account and see your data.</div>
-        <input value={linkCode} onChange={e => setLinkCode(e.target.value.toUpperCase())} placeholder="e.g. TUT-1234" className="td-field max-w-[260px] text-sm text-center tracking-wider font-bold mb-4" />
+        <input value={linkCode} onChange={e => setLinkCode(e.target.value.toUpperCase())} placeholder="e.g. TUT-1234" className="td-field max-w-[260px] text-center tracking-wider font-bold mb-4" />
         <PrimaryButton onClick={() => loadStudentByCode(linkCode)}>Link account</PrimaryButton>
       </div>
     )
@@ -80,7 +80,7 @@ export function StuHomeScreen() {
           {centreLogo
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-[46px] h-[46px] rounded-td-md object-cover border border-td-border shrink-0" />
-            : <div className="w-[46px] h-[46px] rounded-td-md flex items-center justify-center text-white font-extrabold text-td-title shrink-0" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>{ini}</div>}
+            : <div className="w-[46px] h-[46px] rounded-td-md flex items-center justify-center text-white font-semibold text-td-title shrink-0" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>{ini}</div>}
           <div className="min-w-0">
             <div className="text-xs text-td-muted font-semibold truncate">{centreName || 'Good morning'}</div>
             <div className="text-td-title td-strong truncate">{displayName}</div>
@@ -122,18 +122,18 @@ export function StuHomeScreen() {
 
       <div className="grid grid-cols-2 gap-2.5 mb-3.5">
         <button onClick={() => go('stuAttendance', 'stuHome')} className="rounded-td-lg p-3.5 text-white text-left border-none cursor-pointer" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
-          <div className="text-2xl font-extrabold leading-none">{attendancePct === null ? '—' : `${attendancePct}%`}</div>
+          <div className="text-2xl font-semibold leading-none">{attendancePct === null ? '—' : `${attendancePct}%`}</div>
           <div className="text-td-caption opacity-85 mt-1.5 font-semibold">Attendance</div>
         </button>
         <button onClick={() => go('stuRanking', 'stuRanking')} className="td-card rounded-td-lg p-3.5 text-left cursor-pointer">
           {rankInfo.rank > 0 ? (
             <>
-              <div className="text-2xl font-extrabold leading-none text-td-dark">#{rankInfo.rank}<span className="text-sm text-td-muted font-semibold"> / {rankInfo.total}</span></div>
+              <div className="text-2xl font-semibold leading-none text-td-dark">#{rankInfo.rank}<span className="text-sm text-td-muted font-semibold"> / {rankInfo.total}</span></div>
               <div className="text-td-caption text-td-muted mt-1.5 font-semibold">Class Rank</div>
             </>
           ) : (
             <>
-              <div className="text-2xl font-extrabold leading-none text-td-dark">&mdash;</div>
+              <div className="text-2xl font-semibold leading-none text-td-dark">&mdash;</div>
               <div className="text-td-caption text-td-muted mt-1.5 font-semibold">No rank yet</div>
             </>
           )}
@@ -145,15 +145,15 @@ export function StuHomeScreen() {
           <div className="text-td-caption font-bold opacity-85 mb-2.5">THIS MONTH</div>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <div className="text-td-title font-extrabold leading-none">{stuMonthly.attTotal > 0 ? `${Math.round((stuMonthly.attPresent / stuMonthly.attTotal) * 100)}%` : '—'}</div>
+              <div className="text-td-title font-semibold leading-none">{stuMonthly.attTotal > 0 ? `${Math.round((stuMonthly.attPresent / stuMonthly.attTotal) * 100)}%` : '—'}</div>
               <div className="text-td-caption opacity-80 mt-1 font-semibold">Attendance</div>
             </div>
             <div>
-              <div className="text-td-title font-extrabold leading-none">{stuMonthly.tests}</div>
+              <div className="text-td-title font-semibold leading-none">{stuMonthly.tests}</div>
               <div className="text-td-caption opacity-80 mt-1 font-semibold">Tests</div>
             </div>
             <div>
-              <div className="text-td-title font-extrabold leading-none">{stuMonthly.tests > 0 ? `${stuMonthly.avgPct}%` : '—'}</div>
+              <div className="text-td-title font-semibold leading-none">{stuMonthly.tests > 0 ? `${stuMonthly.avgPct}%` : '—'}</div>
               <div className="text-td-caption opacity-80 mt-1 font-semibold">Avg score</div>
             </div>
           </div>
@@ -172,7 +172,7 @@ export function StuHomeScreen() {
         <button onClick={() => go('stuNotes', 'stuHome')} className="relative text-left td-card rounded-td-lg p-3 cursor-pointer">
           <div className="w-[38px] h-[38px] rounded-td-sm bg-td-tint-green flex items-center justify-center mb-2" style={{ color: ink('var(--color-td-tint-green)') }}><Icon name="notes" size={20} /></div>
           <div className="text-td-caption td-strong leading-tight">Material</div>
-          {newNotes > 0 && <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-td-red text-white text-td-caption font-extrabold flex items-center justify-center">{newNotes}</span>}
+          {newNotes > 0 && <span className="absolute top-2 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-td-red text-td-on-solid text-td-caption font-semibold flex items-center justify-center">{newNotes}</span>}
         </button>
       </div>
 
@@ -182,7 +182,7 @@ export function StuHomeScreen() {
             <Icon name="fees" size={21} className="text-white" />
           </div>
           <div className="flex-1">
-            <div className="text-sm font-extrabold text-white">{stuPendingFee.amount} fee {stuPendingFee.overdue ? 'overdue' : 'due'}</div>
+            <div className="text-sm font-semibold text-white">{stuPendingFee.amount} fee {stuPendingFee.overdue ? 'overdue' : 'due'}</div>
             <div className="text-xs text-white/70 mt-0.5">{stuPendingFee.overdue ? 'Was due' : 'Due by'} {stuPendingFee.dueDate}</div>
           </div>
           <Icon name="next" size={18} color="rgba(255,255,255,.5)" />
@@ -219,7 +219,7 @@ export function StuHomeScreen() {
               const g = stuGrade(pct)
               return (
                 <div key={`${r.subject}-${r.test}-${i}`} className="td-row">
-                  <span className="text-td-caption font-extrabold py-[5px] px-2.5 rounded-td-sm" style={{ color: g.c, background: g.t }}>{g.g}</span>
+                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-sm" style={{ color: g.c, background: g.t }}>{g.g}</span>
                   <div className="flex-1">
                     <div className="text-td-small font-bold text-td-dark">{r.subject}</div>
                     <div className="text-xs text-td-muted mt-0.5">{r.test} · {r.date}</div>
@@ -269,7 +269,7 @@ export function StuAttendanceScreen() {
           <text x="50" y="62" textAnchor="middle" fill="rgba(255,255,255,.7)" fontSize="9" fontWeight="600">Present</text>
         </svg>
         <div>
-          <div className="text-td-body font-extrabold">Present overall</div>
+          <div className="text-td-body font-semibold">Present overall</div>
           <div className="text-td-caption opacity-80 mt-1.5 leading-relaxed">
             {total > 0 ? <>{present} of {total} class days attended.<br/>{absent} absences, {leaves} leaves in the last {recent} days.</> : 'No attendance data yet.'}
           </div>
@@ -316,7 +316,7 @@ export function StuResultsScreen() {
         <>
           <div className="grid grid-cols-2 gap-2.5 mb-5">
             <div className="rounded-td-lg p-3.5 text-center" style={{ background: overall.t }}>
-              <div className="text-2xl font-extrabold" style={{ color: overall.c }}>{overall.g}</div>
+              <div className="text-2xl font-semibold" style={{ color: overall.c }}>{overall.g}</div>
               <div className="text-td-caption font-semibold mt-1" style={{ color: overall.c, opacity: .7 }}>Overall grade</div>
             </div>
             <div className="td-stat">
@@ -333,7 +333,7 @@ export function StuResultsScreen() {
               return (
                 <div key={`${r.subject}-${r.test}-${i}`} className="td-card rounded-td-lg p-3.5">
                   <div className="flex items-center gap-[13px] mb-2.5">
-                    <span className="text-td-caption font-extrabold py-[5px] px-2.5 rounded-td-sm" style={{ color: g.c, background: g.t }}>{g.g}</span>
+                    <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-sm" style={{ color: g.c, background: g.t }}>{g.g}</span>
                     <div className="flex-1">
                       <div className="text-td-small font-bold text-td-dark">{r.subject}</div>
                       <div className="text-xs text-td-muted mt-0.5">{r.test} · {r.date}</div>
@@ -398,7 +398,7 @@ export function StuRankingScreen() {
                 return (
                   <div key={p.id ?? `${p.name}-${pi}`} className="flex flex-col items-center">
                     <Icon name={medals[pi]} size={26} className="mb-1" style={{ color: MEDAL_INK[pi] }} />
-                    <div className="w-[52px] h-[52px] rounded-td-md flex items-center justify-center text-white font-extrabold text-td-title mb-1.5" style={{ background: GRADIENTS[pi] }}>{initials(p.name)}</div>
+                    <div className="w-[52px] h-[52px] rounded-td-md flex items-center justify-center text-white font-semibold text-td-title mb-1.5" style={{ background: GRADIENTS[pi] }}>{initials(p.name)}</div>
                     <div className="text-td-caption td-strong text-center leading-tight mb-0.5">{p.name.split(' ')[0]}{isYou && <span className="text-td-primary"> (You)</span>}</div>
                     <div className="text-td-caption font-bold text-td-primary mb-1.5">{p.score}%</div>
                     <div className="w-[72px] rounded-t-td-sm" style={{ height: podiumHeights[pi], background: podiumBg[pi] }} />
@@ -414,7 +414,7 @@ export function StuRankingScreen() {
               const isYou = r.id ? r.id === currentStudentDbId : me?.name === r.name
               return (
                 <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] border rounded-td-md p-3 px-3.5" style={{ background: isYou ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: isYou ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
-                  <div className="w-[26px] text-center text-sm font-extrabold text-td-subtle">{r.rank}</div>
+                  <div className="w-[26px] text-center text-sm font-semibold text-td-subtle">{r.rank}</div>
                   <div className="w-9 h-9 rounded-td-sm td-avatar" style={{ background: av(r.rank) }}>{initials(r.name)}</div>
                   <div className="flex-1 text-td-small font-bold text-td-dark">{r.name}{isYou && <span className="text-td-primary text-xs"> (You)</span>}</div>
                   <div className="text-sm td-strong">{r.score}%</div>
@@ -448,7 +448,7 @@ export function StuTeachersScreen() {
 
   const row = (t: Teacher, caption: string) => (
     <button key={teacherKey(t)} onClick={() => { set({ stuTeacherId: teacherKey(t) }); go('stuTeacher', 'stuTeachers') }} className="text-left td-card rounded-td-lg p-3.5 flex items-center gap-3.5 cursor-pointer">
-      <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center text-white font-extrabold text-td-title" style={{ background: GRADIENTS[teachers.indexOf(t) % GRADIENTS.length] }}>{initials(t.name)}</div>
+      <div className="w-[52px] h-[52px] rounded-td-md shrink-0 flex items-center justify-center text-white font-semibold text-td-title" style={{ background: GRADIENTS[teachers.indexOf(t) % GRADIENTS.length] }}>{initials(t.name)}</div>
       <div className="flex-1 min-w-0">
         <div className="text-td-body td-strong">{t.name}</div>
         <div className="text-td-caption text-td-primary font-bold mt-0.5">{caption}</div>
@@ -495,7 +495,7 @@ export function StuTeacherDetail() {
       <ScreenHeader title="Teacher Profile" onBack={() => go('stuTeachers', 'stuTeachers')} />
 
       <div className="flex flex-col items-center mb-5">
-        <div className="w-[80px] h-[80px] rounded-3xl flex items-center justify-center text-white font-extrabold text-td-display mb-3" style={{ background: GRADIENTS[gradIdx % GRADIENTS.length] }}>{initials(t.name)}</div>
+        <div className="w-[80px] h-[80px] rounded-3xl flex items-center justify-center text-white font-semibold text-td-display mb-3" style={{ background: GRADIENTS[gradIdx % GRADIENTS.length] }}>{initials(t.name)}</div>
         <div className="text-td-heading td-strong">{t.name}</div>
         <span className="text-td-caption font-bold text-td-primary bg-td-tint-blue py-[5px] px-3 rounded-td-lg mt-2">{t.subject}</span>
       </div>
@@ -506,7 +506,7 @@ export function StuTeacherDetail() {
           <div className="text-td-caption text-td-muted font-semibold mt-1">Years exp.</div>
         </div>
         <div className="td-stat">
-          <div className="text-2xl font-extrabold text-td-amber flex items-center justify-center gap-1.5"><Icon name="star" size={20} />{t.rating || '—'}</div>
+          <div className="text-2xl font-semibold text-td-amber flex items-center justify-center gap-1.5"><Icon name="star" size={20} />{t.rating || '—'}</div>
           <div className="text-td-caption text-td-muted font-semibold mt-1">Rating</div>
         </div>
       </div>
@@ -540,7 +540,7 @@ export function StuFeesScreen() {
       {stuPendingFee ? (
         <div className="rounded-td-lg p-5 text-white mb-5" style={{ background: 'linear-gradient(135deg,#e8553c,#ef7a64)' }}>
           <div className="text-xs opacity-70 font-semibold">{plan ? 'Next installment' : 'Amount due'}</div>
-          <div className="text-td-display font-extrabold mt-1">{stuPendingFee.amount}</div>
+          <div className="text-td-display font-semibold mt-1">{stuPendingFee.amount}</div>
           <div className="text-td-caption opacity-80 mt-1">
             {stuPendingFee.period} · {stuPendingFee.overdue ? 'Was due' : 'Due'} {stuPendingFee.dueDate}
           </div>
@@ -549,11 +549,11 @@ export function StuFeesScreen() {
               {plan.paidCount} of {plan.count} paid · {rupee(plan.outstanding)} left in total
             </div>
           )}
-          <button onClick={() => notify('Contact your teacher to arrange payment')} className="w-full mt-4 border-none bg-td-card text-td-red text-sm font-extrabold py-3.5 rounded-td-md cursor-pointer">Pay now</button>
+          <button onClick={() => notify('Contact your teacher to arrange payment')} className="w-full mt-4 border-none bg-td-card text-td-red text-sm font-semibold py-3.5 rounded-td-md cursor-pointer">Pay now</button>
         </div>
       ) : (
         <div className="rounded-td-lg p-5 text-white mb-5 text-center" style={{ background: 'linear-gradient(135deg,#2fa36b,#56c48d)' }}>
-          <div className="text-td-heading font-extrabold">All clear!</div>
+          <div className="text-td-heading font-semibold">All clear!</div>
           <div className="text-td-caption opacity-80 mt-1">No pending fees</div>
         </div>
       )}
@@ -572,7 +572,7 @@ export function StuFeesScreen() {
                 <div className="text-td-small font-bold text-td-dark">{f.period}</div>
                 <div className="text-xs text-td-muted mt-0.5">Paid on {f.date}</div>
               </div>
-              <div className="text-sm font-extrabold text-td-green">{f.amount}</div>
+              <div className="text-sm font-semibold text-td-green">{f.amount}</div>
             </div>
           ))}
         </div>
@@ -626,7 +626,7 @@ export function StuTimetableScreen() {
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => {
           const active = d === day
           return (
-            <button key={d} onClick={() => setDay(d)} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-3 cursor-pointer text-center ${active ? 'bg-td-primary border-td-primary text-white' : 'bg-td-card border-td-border text-td-text'}`}>
+            <button key={d} onClick={() => setDay(d)} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-3 cursor-pointer text-center ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card border-td-border text-td-text'}`}>
               <div className="text-td-caption font-bold">{d}</div>
             </button>
           )
@@ -644,7 +644,7 @@ export function StuTimetableScreen() {
             return (
               <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="td-row">
                 <div className="text-center shrink-0 w-[56px]">
-                  <div className="text-td-caption font-extrabold text-td-primary">{p[0]}</div>
+                  <div className="text-td-caption font-semibold text-td-primary">{p[0]}</div>
                   <div className="text-td-caption text-td-subtle font-semibold">{p[1]}</div>
                 </div>
                 <div className="w-px h-[34px] bg-td-soft" />
@@ -722,9 +722,9 @@ export function StuProfileScreen() {
       </div>
 
       <div className="rounded-td-lg p-5 text-white flex items-center gap-4 mb-5" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
-        <div className="w-[64px] h-[64px] rounded-td-md bg-white/20 flex items-center justify-center text-white font-extrabold text-td-heading shrink-0">{ini}</div>
+        <div className="w-[64px] h-[64px] rounded-td-md bg-white/20 flex items-center justify-center text-white font-semibold text-td-heading shrink-0">{ini}</div>
         <div>
-          <div className="text-td-title font-extrabold">{displayName}</div>
+          <div className="text-td-title font-semibold">{displayName}</div>
           <div className="text-td-caption opacity-80 mt-0.5">{me?.klass ?? ''}</div>
           {stuResults.length > 0 && (
             <span className="inline-block text-td-caption font-bold bg-white/20 py-1 px-2.5 rounded-td-lg mt-1.5">{grade.g} · {avg}%</span>

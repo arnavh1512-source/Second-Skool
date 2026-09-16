@@ -148,9 +148,9 @@ export function LoginScreen() {
             onChange={e => setCode(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && submitCode()}
             placeholder="e.g. TUT-7X2K9Q" aria-label="Your student code" required aria-required="true"
-            className="td-field text-base text-center tracking-[0.2em] font-bold mt-7"
+            className="td-field text-center tracking-[0.2em] font-bold mt-7"
           />
-          <button onClick={submitCode} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">
+          <button onClick={submitCode} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">
             {busy ? 'Checking…' : 'View my updates'}
           </button>
           <button onClick={() => setMode('register')} className="w-full border border-td-border rounded-td-md py-[13px] cursor-pointer bg-td-card text-td-small font-bold text-td-primary mt-3">New here? Register yourself</button>
@@ -166,16 +166,16 @@ export function LoginScreen() {
             autoFocus value={email} type="email" inputMode="email" autoComplete="email" aria-label="Email address" required aria-required="true"
             onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="td-field text-base mt-7"
+            className="td-field mt-7"
           />
           <input
             value={password} type="password" autoComplete="current-password" aria-label="Password" required aria-required="true"
             onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !busy && signInWithPassword()}
             placeholder="Password"
-            className="td-field text-base mt-3"
+            className="td-field mt-3"
           />
-          <button onClick={signInWithPassword} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
+          <button onClick={signInWithPassword} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
           <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">Back</button>
           <div className="mt-auto text-td-caption text-td-subtle text-center leading-relaxed pt-6">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
         </>
@@ -187,35 +187,35 @@ export function LoginScreen() {
           <div className="flex flex-col gap-3 mt-6">
             <div>
               <label htmlFor="reg-code" className="text-xs font-bold text-td-muted">Student code <span className="text-td-red">*</span></label>
-              <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="td-field text-sm mt-1.5 tracking-[0.15em] font-bold text-center" />
+              <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="td-field mt-1.5 tracking-[0.15em] font-bold text-center" />
               <div id="reg-code-hint" className="text-td-caption text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>
               <label htmlFor="reg-name" className="text-xs font-bold text-td-muted">Full name <span className="text-td-red">*</span></label>
-              <input id="reg-name" required aria-required="true" autoComplete="name" value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="td-field text-sm mt-1.5" />
+              <input id="reg-name" required aria-required="true" autoComplete="name" value={stuSignup.name} onChange={e => setStuSignup({ name: e.target.value })} placeholder="Your full name" className="td-field mt-1.5" />
             </div>
             <div>
               <label htmlFor="reg-parent" className="text-xs font-bold text-td-muted">Parent&apos;s phone <span className="text-td-red">*</span></label>
-              <input id="reg-parent" required aria-required="true" type="tel" autoComplete="tel" value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="td-field text-sm mt-1.5" />
+              <input id="reg-parent" required aria-required="true" type="tel" autoComplete="tel" value={stuSignup.parent} onChange={e => setStuSignup({ parent: e.target.value })} inputMode="tel" placeholder="e.g. +91 98765 43210" className="td-field mt-1.5" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
                 <label htmlFor="reg-class" className="text-xs font-bold text-td-muted">Class <span className="text-td-red">*</span></label>
-                <select id="reg-class" required aria-required="true" value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="td-field text-sm mt-1.5 bg-td-card">
+                <select id="reg-class" required aria-required="true" value={stuSignup.klass} onChange={e => setStuSignup({ klass: e.target.value })} className="td-field mt-1.5">
                   {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div className="flex-1">
                 <label htmlFor="reg-school" className="text-xs font-bold text-td-muted">School <span className="text-td-red">*</span></label>
-                <input id="reg-school" required aria-required="true" value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="td-field text-sm mt-1.5" />
+                <input id="reg-school" required aria-required="true" value={stuSignup.school} onChange={e => setStuSignup({ school: e.target.value })} placeholder="Your school" className="td-field mt-1.5" />
               </div>
             </div>
             <div>
               <label htmlFor="reg-address" className="text-xs font-bold text-td-muted">Address <span className="text-td-subtle font-semibold">(optional)</span></label>
-              <input id="reg-address" autoComplete="street-address" value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="td-field text-sm mt-1.5" />
+              <input id="reg-address" autoComplete="street-address" value={stuSignup.address} onChange={e => setStuSignup({ address: e.target.value })} placeholder="Home address" className="td-field mt-1.5" />
             </div>
           </div>
-          <button onClick={submitSignup} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[15px] rounded-td-md cursor-pointer mt-4 disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for approval'}</button>
+          <button onClick={submitSignup} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-4 disabled:opacity-60">{busy ? 'Submitting…' : 'Submit for approval'}</button>
           <button onClick={() => setMode('student')} className="td-plain w-full text-td-muted text-td-small font-bold py-3 cursor-pointer mt-1">I already have a code</button>
         </>
       )}
@@ -399,7 +399,7 @@ export function StuPendingScreen() {
         </button>
       )}
 
-      <button onClick={checkNow} disabled={busy} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
+      <button onClick={checkNow} disabled={busy} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td-md cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
       <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Use a different code</button>
     </GateNotice>
   )
@@ -435,7 +435,7 @@ export function StuDeniedScreen() {
       title={copy.title}
       sub={copy.sub}
     >
-      <button onClick={signOut} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Back to start</button>
+      <button onClick={signOut} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Back to start</button>
     </GateNotice>
   )
 }
@@ -463,7 +463,7 @@ export function ProfileSetupScreen() {
       <input
         value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} aria-label={label}
         onKeyDown={e => e.key === 'Enter' && submit()}
-        className="td-field text-sm"
+        className="td-field"
       />
       {hint && <div className="text-td-caption text-td-subtle mt-1.5">{hint}</div>}
     </div>
@@ -531,7 +531,7 @@ export function RegisterScreen() {
       {mode === 'create' && (
         <div className="mt-7 flex flex-col gap-3">
           <label className="text-xs font-bold text-td-muted">Centre name</label>
-          <input autoFocus value={centreName} onChange={e => setCentreName(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field text-sm" />
+          <input autoFocus value={centreName} onChange={e => setCentreName(e.target.value)} placeholder="e.g. Bright Future Tuition" className="td-field" />
           <PrimaryButton onClick={() => run(() => centreName.trim().length >= 2 ? createCentre(centreName) : notify('Enter your centre name', 'error'))}>{busy ? 'Creating…' : 'Create centre'}</PrimaryButton>
           <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
         </div>
@@ -540,7 +540,7 @@ export function RegisterScreen() {
       {mode === 'join' && (
         <div className="mt-7 flex flex-col gap-3">
           <label className="text-xs font-bold text-td-muted">Centre join code</label>
-          <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="td-field text-sm text-center tracking-[0.2em] font-bold" />
+          <input autoFocus value={code} onChange={e => setCode(e.target.value.toUpperCase())} placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true" className="td-field text-center tracking-[0.2em] font-bold" />
           <PrimaryButton onClick={() => run(() => code.trim().length >= 4 ? joinCentre(code) : notify('Enter the full join code', 'error'))}>{busy ? 'Joining…' : 'Join centre'}</PrimaryButton>
           <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get access once they approve you.</div>
           <button onClick={() => setMode('choose')} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
@@ -580,7 +580,7 @@ export function PendingScreen() {
       title="Waiting for approval"
       sub={<>Your head teacher needs to approve <span className="font-bold text-td-text">{googleEmail}</span> before you can start. You&apos;ll get in as soon as they do.</>}
     >
-      <button onClick={() => window.location.reload()} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Check again</button>
+      <button onClick={() => window.location.reload()} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Check again</button>
       <HelpLine />
       <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
     </GateNotice>
@@ -602,7 +602,7 @@ export function DeniedScreen() {
       {mode === 'view' && (
         <>
           <div className="td-sub max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
-          <button onClick={() => setMode('join')} className="td-pill text-td-body font-extrabold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Enter a join code</button>
+          <button onClick={() => setMode('join')} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td-md cursor-pointer mt-7">Enter a join code</button>
           <HelpLine />
           <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-bold py-3 cursor-pointer mt-2">Sign out</button>
         </>
@@ -615,9 +615,9 @@ export function DeniedScreen() {
             onChange={e => setCode(e.target.value.toUpperCase())}
             onKeyDown={e => e.key === 'Enter' && submit()}
             placeholder="e.g. 7X2K9Q" aria-label="Centre join code" required aria-required="true"
-            className="td-field text-sm text-center tracking-[0.2em] font-bold"
+            className="td-field text-center tracking-[0.2em] font-bold"
           />
-          <button onClick={submit} disabled={busy} className="td-pill w-full text-td-body font-extrabold py-[14px] rounded-td-md cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>
+          <button onClick={submit} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[14px] rounded-td-md cursor-pointer disabled:opacity-60">{busy ? 'Requesting…' : 'Request access'}</button>
           <div className="text-td-caption text-td-subtle leading-relaxed">Ask your head teacher for the centre&apos;s join code. You&apos;ll get in once they approve you.</div>
           <button onClick={() => { setMode('view'); setCode('') }} className="td-plain text-td-small text-td-muted font-bold py-2 cursor-pointer">Back</button>
         </div>

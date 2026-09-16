@@ -53,25 +53,25 @@ export function NotesScreen() {
 
       {showForm && (
         <div className="td-form-card mb-[18px]">
-          <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field text-sm" /></label>
+          <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Chapter 5 — Trigonometry notes" className="td-field" /></label>
           <div className="grid grid-cols-2 gap-[11px]">
             <label className="block"><span className="td-label">Subject</span>
-              <select value={subject} onChange={e => setSubject(e.target.value)} className="td-field text-td-small bg-td-card">
+              <select value={subject} onChange={e => setSubject(e.target.value)} className="td-field">
                 <option value="">General</option>
                 {subjects.map(s => <option key={s.name}>{s.name}</option>)}
               </select>
             </label>
             <label className="block"><span className="td-label">Class</span>
-              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
+              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field disabled:opacity-60">
                 {options(classes, 'Add students first')}
               </select>
             </label>
           </div>
-          <label className="block"><span className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></span><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field text-sm resize-none" /></label>
+          <label className="block"><span className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></span><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field resize-none" /></label>
           <label className="block"><span className="td-label">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></span>
             <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-td-caption text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-td-sm file:border-none file:bg-td-tint-blue file:text-td-primary file:font-bold file:text-td-caption" />
           </label>
-          <label className="block"><span className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></span><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field text-sm" /></label>
+          <label className="block"><span className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></span><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field" /></label>
           <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
         </div>
       )}
@@ -131,7 +131,7 @@ export function StuNotesScreen() {
               {n.body && <div className="text-td-small text-td-text leading-relaxed mt-2.5">{n.body}</div>}
               <div className="flex gap-2.5 mt-2.5">
                 {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border border-td-primary text-td-primary text-td-caption font-bold py-2 rounded-td-sm">Open file</a>}
-                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-td-red text-white text-td-caption font-bold py-2 rounded-td-sm flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
+                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-td-red text-td-on-solid text-td-caption font-bold py-2 rounded-td-sm flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
               </div>
             </div>
           ))}

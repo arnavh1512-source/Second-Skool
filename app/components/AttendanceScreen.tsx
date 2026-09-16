@@ -187,11 +187,11 @@ export function AttendanceScreen() {
 
           <div className="flex gap-2.5 mb-4">
             <div className="flex-1 bg-td-tint-green rounded-td-md p-3 text-center">
-              <div className="text-td-heading font-extrabold text-td-green">{presentCount}</div>
+              <div className="text-td-heading font-semibold text-td-green">{presentCount}</div>
               <div className="text-td-caption text-td-on-green font-semibold">Present</div>
             </div>
             <div className="flex-1 bg-td-tint-red rounded-td-md p-3 text-center">
-              <div className="text-td-heading font-extrabold text-td-red">{absentCount}</div>
+              <div className="text-td-heading font-semibold text-td-red">{absentCount}</div>
               <div className="text-td-caption text-td-on-red font-semibold">Absent</div>
             </div>
           </div>

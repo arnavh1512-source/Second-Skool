@@ -78,7 +78,7 @@ export function HomeScreen() {
     <div className="td-wide td-screen">
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => go('staffProfile')} aria-label="Open my profile" className="td-plain flex items-center gap-3 p-0 cursor-pointer text-left">
-          <div className="w-[46px] h-[46px] rounded-td-md flex items-center justify-center text-white font-extrabold text-td-title" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
+          <div className="w-[46px] h-[46px] rounded-td-md flex items-center justify-center text-white font-semibold text-td-title" style={{ background: 'linear-gradient(135deg,#2a6fdb,#5a93ef)' }}>{ini}</div>
           <div>
             <div className="text-xs text-td-muted font-semibold">{isAdmin ? 'Head Teacher' : 'Teacher'}</div>
             <div className="text-td-title td-strong">{displayName}</div>
@@ -124,7 +124,7 @@ export function HomeScreen() {
                 className="td-plain flex items-center gap-3 text-left w-full p-0 cursor-pointer"
               >
                 <span
-                  className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-td-caption font-extrabold ${s.done ? 'bg-td-tint-green text-td-green' : 'bg-td-soft text-td-subtle'}`}
+                  className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-td-caption font-semibold ${s.done ? 'bg-td-tint-green text-td-green' : 'bg-td-soft text-td-subtle'}`}
                   aria-hidden="true"
                 >
                   {s.done ? <Icon name="check" size={15} color="var(--color-td-green)" /> : i + 1}
@@ -142,11 +142,11 @@ export function HomeScreen() {
 
       <div className="grid grid-cols-2 gap-2.5 mb-3.5 lg:max-w-md">
         <div className="rounded-td-lg p-3.5 text-white" style={{ background: 'linear-gradient(135deg,#2a6fdb,#3f82ec)' }}>
-          <div className="text-2xl font-extrabold leading-none">{schedule.length}</div>
+          <div className="text-2xl font-semibold leading-none">{schedule.length}</div>
           <div className="text-td-caption opacity-85 mt-1.5 font-semibold">Classes today</div>
         </div>
         <div className="td-card rounded-td-lg p-3.5">
-          <div className="text-2xl font-extrabold leading-none text-td-dark">{students.length}</div>
+          <div className="text-2xl font-semibold leading-none text-td-dark">{students.length}</div>
           <div className="text-td-caption text-td-muted mt-1.5 font-semibold">Students</div>
         </div>
       </div>
@@ -212,7 +212,7 @@ export function HomeScreen() {
           {schedule.map((c, i) => (
             <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="flex items-center gap-[13px] td-card rounded-td-lg py-3.5 px-[15px]">
               <div className="text-center shrink-0 w-[52px]">
-                <div className="text-sm font-extrabold text-td-primary">{c.time}</div>
+                <div className="text-sm font-semibold text-td-primary">{c.time}</div>
                 <div className="text-td-caption text-td-subtle font-semibold">{c.ampm}</div>
               </div>
               <div className="w-px h-[34px] bg-td-soft" />

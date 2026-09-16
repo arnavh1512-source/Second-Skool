@@ -92,9 +92,9 @@ export function TimetableScreen() {
         {days.map(d => {
           const active = d.s === ttDay
           return (
-            <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-primary border-td-primary text-white' : 'bg-td-card border-td-border text-td-text'}`}>
+            <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card border-td-border text-td-text'}`}>
               <div className="text-td-caption font-bold">{d.s}</div>
-              <div className="text-sm font-extrabold mt-0.5">{d.d}</div>
+              <div className="text-sm font-semibold mt-0.5">{d.d}</div>
             </button>
           )
         })}
@@ -105,30 +105,30 @@ export function TimetableScreen() {
           <div className="text-sm td-strong">{editing ? 'Edit' : 'Add'} period — {dayNames[ttDay]}</div>
           <div className="grid grid-cols-2 gap-[11px]">
             <label className="block"><span className="td-label">Start</span>
-              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field text-sm" />
+              <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="td-field" />
             </label>
             <label className="block"><span className="td-label">End</span>
-              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="td-field text-sm" />
+              <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="td-field" />
             </label>
           </div>
           <label className="block"><span className="td-label">Subject</span>
-            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="td-field text-td-small bg-td-card">
+            <select value={subject || subjectNames[0] || 'Free period'} onChange={e => setSubject(e.target.value)} className="td-field">
               {subjectNames.map(s => <option key={s}>{s}</option>)}
               <option>Free period</option>
             </select>
           </label>
           <div className="grid grid-cols-2 gap-[11px]">
             <label className="block"><span className="td-label">Class</span>
-              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
+              <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field disabled:opacity-60">
                 {options(classes, 'Add students first')}
               </select>
             </label>
             <label className="block"><span className="td-label">Room</span>
-              <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="td-field text-sm" />
+              <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 1" className="td-field" />
             </label>
           </div>
           <label className="block"><span className="td-label">Teacher</span>
-            <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="td-field text-td-small bg-td-card">
+            <select value={teacherId} onChange={e => setTeacherId(e.target.value)} className="td-field">
               <option value="">Not set</option>
               {teachers.map(t => <option key={t.dbId} value={t.dbId}>{t.name} &middot; {t.subject}</option>)}
             </select>
@@ -157,7 +157,7 @@ export function TimetableScreen() {
                     return (
                       <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="rounded-td-sm border p-2" style={{ background: s.bg, borderColor: s.border }}>
                         <div className="text-td-caption font-bold text-td-muted">{p[0]}–{p[1]}</div>
-                        <div className="text-td-caption font-extrabold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
+                        <div className="text-td-caption font-semibold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
                         <div className="text-td-caption text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
                         {p[5] && <div className="text-td-caption text-td-primary font-semibold mt-0.5 truncate">{p[5]}</div>}
                         {isAdmin && (
@@ -198,7 +198,7 @@ export function TimetableScreen() {
                 <div className="flex-1 pb-3.5">
                   <div className="rounded-td-md p-[13px] px-[15px] border" style={{ background: s.bg, borderColor: s.border }}>
                     <div className="flex justify-between items-center gap-2">
-                      <div className="text-sm font-extrabold" style={{ color: s.titleColor }}>{p[2]}</div>
+                      <div className="text-sm font-semibold" style={{ color: s.titleColor }}>{p[2]}</div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-td-caption font-bold py-1 px-[9px] rounded-td-lg" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
                         {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-td-caption leading-none">✎</button>}
@@ -413,19 +413,19 @@ export function ResultsScreen() {
         <label className="block"><span className="td-label">Class</span>
           {/* Locked while editing: the test belongs to a class, and moving it to
               another one would hand a set of marks to students who never sat it. */}
-          <select value={selKlass} disabled={!!editing} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field text-td-small bg-td-card disabled:opacity-60">
+          <select value={selKlass} disabled={!!editing} onChange={e => { setKlass(e.target.value); setMarks({}) }} className="td-field disabled:opacity-60">
             {editing ? <option>{editing.klass}</option> : classes.map(c => <option key={c}>{c}</option>)}
           </select>
         </label>
         <label className="block"><span className="td-label">Subject</span>
-          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={!!editing || subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
+          <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={!!editing || subjectNames.length === 0} className="td-field disabled:opacity-60">
             {editing ? <option>{editing.subject || '—'}</option> : options(subjectNames, 'Add subjects first')}
           </select>
         </label>
       </div>
       <div className="grid grid-cols-[2fr_1fr] gap-[11px] mb-[18px]">
-        <label className="block"><span className="td-label">Test name</span><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field text-td-small" /></label>
-        <label className="block"><span className="td-label">Max</span><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field text-td-small" /></label>
+        <label className="block"><span className="td-label">Test name</span><input value={testName} onChange={e => setTestName(e.target.value)} className="td-field" /></label>
+        <label className="block"><span className="td-label">Max</span><input value={maxMarks} onChange={e => setMaxMarks(e.target.value)} className="td-field" /></label>
       </div>
 
       <div className="td-h2">{editing ? 'Correct marks' : 'Enter marks'}</div>
@@ -503,21 +503,21 @@ export function AssignmentsScreen() {
       <ScreenHeader title="New Assignment" onBack={back} />
 
       <div className="td-form-card mb-[22px]">
-        <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field text-sm" /></label>
+        <label className="block"><span className="td-label">Title</span><input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Algebra worksheet 5" className="td-field" /></label>
         <div className="grid grid-cols-2 gap-[11px]">
           <label className="block"><span className="td-label">Subject</span>
-            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
+            <select value={selSubject} onChange={e => setSubject(e.target.value)} disabled={subjectNames.length === 0} className="td-field disabled:opacity-60">
               {options(subjectNames, 'Add subjects first')}
             </select>
           </label>
           <label className="block"><span className="td-label">Class</span>
-            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field text-td-small bg-td-card disabled:opacity-60">
+            <select value={selKlass} onChange={e => setKlass(e.target.value)} disabled={classes.length === 0} className="td-field disabled:opacity-60">
               {options(classes, 'Add students first')}
             </select>
           </label>
         </div>
-        <label className="block"><span className="td-label">Due date</span><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field text-sm" /></label>
-        <label className="block"><span className="td-label">Instructions</span><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="td-field text-sm resize-none" /></label>
+        <label className="block"><span className="td-label">Due date</span><input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="td-field" /></label>
+        <label className="block"><span className="td-label">Instructions</span><textarea rows={3} value={instructions} onChange={e => setInstructions(e.target.value)} placeholder="Describe the task..." className="td-field resize-none" /></label>
         <PrimaryButton onClick={async () => {
           // Same silent swallow as the timetable: with no students on the
           // roster the class select has nothing to offer, and Create used to
@@ -591,7 +591,7 @@ export function RemindersScreen() {
 
       <label className="block">
         <span className="td-label">Send to</span>
-        <select value={filter} onChange={e => setFilter(e.target.value)} className="td-field text-td-small bg-td-card mb-4">
+        <select value={filter} onChange={e => setFilter(e.target.value)} className="td-field mb-4">
           <option value="all">All students</option>
           <option value="absentees">Absentees only</option>
           <option value="fees_due">Students with fees due</option>
@@ -600,7 +600,7 @@ export function RemindersScreen() {
 
       <label className="block">
         <span className="td-label">Message</span>
-        <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field text-sm resize-none mb-[18px]" />
+        <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field resize-none mb-[18px]" />
       </label>
 
       <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>

@@ -168,7 +168,7 @@ export function DevConsoleScreen() {
           {error === SESSION_EXPIRED && (
             <button
               onClick={signOut}
-              className="text-td-caption font-extrabold py-2 px-3 rounded-td-sm cursor-pointer border-none bg-td-red text-white shrink-0"
+              className="text-td-caption font-semibold py-2 px-3 rounded-td-sm cursor-pointer border-none bg-td-red text-td-on-solid shrink-0"
             >
               Sign in again
             </button>
@@ -240,7 +240,7 @@ export function DevConsoleScreen() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`flex-1 text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-primary text-white border-td-primary' : 'bg-td-card text-td-text border-td-border'}`}
+                className={`flex-1 text-td-caption font-bold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}
               >
                 {t === 'reports' && openReports > 0 ? `reports (${openReports})` : t}
               </button>
@@ -284,7 +284,7 @@ export function DevConsoleScreen() {
               value={typed}
               onChange={e => setTyped(e.target.value)}
               autoFocus
-              className="td-field text-td-small"
+              className="td-field"
             />
             <div className="flex gap-2 mt-4">
               <button
@@ -297,7 +297,7 @@ export function DevConsoleScreen() {
               <button
                 onClick={confirmDelete}
                 disabled={deleting || typed.trim() !== doomed.name}
-                className="flex-1 text-td-small font-extrabold py-2.5 rounded-td-sm cursor-pointer border-none bg-td-red text-white disabled:opacity-40"
+                className="flex-1 text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer border-none bg-td-red text-td-on-solid disabled:opacity-40"
               >
                 {deleting ? 'Deleting…' : 'Delete for ever'}
               </button>
@@ -352,7 +352,7 @@ function Centres({ rows, onDelete }: CentresProps) {
               <div className="text-td-caption text-td-subtle">head last signed in {ago(c.owner?.lastSignIn ?? null)}</div>
             </div>
             <div className="text-right shrink-0">
-              <div className={`text-td-small font-extrabold ${c.activity7d.total ? 'text-td-green' : 'text-td-subtle'}`}>
+              <div className={`text-td-small font-semibold ${c.activity7d.total ? 'text-td-green' : 'text-td-subtle'}`}>
                 {c.activity7d.total} · 7d
               </div>
               <div className="text-td-caption text-td-muted">active {ago(c.lastActive)}</div>
@@ -384,7 +384,7 @@ function Centres({ rows, onDelete }: CentresProps) {
             <button
               onClick={() => onDelete(c)}
               aria-label={`Delete ${c.name}`}
-              className="w-full text-td-caption font-extrabold py-2.5 rounded-td-sm td-danger"
+              className="w-full text-td-caption font-semibold py-2.5 rounded-td-sm td-danger"
             >
               Delete centre
             </button>
@@ -410,7 +410,7 @@ function People({ rows }: { rows: StaffRow[] }) {
           </div>
           <div className="text-right shrink-0">
             <span
-              className="text-td-caption font-extrabold rounded-md px-2 py-0.5 inline-block"
+              className="text-td-caption font-semibold rounded-md px-2 py-0.5 inline-block"
               style={
                 s.status === 'approved' ? { background: 'var(--color-td-tint-green)', color: 'var(--color-td-green)' }
                   : s.status === 'pending' ? { background: 'var(--color-td-tint-amber)', color: 'var(--color-td-amber)' }
@@ -492,7 +492,7 @@ function Reports({ rows, onReply, onResolve }: {
             {open && (
               <div className="border-t border-td-line p-4 flex flex-col gap-3">
                 <div>
-                  <div className="text-td-caption font-extrabold text-td-muted mb-1">What happened instead</div>
+                  <div className="text-td-caption font-semibold text-td-muted mb-1">What happened instead</div>
                   <div className="text-td-small text-td-text leading-[1.55] whitespace-pre-wrap">{t.outcome}</div>
                 </div>
 
@@ -519,7 +519,7 @@ function Reports({ rows, onReply, onResolve }: {
                           key={i}
                           className={`text-td-small leading-[1.5] rounded-td-sm p-2.5 px-3 whitespace-pre-wrap ${m.author === 'operator' ? 'bg-td-tint-blue text-td-dark' : 'bg-td-soft text-td-text'}`}
                         >
-                          <div className="text-td-caption font-extrabold text-td-muted mb-1">
+                          <div className="text-td-caption font-semibold text-td-muted mb-1">
                             {m.author === 'operator' ? 'You' : t.reporter_name || 'Reporter'} · {fmtDate(m.created_at)}
                           </div>
                           {m.body}
@@ -533,20 +533,20 @@ function Reports({ rows, onReply, onResolve }: {
                   onChange={e => setDraft(e.target.value)}
                   placeholder="Reply — they see this inside the app"
                   rows={3}
-                  className="td-field text-td-small resize-none"
+                  className="td-field resize-none"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={() => send(t.id)}
                     disabled={busy || !draft.trim()}
-                    className="td-pill flex-1 text-td-caption font-extrabold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-50"
+                    className="td-pill flex-1 text-td-caption font-semibold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-50"
                   >
                     {busy ? 'Sending…' : 'Send reply'}
                   </button>
                   {t.status === 'open' && (
                     <button
                       onClick={() => onResolve(t.id)}
-                      className="text-td-caption font-extrabold py-2.5 px-3.5 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-muted"
+                      className="text-td-caption font-semibold py-2.5 px-3.5 rounded-td-sm cursor-pointer border border-td-border bg-td-card text-td-muted"
                     >
                       Close report
                     </button>
