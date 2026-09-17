@@ -125,9 +125,11 @@ begin
       from (select title, detail, icon, created_at from public.notifications
              where student_id=v_student.id order by created_at desc limit 100) x),'[]'::json),
     'teachers', coalesce((select json_agg(json_build_object('name',te.name,'subject',te.subject,'experience',te.experience,'qualification',te.qualification,'rating',te.rating,'about',te.about) order by te.created_at desc) from public.teachers te where te.centre_id=v_c),'[]'::json),
-    -- CHANGED FROM 0040: scoped to the student's own class. A rank is only a
-    -- rank against the people who sat the same paper. Grouped by st.id, so the
-    -- name is a label and never the key; approved students only.
+    -- CHANGED FROM 0040: scoped to the student's own class. The score is a
+    -- cumulative percentage across every recorded test in the subject, and it
+    -- only compares fairly against classmates, who sat the same syllabus.
+    -- Grouped by st.id, so the name is a label and never the key; approved
+    -- students only.
     'rankings', coalesce((
       select json_object_agg(subject, arr) from (
         select subject, json_agg(json_build_object('id', sid, 'name', name, 'score', pct) order by pct desc, name) as arr

@@ -110,9 +110,9 @@ export function RankingsScreen() {
   const subjectNames = subjects.map(s => s.name).filter(n => (rankData[n]?.length ?? 0) > 0)
   const activeSubject = subjectNames.includes(rankSubject) ? rankSubject : (subjectNames[0] ?? '')
   const board = rankData[activeSubject] || []
-  // A rank only means something against the same paper. Class 9 and Class 12
-  // sit different tests out of different totals, so one list of everyone is
-  // noise. Boards built before the class reached the server carry no class at
+  // A rank only means something within one class. A score is the cumulative
+  // percentage across a subject's recorded tests, and Class 9 and Class 12 sit
+  // different tests out of different totals, so one list of everyone is noise. Boards built before the class reached the server carry no class at
   // all, and those still render whole rather than as an empty screen.
   const classNames = [...new Set(board.map(r => r.klass).filter((k): k is string => !!k))]
   const activeClass = classNames.includes(rankClass) ? rankClass : (classNames[0] ?? '')
