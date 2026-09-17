@@ -45,6 +45,38 @@ jobs:
       - name: Build
         run: npm run build
 
+  # A key pushed by mistake stays in history even after the file is fixed, and
+  # this repo's history is the one place a service role key or a DB password
+  # would be readable by anyone who can clone it. Scans every commit, not just
+  # the diff, so a leak cannot hide further back than the latest push.
+  #
+  # The binary rather than gitleaks-action: that action is third-party code
+  # running with this repo's token, and it wants a paid licence for org repos.
+  # Pinned version, checksum verified before it runs.
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks
+        env:
+          VERSION: 8.30.1
+          SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          set -eu
+          tarball="gitleaks_${VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$tarball" "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/${tarball}"
+          echo "${SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "$tarball" gitleaks
+
+      # --redact keeps a found secret out of the public-to-collaborators CI log.
+      - name: Scan the full history
+        run: ./gitleaks git --redact --verbose --exit-code 1 .
+
   # The database half. Nothing in `verify` touches Postgres — the unit tests are
   # pure logic and the build never opens a connection — so until this job
   # existed, the schema and every row level security policy in it were shipped
