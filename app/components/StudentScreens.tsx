@@ -7,7 +7,8 @@ import { ScreenHeader, PrimaryButton, ChevronRight, Chip, CodeCard } from './She
 import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { ThemeToggle } from './ThemeToggle'
-import { enablePush, pushSupported, testNotification } from '../lib/push'
+import { enablePush, testNotification } from '../lib/push'
+import { useNotificationPermission, announcePermissionChange } from './AuthScreens'
 import { readStudentCred } from '../lib/student-cred'
 import { teacherKey } from '../lib/student-key'
 import { readLocal, writeLocal } from '../lib/storage'
@@ -17,6 +18,7 @@ import { readLocal, writeLocal } from '../lib/storage'
 const useMe = () => useDashboard(s => s.students.find(x => x.dbId === s.currentStudentDbId))
 
 export function StuHomeScreen() {
+  const perm = useNotificationPermission()
   const { go, stuReminders, stuNotifications, stuResults, stuPendingFee, currentStudentDbId, googleEmail, rankData, loadStudentByCode, stuMonthly, stuNotes, loadStudentNotes, centreName, centreLogo } = useDashboard()
   const [linkCode, setLinkCode] = useState('')
   const me = useMe()
@@ -109,25 +111,38 @@ export function StuHomeScreen() {
         </button>
       )}
 
+      {/* A student who skipped the reminder gate would otherwise hear nothing
+          and never know why. The note stays until permission is granted. */}
+      {perm && perm !== 'granted' && me?.id && (
+        <div className="bg-td-tint-amber border border-td-border px-4 py-3.5 mb-[22px]">
+          <div className="text-td-body font-semibold text-td-dark">Alerts are off</div>
+          <div className="text-td-body leading-[22px] text-td-text mt-[5px]">
+            {perm === 'denied'
+              ? 'Your browser is blocking them. Tap the lock icon next to the web address, allow Notifications, then come back.'
+              : 'You will not be told about tests, homework or fees.'}
+          </div>
+          {perm === 'default' && (
+            <button onClick={async () => {
+              const r = await enablePush('student', readStudentCred() ?? me.id)
+              announcePermissionChange()
+              if (!r.ok) { useDashboard.getState().notify(r.error || 'Could not turn on alerts'); return }
+              // Prove the phone can display one, or a silent phone setting
+              // reads as a broken app days later.
+              const t = await testNotification(useDashboard.getState().centreName)
+              useDashboard.getState().notify(t.ok ? 'Alerts on — check your notifications for a test' : (t.error || 'Alerts on'))
+            }} className="mt-3 inline-flex items-center gap-1.5 bg-td-card border border-td-border text-td-dark text-td-small font-semibold min-h-11 px-3 cursor-pointer">
+              <Icon name="reminder" size={14} color="var(--color-td-dark)" />
+              Turn on alerts
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="flex items-center justify-between gap-2 mb-[18px]">
         <div className="inline-flex items-center gap-[7px] min-w-0">
           <Icon name="branches" size={14} color="var(--color-td-muted)" />
           <span className="text-td-small text-td-muted truncate">{me?.school || 'Your branch'}</span>
         </div>
-        {pushSupported() && me?.id && (
-          <button onClick={async () => {
-            const r = await enablePush('student', readStudentCred() ?? me.id)
-            if (!r.ok) { useDashboard.getState().notify(r.error || 'Could not enable'); return }
-            // Immediately prove the device can actually display one. Turning
-            // alerts "on" and seeing nothing for days is how a student ends up
-            // believing the app is broken when it's a phone setting.
-            const t = await testNotification(useDashboard.getState().centreName)
-            useDashboard.getState().notify(t.ok ? 'Alerts on — check your notifications for a test' : (t.error || 'Alerts on'))
-          }} className="inline-flex items-center gap-1.5 bg-td-card border border-td-border text-td-dark text-td-small font-semibold min-h-11 px-3 cursor-pointer shrink-0">
-            <Icon name="reminder" size={14} color="var(--color-td-dark)" />
-            Turn on alerts
-          </button>
-        )}
       </div>
 
       <div className="mb-3.5">

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useDashboard, initials, feeTag } from '../store'
 import { parseRoster, MAX_IMPORT } from '../lib/roster-import'
-import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard, Chip, classesOf } from './Shell'
+import { ScreenHeader, PrimaryButton, BackButton, ChevronRight, EmptyState, WhatsAppIcon, WhatsAppButton, options, CodeCard, Chip, classesOf, ConfirmDialog } from './Shell'
 import { whatsappShareUrl, studentCodeMessage, absenceCheckInMessage, copyText } from '../lib/share'
 import { fmtDayMonth } from '../store/format'
 import { Icon } from './Icon'
@@ -198,6 +198,7 @@ export function StudentsScreen() {
 export function EditStudentScreen() {
   const { students, editId, origin, go, goFrom, setStudentField, saveStudentEdit, deleteStudent, notify } = useDashboard()
   const [saving, runSave] = useBusy()
+  const [confirmRemove, setConfirmRemove] = useState(false)
   const st = findStudent(students, editId)
   // A background refresh can retire the student under this screen — deleted on
   // another device, or their approval revoked. Say so plainly rather than
@@ -207,7 +208,7 @@ export function EditStudentScreen() {
   return (
     <div className="td-screen">
       <ScreenHeader title="Edit Student" onBack={() => origin === 'admin' ? goFrom('students', 'students', 'admin') : go('students', 'students')} right={
-        <button onClick={deleteStudent} className="border-none bg-td-tint-red text-td-red text-td-caption font-semibold py-[9px] px-[13px] rounded-td-sm cursor-pointer">Remove</button>
+        <button onClick={() => setConfirmRemove(true)} className="border-none bg-td-tint-red text-td-red text-td-caption font-semibold py-[9px] px-[13px] rounded-td-sm cursor-pointer">Remove</button>
       } />
 
       <div className="flex items-center gap-3.5 mb-3">
@@ -267,6 +268,14 @@ export function EditStudentScreen() {
         if (origin === 'admin') goFrom('students', 'students', 'admin')
         else go('students', 'students')
       })}>{saving ? 'Saving…' : 'Save changes'}</PrimaryButton>
+      <ConfirmDialog
+        open={confirmRemove}
+        title={`Remove ${st.name}?`}
+        body="Their marks, fees and attendance are deleted too. This cannot be undone."
+        confirmLabel="Remove"
+        onConfirm={() => { setConfirmRemove(false); deleteStudent() }}
+        onCancel={() => setConfirmRemove(false)}
+      />
     </div>
   )
 }

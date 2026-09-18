@@ -35,6 +35,7 @@ export function BranchesScreen() {
   const [address, setAddress] = useState('')
   const [isMain, setIsMain] = useState(false)
   const [openBranch, setOpenBranch] = useState<string | null>(null)
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
 
   const handleAdd = async () => {
     if (!name.trim()) { useDashboard.getState().notify('Enter branch name', 'error'); return }
@@ -44,6 +45,14 @@ export function BranchesScreen() {
 
   return (
     <div className="td-screen">
+      <ConfirmDialog
+        open={!!removing}
+        title={`Remove branch ${removing?.name ?? ''}?`}
+        body="This cannot be undone. A branch that still has students or staff assigned cannot be removed."
+        confirmLabel="Remove branch"
+        onConfirm={() => { if (removing) deleteBranch(removing.id); setRemoving(null) }}
+        onCancel={() => setRemoving(null)}
+      />
       <ScreenHeader title="Branches" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
           <span className="text-td-body leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
@@ -86,7 +95,7 @@ export function BranchesScreen() {
                   <div><div className="text-td-body td-strong">{roster.length}</div><div className="text-td-caption text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
                   <div><div className="text-td-body td-strong">{b.staff}</div><div className="text-td-caption text-td-subtle font-semibold">Staff</div></div>
                 </button>
-                {b.dbId && <button onClick={() => deleteBranch(b.dbId!)} className="td-danger text-td-caption font-semibold py-2 px-3.5 rounded-td-sm">Remove</button>}
+                {b.dbId && <button onClick={() => setRemoving({ id: b.dbId!, name: b.name })} className="td-danger text-td-caption font-semibold py-2 px-3.5 rounded-td-sm">Remove</button>}
               </div>
               {open && <StudentRoster list={roster} />}
             </div>

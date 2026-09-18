@@ -137,8 +137,8 @@ suite('student devices', () => {
   })
 
   it('a code that does not exist is refused without saying so', async () => {
-    const msg = await denied(() => claim('NOSUCHCODE'))
-    expect(msg).toMatch(/Not found/)
+    // A return value, not a raise, so the throttle's record of the miss survives.
+    expect(await claim('NOSUCHCODE')).toEqual({ error: 'not_found' })
   })
 
   it('claim_student_device is callable by anon, student_for_credential by nobody', async () => {

@@ -11,7 +11,7 @@ import { SupabaseProvider } from './components/SupabaseProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { ConnectionStatus } from './components/ConnectionStatus'
 import { InstallPrompt } from './components/InstallPrompt'
-import { LoginScreen, ProfileSetupScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen, NotificationGateScreen, useNotificationGate } from './components/AuthScreens'
+import { LoginScreen, ProfileSetupScreen, RegisterScreen, PendingScreen, DeniedScreen, StuPendingScreen, StuDeniedScreen, NotificationGateScreen, useNotificationGate, SetNewPasswordScreen, usePasswordRecovery } from './components/AuthScreens'
 import { HomeScreen } from './components/HomeScreen'
 
 function ScreenLoading() {
@@ -174,6 +174,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
 function ScreenRouter() {
   const { screen, role, dataLoading, staffStatus, supabaseUserId, profileDone } = useDashboard()
   const notifGated = useNotificationGate()
+  const [recovering, recovered] = usePasswordRecovery()
 
   useEffect(() => {
     let label: string | undefined
@@ -186,6 +187,10 @@ function ScreenRouter() {
     else label = SCREENS[screen]?.title
     document.title = label ? `${label} · Second Skool` : 'Second Skool'
   }, [screen, role, staffStatus, supabaseUserId, profileDone, notifGated])
+
+  // A reset link signs the user in; they choose the new password before any
+  // gate or screen, since that is the only thing they came here to do.
+  if (recovering) return <SetNewPasswordScreen onDone={recovered} />
 
   if (!role) return <LoginScreen />
 

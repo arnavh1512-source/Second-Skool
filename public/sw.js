@@ -1,10 +1,54 @@
-// Second Skool — push service worker.
+// Second Skool — push and offline service worker.
+
+// Bump when the caching rules below change; activate drops every other cache.
+const CACHE = 'ss-v1'
+// The whole app is one page, so the cached root is the offline copy of every
+// screen: offline, the app still opens (and queues attendance) instead of the
+// browser's no-connection page.
+const SHELL = '/'
+// Dev chunks are not content-hashed, so cache-first would pin stale code.
+const DEV = ['localhost', '127.0.0.1'].includes(self.location.hostname)
 
 // Activate a new SW build immediately instead of waiting for every tab to
 // close — otherwise bug fixes here (e.g. notification handling) never reach
 // devices that keep the PWA open.
 self.addEventListener('install', () => self.skipWaiting())
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+self.addEventListener('activate', (event) => event.waitUntil((async () => {
+  for (const key of await caches.keys()) if (key !== CACHE) await caches.delete(key)
+  await self.clients.claim()
+})()))
+
+// Same-origin GETs only: Supabase is another origin and /api answers are
+// per-user and live, so neither is ever stored.
+self.addEventListener('fetch', (event) => {
+  const req = event.request
+  const url = new URL(req.url)
+  if (DEV || req.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return
+
+  if (req.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const res = await fetch(req)
+        if (res.ok) { const cache = await caches.open(CACHE); await cache.put(SHELL, res.clone()) }
+        return res
+      } catch {
+        return (await caches.match(SHELL)) || Response.error()
+      }
+    })())
+    return
+  }
+
+  // Hashed build output never changes under the same URL.
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith((async () => {
+      const hit = await caches.match(req)
+      if (hit) return hit
+      const res = await fetch(req)
+      if (res.ok) { const cache = await caches.open(CACHE); await cache.put(req, res.clone()) }
+      return res
+    })())
+  }
+})
 
 self.addEventListener('push', (event) => {
   let data = {}

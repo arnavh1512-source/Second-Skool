@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useSyncExternalStore, type ReactNode } from 'react'
 import Image from 'next/image'
 import { copyText, whatsappShareUrl } from '../lib/share'
 import { useDashboard } from '../store'
@@ -11,6 +11,7 @@ import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { readLocal, writeLocal, removeLocal } from '../lib/storage'
 import { readStudentCred } from '../lib/student-cred'
 import { useBusy } from '../lib/use-busy'
+import { MIN_PASSWORD_LENGTH } from '../store/validate'
 
 // The centre's own mark, the same file the installed app icon uses. It has a
 // white ground of its own, so it sits as a tile on either theme.
@@ -55,6 +56,53 @@ function GateNotice({ tint, icon, color, title, sub, children }: {
   )
 }
 
+// Launched from the home screen. Google's sign-in redirect leaves the
+// installed app for the phone browser and the session never comes back, so in
+// this mode the button is a trap, not an option.
+const STANDALONE = '(display-mode: standalone)'
+const useStandalone = () => useSyncExternalStore(
+  cb => { const m = window.matchMedia(STANDALONE); m.addEventListener('change', cb); return () => m.removeEventListener('change', cb) },
+  () => window.matchMedia(STANDALONE).matches,
+  () => false,
+)
+
+// The reset email links back here with ?reset=1. The client exchanges the
+// link for a session and fires PASSWORD_RECOVERY; the query flag covers the
+// case where that event fired before this listener was attached.
+const RESET_PARAM = 'reset'
+export function usePasswordRecovery(): [boolean, () => void] {
+  const [recovering, setRecovering] = useState(false)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' || (session && new URLSearchParams(window.location.search).has(RESET_PARAM))) setRecovering(true)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+  return [recovering, () => { window.history.replaceState({}, '', window.location.pathname); setRecovering(false) }]
+}
+
+export function SetNewPasswordScreen({ onDone }: { onDone: () => void }) {
+  const setMyPassword = useDashboard(s => s.setMyPassword)
+  const notify = useDashboard(s => s.notify)
+  const [pw, setPw] = useState('')
+  const [pw2, setPw2] = useState('')
+  const [busy, run] = useBusy()
+  const save = () => run(async () => {
+    if (pw !== pw2) { notify('The two passwords do not match', 'error'); return }
+    if (await setMyPassword(pw)) onDone()
+  })
+  return (
+    <div className="td-auth-screen">
+      {LOGO}
+      <div className="text-td-heading font-semibold tracking-[-.015em] leading-[30px] text-td-dark mt-7">Set a new password</div>
+      <div className="td-sub">Then sign in on the home-screen app with your email and this password.</div>
+      <input autoFocus value={pw} type="password" autoComplete="new-password" aria-label="New password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="td-field mt-7" />
+      <input value={pw2} type="password" autoComplete="new-password" aria-label="Confirm password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !busy && save()} placeholder="Confirm password" className="td-field mt-3" />
+      <button onClick={save} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Saving…' : 'Save password'}</button>
+    </div>
+  )
+}
+
 export function LoginScreen() {
   const { authLoading, notify, loadStudentByCode, stuSignup, setStuSignup, studentSignup } = useDashboard()
   const [mode, setMode] = useState<'choose' | 'student' | 'register' | 'email'>('choose')
@@ -62,6 +110,7 @@ export function LoginScreen() {
   const [busy, run] = useBusy()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const standalone = useStandalone()
 
   const signInWithGoogle = () => run(async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -75,7 +124,7 @@ export function LoginScreen() {
   // app. Google's redirect escapes to the phone browser and the session never
   // lands back in the PWA, so the head is logged out on every launch. A password
   // login stays fully in-app, so the session persists. Staff set their password
-  // once from My Profile (Set password) after a Google sign-in.
+  // once from My Profile, or through the emailed reset link below.
   const signInWithPassword = () => run(async () => {
     const e = email.trim().toLowerCase()
     if (!e.includes('@') || e.length < 5) { notify('Enter your email', 'error'); return }
@@ -84,6 +133,17 @@ export function LoginScreen() {
     // routes the head/teacher into the app.
     const { error } = await supabase.auth.signInWithPassword({ email: e, password })
     if (error) notify('Wrong email or password')
+  })
+
+  // Also how a Google-only staff member gets their first password, which is
+  // the only way into the installed app. Supabase answers the same whether or
+  // not the email has an account, so this reveals nothing.
+  const sendResetLink = () => run(async () => {
+    const e = email.trim().toLowerCase()
+    if (!e.includes('@') || e.length < 5) { notify('Enter your email first', 'error'); return }
+    const { error } = await supabase.auth.resetPasswordForEmail(e, { redirectTo: `${window.location.origin}/?${RESET_PARAM}=1` })
+    if (error) notify('Could not send the link — try again in a minute', 'error')
+    else notify('Check your email for a link to set your password')
   })
 
   const submitCode = () => run(() => loadStudentByCode(code))
@@ -106,19 +166,21 @@ export function LoginScreen() {
 
       {mode === 'choose' && (
         <>
-          <div className="td-sub">Teachers sign in with Google. Students tap below and enter the code their teacher gave them — no account needed.</div>
+          <div className="td-sub">Teachers sign in with {standalone ? 'their email and password' : 'Google'}. Students tap below and enter the code their teacher gave them — no account needed.</div>
 
           <div className="td-h2 mt-8 mb-4">Staff</div>
-          <button onClick={signInWithGoogle} className="w-full border border-td-border bg-td-card rounded-td-md px-4 py-3.5 min-h-[52px] flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
+          {!standalone && <button onClick={signInWithGoogle} className="w-full border border-td-border bg-td-card rounded-td-md px-4 py-3.5 min-h-[52px] flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
             <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.3 2.2 20.6 2.2 24s.8 6.7 2.3 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>
             <span className="text-td-body font-semibold text-td-dark">Continue with Google</span>
-          </button>
+          </button>}
 
-          <button onClick={() => setMode('email')} className="w-full border border-td-border bg-td-card rounded-td-md px-4 py-3.5 min-h-[52px] mt-3 flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
+          <button onClick={() => setMode('email')} className={`w-full border border-td-border bg-td-card rounded-td-md px-4 py-3.5 min-h-[52px] ${standalone ? '' : 'mt-3'} flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card`}>
             <Icon name="lock" size={20} color="var(--color-td-dark)" />
             <span className="text-td-body font-semibold text-td-dark">Sign in with password</span>
           </button>
-          <div className="text-td-caption text-td-subtle mt-2 leading-relaxed">Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.</div>
+          <div className="text-td-caption text-td-subtle mt-2 leading-relaxed">{standalone
+            ? 'No password yet? Tap Sign in with password, enter your email and tap Forgot password — we email you a link to set one.'
+            : 'Installed the app to your home screen? Use your password — it keeps you signed in. Set one in My Profile after signing in with Google.'}</div>
 
           <div className="td-h2 mt-[30px] mb-4">Student or parent</div>
           <button onClick={() => setMode('student')} className="w-full text-left border border-td-border rounded-td-md px-4 py-3.5 min-h-[52px] flex items-center gap-3 cursor-pointer bg-td-card shadow-td-card">
@@ -172,7 +234,8 @@ export function LoginScreen() {
           />
           <button onClick={signInWithPassword} disabled={busy} className="td-pill w-full text-td-body font-semibold py-[15px] rounded-td-md cursor-pointer mt-3 disabled:opacity-60">{busy ? 'Signing in…' : 'Sign in'}</button>
           <button onClick={() => { setMode('choose'); setEmail(''); setPassword('') }} className="td-plain w-full text-td-muted text-td-small font-semibold py-3 cursor-pointer mt-1">Back</button>
-          <div className="mt-auto text-td-body leading-[22px] text-td-text pt-[26px]">No password yet? Sign in with Google once, then set one in My Profile → Set password.</div>
+          <button onClick={sendResetLink} disabled={busy} className="td-plain w-full text-td-primary text-td-small font-semibold py-3 cursor-pointer disabled:opacity-60">Forgot password, or never set one?</button>
+          <div className="mt-auto text-td-body leading-[22px] text-td-text pt-[26px]">Enter your email above and tap Forgot password — we email you a link to set a new one.</div>
         </>
       )}
 
@@ -246,6 +309,16 @@ function watchPermission(read: () => void): () => void {
     window.removeEventListener(PERM_EVENT, read)
   }
 }
+
+// The live permission for screens past the gate, so a student who chose
+// "Continue without reminders" keeps being told alerts are off instead of
+// silently missing every test. null where the browser has no push at all.
+export function useNotificationPermission(): NotificationPermission | null {
+  const [perm, setPerm] = useState<NotificationPermission | null>(null)
+  useEffect(() => watchPermission(() => setPerm(pushSupported() ? Notification.permission : null)), [])
+  return perm
+}
+export const announcePermissionChange = () => window.dispatchEvent(new Event(PERM_EVENT))
 
 // A student whose browser has blocked notifications cannot grant them from
 // inside the page — requestPermission() is a silent no-op once denied — so the

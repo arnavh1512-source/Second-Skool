@@ -32,6 +32,9 @@ type StaffRow = {
   createdAt: string
   lastSignIn: string | null
 }
+// A client error a phone reported through /api/log. Scalars only, by the
+// logger's own type, so the detail renders as plain key: value lines.
+type Crash = { id: number; created_at: string; event: string; detail: Record<string, unknown>; version: string | null; user_agent: string | null }
 type Snapshot = {
   generatedAt: string
   totals: {
@@ -42,10 +45,11 @@ type Snapshot = {
   }
   // What the system itself is doing, as opposed to what the centres are doing.
   health: {
-    phonesLive: number; phonesWaiting: number; codeAttempts5m: number
+    phonesLive: number; phonesWaiting: number; codeAttempts5m: number; crashes7d: number
     migrations: number; migrationLatest: string | null
   }
   centres: CentreRow[]
+  crashes: Crash[]
   staff: StaffRow[]
   alerts: string[]
   errors: string[]
@@ -88,7 +92,7 @@ export function DevConsoleScreen() {
   const [data, setData] = useState<Snapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'centres' | 'people' | 'reports'>('centres')
+  const [tab, setTab] = useState<'centres' | 'people' | 'crashes' | 'reports'>('centres')
   const [tickets, setTickets] = useState<Ticket[]>([])
 
   // The centre whose delete confirmation is open, and what has been typed into
@@ -198,8 +202,9 @@ export function DevConsoleScreen() {
               written and none of it was being read: a phone waiting on a head
               who never saw the badge, a code being ground against the throttle,
               a migration file pasted into the SQL editor months ago and never
-              confirmed. Three numbers, no dashboards. */}
-          <div className="grid grid-cols-3 gap-2.5 mb-4 lg:max-w-2xl">
+              confirmed — and, since the phones started reporting them, the
+              errors nobody filed a ticket about. Four numbers, no dashboards. */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4 lg:max-w-3xl">
             <Stat
               label="Phones"
               value={data.health.phonesLive}
@@ -211,6 +216,12 @@ export function DevConsoleScreen() {
               value={data.health.codeAttempts5m}
               sub={data.health.codeAttempts5m >= 10 ? 'throttle holding' : 'quiet'}
               calm={data.health.codeAttempts5m < 10}
+            />
+            <Stat
+              label="Crashes · 7d"
+              value={data.health.crashes7d}
+              sub={data.health.crashes7d ? 'see Crashes' : 'none reported'}
+              calm={data.health.crashes7d === 0}
             />
             <Stat
               label="Migrations"
@@ -235,8 +246,8 @@ export function DevConsoleScreen() {
             </div>
           )}
 
-          <div className="flex gap-2 mb-4 lg:max-w-xs">
-            {(['centres', 'people', 'reports'] as const).map(t => (
+          <div className="flex gap-2 mb-4 lg:max-w-md">
+            {(['centres', 'people', 'crashes', 'reports'] as const).map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -254,6 +265,7 @@ export function DevConsoleScreen() {
             />
           )}
           {tab === 'people' && <People rows={data.staff} />}
+          {tab === 'crashes' && <Crashes rows={data.crashes} />}
           {tab === 'reports' && (
             <Reports
               rows={tickets}
@@ -422,6 +434,28 @@ function People({ rows }: { rows: StaffRow[] }) {
             </span>
             <div className="text-td-caption text-td-muted mt-1">{ago(s.lastSignIn)}</div>
           </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Newest first. The event names the code path, the detail says what it saw,
+// the version says which deploy — enough to find the line without a ticket.
+function Crashes({ rows }: { rows: Crash[] }) {
+  if (!rows.length) return <Empty>No app errors reported in the last 7 days.</Empty>
+  return (
+    <div className="flex flex-col gap-2">
+      {rows.map(c => (
+        <div key={c.id} className="td-card rounded-td-md p-3.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-td-small td-strong break-all">{c.event}</span>
+            <span className="text-td-caption text-td-subtle shrink-0">{ago(c.created_at)}{c.version ? ` · ${c.version}` : ''}</span>
+          </div>
+          {Object.entries(c.detail).map(([k, v]) => (
+            <div key={k} className="text-td-caption text-td-text mt-1 break-all"><span className="text-td-subtle">{k}:</span> {String(v)}</div>
+          ))}
+          {c.user_agent && <div className="text-td-caption text-td-subtle mt-1.5 break-all">{c.user_agent}</div>}
         </div>
       ))}
     </div>

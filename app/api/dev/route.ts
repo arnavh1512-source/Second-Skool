@@ -62,6 +62,9 @@ async function fetchRows<T>(
   return rows
 }
 
+const CRASH_ROWS = 50
+type CrashRow = { id: number; created_at: string; event: string; detail: Record<string, unknown>; version: string | null; user_agent: string | null }
+
 type AuthUser = { id: string; last_sign_in_at?: string | null }
 
 // listUsers is paginated at 1000 per call and silently returns only the first
@@ -147,7 +150,7 @@ export async function GET(req: NextRequest) {
   const sevenDaysAgo = now - 7 * 86_400_000
   const errors: string[] = []
 
-  const [centres, profiles, students, branches, devices, phones, attempts, migrations, activity, authUsers] = await Promise.all([
+  const [centres, profiles, students, branches, devices, phones, attempts, migrations, crashes, activity, authUsers] = await Promise.all([
     fetchRows<CentreRow>('centres', () =>
       admin.from('centres').select('id,name,join_code,student_join_code,owner_id,created_at').limit(CAP), errors),
     fetchRows<ProfileRow>('profiles', () =>
@@ -172,6 +175,11 @@ export async function GET(req: NextRequest) {
       admin.from('code_attempts').select('id').limit(CAP), errors),
     fetchRows<{ version: string }>('schema_migrations', () =>
       admin.from('schema_migrations').select('version').order('version').limit(CAP), errors),
+    // Client errors the phones reported themselves (migration 0047). The newest
+    // few are the useful ones; the table keeps its own size down.
+    fetchRows<CrashRow>('client_errors', () =>
+      admin.from('client_errors').select('id,created_at,event,detail,version,user_agent')
+        .gte('created_at', new Date(sevenDaysAgo).toISOString()).order('id', { ascending: false }).limit(CRASH_ROWS), errors),
     Promise.all(ACTIVITY_TABLES.map(async table => ({
       table,
       rows: await fetchRows<Dated>(table, () =>
@@ -330,6 +338,8 @@ export async function GET(req: NextRequest) {
   // The throttle refuses the eleventh failure in a minute, so a bucket this
   // full is somebody working through the code space rather than a parent
   // mistyping. It is the only place that fact is visible at all.
+  if (crashes.length)
+    alerts.push(`${crashes.length >= CRASH_ROWS ? `${CRASH_ROWS}+` : crashes.length} app error${crashes.length > 1 ? 's' : ''} reported in the last 7 days — see Crashes`)
   if (attempts.length >= 10)
     alerts.push(`${attempts.length} failed code attempts in the last 5 minutes — the throttle is holding`)
 
@@ -337,6 +347,7 @@ export async function GET(req: NextRequest) {
     phonesLive: livePhones.length,
     phonesWaiting: livePhones.filter(p => !p.approved).length,
     codeAttempts5m: attempts.length,
+    crashes7d: crashes.length,
     migrations: migrations.length,
     migrationLatest: migrations.length ? migrations[migrations.length - 1].version : null,
   }
@@ -355,7 +366,7 @@ export async function GET(req: NextRequest) {
   }
 
   return NextResponse.json(
-    { generatedAt: new Date(now).toISOString(), windowDays: WINDOW_DAYS, totals, health, centres: centreRows, staff: staffRows, alerts, errors },
+    { generatedAt: new Date(now).toISOString(), windowDays: WINDOW_DAYS, totals, health, centres: centreRows, staff: staffRows, crashes, alerts, errors },
     { headers: { 'cache-control': 'no-store' } },
   )
 }

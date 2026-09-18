@@ -3,6 +3,7 @@ import { readStudentCred } from '../../lib/student-cred'
 import { fileToScreenshotDataUrl } from '../../lib/image'
 import { buildDiagnostics, validateReport } from '../../lib/support'
 import { friendlyError } from '../errors'
+import { logError } from '../../lib/log'
 import type { Slice } from '../slice'
 import type { SupportTicket, SupportMessage } from '../types'
 
@@ -13,15 +14,16 @@ const VERSION = process.env.NEXT_PUBLIC_COMMIT_SHA?.slice(0, 7) ?? 'dev'
 // The last uncaught error the browser saw. This is the single most useful field
 // in a ticket — it turns "it just stops" into a stack frame — and it is only
 // worth having because something actually writes it, so the listeners live here
-// rather than behind an exported setter with no callers.
+// rather than behind an exported setter with no callers. Each one is also
+// reported, so the operator hears about it whether or not a ticket follows.
 let lastError: string | null = null
+const uncaught = (message: string) => {
+  lastError = message.slice(0, 300)
+  logError('client.uncaught', { message: lastError })
+}
 if (typeof window !== 'undefined') {
-  window.addEventListener('error', e => {
-    lastError = `${e.message} @ ${e.filename}:${e.lineno}`.slice(0, 300)
-  })
-  window.addEventListener('unhandledrejection', e => {
-    lastError = `unhandled: ${String(e.reason)}`.slice(0, 300)
-  })
+  window.addEventListener('error', e => uncaught(`${e.message} @ ${e.filename}:${e.lineno}`))
+  window.addEventListener('unhandledrejection', e => uncaught(`unhandled: ${String(e.reason)}`))
 }
 
 const diagnostics = () => buildDiagnostics({
@@ -33,6 +35,7 @@ const diagnostics = () => buildDiagnostics({
 })
 
 const EMPTY_DRAFT = { intent: '', outcome: '', area: '', frequency: 'always' } as const
+const CODE_GONE = 'That code no longer works — sign in again'
 
 // PostgREST hands back snake_case rows; the store speaks camelCase.
 type Row = Record<string, unknown>
@@ -104,7 +107,7 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
     if (role === 'student') {
       const cred = readStudentCred()
       if (!cred) { get().notify('Sign in again to report a problem', 'error'); return }
-      const { error } = await supabase.rpc('file_ticket', {
+      const { data, error } = await supabase.rpc('file_ticket', {
         p_code: cred,
         p_intent: d.intent,
         p_outcome: d.outcome,
@@ -114,6 +117,9 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
         p_diag: diag,
       })
       if (error) { get().notify(friendlyError(error, 'send your report'), 'error'); return }
+      // An unknown code comes back as null rather than an error, so the throttle's
+      // record of the miss is not rolled back with it.
+      if (!data) { get().notify(CODE_GONE, 'error'); return }
     } else {
       // Staff file through an RPC for the same reason students do: who you are
       // is read off your profile row on the server. A browser that gets to
@@ -145,8 +151,9 @@ export const createSupportSlice: Slice<Keys> = (set, get) => ({
     if (get().role === 'student') {
       const cred = readStudentCred()
       if (!cred) return
-      const { error } = await supabase.rpc('reply_ticket', { p_code: cred, p_ticket: id, p_body: text })
+      const { data, error } = await supabase.rpc('reply_ticket', { p_code: cred, p_ticket: id, p_body: text })
       if (error) { get().notify(friendlyError(error, 'send that message'), 'error'); return }
+      if (data === false) { get().notify(CODE_GONE, 'error'); return }
     } else {
       const { error } = await supabase
         .from('support_messages')

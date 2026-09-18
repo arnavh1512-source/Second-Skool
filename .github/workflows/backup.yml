@@ -41,7 +41,8 @@
 # earning its keep. Keep every script in this file POSIX sh.
 #
 # Restoring is documented in supabase/BACKUP.md. A backup nobody has tried to
-# restore is a guess, not a backup — do the drill once.
+# restore is a guess, so every run restores its own dump into a throwaway
+# Postgres before encrypting it (the "Restore drill" step).
 
 name: Database backup
 
@@ -71,6 +72,9 @@ jobs:
       contents: read
 
     steps:
+      # Only for supabase/test/bootstrap.sql, which the restore drill needs.
+      - uses: actions/checkout@v5
+
       - name: Check the toolchain and the secret
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -156,6 +160,35 @@ jobs:
           grep -q 'CREATE TABLE public.students' out/public.sql || {
             echo "::error::public.sql has no students table. The dump is incomplete."; exit 1; }
 
+      # Proves the dump restores, not just that it exists. A throwaway Postgres
+      # in this same container gets the platform stubs the RLS tests already use
+      # (roles, auth.uid(), storage), then the real dump with ON_ERROR_STOP, then
+      # a row count. continue-on-error so a failed drill never costs the
+      # upload: the last step turns the run red afterwards instead.
+      - name: Restore drill
+        id: drill
+        continue-on-error: true
+        run: |
+          set -eu
+          BIN=/usr/lib/postgresql/17/bin
+          mkdir -p /tmp/drill
+          chown postgres /tmp/drill
+          # Postgres refuses to run as root, which is who this container is.
+          gosu postgres "$BIN/initdb" -D /tmp/drill/data -U postgres -A trust >/dev/null
+          gosu postgres "$BIN/pg_ctl" -D /tmp/drill/data -o "-c listen_addresses= -k /tmp/drill" -w start
+          export PGHOST=/tmp/drill PGUSER=postgres PGDATABASE=postgres
+          psql -q -v ON_ERROR_STOP=1 -f supabase/test/bootstrap.sql
+          # Supabase keeps these in their own schema, and the dump names them there.
+          psql -q -v ON_ERROR_STOP=1 -c 'create schema extensions'             -c 'create extension pgcrypto schema extensions'             -c 'create extension "uuid-ossp" schema extensions'
+          if grep -q '^CREATE SCHEMA public;' out/public.sql; then psql -q -c 'drop schema public cascade'; fi
+          # Auth rows are not loaded here, so foreign keys into auth.users are
+          # added unchecked. Everything else must restore exactly as dumped.
+          sed '/REFERENCES auth\.users/ s/;$/ NOT VALID;/' out/public.sql > /tmp/drill/public.sql
+          psql -q -v ON_ERROR_STOP=1 -f /tmp/drill/public.sql >/dev/null
+          n=$(psql -tAc 'select count(*) from public.students')
+          echo "Restored $n students."
+          [ "$n" -gt 0 ] || { echo "::error::The dump restored but holds no students."; exit 1; }
+
       - name: Compress and encrypt
         env:
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
@@ -188,3 +221,9 @@ jobs:
           path: out/
           retention-days: 90
           if-no-files-found: error
+
+      - name: Fail the run if the restore drill failed
+        if: steps.drill.outcome == 'failure'
+        run: |
+          echo "::error::The backup was uploaded, but it did not restore cleanly. See the Restore drill step."
+          exit 1

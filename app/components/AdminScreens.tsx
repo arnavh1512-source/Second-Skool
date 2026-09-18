@@ -12,6 +12,7 @@ import { useState } from 'react'
 export function StaffApprovalsScreen() {
   const { back, staffList, loadStaff, loadMyCentre, joinCode, centreName, approveTeacher, rejectTeacher, grantHead, removeStaff, supabaseUserId, role, regenerateJoinCode, notify } = useDashboard()
   const [confirmRotate, setConfirmRotate] = useState(false)
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
 
   // Reload on open, and live-refresh whenever any profile changes (e.g. a new
   // teacher registers) so pending requests appear without leaving the screen.
@@ -30,6 +31,14 @@ export function StaffApprovalsScreen() {
   return (
     <div className="td-wide td-screen">
       <ScreenHeader title="Staff access" onBack={back} />
+      <ConfirmDialog
+        open={!!removing}
+        title={`Remove ${removing?.name ?? 'this teacher'}?`}
+        body="They lose access to this centre straight away. They would have to ask to join again."
+        confirmLabel="Remove"
+        onConfirm={() => { if (removing) removeStaff(removing.id); setRemoving(null) }}
+        onCancel={() => setRemoving(null)}
+      />
 
       <div className="text-td-small text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
 
@@ -129,7 +138,7 @@ export function StaffApprovalsScreen() {
                     <button onClick={() => grantHead(s.id)} className="flex-1 border border-td-primary bg-td-card text-td-primary text-td-caption font-semibold py-2.5 rounded-td-sm cursor-pointer">
                       Make head teacher
                     </button>
-                    <button onClick={() => removeStaff(s.id)} className="td-danger text-td-caption font-semibold py-2.5 px-4 rounded-td-sm">Remove</button>
+                    <button onClick={() => setRemoving({ id: s.id, name: s.name })} className="td-danger text-td-caption font-semibold py-2.5 px-4 rounded-td-sm">Remove</button>
                   </div>
                 )}
               </div>
@@ -196,7 +205,7 @@ export function StudentRequestsScreen() {
 
       {studentDevices.length > 0 && <>
         <div className="td-h2 mt-7">Phones {studentDevices.some(d => !d.allowed) && <span className="text-td-red">· {studentDevices.filter(d => !d.allowed).length} waiting</span>}</div>
-        <div className="text-td-small text-td-muted leading-relaxed mb-3 lg:max-w-2xl">Each student&apos;s first phone is allowed automatically. A second one waits here — if you did not expect it, remove it and the code stops working on that phone.</div>
+        <div className="text-td-small text-td-muted leading-relaxed mb-3 lg:max-w-2xl">Each student&apos;s first phone is allowed automatically. A second one waits here. Phones marked new were added this week — if one is not the family&apos;s, remove it and the code stops working on that phone.</div>
         <div className="td-list gap-2.5">
           {studentDevices.map(d => (
             <StudentDeviceRow key={d.dbId} d={d} onAllow={allowStudentDevice} onRemove={removeStudentDevice} />
@@ -217,10 +226,22 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
   onRemove: (dbId: string) => Promise<void>
 }) {
   const [busy, run] = useBusy()
+  const [confirmRemove, setConfirmRemove] = useState(false)
   return (
     <div className="td-card rounded-td-md p-3.5 flex items-center gap-3">
+      <ConfirmDialog
+        open={confirmRemove}
+        title="Sign this phone out?"
+        body={`${d.studentName} is signed out on ${d.label} for good. Their code stops working there.`}
+        confirmLabel="Sign out"
+        onConfirm={() => { setConfirmRemove(false); run(() => onRemove(d.dbId)) }}
+        onCancel={() => setConfirmRemove(false)}
+      />
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-td-body truncate">{d.studentName}</div>
+        <div className="font-semibold text-td-body truncate">
+          {d.studentName}
+          {d.recent && d.allowed && <span className="ml-2 text-td-caption font-semibold text-td-amber bg-td-tint-amber py-0.5 px-2 rounded-td-lg">New</span>}
+        </div>
         <div className="text-td-caption text-td-subtle truncate">{d.label}</div>
         <div className="text-td-caption text-td-subtle">
           Added {fmtDate(d.when)}{d.lastSeen ? ` · last used ${timeAgo(d.lastSeen)}` : ''}
@@ -233,7 +254,7 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
         >Allow</button>
       )}
       <button
-        onClick={() => run(() => onRemove(d.dbId))} disabled={busy}
+        onClick={() => setConfirmRemove(true)} disabled={busy}
         className="text-td-small font-semibold text-td-red underline cursor-pointer disabled:opacity-50"
       >Remove</button>
     </div>

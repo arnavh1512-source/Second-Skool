@@ -125,6 +125,9 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       p_address: clampText(f.address, LIMITS.address) || null,
     })
     if (error || !data) { get().notify(friendlyError(error, 'register'), 'error'); return }
+    // A wrong join code is a return value, not an exception, so the throttle's
+    // record of the miss survives.
+    if ((data as { error?: string }).error) { get().notify('That centre code is not right — check it with your teacher', 'error'); return }
     const d = data as { code: string; name: string; centre: string }
     writeLocal('student_code', d.code)
     // Spend it immediately: this phone is definitionally the first device on a
@@ -337,12 +340,14 @@ export const createStudentsSlice: Slice<Keys> = (set, get) => ({
       id: string; student_id: string; label: string | null; approved: boolean
       created_at: string; last_seen_at: string | null; students: { name: string } | null
     }[]
+    const weekAgo = Date.now() - 7 * 86_400_000
     const devices: StudentDevice[] = rows.map(r => ({
       dbId: r.id,
       studentId: r.student_id,
       studentName: r.students?.name ?? 'Student',
       label: r.label ?? 'Unknown phone',
       allowed: r.approved,
+      recent: Date.parse(r.created_at) > weekAgo,
       when: r.created_at,
       lastSeen: r.last_seen_at,
     }))

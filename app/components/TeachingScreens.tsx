@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { isoDay, parseDay } from '../store/format'
 import { useDashboard, REMINDER_TEMPLATES, initials, LIMITS, clampText, isWholeNumber } from '../store'
-import { ScreenHeader, PrimaryButton, EmptyState, options, classesOf } from './Shell'
+import { ScreenHeader, PrimaryButton, EmptyState, options, classesOf, ConfirmDialog } from './Shell'
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
 import { changedMarks, writeOrder } from '../lib/results-edit'
@@ -15,6 +15,7 @@ export function TimetableScreen() {
   const { ttDay, timetableData, back, set, addTimetableEntry, deleteTimetableEntry, updateTimetableEntry, subjects, students, teachers, role, notify } = useDashboard()
   const isAdmin = role === 'admin'
   const [showForm, setShowForm] = useState(false)
+  const [removing, setRemoving] = useState<{ day: string; p: string[] } | null>(null)
   const [editing, setEditing] = useState<string[] | null>(null) // the original period being edited
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('10:00')
@@ -82,6 +83,14 @@ export function TimetableScreen() {
 
   return (
     <div className="td-screen td-wide">
+      <ConfirmDialog
+        open={!!removing}
+        title={`Remove ${removing?.p[2] ?? 'this period'}?`}
+        body={removing ? `${removing.p[0]}–${removing.p[1]} for ${removing.p[3]} comes off the timetable for everyone.` : ''}
+        confirmLabel="Remove period"
+        onConfirm={() => { if (removing) deleteTimetableEntry(removing.day, removing.p); setRemoving(null) }}
+        onCancel={() => setRemoving(null)}
+      />
       <ScreenHeader title="Timetable" onBack={back} right={isAdmin ? (
         <button onClick={() => (showForm ? resetForm() : setShowForm(true))} className="td-btn-sm">
           <span className="text-td-body leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add'}
@@ -163,7 +172,7 @@ export function TimetableScreen() {
                         {isAdmin && (
                           <div className="flex gap-1 mt-1.5">
                             <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-td-edge-blue bg-td-tint-blue text-td-primary text-td-caption cursor-pointer">✎</button>
-                            <button onClick={() => deleteTimetableEntry(d.s, p)} className="flex-1 h-6 rounded-lg td-danger text-td-caption">×</button>
+                            <button onClick={() => setRemoving({ day: d.s, p })} className="flex-1 h-6 rounded-lg td-danger text-td-caption">×</button>
                           </div>
                         )}
                       </div>
@@ -202,7 +211,7 @@ export function TimetableScreen() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-td-caption font-semibold py-1 px-[9px] rounded-td-lg" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
                         {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-td-caption leading-none">✎</button>}
-                        {isAdmin && <button onClick={() => deleteTimetableEntry(ttDay, p)} className="w-6 h-6 rounded-full td-danger flex items-center justify-center text-td-body leading-none">×</button>}
+                        {isAdmin && <button onClick={() => setRemoving({ day: ttDay, p })} className="w-6 h-6 rounded-full td-danger flex items-center justify-center text-td-body leading-none">×</button>}
                       </div>
                     </div>
                     <div className="text-td-caption text-td-muted mt-1">{p[3]} · {p[4]}{p[5] ? ` · ${p[5]}` : ''}</div>
@@ -493,6 +502,7 @@ export function AssignmentsScreen() {
   const [klass, setKlass] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [instructions, setInstructions] = useState('')
+  const [removing, setRemoving] = useState<{ id: string; title: string } | null>(null)
   const subjectNames = subjects.map(s => s.name)
   const selSubject = subject || subjectNames[0] || ''
   const classes = classesOf(students)
@@ -500,6 +510,14 @@ export function AssignmentsScreen() {
 
   return (
     <div className="td-screen">
+      <ConfirmDialog
+        open={!!removing}
+        title={`Delete ${removing?.title ?? 'this assignment'}?`}
+        body="Students stop seeing it. This cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={() => { if (removing) deleteAssignment(removing.id); setRemoving(null) }}
+        onCancel={() => setRemoving(null)}
+      />
       <ScreenHeader title="New Assignment" onBack={back} />
 
       <div className="td-form-card mb-[22px]">
@@ -540,7 +558,7 @@ export function AssignmentsScreen() {
                   <span className="text-td-caption font-semibold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-td-lg whitespace-nowrap">Due {a.due}</span>
                   {a.dbId && (
                     <button
-                      onClick={() => deleteAssignment(a.dbId!)}
+                      onClick={() => setRemoving({ id: a.dbId!, title: a.title })}
                       aria-label={`Delete assignment ${a.title}`}
                       className="td-plain text-td-muted hover:text-td-red cursor-pointer p-1 leading-none text-td-body"
                     >×</button>

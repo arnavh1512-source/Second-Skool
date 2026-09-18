@@ -6,7 +6,7 @@ corrupted, every student record, parent phone number and home address goes with
 it and there is nothing to restore from.
 
 [`.github/workflows/backup.yml`](../.github/workflows/backup.yml) is the
-free-tier substitute: a nightly `pg_dump` at 01:30 IST, stored as a private
+free-tier substitute: a `pg_dump` twice a day (01:30 and 13:30 IST), stored as a private
 GitHub artifact for 90 days.
 
 ## Setting it up
@@ -86,11 +86,25 @@ on primary keys. That is the correct behaviour — it stops you silently
 half-merging two user tables. For a partial restore, edit the file down to the
 rows you need.
 
-## Do the drill
+## The drill runs on every backup
 
-A backup nobody has restored is a guess. Once, spin up a throwaway Supabase
-project, restore into it, and sign in. Twenty minutes now beats finding out
-during an actual outage.
+A backup nobody has restored is a guess, so the workflow restores each dump
+before it encrypts it. The **Restore drill** step starts a throwaway Postgres
+inside the job, loads the same platform stubs the RLS tests use
+(`supabase/test/bootstrap.sql`: the API roles, `auth.uid()`, storage), creates
+the `extensions` schema, then replays `public.sql` with `ON_ERROR_STOP` and
+checks that `public.students` has rows.
+
+Two things it does not prove:
+
+- **Auth rows.** `auth-users.sql` is not loaded — the drill has no real auth
+  schema to load it into. Foreign keys into `auth.users` are added `NOT VALID`
+  in the drill copy only; the stored dump is untouched.
+- **Signing in.** Only a real Supabase project does that. Once, spin up a
+  throwaway project, restore both files into it, and sign in.
+
+A failed drill does not stop the upload. The backup is still stored, and the
+last step turns the run red so the failure is not missed.
 
 ## When to stop using this
 

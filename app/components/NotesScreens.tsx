@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useDashboard } from '../store'
-import { ScreenHeader, PrimaryButton, options, classesOf } from './Shell'
+import { ScreenHeader, PrimaryButton, options, classesOf, ConfirmDialog } from './Shell'
 import { Icon, ink } from './Icon'
 import { uploadNoteFile } from '../lib/upload'
 import { writeLocal } from '../lib/storage'
@@ -16,6 +16,7 @@ const FileIcon = ({ url }: { url: string }) => (
 export function NotesScreen() {
   const { back, subjects, notesList, loadNotes, addNote, deleteNote, notify, students } = useDashboard()
   const [showForm, setShowForm] = useState(false)
+  const [removing, setRemoving] = useState<{ id: string; title: string } | null>(null)
   const [title, setTitle] = useState('')
   const [subject, setSubject] = useState('')
   const [klass, setKlass] = useState('')
@@ -45,6 +46,14 @@ export function NotesScreen() {
 
   return (
     <div className="td-screen">
+      <ConfirmDialog
+        open={!!removing}
+        title={`Remove ${removing?.title ?? 'this material'}?`}
+        body="Students stop seeing it. This cannot be undone."
+        confirmLabel="Remove"
+        onConfirm={() => { if (removing) deleteNote(removing.id); setRemoving(null) }}
+        onCancel={() => setRemoving(null)}
+      />
       <ScreenHeader title="Study Material" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
           <span className="text-td-body leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Share'}
@@ -87,7 +96,7 @@ export function NotesScreen() {
                   <div className="text-td-body td-strong">{n.title}</div>
                   <div className="text-td-caption text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
                 </div>
-                <button onClick={() => n.dbId && deleteNote(n.dbId)} className="td-danger text-td-caption font-semibold py-1.5 px-3 rounded-td-sm shrink-0">Remove</button>
+                <button onClick={() => n.dbId && setRemoving({ id: n.dbId, title: n.title })} className="td-danger text-td-caption font-semibold py-1.5 px-3 rounded-td-sm shrink-0">Remove</button>
               </div>
               {n.body && <div className="text-td-small text-td-text leading-relaxed mt-2">{n.body}</div>}
               <div className="flex gap-2 mt-2.5">
