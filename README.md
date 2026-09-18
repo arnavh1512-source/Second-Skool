@@ -66,13 +66,29 @@ Enters the private code their teacher gave them and instantly sees their attenda
 
 <div align="center">
 
-<img src="docs/screenshots/login.png" width="30%" alt="Sign in — teachers use Google, students use a code" />
+<img src="docs/screenshots/login.png" width="30%" alt="Sign in — staff use Google, students and parents use a code" />
 &nbsp;
 <img src="docs/screenshots/student-code.png" width="30%" alt="Student code entry" />
 &nbsp;
-<img src="docs/screenshots/404.png" width="30%" alt="Branded 404 page" />
+<img src="docs/screenshots/stu-home.png" width="30%" alt="Parent dashboard home — fee due, attendance and class rank" />
 
-<sub>Sign in · Student code entry · Branded 404 — real screenshots, mobile viewport</sub>
+<sub>Sign in · Code entry · Dashboard home</sub>
+
+<img src="docs/screenshots/stu-attendance.png" width="30%" alt="Attendance history, day by day" />
+&nbsp;
+<img src="docs/screenshots/stu-results.png" width="30%" alt="Test results with grades per subject" />
+&nbsp;
+<img src="docs/screenshots/stu-ranking.png" width="30%" alt="Subject ranking within the class" />
+
+<sub>Attendance · Results · Ranking</sub>
+
+<img src="docs/screenshots/stu-fees.png" width="30%" alt="Fees — next instalment and payment history" />
+&nbsp;
+<img src="docs/screenshots/stu-timetable.png" width="30%" alt="Weekly timetable" />
+
+<sub>Fees · Timetable</sub>
+
+<sub>What a parent sees after typing their child's code. Real app screens on a phone viewport, filled with sample data.</sub>
 
 </div>
 
