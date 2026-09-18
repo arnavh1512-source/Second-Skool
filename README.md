@@ -106,7 +106,7 @@ graph TB
     end
 
     subgraph edge["▲ Vercel"]
-        API["/api/push<br/>auth · validate · rate-limit"]
+        API["/api routes<br/>auth · validate · rate-limit"]
     end
 
     subgraph data["🗄️ Supabase"]
@@ -147,13 +147,38 @@ flowchart LR
 - **Row-Level Security** on every tenant table, keyed by `centre_id`.
 - **Sensitive reads** go through `SECURITY DEFINER` RPCs with a pinned `search_path`; invalid student-code lookups are **rate-limited in the database** to blunt brute-force — while valid codes always resolve, so real students are never locked out.
 - **Security headers** — CSP, HSTS, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` — in [`next.config.ts`](next.config.ts).
-- **The one server route**, [`/api/push`](app/api/push/route.ts), authenticates the caller, scopes every send to their centre, validates input, and rate-limits per caller (shared across serverless instances via Redis).
+- **Every server route is validated and rate-limited** (shared across serverless instances via Upstash Redis when it is configured):
+  - [`/api/push`](app/api/push/route.ts) authenticates the caller and scopes every send to their centre.
+  - [`/api/push/student-request`](app/api/push/student-request/route.ts) tells the head a student is waiting. It has no session, so the new student code authorises the send, and it stops working once the request is approved or rejected.
+  - [`/api/log`](app/api/log/route.ts) collects client crash reports, including from the sign-in screen, with a strict size and shape check.
+  - [`/api/dev`](app/api/dev/route.ts) is the operator console. It is gated to an allow-listed, confirmed Google identity, and it is the only place the service-role key is used for reads across centres.
 - **Notification links** are relative-only, so a tapped notification can never redirect off-app.
 - **Structured logging** is PII-safe by construction — the type system rejects dumping whole records into a log line.
 
+## 📘 User guides
+
+Printable PDF handouts for the people who actually use the app, drawn in the app's current look.
+
+| Guide | For | What's in it |
+|---|---|---|
+| **How-To Guide** | Heads, teachers, parents | Step-by-step, no jargon. Start here. |
+| **Complete Feature Guide** | Heads and teachers | Every feature, role by role, with phone screens. |
+| **Parent Guide** | Parents | Signing in with the child's code and reading each tab. |
+
+The PDFs are generated, not committed. Build the one you need:
+
+```bash
+pip install reportlab
+python scripts/pdf/howto.py     # Second-Skool-How-To-Guide.pdf
+python scripts/pdf/guide.py     # Second-Skool-Complete-Feature-Guide.pdf
+python scripts/pdf/parents.py   # Second-Skool-Parent-Guide.pdf
+```
+
+They land in the repo root. See [`scripts/pdf/README.md`](scripts/pdf/README.md) before editing one.
+
 ## 🚀 Quick start
 
-> Requires **Node 18+** and a Supabase project.
+> Requires **Node 20.9+** (CI runs 24) and a Supabase project.
 
 ```bash
 # 1 — install
@@ -190,7 +215,7 @@ Full list in [`.env.example`](.env.example).
 | Variable | Required | Purpose |
 |---|:--:|---|
 | `NEXT_PUBLIC_SUPABASE_URL` / `..._ANON_KEY` | ✅ | Client connection |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Server-only, used by `/api/push` |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Server-only, used by the `/api/*` routes. Never prefix it `NEXT_PUBLIC_` |
 | `VAPID_*` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | ✅ | Web push |
 | `NEXT_PUBLIC_SITE_URL` | ➖ | Absolute base for OG images & manifest |
 
