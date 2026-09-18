@@ -16,10 +16,11 @@ python scripts/pdf/guide.py
 |---|---|---|
 | `guide.py` | `Second-Skool-Complete-Feature-Guide.pdf` | Every feature, per role. The main document. |
 | `parents.py` | `Second-Skool-Parent-Guide.pdf` | What a parent sees and how to read it. |
+| `howto.py` | `Second-Skool-How-To-Guide.pdf` | Plain-language how-to for head, teacher and parent. |
 | `roles.py` | `Second-Skool-Features-by-Role.pdf` | The head / teacher / student split, with diagrams. |
 | `repo_pdf.py` | `Second-Skool-Source.pdf` | Every tracked text file in the repo, paginated. |
 
-Shared modules, imported by `guide.py` and `parents.py`:
+Shared modules, imported by `guide.py`, `parents.py` and `howto.py`:
 
 - `viz.py` — the palette plus the diagram primitives (`role_trio`, `flow`, `legend`).
 - `screens.py` — the phone mockups (`phone_row`) and the tab bars they carry.

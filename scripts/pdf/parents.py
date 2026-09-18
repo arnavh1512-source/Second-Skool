@@ -251,11 +251,11 @@ A(PageBreak())
 E(h1('Part 2 &mdash; The home screen', 'The four numbers that answer most questions before you ask them.'))
 
 E(figure(phone_row(CW, [
-    ('Home', STU_TABS, SC.stu_home,
+    (None, STU_TABS, SC.stu_home,
      'Attendance and average on top, then whatever needs attention'),
     ('Attendance', STU_TABS, SC.stu_attendance,
      'Every marked day, month by month'),
-    ('Results', STU_TABS, SC.stu_results,
+    ('Test results', SC.tabs(SC.STU_LABELS, 1), SC.stu_results,
      'Every test, class average printed beside the mark'),
 ]), 'The three screens most parents open. Nothing here can be edited from a phone.'))
 
@@ -271,10 +271,10 @@ E(table(['On the home screen', 'What it tells you'],
 A(Paragraph('The five tabs along the bottom', S['h2']))
 E(table(['Tab', 'What is behind it'],
         [['Home', 'The summary above.'],
-         ['Result', 'Every test, subject by subject, with the class average and the date.'],
-         ['Rank', 'Where your child stands in their class. Empty until the teachers have entered results.'],
-         ['Teach', 'Which teachers take your child, and for which subject.'],
-         ['You', 'The profile: name, grade, the student code, and the contact details the centre holds.']],
+         ['Results', 'Every test, subject by subject, with the class average and the date.'],
+         ['Ranking', 'Where your child stands in their class. Empty until the teachers have entered results.'],
+         ['Teachers', 'Which teachers take your child, and for which subject.'],
+         ['Profile', 'The profile: name, grade, the student code, and the contact details the centre holds.']],
         [30 * mm, 140 * mm]))
 
 A(Paragraph('Everything in the app is read-only for you and for your child. Nothing on any of these '
@@ -335,7 +335,7 @@ E(table(['On the results screen', 'What it means'],
         [50 * mm, 120 * mm]))
 
 A(Paragraph('Rankings', S['h2']))
-A(Paragraph('The <b>Rank</b> tab shows where your child sits in their class. It fills itself in from '
+A(Paragraph('The <b>Ranking</b> tab shows where your child sits in their class. It fills itself in from '
             'the results the teachers enter &mdash; until there are results it says &ldquo;No rankings '
             'published yet&rdquo; rather than showing a position. An empty rank tab early in a term is '
             'normal, not a fault.', S['body']))

@@ -8,32 +8,35 @@ from reportlab.lib import colors
 from reportlab.lib.units import mm
 from reportlab.graphics.shapes import Drawing, Rect, String, Circle, Line, Polygon, Wedge, Group
 
-# the app's own td-* palette
-BLUE = colors.HexColor('#2a6fdb')
-BLUE_L = colors.HexColor('#3f82ec')
-DARK = colors.HexColor('#12203a')
-TEXT = colors.HexColor('#3c4a63')
-MUTED = colors.HexColor('#6b7a93')
-FAINT = colors.HexColor('#a7b2c4')
-LINE = colors.HexColor('#dde3ec')
-SOFT = colors.HexColor('#f2f5fa')
+# the app's own td-* palette (the light "Register" theme in globals.css)
+BLUE = colors.HexColor('#2c3e8f')    # td-primary
+DARK = colors.HexColor('#14161a')    # td-dark, the ink
+INDIGO = DARK                        # teacher accent: the app gives teachers ink, not a hue
+TEXT = colors.HexColor('#33373d')
+MUTED = colors.HexColor('#5e646b')
+FAINT = colors.HexColor('#9098a1')
+LINE = colors.HexColor('#dde0da')
+BORDER = colors.HexColor('#c9ccc6')
+SOFT = colors.HexColor('#f2f3f0')    # td-bg and td-soft
 CARD = colors.white
-GREEN = colors.HexColor('#2fa36b')
-AMBER = colors.HexColor('#d9862a')
-RED = colors.HexColor('#e8553c')
-INDIGO = colors.HexColor('#6366c9')
-TINT_B = colors.HexColor('#e8f0fd')
-TINT_G = colors.HexColor('#e4f5ec')
-TINT_A = colors.HexColor('#fdf1e0')
-TINT_R = colors.HexColor('#fdecea')
-TINT_I = colors.HexColor('#ecedfa')
+GREEN = colors.HexColor('#1f7a4d')
+AMBER = colors.HexColor('#b7791f')
+RED = colors.HexColor('#c8463c')
+TINT_B = colors.HexColor('#e6e9f4')
+TINT_G = colors.HexColor('#e1f0e8')
+TINT_A = colors.HexColor('#f6ecd9')
+TINT_R = colors.HexColor('#f7e3e0')
+ON_G = colors.HexColor('#145c39')
+ON_A = colors.HexColor('#7a5211')
+ON_R = colors.HexColor('#8a3229')
 
 BOLD = 'Helvetica-Bold'
 REG = 'Helvetica'
+MONO = 'Courier-Bold'  # stands in for td-num (IBM Plex Mono)
 
 
 # ---------------------------------------------------------------- atoms ----
-def card(g, x, y, w, h, fill=CARD, stroke=LINE, r=7, sw=0.7):
+def card(g, x, y, w, h, fill=CARD, stroke=LINE, r=2.5, sw=0.7):
     g.add(Rect(x, y, w, h, rx=r, ry=r, fillColor=fill, strokeColor=stroke, strokeWidth=sw))
 
 
@@ -42,16 +45,21 @@ def txt(g, x, y, s, size=7, color=TEXT, bold=False, anchor='start'):
                  fillColor=color, textAnchor=anchor))
 
 
-def pill(g, x, y, w, h, label, fill=TINT_B, fg=BLUE, size=6):
-    g.add(Rect(x, y, w, h, rx=h / 2, ry=h / 2, fillColor=fill, strokeColor=None))
-    txt(g, x + w / 2, y + h / 2 - size * 0.35, label, size, fg, True, 'middle')
+def mono(g, x, y, s, size=6, color=DARK, anchor='start'):
+    g.add(String(x, y, s, fontName=MONO, fontSize=size, fillColor=color, textAnchor=anchor))
 
 
-def meter(g, x, y, w, pct, color=BLUE, track=SOFT, h=4):
-    g.add(Rect(x, y, w, h, rx=h / 2, ry=h / 2, fillColor=track, strokeColor=None))
+def tag(g, x_end, y, label, fill=TINT_B, fg=BLUE, size=4.4):
+    """A td-tag, right-aligned to x_end: mono uppercase on a tint."""
+    w = len(label) * size * 0.6 + 4
+    g.add(Rect(x_end - w, y, w, size + 2.6, rx=1.2, ry=1.2, fillColor=fill, strokeColor=None))
+    mono(g, x_end - w / 2, y + 1.5, label.upper(), size, fg, 'middle')
+
+
+def meter(g, x, y, w, pct, color=BLUE, track=LINE, h=2):
+    g.add(Rect(x, y, w, h, fillColor=track, strokeColor=None))
     if pct > 0:
-        g.add(Rect(x, y, w * min(pct, 100) / 100.0, h, rx=h / 2, ry=h / 2,
-                   fillColor=color, strokeColor=None))
+        g.add(Rect(x, y, w * min(pct, 100) / 100.0, h, fillColor=color, strokeColor=None))
 
 
 def dot(g, x, y, r=2.4, color=RED):
@@ -62,12 +70,6 @@ def arrow(g, x, y, w, color=FAINT):
     """A short horizontal arrow, y is the centre line."""
     g.add(Line(x, y, x + w - 3.5, y, strokeColor=color, strokeWidth=1.1))
     g.add(Polygon([x + w - 4.5, y - 2.6, x + w, y, x + w - 4.5, y + 2.6],
-                  fillColor=color, strokeColor=None))
-
-
-def down_arrow(g, x, y, h, color=FAINT):
-    g.add(Line(x, y, x, y - h + 3.5, strokeColor=color, strokeWidth=1.1))
-    g.add(Polygon([x - 2.6, y - h + 4.5, x, y - h, x + 2.6, y - h + 4.5],
                   fillColor=color, strokeColor=None))
 
 
@@ -126,54 +128,42 @@ def glyph(g, x, y, size, kind, color):
                            fillColor=colors.white, strokeColor=None))
 
 
-def icon_tile(g, x, y, s, kind, fg, bg, r=6):
+def icon_tile(g, x, y, s, kind, fg, bg, r=2.5):
     g.add(Rect(x, y, s, s, rx=r, ry=r, fillColor=bg, strokeColor=None))
     glyph(g, x + s * .18, y + s * .18, s * .64, kind, fg)
 
 
-def ring(g, cx, cy, r, pct, color=colors.white, track=None, label=None,
-         sub=None, thick=None, label_color=colors.white):
-    thick = thick or r * 0.28
-    track = track or colors.Color(1, 1, 1, 0.25)
-    g.add(Circle(cx, cy, r, fillColor=None, strokeColor=track, strokeWidth=thick))
-    if pct > 0:
-        start = 90 - 360.0 * min(pct, 100) / 100.0
-        g.add(Wedge(cx, cy, r + thick / 2, start, 90, yradius=r + thick / 2,
-                    radius1=r - thick / 2, fillColor=color, strokeColor=None))
-    if label:
-        txt(g, cx, cy - r * .10, label, r * .52, label_color, True, 'middle')
-    if sub:
-        txt(g, cx, cy - r * .48, sub, r * .24, label_color, False, 'middle')
-
-
 # --------------------------------------------------------------- phones ----
-def phone_shell(g, x, y, w, h, title=None, tabs=None, accent=BLUE):
-    """Draws the frame and returns (bx, by, bw, bh) of the usable body area."""
-    g.add(Rect(x, y, w, h, rx=11, ry=11, fillColor=colors.HexColor('#e6ebf3'),
-               strokeColor=colors.HexColor('#c9d3e2'), strokeWidth=1))
+def phone_shell(g, x, y, w, h, title=None, tabs=None):
+    """Draws the frame and returns (bx, by, bw, bh) of the usable body area.
+
+    tabs = [(label, active, dot), ...]: the app's bottom nav, text over a 2px
+    ink rule, the active tab in bold ink.
+    """
+    g.add(Rect(x, y, w, h, rx=11, ry=11, fillColor=colors.HexColor('#e4e6e1'),
+               strokeColor=BORDER, strokeWidth=1))
     ix, iy, iw, ih = x + 3, y + 3, w - 6, h - 6
     g.add(Rect(ix, iy, iw, ih, rx=9, ry=9, fillColor=SOFT, strokeColor=None))
-    # notch
     g.add(Rect(x + w / 2 - 9, y + h - 6.5, 18, 3.2, rx=1.6, ry=1.6,
-               fillColor=colors.HexColor('#c9d3e2'), strokeColor=None))
+               fillColor=BORDER, strokeColor=None))
     top = y + h - 9
     if title:
-        txt(g, ix + 7, top - 7, title, 7.2, DARK, True)
-        top -= 13
+        txt(g, ix + 5, top - 9, title, 8.6, DARK, True)
+        top -= 15
     else:
         top -= 2
     bot = iy
     if tabs:
-        th = 13
-        g.add(Rect(ix, iy, iw, th, rx=0, ry=0, fillColor=CARD, strokeColor=None))
-        g.add(Line(ix, iy + th, ix + iw, iy + th, strokeColor=LINE, strokeWidth=0.6))
+        th = 12
+        g.add(Line(ix, iy + th, ix + iw, iy + th, strokeColor=DARK, strokeWidth=1.1))
         step = iw / float(len(tabs))
-        for i, (lab, on) in enumerate(tabs):
+        for i, (lab, on, alert) in enumerate(tabs):
             cx = ix + step * (i + .5)
-            g.add(Circle(cx, iy + th - 5, 2.1, fillColor=accent if on else FAINT, strokeColor=None))
-            txt(g, cx, iy + 2.6, lab, 4.6, accent if on else FAINT, on, 'middle')
+            txt(g, cx, iy + 4.2, lab, 4.3, DARK if on else MUTED, on, 'middle')
+            if alert:
+                dot(g, cx + len(lab) * 1.2 + 1.5, iy + 8.2, 1.1, RED)
         bot = iy + th
-    return ix + 5, bot + 4, iw - 10, top - bot - 8
+    return ix + 5, bot + 4, iw - 10, top - bot - 6
 
 
 # ------------------------------------------------------------- diagrams ----
@@ -187,9 +177,9 @@ def flow(width, steps, accent=BLUE, box_h=46, sub_lines=2):
     for i, (title, sub) in enumerate(steps):
         x = i * (bw + gap)
         card(g, x, 3, bw, box_h, CARD, LINE)
-        g.add(Circle(x + 11, 3 + box_h - 11, 7, fillColor=accent, strokeColor=None))
-        txt(g, x + 11, 3 + box_h - 13.4, str(i + 1), 7.4, colors.white, True, 'middle')
-        txt(g, x + 22, 3 + box_h - 14, title, 7.4, DARK, True)
+        g.add(Rect(x, 3 + box_h - 1.6, bw, 1.6, fillColor=accent, strokeColor=None))
+        mono(g, x + 7, 3 + box_h - 14, '%02d' % (i + 1), 7.4, accent)
+        txt(g, x + 21, 3 + box_h - 14, title, 7.4, DARK, True)
         yy = 3 + box_h - 25
         for ln in _wrap(sub, int(bw / 3.55)):
             txt(g, x + 7, yy, ln, 6.4, MUTED)
@@ -223,7 +213,7 @@ def role_trio(width):
     spec = [
         ('Head teacher', BLUE, TINT_B, 'building',
          ['Owns the centre', 'Staff, fees, branches', 'Reports and rankings', 'Edits the timetable']),
-        ('Teacher', INDIGO, TINT_I, 'person',
+        ('Teacher', DARK, SOFT, 'person',
          ['Joins with a code', 'Attendance and marks', 'Homework and notes', 'Sends reminders']),
         ('Student and parent', GREEN, TINT_G, 'phone',
          ['Signs in with a code', 'Sees everything', 'Changes nothing', 'Always notified']),
@@ -231,13 +221,12 @@ def role_trio(width):
     for i, (name, fg, bg, ic, lines) in enumerate(spec):
         x = i * (bw + gap)
         card(g, x, 0, bw, h, CARD, LINE)
-        g.add(Rect(x, h - 4, bw, 4, rx=0, ry=0, fillColor=fg, strokeColor=None))
-        g.add(Rect(x, h - 8, bw, 5, fillColor=CARD, strokeColor=None))
+        g.add(Rect(x, h - 1.8, bw, 1.8, fillColor=fg, strokeColor=None))
         icon_tile(g, x + 9, h - 34, 21, ic, fg, bg)
         txt(g, x + 36, h - 24, name, 8.2, DARK, True)
         yy = h - 48
         for ln in lines:
-            g.add(Circle(x + 12, yy + 2.2, 1.5, fillColor=fg, strokeColor=None))
+            g.add(Rect(x + 10.5, yy + 1, 3, 3, fillColor=fg, strokeColor=None))
             txt(g, x + 18, yy, ln, 6.8, TEXT)
             yy -= 11
     d.add(g)
@@ -250,7 +239,7 @@ def legend(width, items):
     g = Group()
     x = 0
     for col, lab in items:
-        g.add(Rect(x, 3, 7, 7, rx=2, ry=2, fillColor=col, strokeColor=None))
+        g.add(Rect(x, 3, 7, 7, rx=1, ry=1, fillColor=col, strokeColor=None))
         txt(g, x + 11, 4.6, lab, 7, MUTED)
         x += 11 + len(lab) * 3.6 + 14
     d.add(g)

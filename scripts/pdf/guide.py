@@ -9,7 +9,7 @@ from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT
-from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, PageBreak, KeepTogether,
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, PageBreak, CondPageBreak, KeepTogether,
                                 Table, TableStyle, ListFlowable, ListItem)
 
 import viz
@@ -270,23 +270,25 @@ E(h1('Part 2 &mdash; The head teacher',
      'A head can do everything a teacher can do, and ten things a teacher cannot.'))
 
 E(figure(phone_row(CW, [
-    ('Home', STAFF_TABS_HEAD, SC.head_home, 'Head teacher. Five tabs.'),
-    ('Home', STAFF_TABS_TEA, SC.teacher_home, 'Teacher. Four tabs, same parent reach card.'),
+    (None, STAFF_TABS_HEAD, SC.head_home, 'Head teacher. Five tabs.'),
+    (None, STAFF_TABS_TEA, SC.teacher_home, 'Teacher. Four tabs, same parent reach card.'),
 ]), 'The same home screen for both staff roles. The only difference here is the Staff tab.'))
 
 A(Paragraph('The home screen', S['h2']))
-A(Paragraph('A head opens onto the centre logo and name, a branch pill they can tap to jump '
-            'straight to branch management, a notification bell that shows a red dot when '
-            'something needs them, and two tiles &mdash; classes scheduled today, and total '
-            'students. Below that sit four quick actions: <b>Attendance</b>, <b>Results</b>, '
-            '<b>Assignment</b> and <b>Reminder</b>. Then today&rsquo;s schedule, in order.',
+A(Paragraph('There is no title bar. The home screen opens on your name, with the date and '
+            'the number of classes today underneath, then the light and dark switch, a bell that '
+            'shows a red dot when something needs you, and your initials. Below that is the branch '
+            '&mdash; a head can tap it to jump to branch management. Then the day, in sections: '
+            '<b>Today &middot; attendance</b>, <b>Fees</b> (head only), <b>Needs attention</b>, '
+            '<b>Parents &middot; this week</b>, four quick buttons (<b>Attendance</b>, <b>Results</b>, '
+            '<b>Assignment</b>, <b>Reminder</b>) and today&rsquo;s schedule, in order.',
             S['body']))
 
 A(Paragraph('Parent reach', S['h3']))
 A(Paragraph('<b>Parent reach &middot; this week</b> answers a question no attendance register '
             'can: how many families actually opened the app. It reads &ldquo;34 of 48&rdquo; with '
-            'a progress bar, and a line underneath saying how many did not open it this week. '
-            'Tapping it opens the student list already filtered to exactly those families. '
+            'a bar, and small counts underneath: never opened it, opened it once, gone quiet. '
+            'Tapping a count opens the student list already filtered to exactly those families. '
             'Both staff roles see the card, because a parent who never opens the app is a parent '
             'who never sees the absence, and it is the teacher who gets asked about that at the '
             'end of term. What the head has and the teacher does not is the chase itself: a '
@@ -302,15 +304,15 @@ A(Paragraph('The head gets a fifth tab that teachers do not: <b>Staff</b>. It is
             'of experience and qualification, with an <b>+ Add</b> button for entering a teacher '
             'directly. Teachers can see the same roster read-only from elsewhere, but cannot add '
             'to it.', S['body']))
-A(PageBreak())
+A(CondPageBreak(120 * mm))
 
 A(Paragraph('Management', S['h2']))
 A(Paragraph('Under <b>More</b>, a head sees a whole second block of items that is simply absent '
             'for a teacher.', S['body']))
 
 E(figure(phone_row(CW, [
-    ('More', STAFF_TABS_HEAD, SC.head_more, 'Head. Daily work, then the management block.'),
-    ('More', STAFF_TABS_TEA, SC.teacher_more, 'Teacher. The daily work, and then the list ends.'),
+    ('More', SC.tabs(['Home', 'Timetable', 'Students', 'Staff', 'More'], 4), SC.head_more, 'Head. Daily work, then the management block.'),
+    ('More', SC.tabs(['Home', 'Timetable', 'Students', 'More'], 3), SC.teacher_more, 'Teacher. The daily work, and then the list ends.'),
 ]), 'The More tab is where the two roles diverge most. Everything in the dashed box on the left '
     'is head-only.'))
 
@@ -403,8 +405,8 @@ E(figure(flow(CW, [
   'families it concerns.'))
 
 A(Paragraph('Mark attendance', S['h2']))
-A(Paragraph('Pick a class from the chips along the top. Two tiles count present and absent as '
-            'you go. Tap a student to toggle them between present and absent, then save. '
+A(Paragraph('Pick a class from the chips along the top. Everyone starts present, and the save button '
+            'counts present and absent as you go. Tap a student to toggle them between present and absent, then save. '
             'Switching class loads that class&rsquo;s own register, so nothing carries over.',
             S['body']))
 A(Paragraph('The screen opens on what is already recorded for today &mdash; not on a blank sheet. '
@@ -484,7 +486,12 @@ A(Paragraph('A teacher can approve students, not staff. The item sits at the top
             '<b>More</b> list with a badge when somebody is waiting, and the <b>More</b> tab '
             'itself carries a red dot so a waiting child is never missed.', S['body']))
 
+A(CondPageBreak(110 * mm))
 A(Paragraph('What a teacher deliberately cannot do', S['h2']))
+E(callout('This is a design rule, not an oversight',
+          'A feature that costs a teacher extra typing every day does not ship, because adoption '
+          'is the bottleneck. Everything below is either something a teacher already does on '
+          'paper, or something the app works out for itself.', AMBER))
 E(table(['Screen', 'What is different for a teacher'],
         [['Students', 'Read-only. No <b>+ Add</b>, no fee amounts, rows do not open, and no '
                       'WhatsApp chase button.'],
@@ -497,10 +504,6 @@ E(table(['Screen', 'What is different for a teacher'],
          ['Home', 'The parent reach card is there, and taps through to the families who did '
                   'not open the app. The WhatsApp chase button on that list is not.']],
         [36 * mm, 134 * mm]))
-E(callout('This is a design rule, not an oversight',
-          'A feature that costs a teacher extra typing every day does not ship, because adoption '
-          'is the bottleneck. Everything above is either something a teacher already does on '
-          'paper, or something the app works out for itself.', AMBER))
 A(PageBreak())
 
 # --------------------------------------------------------------- student ---
@@ -508,9 +511,9 @@ E(h1('Part 4 &mdash; The student and parent',
      'Twelve screens, all read-only. Nothing here can be edited by the child.'))
 
 E(figure(phone_row(CW, [
-    ('Home', STU_TABS, SC.stu_home, 'Home. Attendance, rank, and a way into everything else.'),
-    ('Attendance', STU_TABS, SC.stu_attendance, 'Attendance. The overall ring, then every day.'),
-    ('Results', STU_TABS, SC.stu_results, 'Results. A grade per test and an average across all.'),
+    (None, STU_TABS, SC.stu_home, 'Home. Attendance, rank, and a way into everything else.'),
+    ('Attendance', STU_TABS, SC.stu_attendance, 'Attendance. The overall percentage, then every day.'),
+    ('Test results', SC.tabs(SC.STU_LABELS, 1), SC.stu_results, 'Results. A grade per test and an average across all.'),
 ]), 'Three of the five student tabs. Nothing on any of them can be changed by the child.'))
 
 A(Paragraph('The five tabs', S['h2']))
@@ -520,11 +523,11 @@ A(Paragraph('A signed-in student gets <b>Home</b>, <b>Results</b>, <b>Ranking</b
 
 E(table(['Screen', 'What it shows'],
         [['Home',
-          'The centre logo and name, the branch, an attendance tile, a rank tile, the day&rsquo;s '
-          'classes, and shortcuts into everything below. A bell shows a dot when there is '
-          'something new.'],
+          'The student&rsquo;s name, a red banner when a fee is due, the branch, the attendance '
+          'percentage over a bar, their standing (rank and tests this month), shortcuts to '
+          'timetable, homework and material, and the latest marks.'],
          ['Attendance',
-          'A large ring with the overall present percentage, a line reading how many class days '
+          'A large overall present percentage over a green and red bar, a line reading how many class days '
           'were attended out of how many, and how many absences and leaves there were recently. '
           'Then a day-by-day log.'],
          ['Test Results',
@@ -587,7 +590,7 @@ E(callout('This is the strictest rule in the product',
 
 A(Paragraph('Honest empty states', S['h2']))
 A(Paragraph('When there is genuinely no data, the app says so rather than showing a zero. A '
-            'student never marked shows a dash on the attendance tile, not 0%. An empty homework '
+            'student never marked shows a dash on the attendance figure, not 0%. An empty homework '
             'list reads &ldquo;No homework assigned yet. New assignments from your teacher will '
             'appear here.&rdquo; A parent should never mistake &ldquo;nothing recorded&rdquo; for '
             '&ldquo;nothing achieved&rdquo;.', S['body']))
@@ -654,7 +657,7 @@ A(Paragraph('Errors that stay long enough to read', S['h2']))
 A(Paragraph('Success messages disappear after a couple of seconds. Error messages hold for nine, '
             'are announced to screen readers, and can be dismissed by tapping. An error nobody '
             'read is an error that happens again.', S['body']))
-A(PageBreak())
+A(CondPageBreak(120 * mm))
 
 E(h1('Part 6 &mdash; Quick reference', 'The complete split, in one table.'))
 E([legend(CW, [(GREEN, 'Full access'), (AMBER, 'Partial or view-only'),
