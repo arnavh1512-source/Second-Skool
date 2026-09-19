@@ -13,6 +13,7 @@ export function StaffApprovalsScreen() {
   const { back, staffList, loadStaff, loadMyCentre, joinCode, centreName, approveTeacher, rejectTeacher, grantHead, removeStaff, supabaseUserId, role, regenerateJoinCode, notify } = useDashboard()
   const [confirmRotate, setConfirmRotate] = useState(false)
   const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
+  const [rejecting, setRejecting] = useState<{ id: string; name: string } | null>(null)
 
   // Reload on open, and live-refresh whenever any profile changes (e.g. a new
   // teacher registers) so pending requests appear without leaving the screen.
@@ -39,6 +40,14 @@ export function StaffApprovalsScreen() {
         onConfirm={() => { if (removing) removeStaff(removing.id); setRemoving(null) }}
         onCancel={() => setRemoving(null)}
       />
+      <ConfirmDialog
+        open={!!rejecting}
+        title={`Reject ${rejecting?.name ?? 'this request'}?`}
+        body="They will not get access to this centre. They would have to ask to join again."
+        confirmLabel="Reject"
+        onConfirm={() => { if (rejecting) rejectTeacher(rejecting.id); setRejecting(null) }}
+        onCancel={() => setRejecting(null)}
+      />
 
       <div className="text-td-small text-td-muted leading-relaxed mb-4 lg:max-w-2xl">Approve teachers so they can mark attendance and enter marks. Grant head access only to people you fully trust.</div>
 
@@ -53,7 +62,7 @@ export function StaffApprovalsScreen() {
 
       {joinCode && (
         <CodeCard
-          className="lg:max-w-md rounded-td-md mb-5"
+          className="lg:max-w-md rounded-td mb-5"
           label={`${centreName || 'Your centre'} · JOIN CODE`}
           code={joinCode}
           hint="Share with teachers so they can join your centre."
@@ -69,11 +78,11 @@ export function StaffApprovalsScreen() {
 
       <div className="td-h2">Pending approval {pending.length > 0 && <span className="text-td-red">· {pending.length}</span>}</div>
       {pending.length === 0 ? (
-        <div className="text-center text-td-muted text-td-small py-4 td-card rounded-td-md mb-6">No one waiting</div>
+        <div className="text-center text-td-muted text-td-small py-4 td-card rounded-td mb-6">No one waiting</div>
       ) : (
         <div className="td-list gap-2.5 mb-6">
           {pending.map(s => (
-            <div key={s.id} className="td-card rounded-td-md p-3.5">
+            <div key={s.id} className="td-card rounded-td p-3.5">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 td-avatar">{initials(s.name)}</div>
                 <div className="flex-1 min-w-0">
@@ -85,7 +94,7 @@ export function StaffApprovalsScreen() {
                   because verifying an applicant by calling them is the whole
                   reason it's collected. */}
               {(s.phone || s.subject || s.qualification) && (
-                <div className="bg-td-soft border border-td-border rounded-td-sm p-2.5 mb-3 flex flex-col gap-1.5">
+                <div className="bg-td-soft border border-td-border rounded-td p-2.5 mb-3 flex flex-col gap-1.5">
                   {s.phone && (
                     <div className="flex items-center gap-2 text-td-caption">
                       <span className="text-td-subtle w-[68px] shrink-0">Phone</span>
@@ -107,8 +116,8 @@ export function StaffApprovalsScreen() {
                 </div>
               )}
               <div className="flex gap-2.5">
-                <button onClick={() => approveTeacher(s.id)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
-                <button onClick={() => rejectTeacher(s.id)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Reject</button>
+                <button onClick={() => approveTeacher(s.id)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold min-h-11 py-2.5 rounded-td cursor-pointer">Approve</button>
+                <button onClick={() => setRejecting({ id: s.id, name: s.name })} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-semibold min-h-11 py-2.5 rounded-td cursor-pointer">Reject</button>
               </div>
             </div>
           ))}
@@ -117,28 +126,28 @@ export function StaffApprovalsScreen() {
 
       <div className="td-h2">Active staff</div>
       {active.length === 0 ? (
-        <div className="text-center text-td-muted text-td-small py-4 td-card rounded-td-md">No active staff yet</div>
+        <div className="text-center text-td-muted text-td-small py-4 td-card rounded-td">No active staff yet</div>
       ) : (
         <div className="td-list gap-2.5">
           {active.map(s => {
             const isHead = s.role === 'admin'
             const isSelf = s.id === supabaseUserId
             return (
-              <div key={s.id} className="td-card rounded-td-md p-3.5">
+              <div key={s.id} className="td-card rounded-td p-3.5">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 td-avatar">{initials(s.name)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="text-td-small td-strong truncate">{s.name}{isSelf && <span className="text-td-muted font-semibold"> · you</span>}</div>
                     <div className="text-td-caption text-td-muted truncate">{s.email}</div>
                   </div>
-                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-lg" style={{ color: isHead ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: isHead ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{isHead ? 'Head' : 'Teacher'}</span>
+                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td" style={{ color: isHead ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: isHead ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{isHead ? 'Head' : 'Teacher'}</span>
                 </div>
                 {!isHead && (
                   <div className="flex gap-2.5 mt-3">
-                    <button onClick={() => grantHead(s.id)} className="flex-1 border border-td-primary bg-td-card text-td-primary text-td-caption font-semibold py-2.5 rounded-td-sm cursor-pointer">
+                    <button onClick={() => grantHead(s.id)} className="flex-1 border border-td-primary bg-td-card text-td-primary text-td-caption font-semibold min-h-11 py-2.5 rounded-td cursor-pointer">
                       Make head teacher
                     </button>
-                    <button onClick={() => setRemoving({ id: s.id, name: s.name })} className="td-danger text-td-caption font-semibold py-2.5 px-4 rounded-td-sm">Remove</button>
+                    <button onClick={() => setRemoving({ id: s.id, name: s.name })} className="td-danger text-td-caption font-semibold min-h-11 py-2.5 px-4 rounded-td">Remove</button>
                   </div>
                 )}
               </div>
@@ -175,7 +184,7 @@ export function StudentRequestsScreen() {
 
       {studentJoinCode && (
         <CodeCard
-          className="lg:max-w-md rounded-td-md mb-5"
+          className="lg:max-w-md rounded-td mb-5"
           label={`${centreName || 'Your centre'} · STUDENT CODE`}
           code={studentJoinCode}
           hint="Share with students so they can register themselves."
@@ -194,7 +203,7 @@ export function StudentRequestsScreen() {
 
       <div className="td-h2">Pending {pendingStudents.length > 0 && <span className="text-td-red">· {pendingStudents.length}</span>}</div>
       {pendingStudents.length === 0 ? (
-        <div className="text-center text-td-muted text-td-small py-6 td-card rounded-td-md">No requests waiting</div>
+        <div className="text-center text-td-muted text-td-small py-6 td-card rounded-td">No requests waiting</div>
       ) : (
         <div className="td-list gap-2.5">
           {pendingStudents.map(s => (
@@ -228,7 +237,7 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
   const [busy, run] = useBusy()
   const [confirmRemove, setConfirmRemove] = useState(false)
   return (
-    <div className="td-card rounded-td-md p-3.5 flex items-center gap-3">
+    <div className="td-card rounded-td p-3.5 flex items-center gap-3">
       <ConfirmDialog
         open={confirmRemove}
         title="Sign this phone out?"
@@ -240,7 +249,7 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
       <div className="min-w-0 flex-1">
         <div className="font-semibold text-td-body truncate">
           {d.studentName}
-          {d.recent && d.allowed && <span className="ml-2 text-td-caption font-semibold text-td-amber bg-td-tint-amber py-0.5 px-2 rounded-td-lg">New</span>}
+          {d.recent && d.allowed && <span className="ml-2 text-td-caption font-semibold text-td-amber bg-td-tint-amber py-0.5 px-2 rounded-td">New</span>}
         </div>
         <div className="text-td-caption text-td-subtle truncate">{d.label}</div>
         <div className="text-td-caption text-td-subtle">
@@ -250,7 +259,7 @@ function StudentDeviceRow({ d, onAllow, onRemove }: {
       {!d.allowed && (
         <button
           onClick={() => run(() => onAllow(d.dbId))} disabled={busy}
-          className="td-pill text-td-small font-semibold py-2 px-4 rounded-td-sm cursor-pointer disabled:opacity-50"
+          className="td-pill text-td-small font-semibold py-2 px-4 rounded-td cursor-pointer disabled:opacity-50"
         >Allow</button>
       )}
       <button
@@ -269,6 +278,7 @@ function StudentRequestCard({ s, branches, batchList, onApprove, onReject }: {
   onReject: (dbId: string) => Promise<void>
 }) {
   const [open, setOpen] = useState(false)
+  const [declining, setDeclining] = useState(false)
   const [busy, run] = useBusy()
   const [klass, setKlass] = useState(s.klass)
   const [branch, setBranch] = useState('')
@@ -282,7 +292,15 @@ function StudentRequestCard({ s, branches, batchList, onApprove, onReject }: {
   })
 
   return (
-    <div className="td-card rounded-td-md p-3.5 self-start">
+    <div className="td-card rounded-td p-3.5 self-start">
+      <ConfirmDialog
+        open={declining}
+        title={`Decline ${s.name}?`}
+        body="Their request is removed. They would have to ask to join again."
+        confirmLabel="Decline"
+        onConfirm={() => { setDeclining(false); onReject(s.dbId) }}
+        onCancel={() => setDeclining(false)}
+      />
       <div className="flex items-center gap-3 mb-2.5">
         <div className="w-10 h-10 td-avatar">{initials(s.name)}</div>
         <div className="flex-1 min-w-0">
@@ -291,7 +309,7 @@ function StudentRequestCard({ s, branches, batchList, onApprove, onReject }: {
         </div>
         {s.when && <span className="text-td-caption text-td-subtle shrink-0">{s.when}</span>}
       </div>
-      <div className="text-td-caption text-td-muted leading-relaxed mb-3 bg-td-soft rounded-td-sm p-2.5">
+      <div className="text-td-caption text-td-muted leading-relaxed mb-3 bg-td-soft rounded-td p-2.5">
         <div>Parent: <span className="font-semibold text-td-text">{s.parent || '—'}</span></div>
         {s.address && <div>Address: <span className="font-semibold text-td-text">{s.address}</span></div>}
         <div>Code: <span className="font-semibold text-td-text tracking-wide">{s.code}</span></div>
@@ -299,8 +317,8 @@ function StudentRequestCard({ s, branches, batchList, onApprove, onReject }: {
 
       {!open ? (
         <div className="flex gap-2.5">
-          <button onClick={() => setOpen(true)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Approve</button>
-          <button onClick={() => onReject(s.dbId)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer">Decline</button>
+          <button onClick={() => setOpen(true)} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold min-h-11 py-2.5 rounded-td cursor-pointer">Approve</button>
+          <button onClick={() => setDeclining(true)} className="flex-1 border border-td-border bg-td-card text-td-muted text-td-small font-semibold min-h-11 py-2.5 rounded-td cursor-pointer">Decline</button>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -339,8 +357,8 @@ function StudentRequestCard({ s, branches, batchList, onApprove, onReject }: {
             </div>
           </div>
           <div className="flex gap-2.5 mt-0.5">
-            <button onClick={confirm} disabled={busy} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold py-2.5 rounded-td-sm cursor-pointer disabled:opacity-60">{busy ? 'Approving…' : 'Confirm approval'}</button>
-            <button onClick={() => setOpen(false)} className="border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-2.5 px-4 rounded-td-sm cursor-pointer">Cancel</button>
+            <button onClick={confirm} disabled={busy} className="flex-1 border-none bg-td-green text-td-on-solid text-td-small font-semibold min-h-11 py-2.5 rounded-td cursor-pointer disabled:opacity-60">{busy ? 'Approving…' : 'Confirm approval'}</button>
+            <button onClick={() => setOpen(false)} className="border border-td-border bg-td-card text-td-muted text-td-small font-semibold min-h-11 py-2.5 px-4 rounded-td cursor-pointer">Cancel</button>
           </div>
         </div>
       )}
@@ -357,16 +375,16 @@ export function ReportsScreen() {
   return (
     <div className="td-wide td-screen">
       <ScreenHeader title={period === 7 ? 'Weekly Report' : 'Monthly Report'} onBack={back} right={
-        <div className="flex bg-td-soft rounded-td-sm p-[3px]">
+        <div className="flex bg-td-soft rounded-td p-[3px]">
           {([7, 30] as const).map(d => (
-            <button key={d} onClick={() => setPeriod(d)} className="text-td-caption font-semibold py-[7px] px-3 rounded-td-sm cursor-pointer border-none" style={{ background: period === d ? 'var(--color-td-card)' : 'transparent', color: period === d ? 'var(--color-td-primary)' : 'var(--color-td-muted)', boxShadow: period === d ? 'var(--shadow-td-card)' : 'none' }}>{d === 7 ? 'Week' : 'Month'}</button>
+            <button key={d} onClick={() => setPeriod(d)} className="text-td-caption font-semibold py-[7px] px-3 rounded-td cursor-pointer border-none" style={{ background: period === d ? 'var(--color-td-card)' : 'transparent', color: period === d ? 'var(--color-td-primary)' : 'var(--color-td-muted)', boxShadow: period === d ? 'var(--shadow-td-card)' : 'none' }}>{d === 7 ? 'Week' : 'Month'}</button>
           ))}
         </div>
       } />
 
       <div className="flex gap-2 mb-4 lg:max-w-md">
         {(['branches', 'students', 'teachers'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 text-td-caption font-semibold py-2.5 rounded-td-sm cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}>{t}</button>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 text-td-caption font-semibold py-2.5 rounded-td cursor-pointer border capitalize ${tab === t ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card text-td-text border-td-border'}`}>{t}</button>
         ))}
       </div>
 
@@ -374,18 +392,18 @@ export function ReportsScreen() {
         !teacherActivity ? (
           <div className="text-center text-td-muted text-td-small py-12">Loading activity…</div>
         ) : teacherActivity.length === 0 ? (
-          <div className="text-center text-td-muted text-td-small py-10 td-card rounded-td-md">No approved staff yet.</div>
+          <div className="text-center text-td-muted text-td-small py-10 td-card rounded-td">No approved staff yet.</div>
         ) : (
           <div className="td-list gap-3">
             <div className="text-td-caption text-td-muted mb-1 lg:col-span-full">What each staff member logged in the last {period} days.</div>
             {teacherActivity.map((t, i) => (
-              <div key={`${t.email}-${i}`} className="td-card rounded-td-lg p-4">
+              <div key={`${t.email}-${i}`} className="td-card rounded-td p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="text-td-body td-strong">{t.name || t.email}</div>
                     <div className="text-td-caption text-td-muted">{t.email}</div>
                   </div>
-                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td-lg" style={{ color: t.is_head ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: t.is_head ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{t.is_head ? 'Head' : 'Teacher'}</span>
+                  <span className="text-td-caption font-semibold py-[5px] px-2.5 rounded-td" style={{ color: t.is_head ? 'var(--color-td-primary)' : 'var(--color-td-green)', background: t.is_head ? 'var(--color-td-tint-blue)' : 'var(--color-td-tint-green)' }}>{t.is_head ? 'Head' : 'Teacher'}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   {[
@@ -393,7 +411,7 @@ export function ReportsScreen() {
                     { v: t.tests_entered, l: 'Results' },
                     { v: t.assignments_created, l: 'Assignments' },
                   ].map(x => (
-                    <div key={x.l} className="bg-td-soft rounded-td-sm py-2.5">
+                    <div key={x.l} className="bg-td-soft rounded-td py-2.5">
                       <div className="text-td-title td-strong leading-none">{x.v}</div>
                       <div className="text-td-caption text-td-muted mt-1 font-semibold">{x.l}</div>
                     </div>
@@ -420,13 +438,13 @@ export function ReportsScreen() {
             {studentReports.map((s, i) => {
               const attPct = s.att_total > 0 ? Math.round((s.att_present / s.att_total) * 100) : null
               return (
-                <div key={`${s.name}-${s.klass}-${i}`} className="td-card rounded-td-lg p-4">
+                <div key={`${s.name}-${s.klass}-${i}`} className="td-card rounded-td p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <div className="text-td-body td-strong">{s.name}</div>
                       <div className="text-td-caption text-td-muted">{s.klass}</div>
                     </div>
-                    <span className="text-td-caption font-semibold py-[5px] px-[9px] rounded-td-lg" style={{ color: s.fee_status === 'Paid' ? 'var(--color-td-green)' : 'var(--color-td-amber)', background: s.fee_status === 'Paid' ? 'var(--color-td-tint-green)' : 'var(--color-td-tint-amber)' }}>{s.fee_status}</span>
+                    <span className="text-td-caption font-semibold py-[5px] px-[9px] rounded-td" style={{ color: s.fee_status === 'Paid' ? 'var(--color-td-green)' : 'var(--color-td-amber)', background: s.fee_status === 'Paid' ? 'var(--color-td-tint-green)' : 'var(--color-td-tint-amber)' }}>{s.fee_status}</span>
                   </div>
                   <div className="text-td-caption text-td-muted mb-3">Attendance: <span className="font-semibold text-td-text">{attPct === null ? '—' : `${attPct}%`}</span> · Tests: <span className="font-semibold text-td-text">{s.tests}{s.tests > 0 ? ` (avg ${s.avg_pct}%)` : ''}</span></div>
                   <WhatsAppButton
@@ -434,7 +452,7 @@ export function ReportsScreen() {
                     message={studentReportMessage(s, centreName || undefined, period)}
                     label="Send to parent"
                     unavailableLabel="No parent number"
-                    className="w-full text-td-small py-2.5 rounded-td-sm"
+                    className="w-full text-td-small py-2.5 rounded-td"
                   />
                 </div>
               )
@@ -448,11 +466,11 @@ export function ReportsScreen() {
           <div className="text-td-caption text-td-muted mb-4">Last {period} days · as of {fmtDate(r.generated_at)}</div>
 
           {r.branches.length === 0 ? (
-            <div className="td-none td-card rounded-td-md mb-4">No branches configured yet — add branches and assign students to see per-branch numbers.</div>
+            <div className="td-none td-card rounded-td mb-4">No branches configured yet — add branches and assign students to see per-branch numbers.</div>
           ) : (
             <div className="td-list gap-3 mb-4">
               {r.branches.map((b, i) => (
-                <div key={`${b.name}-${i}`} className="td-card rounded-td-lg p-4">
+                <div key={`${b.name}-${i}`} className="td-card rounded-td p-4">
                   <div className="td-h2">{b.name}</div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
@@ -473,13 +491,13 @@ export function ReportsScreen() {
             </div>
           )}
 
-          <div className="bg-td-soft border border-td-border rounded-td-md p-3.5 text-td-caption text-td-muted mb-4 lg:max-w-xl">
+          <div className="bg-td-soft border border-td-border rounded-td p-3.5 text-td-caption text-td-muted mb-4 lg:max-w-xl">
             {/* Students created before any branch existed belong to no branch, so
                 the per-branch totals above legitimately exclude them. Buried as a
                 grey footnote this read as "complete"; it now looks like the
                 caveat it is. */}
             {r.unassigned_students > 0 && (
-              <div className="bg-td-tint-amber border border-td-edge-amber rounded-td-sm p-2.5 text-td-amber font-semibold">
+              <div className="bg-td-tint-amber border border-td-edge-amber rounded-td p-2.5 text-td-amber font-semibold">
                 {r.unassigned_students} student{r.unassigned_students === 1 ? '' : 's'} not assigned to any branch — they are not counted in the per-branch totals above.
               </div>
             )}
@@ -490,7 +508,7 @@ export function ReportsScreen() {
             phone={myPhone}
             message={weeklyReportMessage(r, centreName || undefined, period)}
             label="Send to WhatsApp"
-            className="w-full lg:max-w-md text-td-body py-[14px] rounded-td-md"
+            className="w-full lg:max-w-md text-td-body py-[14px] rounded-td"
           />
           <div className="text-td-caption text-td-subtle text-center mt-3 leading-relaxed">Opens WhatsApp with the report ready to send to yourself or a co-owner.</div>
         </>

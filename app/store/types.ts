@@ -18,7 +18,7 @@ export type Screen =
   | 'support' | 'supportThread'
 
 export type Tab = 'home' | 'timetable' | 'students' | 'teachers' | 'more'
-  | 'stuHome' | 'stuResults' | 'stuRanking' | 'stuTeachers' | 'stuProfile'
+  | 'stuHome' | 'stuResults' | 'stuFees' | 'stuTeachers' | 'stuProfile'
 export type Role = 'admin' | 'teacher' | 'student' | null
 export type StaffStatus = 'none' | 'pending' | 'approved' | 'rejected'
 export type FeeStatus = 'Paid' | 'Due' | 'Overdue'
@@ -37,12 +37,12 @@ export interface StudentDevice { dbId: string; studentId: string; studentName: s
 
 export interface PendingStudent { dbId: string; name: string; klass: string; school: string; parent: string; address: string; code: string; when: string }
 
-export interface ScheduleItem { time: string; ampm: string; subject: string; klass: string; room: string; status: string; statusColor: string; statusBg: string }
+export interface ScheduleItem { time: string; ampm: string; subject: string; klass: string; room: string; status: string }
 export interface MeetingItem { day: string; mon: string; title: string; time: string; kind: string; dbId?: string }
 export interface AssignmentItem { title: string; due: string; klass: string; submitted: number; total: number; dbId?: string }
 export interface BranchItem { name: string; address: string; students: number; staff: number; main: boolean; dbId?: string }
 export interface StuResultItem { subject: string; test: string; date: string; marks: number; total: number }
-export interface AttLogItem { day: string; date: string; status: string; icon: string; tint: string }
+export interface AttLogItem { day: string; date: string; iso: string; status: string; icon: string; tint: string }
 export interface StuAssignmentItem { title: string; subject: string; due: string; instructions: string }
 interface NoteItem { dbId?: string; title: string; subject: string; klass: string; body: string; fileUrl: string; linkUrl: string }
 interface StuNoteItem { title: string; subject: string; body: string; fileUrl: string; linkUrl: string; date: string }

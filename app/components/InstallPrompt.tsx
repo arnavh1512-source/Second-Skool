@@ -136,7 +136,7 @@ export function InstallPrompt() {
       <button
         type="button"
         onClick={ios && !deferred ? () => setShowIosSteps(true) : install}
-        className="shrink-0 bg-td-card text-td-dark text-td-small font-semibold px-4 py-2 rounded-td-sm cursor-pointer"
+        className="shrink-0 bg-td-card text-td-dark text-td-small font-semibold px-4 py-2 rounded-td cursor-pointer"
       >
         {ios && !deferred ? 'How' : 'Install'}
       </button>

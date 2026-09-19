@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { isoDay, parseDay } from '../store/format'
 import { useDashboard } from '../store'
-import { PrimaryButton, EmptyState, Chip, classesOf } from './Shell'
+import { PrimaryButton, EmptyState, Chip, ConfirmDialog, classesOf } from './Shell'
 import { earliestMarkableDay, pickAttendanceClass, seedMarks } from '../lib/attendance'
 import { queuedMarksForDay } from '../lib/att-queue'
 import { Icon } from './Icon'
@@ -83,16 +83,25 @@ export function AttendanceScreen() {
   // on the screen under yesterday's date.
   const ready = (lastSyncedAt !== null || attQueue.length > 0) && loaded
   const seededFor = useRef<string | null>(null)
+  // What the register looked like when she last seeded or saved it, so leaving
+  // a class can tell her taps apart from what the centre already has.
+  const baseline = useRef<Record<string, string>>({})
+  const [leaving, setLeaving] = useState<string | null>(null)
   useEffect(() => {
     if (!ready) return
     const seedKey = `${day}|${selClass}`
     if (seededFor.current === seedKey) return
     seededFor.current = seedKey
-    set({
-      attClass: selClass,
-      att: seedMarks(roster, recorded, queuedMarksForDay(attQueue, day)),
-    })
+    baseline.current = seedMarks(roster, recorded, queuedMarksForDay(attQueue, day))
+    set({ attClass: selClass, att: baseline.current })
   }, [ready, day, selClass, roster, recorded, attQueue, set])
+  const switchClass = (name: string) => set({ attClass: name, att: {} })
+  const pickClass = (name: string) => {
+    if (name === selClass) return
+    const unsaved = roster.some(s => att[studentKey(s)] !== baseline.current[studentKey(s)])
+    if (unsaved) setLeaving(name)
+    else switchClass(name)
+  }
   const absentCount = roster.reduce((a, s) => a + (att[studentKey(s)] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 
@@ -112,7 +121,7 @@ export function AttendanceScreen() {
           cannot: correcting a register the phone is unable to read back would
           mean saving a screen full of Presents over marks nobody can see. */}
       <div className="flex flex-wrap items-center gap-2.5 mb-4">
-        <label htmlFor="att-day" className="text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">Day</label>
+        <label htmlFor="att-day" className="td-eyebrow">Day</label>
         <input
           id="att-day"
           type="date"
@@ -121,7 +130,7 @@ export function AttendanceScreen() {
           min={isoDay(earliestMarkableDay(new Date()))}
           disabled={!online}
           onChange={e => { setDay(e.target.value || today); setLoadFailed(false) }}
-          className="td-num border border-td-border bg-td-card rounded-td-sm px-3 py-2 min-h-11 text-td-small text-td-dark disabled:opacity-60"
+          className="td-num border border-td-border bg-td-card rounded-td px-3 py-2 min-h-11 text-td-small text-td-dark disabled:opacity-60"
         />
         {correcting && (
           <button onClick={() => { setDay(today); setLoadFailed(false) }} className="td-plain text-td-small font-semibold text-td-dark underline min-h-11 cursor-pointer">
@@ -176,11 +185,19 @@ export function AttendanceScreen() {
         />
       ) : (
         <>
+          <ConfirmDialog
+            open={!!leaving}
+            title={`Leave ${selClass} without saving?`}
+            body="The marks you changed in this class are not saved yet and will be lost."
+            confirmLabel="Leave without saving"
+            onConfirm={() => { if (leaving) switchClass(leaving); setLeaving(null) }}
+            onCancel={() => setLeaving(null)}
+          />
           <div className="flex flex-wrap gap-[7px] mb-5">
             {classes.map(name => {
               const active = name === selClass
               return (
-                <Chip key={name} active={active} onClick={() => set({ attClass: name, att: {} })}>{name}</Chip>
+                <Chip key={name} active={active} onClick={() => pickClass(name)}>{name}</Chip>
               )
             })}
           </div>
@@ -214,6 +231,7 @@ export function AttendanceScreen() {
             <PrimaryButton onClick={() => {
               if (!loaded) { notify('That day’s register has not loaded yet', 'error'); return }
               saveAttendance(roster, day)
+              baseline.current = { ...att }
             }}>{correcting ? 'Save correction' : 'Save'} · {presentCount} present, {absentCount} absent</PrimaryButton>
           </div>
         </>

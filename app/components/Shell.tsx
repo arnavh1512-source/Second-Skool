@@ -9,7 +9,7 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
     // Mobile: fills the screen (no bezel). md+: framed phone mockup.
     <div className="min-h-[var(--app-h)] w-full flex md:items-center md:justify-center md:bg-td-line md:p-10">
-      <div className="w-full flex md:max-w-[402px] md:bg-[#0b0d12] md:rounded-[56px] md:p-[13px] md:shadow-[0_40px_90px_-20px_rgba(20,30,60,.45)]">
+      <div className="w-full flex md:max-w-[402px] md:bg-td-bezel md:rounded-[56px] md:p-[13px] md:shadow-td-bezel">
         <div className="relative w-full app-frame md:aspect-[376/812] bg-td-bg md:rounded-[44px] overflow-hidden flex flex-col">
           <StatusBar />
           <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide pt-[env(safe-area-inset-top)] md:pt-0">{children}</div>
@@ -26,7 +26,7 @@ function StatusBar() {
     // Fake status bar is only for the desktop mockup; real phones have their own.
     <div className="hidden md:flex h-12 shrink-0 items-end justify-between px-7 pb-1.5 text-td-small font-semibold text-td-dark z-5">
       <span>9:41</span>
-      <div className="absolute left-1/2 top-2 -translate-x-1/2 w-[118px] h-[30px] bg-[#0b0d12] rounded-td-lg" />
+      <div className="absolute left-1/2 top-2 -translate-x-1/2 w-[118px] h-[30px] bg-td-bezel rounded-td" />
       <div className="flex items-center gap-1.5">
         <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="7" width="3" height="5" rx="1" fill="var(--color-td-dark)"/><rect x="4.5" y="4.5" width="3" height="7.5" rx="1" fill="var(--color-td-dark)"/><rect x="9" y="2" width="3" height="10" rx="1" fill="var(--color-td-dark)"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="var(--color-td-dark)"/></svg>
         <svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" fill="none" stroke="var(--color-td-dark)" opacity="0.4"/><rect x="2.5" y="2.5" width="16" height="8" rx="1.5" fill="var(--color-td-dark)"/><rect x="24" y="4" width="2" height="5" rx="1" fill="var(--color-td-dark)" opacity="0.4"/></svg>
@@ -48,7 +48,7 @@ function BottomTabBar() {
     items = [
       { key: 'stuHome', label: 'Home', screen: 'stuHome', icon: (c) => <Icon name="home" size={21} color={c} /> },
       { key: 'stuResults', label: 'Results', screen: 'stuResults', icon: (c) => <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M5 21V9"/><path d="M12 21V4"/><path d="M19 21v-7"/></svg> },
-      { key: 'stuRanking', label: 'Ranking', screen: 'stuRanking', icon: (c) => <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg> },
+      { key: 'stuFees', label: 'Fees', screen: 'stuFees', icon: (c) => <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 4h12"/><path d="M6 9h12"/><path d="M14 20 7 13h2.5a4.5 4.5 0 0 0 0-9"/></svg> },
       { key: 'stuTeachers', label: 'Teachers', screen: 'stuTeachers', icon: (c) => <Icon name="students" size={21} color={c} /> },
       { key: 'stuProfile', label: 'Profile', screen: 'stuProfile', icon: (c) => <Icon name="person" size={21} color={c} /> },
     ]
@@ -79,7 +79,7 @@ function BottomTabBar() {
               {t.icon(c)}
               {t.alert && <span className="absolute -top-0.5 -right-1 w-[9px] h-[9px] rounded-full bg-td-red border-2 border-td-bg" />}
             </span>
-            <span className={`text-td-caption ${on ? 'font-semibold' : 'font-normal'}`} style={{ color: c }}>{t.label}</span>
+            <span className={`text-td-small ${on ? 'font-semibold' : 'font-normal'}`} style={{ color: c }}>{t.label}</span>
           </button>
         )
       })}
@@ -113,7 +113,7 @@ function Toast() {
     <div
       role={err ? 'alert' : 'status'}
       aria-live={err ? 'assertive' : 'polite'}
-      className={`absolute left-5 right-5 bottom-[104px] z-30 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-td-tint-red text-td-on-red border border-td-edge-red' : 'bg-td-dark text-td-bg'}`}
+      className={`absolute left-5 right-5 bottom-[calc(104px+env(safe-area-inset-bottom))] z-30 shadow-td-overlay animate-[toastIn_.25s_ease] ${err ? 'bg-td-tint-red text-td-on-red border border-td-edge-red' : 'bg-td-dark text-td-bg'}`}
     >
       <button
         type="button"
@@ -153,7 +153,7 @@ export function WhatsAppButton({ phone, message, label, unavailableLabel, classN
   unavailableLabel?: string
   className?: string
 }) {
-  const base = `bg-[#25D366] text-white font-semibold flex items-center justify-center gap-2 ${className}`
+  const base = `bg-td-whatsapp text-white font-semibold flex items-center justify-center gap-2 ${className}`
   // No number on file. Say so in place of the button rather than offering a
   // link that opens WhatsApp with nobody in the To field.
   if (!phone) return <div className={`${base} opacity-50`}><WhatsAppIcon />{unavailableLabel ?? label}</div>
@@ -175,7 +175,8 @@ export function Chip({ active, onClick, children }: {
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 text-td-small py-[11px] px-[15px] min-h-11 rounded-full cursor-pointer border ${active ? 'font-semibold bg-td-dark text-td-bg border-td-dark' : 'font-medium bg-td-card text-td-text border-td-border'}`}
+      aria-pressed={active}
+      className="td-chip"
     >{children}</button>
   )
 }
@@ -187,14 +188,14 @@ export function EmptyState({ title, hint, actionLabel, onAction }: {
   onAction?: () => void
 }) {
   return (
-    <div className="text-center td-card rounded-td-md py-9 px-6">
+    <div className="text-center td-card rounded-td py-9 px-6">
       <div className="text-td-body td-strong mb-1.5">{title}</div>
       {hint && <p className="text-td-small text-td-muted leading-relaxed max-w-[290px] mx-auto mb-0">{hint}</p>}
       {actionLabel && onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="td-pill mt-4 text-td-small font-semibold px-5 py-2.5 rounded-td-sm cursor-pointer"
+          className="td-pill mt-4 text-td-small font-semibold px-5 py-2.5 rounded-td cursor-pointer"
         >
           {actionLabel}
         </button>
@@ -275,7 +276,7 @@ export function PrimaryButton({ onClick, children }: { onClick: () => unknown; c
       onClick={guard}
       disabled={busy}
       aria-busy={busy}
-      className="td-pill w-full text-td-body font-semibold py-[15px] min-h-[52px] rounded-td-md cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
+      className="td-pill w-full text-td-body font-semibold py-[15px] min-h-[52px] rounded-td cursor-pointer flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-default"
     >
       {busy && <Spinner />}
       {children}
@@ -290,9 +291,11 @@ export function PrimaryButton({ onClick, children }: { onClick: () => unknown; c
 // for no reason or waves the action through without her ever seeing a question.
 // This dialog is part of the app, so it always appears, always says what will
 // happen, and can actually be tested.
-export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCancel }: {
+// `tone` is 'danger' for anything that removes or refuses; 'primary' for a
+// confirm that only guards against a mis-tap, such as marking a fee paid.
+export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCancel, tone = 'danger' }: {
   open: boolean; title: string; body: string; confirmLabel: string
-  onConfirm: () => void; onCancel: () => void
+  onConfirm: () => void; onCancel: () => void; tone?: 'danger' | 'primary'
 }) {
   // Escape cancels, and focus lands on the dialog rather than staying behind it.
   const panel = useRef<HTMLDivElement>(null)
@@ -307,7 +310,7 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
   if (!open) return null
   return (
     <div
-      className="fixed inset-0 z-[70] bg-td-dark/55 flex items-center justify-center p-6"
+      className="fixed inset-0 z-[70] bg-td-scrim flex items-center justify-center p-6"
       onClick={onCancel}
     >
       <div
@@ -318,13 +321,13 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
         aria-describedby="confirm-body"
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-[380px] bg-td-card rounded-td-lg p-[21px] outline-none shadow-td-overlay animate-[pop_.2s_ease]"
+        className="w-full max-w-[380px] bg-td-card rounded-td p-[21px] outline-none shadow-td-overlay animate-[pop_.2s_ease]"
       >
         <div id="confirm-title" className="text-td-title td-strong mb-2">{title}</div>
         <div id="confirm-body" className="text-td-small text-td-muted font-semibold leading-snug mb-[18px]">{body}</div>
         <div className="flex gap-2.5">
-          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-td-small font-semibold py-3 rounded-td-md cursor-pointer">Cancel</button>
-          <button onClick={onConfirm} className="flex-1 border-none bg-td-red text-td-on-solid text-td-small font-semibold py-3 rounded-td-md cursor-pointer">{confirmLabel}</button>
+          <button onClick={onCancel} className="flex-1 border border-td-border bg-td-card text-td-text text-td-small font-semibold py-3 rounded-td cursor-pointer">Cancel</button>
+          <button onClick={onConfirm} className={`flex-1 border-none ${tone === 'danger' ? 'bg-td-red text-td-on-solid' : 'bg-td-dark text-td-bg'} text-td-small font-semibold py-3 rounded-td cursor-pointer`}>{confirmLabel}</button>
         </div>
       </div>
     </div>

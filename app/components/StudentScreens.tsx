@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { copyText } from '../lib/share'
-import { useDashboard, initials, rupee, stuGrade, type Teacher } from '../store'
+import { useDashboard, initials, rupee, stuGrade, isoDay, type Teacher } from '../store'
 import { ScreenHeader, PrimaryButton, ChevronRight, Chip, CodeCard } from './Shell'
 import { Icon, DataIcon, ink, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
@@ -17,9 +17,12 @@ import { readLocal, writeLocal } from '../lib/storage'
 // found it the same way; this is that lookup, once.
 const useMe = () => useDashboard(s => s.students.find(x => x.dbId === s.currentStudentDbId))
 
+// A parent opens the app to ask one thing: was my child there today.
+const TODAY_TONE: Record<string, string> = { Present: 'text-td-on-green', Absent: 'text-td-on-red', Leave: 'text-td-on-amber' }
+
 export function StuHomeScreen() {
   const perm = useNotificationPermission()
-  const { go, stuReminders, stuNotifications, stuResults, stuPendingFee, currentStudentDbId, googleEmail, rankData, loadStudentByCode, stuMonthly, stuNotes, loadStudentNotes, centreName, centreLogo } = useDashboard()
+  const { go, stuReminders, stuNotifications, stuResults, stuPendingFee, currentStudentDbId, googleEmail, rankData, loadStudentByCode, stuMonthly, stuNotes, loadStudentNotes, centreName, centreLogo, stuAttendanceLog } = useDashboard()
   const [linkCode, setLinkCode] = useState('')
   const me = useMe()
 
@@ -40,7 +43,7 @@ export function StuHomeScreen() {
           <Icon name="back" size={18} color="var(--color-td-muted)" />
           Back
         </button>
-        <div className="w-[72px] h-[72px] rounded-td-lg bg-td-tint-blue flex items-center justify-center mb-5">
+        <div className="w-[72px] h-[72px] rounded-td bg-td-tint-blue flex items-center justify-center mb-5">
           <Icon name="students" size={32} color="var(--color-td-primary)" />
         </div>
         <div className="text-td-title td-strong mb-2">Link your account</div>
@@ -61,6 +64,7 @@ export function StuHomeScreen() {
   // and this tile is the first thing their parent sees: showing "0%" told them
   // their child had missed every single class since joining.
   const attendancePct = (me?.attendanceMarked ?? 0) > 0 ? me?.attendance ?? null : null
+  const today = stuAttendanceLog.find(d => d.iso === isoDay())
   const recentResults = stuResults.slice(0, 3)
 
   // Matched on the student's row id. Matching on the name put a child at their
@@ -114,12 +118,12 @@ export function StuHomeScreen() {
       {/* A student who skipped the reminder gate would otherwise hear nothing
           and never know why. The note stays until permission is granted. */}
       {perm && perm !== 'granted' && me?.id && (
-        <div className="bg-td-tint-amber border border-td-border px-4 py-3.5 mb-[22px]">
-          <div className="text-td-body font-semibold text-td-dark">Alerts are off</div>
-          <div className="text-td-body leading-[22px] text-td-text mt-[5px]">
+        <div className="bg-td-tint-amber border border-td-edge-amber px-4 py-2.5 mb-[22px] flex items-center gap-3">
+          <div className="flex-1 min-w-0 text-td-small text-td-text">
+            <span className="font-semibold text-td-dark">Alerts are off.</span>{' '}
             {perm === 'denied'
-              ? 'Your browser is blocking them. Tap the lock icon next to the web address, allow Notifications, then come back.'
-              : 'You will not be told about tests, homework or fees.'}
+              ? 'Allow Notifications from the lock icon next to the web address.'
+              : 'You will not hear about tests, homework or fees.'}
           </div>
           {perm === 'default' && (
             <button onClick={async () => {
@@ -130,9 +134,9 @@ export function StuHomeScreen() {
               // reads as a broken app days later.
               const t = await testNotification(useDashboard.getState().centreName)
               useDashboard.getState().notify(t.ok ? 'Alerts on — check your notifications for a test' : (t.error || 'Alerts on'))
-            }} className="mt-3 inline-flex items-center gap-1.5 bg-td-card border border-td-border text-td-dark text-td-small font-semibold min-h-11 px-3 cursor-pointer">
+            }} className="shrink-0 inline-flex items-center gap-1.5 bg-td-card border border-td-border text-td-dark text-td-small font-semibold min-h-11 px-3 cursor-pointer">
               <Icon name="reminder" size={14} color="var(--color-td-dark)" />
-              Turn on alerts
+              Turn on
             </button>
           )}
         </div>
@@ -151,8 +155,11 @@ export function StuHomeScreen() {
 
       <div className="td-h2 mb-4">Attendance</div>
       <button onClick={() => go('stuAttendance', 'stuHome')} className="td-plain w-full text-left cursor-pointer block">
+        <div className={`text-td-body font-semibold mb-2 ${TODAY_TONE[today?.status ?? ''] ?? 'text-td-muted'}`}>
+          Today: {today?.status ?? 'Not marked yet'}
+        </div>
         <div className="flex items-end gap-4">
-          <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{attendancePct === null ? '—' : `${attendancePct}%`}</div>
+          <div className="td-hero">{attendancePct === null ? '—' : `${attendancePct}%`}</div>
           <div className="pb-[3px] min-w-0">
             <div className="td-num text-td-body font-medium text-td-text">{attendancePct === null ? 'Not marked yet' : `${me?.attendanceMarked} ${me?.attendanceMarked === 1 ? 'session' : 'sessions'} marked`}</div>
             {monthAtt && <div className="td-num text-td-small text-td-muted mt-0.5">{monthAtt.attPresent} of {monthAtt.attTotal} this month</div>}
@@ -167,7 +174,12 @@ export function StuHomeScreen() {
       </button>
 
       <div className="td-h2 mt-6 mb-0">Standing</div>
-      <button onClick={() => go('stuRanking', 'stuRanking')} className="td-plain w-full text-left cursor-pointer flex items-center gap-3 py-3 min-h-[52px] border-b border-td-line">
+      <button onClick={() => go('stuFees', 'stuHome')} className="td-plain w-full text-left cursor-pointer td-row">
+        <div className="flex-1 text-td-body font-medium text-td-dark">Fees</div>
+        <div className={`td-num text-td-body font-semibold ${stuPendingFee ? 'text-td-on-red' : 'text-td-on-green'}`}>{stuPendingFee ? `${stuPendingFee.amount} due` : 'All paid'}</div>
+        <Icon name="next" size={16} color="var(--color-td-faint)" className="shrink-0" />
+      </button>
+      <button onClick={() => go('stuRanking')} className="td-plain w-full text-left cursor-pointer td-row">
         <div className="flex-1 text-td-body font-medium text-td-dark">Class rank</div>
         <div className="td-num text-td-body font-semibold text-td-dark">
           {rankInfo.rank > 0 ? <>#{rankInfo.rank}<span className="text-td-muted font-normal"> / {rankInfo.total}</span></> : <span className="text-td-muted font-normal">No rank yet</span>}
@@ -175,7 +187,7 @@ export function StuHomeScreen() {
         <Icon name="next" size={16} color="var(--color-td-faint)" className="shrink-0" />
       </button>
       {stuMonthly && stuMonthly.tests > 0 && (
-        <div className="flex items-center gap-3 py-3 min-h-[52px] border-b border-td-line">
+        <div className="td-row">
           <div className="flex-1 text-td-body font-medium text-td-dark">Tests this month</div>
           <div className="td-num text-td-body font-semibold text-td-dark">{stuMonthly.tests}<span className="text-td-muted font-normal"> · avg {stuMonthly.avgPct}%</span></div>
         </div>
@@ -199,7 +211,7 @@ export function StuHomeScreen() {
         <div className="mb-[22px]">
           <div className="td-h2 mb-0">Latest marks</div>
           {recentResults.map((r, i) => (
-            <div key={`${r.subject}-${r.test}-${i}`} className="flex items-center gap-3 py-3 min-h-[52px] border-b border-td-line">
+            <div key={`${r.subject}-${r.test}-${i}`} className="td-row">
               <div className="flex-1 min-w-0">
                 <div className="text-td-body font-medium text-td-dark truncate">{r.subject}</div>
                 <div className="td-num text-td-small text-td-muted mt-px truncate">{r.test} · {r.date}</div>
@@ -255,7 +267,7 @@ export function StuAttendanceScreen() {
       {total > 0 ? (
         <div className="mb-6">
           <div className="flex items-end gap-4">
-            <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{pct}%</div>
+            <div className="td-hero">{pct}%</div>
             <div className="pb-[3px] min-w-0">
               <div className="td-num text-td-body font-medium text-td-text">{present} of {total} class days</div>
               {recent > 0 && <div className="td-num text-td-small text-td-muted mt-0.5">{absent} absences, {leaves} leaves in the last {recent} days</div>}
@@ -306,7 +318,7 @@ export function StuResultsScreen() {
         <>
           <div className="td-h2 mb-4">Average</div>
           <div className="flex items-end gap-4 mb-6">
-            <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{avg}%</div>
+            <div className="td-hero">{avg}%</div>
             <span className={`td-tag px-[7px] py-[3px] mb-[5px] ${overall.tag}`}>Grade {overall.g}</span>
           </div>
 
@@ -501,8 +513,8 @@ export function StuFeesScreen() {
 
       {stuPendingFee ? (
         <div className="bg-td-card border border-td-border shadow-td-card p-4 mb-6">
-          <div className="text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">{plan ? 'Next installment' : 'Amount due'}</div>
-          <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-on-red mt-[9px]">{stuPendingFee.amount}</div>
+          <div className="td-eyebrow">{plan ? 'Next installment' : 'Amount due'}</div>
+          <div className="td-hero text-td-on-red mt-[9px]">{stuPendingFee.amount}</div>
           <div className="td-num text-td-small text-td-muted mt-2">
             {stuPendingFee.period} · {stuPendingFee.overdue ? 'Was due' : 'Due'} {stuPendingFee.dueDate}
           </div>

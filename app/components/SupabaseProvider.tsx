@@ -386,9 +386,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       const [eh, em = 0] = end.split(':').map(Number)
       const endH = new Date(); endH.setHours(eh, em, 0, 0)
       const status = now > endH ? 'Done' : now >= startH ? 'Ongoing' : `${hhmm} ${ampm}`
-      const statusColor = status === 'Done' ? 'var(--color-td-green)' : status === 'Ongoing' ? 'var(--color-td-primary)' : 'var(--color-td-muted)'
-      const statusBg = status === 'Done' ? 'var(--color-td-tint-green)' : status === 'Ongoing' ? 'var(--color-td-tint-blue)' : 'var(--color-td-soft)'
-      return { time: hhmm, ampm, subject, klass, room, status, statusColor, statusBg }
+      return { time: hhmm, ampm, subject, klass, room, status }
     })
 
     // Subjects

@@ -249,7 +249,7 @@ function toIconName(value: string | null | undefined): IconName | null {
   return LEGACY_EMOJI[value] ?? null
 }
 
-// The five pastel tints the app uses behind an icon tile. An emoji carried its
+// The four pastel tints the app uses behind an icon tile. An emoji carried its
 // own colour; a stroked icon inherits one, so each tint needs a matching ink or
 // every tile would come out the same slate grey. Kept here so the pairing is
 // defined once instead of at each of the tiles.
@@ -258,7 +258,6 @@ const TINT_INK: Record<string, string> = {
   'var(--color-td-tint-blue)': 'var(--color-td-primary)', // primary blue
   'var(--color-td-tint-amber)': 'var(--color-td-amber)', // amber
   'var(--color-td-tint-red)': 'var(--color-td-red)', // red
-  'var(--color-td-tint-indigo)': 'var(--color-td-indigo)', // indigo
 }
 
 export const ink = (tint: string) => TINT_INK[tint] ?? 'var(--color-td-primary)'

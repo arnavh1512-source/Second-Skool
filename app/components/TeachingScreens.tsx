@@ -7,6 +7,7 @@ import { ScreenHeader, PrimaryButton, EmptyState, options, classesOf, ConfirmDia
 import { Icon, type IconName } from './Icon'
 import { findStudent, studentKey } from '../lib/student-key'
 import { changedMarks, writeOrder } from '../lib/results-edit'
+import { reminderTargets } from '../lib/reminders'
 
 // Period labels that are not a subject. Matched exactly — see periodStyle.
 const SPECIAL_PERIODS = new Set(['Test', 'Staff meeting', 'Parent meeting', 'Doubt session'])
@@ -101,7 +102,7 @@ export function TimetableScreen() {
         {days.map(d => {
           const active = d.s === ttDay
           return (
-            <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-td-md py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card border-td-border text-td-text'}`}>
+            <button key={d.s} onClick={() => set({ ttDay: d.s })} className={`shrink-0 min-w-[48px] border rounded-td py-[9px] px-1.5 cursor-pointer text-center ${active ? 'bg-td-dark text-td-bg border-td-dark' : 'bg-td-card border-td-border text-td-text'}`}>
               <div className="text-td-caption font-semibold">{d.s}</div>
               <div className="text-td-small font-semibold mt-0.5">{d.d}</div>
             </button>
@@ -152,7 +153,7 @@ export function TimetableScreen() {
         {days.map(d => {
           const ps = timetableData[d.s] || []
           return (
-            <div key={d.s} className={`rounded-td-md border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
+            <div key={d.s} className={`rounded-td border p-2.5 min-h-[130px] ${d.s === ttDay ? 'border-td-primary bg-td-soft' : 'border-td-border bg-td-card'}`}>
               <button onClick={() => set({ ttDay: d.s })} className="td-plain w-full text-center mb-2 cursor-pointer">
                 <div className="text-td-caption font-semibold text-td-muted">{d.s}</div>
                 <div className="text-td-body td-strong">{d.d}</div>
@@ -164,15 +165,15 @@ export function TimetableScreen() {
                   {ps.map((p, i) => {
                     const s = periodStyle(p)
                     return (
-                      <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="rounded-td-sm border p-2" style={{ background: s.bg, borderColor: s.border }}>
+                      <div key={`${p[0]}-${p[1]}-${p[2]}-${p[3]}-${i}`} className="rounded-td border p-2" style={{ background: s.bg, borderColor: s.border }}>
                         <div className="text-td-caption font-semibold text-td-muted">{p[0]}–{p[1]}</div>
                         <div className="text-td-caption font-semibold leading-tight mt-0.5" style={{ color: s.titleColor }}>{p[2]}</div>
                         <div className="text-td-caption text-td-muted mt-0.5">{p[3]}{p[4] ? ` · ${p[4]}` : ''}</div>
                         {p[5] && <div className="text-td-caption text-td-primary font-semibold mt-0.5 truncate">{p[5]}</div>}
                         {isAdmin && (
                           <div className="flex gap-1 mt-1.5">
-                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} className="flex-1 h-6 rounded-lg border border-td-edge-blue bg-td-tint-blue text-td-primary text-td-caption cursor-pointer">✎</button>
-                            <button onClick={() => setRemoving({ day: d.s, p })} className="flex-1 h-6 rounded-lg td-danger text-td-caption">×</button>
+                            <button onClick={() => { set({ ttDay: d.s }); startEdit(p) }} aria-label="Edit period" className="flex-1 min-h-11 rounded-td border border-td-edge-blue bg-td-tint-blue text-td-primary text-td-body cursor-pointer">✎</button>
+                            <button onClick={() => setRemoving({ day: d.s, p })} aria-label="Remove period" className="flex-1 min-h-11 rounded-td td-danger text-td-body">×</button>
                           </div>
                         )}
                       </div>
@@ -205,13 +206,13 @@ export function TimetableScreen() {
                   <div className="flex-1 w-0.5 bg-td-border" />
                 </div>
                 <div className="flex-1 pb-3.5">
-                  <div className="rounded-td-md p-[13px] px-[15px] border" style={{ background: s.bg, borderColor: s.border }}>
+                  <div className="rounded-td p-[13px] px-4 border" style={{ background: s.bg, borderColor: s.border }}>
                     <div className="flex justify-between items-center gap-2">
                       <div className="text-td-small font-semibold" style={{ color: s.titleColor }}>{p[2]}</div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-td-caption font-semibold py-1 px-[9px] rounded-td-lg" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
-                        {isAdmin && <button onClick={() => startEdit(p)} className="w-6 h-6 rounded-full border border-td-edge-blue bg-td-tint-blue text-td-primary flex items-center justify-center cursor-pointer text-td-caption leading-none">✎</button>}
-                        {isAdmin && <button onClick={() => setRemoving({ day: ttDay, p })} className="w-6 h-6 rounded-full td-danger flex items-center justify-center text-td-body leading-none">×</button>}
+                        <span className="text-td-caption font-semibold py-1 px-[9px] rounded-td" style={{ color: s.pillColor, background: s.pillBg }}>{s.tag}</span>
+                        {isAdmin && <button onClick={() => startEdit(p)} aria-label="Edit period" className="td-icon-btn border-td-edge-blue bg-td-tint-blue text-td-primary text-td-body leading-none">✎</button>}
+                        {isAdmin && <button onClick={() => setRemoving({ day: ttDay, p })} aria-label="Remove period" className="td-icon-btn td-danger text-td-body leading-none">×</button>}
                       </div>
                     </div>
                     <div className="text-td-caption text-td-muted mt-1">{p[3]} · {p[4]}{p[5] ? ` · ${p[5]}` : ''}</div>
@@ -280,7 +281,7 @@ export function ResultsScreen() {
   const handlePublish = async () => {
     if (!testName.trim()) { notify('Enter test name', 'error'); return }
     if (!selKlass) { notify('Add students first', 'error'); return }
-    if (!selSubject) { notify('Add a subject first (More → Subjects)', 'error'); return }
+    if (!selSubject) { notify(role === 'admin' ? 'Add a subject first (More → Subjects)' : 'No subjects yet — ask the head teacher to add one', 'error'); return }
     if (!isWholeNumber(maxMarks, 1, LIMITS.maxMarks)) { notify(`Max marks must be a whole number from 1 to ${LIMITS.maxMarks}`); return }
     const max = Number(maxMarks)
 
@@ -453,10 +454,10 @@ export function ResultsScreen() {
       ) : (
         <div className="td-list gap-[9px] mb-5">
           {roster.map((s, i) => (
-            <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-td-md p-[11px] px-3.5 flex items-center gap-[13px]">
+            <div key={s.dbId ?? s.id ?? i} className="border border-td-border bg-td-card rounded-td p-[11px] px-3.5 flex items-center gap-[13px]">
               <div className="w-9 h-9 td-avatar">{initials(s.name)}</div>
               <div className="flex-1 text-td-small font-semibold text-td-dark">{s.name}</div>
-              <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-td-sm py-[9px] px-1.5 text-td-small font-semibold text-td-dark outline-none focus:border-td-primary" />
+              <input value={marks[studentKey(s)] ?? ''} onChange={e => setMarks(m => ({ ...m, [studentKey(s)]: e.target.value }))} placeholder="—" className="w-[62px] text-center border border-td-border rounded-td py-[9px] px-1.5 text-td-small font-semibold text-td-dark outline-none focus:border-td-primary" />
               <span className="text-td-small text-td-subtle font-semibold">/{maxMarks}</span>
             </div>
           ))}
@@ -477,7 +478,7 @@ export function ResultsScreen() {
             {tests.map(t => {
               const d = parseDay(t.date)
               return (
-                <button key={t.id} onClick={() => openTest(t)} className="w-full text-left td-card rounded-td-md p-[11px] px-3.5 flex items-center gap-3 cursor-pointer">
+                <button key={t.id} onClick={() => openTest(t)} className="w-full text-left td-card rounded-td p-[11px] px-3.5 flex items-center gap-3 cursor-pointer">
                   <div className="flex-1 min-w-0">
                     <div className="text-td-small font-semibold text-td-dark truncate">{t.name}</div>
                     <div className="text-td-caption text-td-muted">
@@ -551,11 +552,11 @@ export function AssignmentsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {assignmentsList.map((a, i) => (
-            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="td-card rounded-td-md p-3.5">
+            <div key={a.dbId ?? `${a.title}-${a.due}-${i}`} className="td-card rounded-td p-3.5">
               <div className="flex justify-between items-start gap-2">
                 <div className="text-td-small font-semibold text-td-dark">{a.title}</div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-td-caption font-semibold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-td-lg whitespace-nowrap">Due {a.due}</span>
+                  <span className="text-td-caption font-semibold text-td-amber bg-td-tint-amber py-1 px-[9px] rounded-td whitespace-nowrap">Due {a.due}</span>
                   {a.dbId && (
                     <button
                       onClick={() => setRemoving({ id: a.dbId!, title: a.title })}
@@ -575,13 +576,15 @@ export function AssignmentsScreen() {
 }
 
 export function RemindersScreen() {
-  const { reminderType, back, set, saveReminder, reminderHistory, loadReminderHistory } = useDashboard()
+  const { reminderType, back, set, saveReminder, reminderHistory, loadReminderHistory, students } = useDashboard()
   // Every send has been recorded since the first release; nothing ever showed
   // it back. Fetched on open rather than kept in the refresh cycle — it is
   // reference material, not something the rest of the app reads.
   useEffect(() => { loadReminderHistory() }, [loadReminderHistory])
   const [message, setMessage] = useState(REMINDER_TEMPLATES[reminderType] ?? '')
   const [filter, setFilter] = useState('all')
+  const [confirmSend, setConfirmSend] = useState(false)
+  const sendCount = reminderTargets(students, filter).length
   const types: { key: string; label: string; icon: IconName }[] = [
     { key: 'Notice', label: 'Notice', icon: 'notice' },
     { key: 'Fee', label: 'Fees', icon: 'fees' },
@@ -599,7 +602,7 @@ export function RemindersScreen() {
         {types.map(r => {
           const active = r.key === reminderType
           return (
-            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-td-md p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
+            <button key={r.key} onClick={() => { set({ reminderType: r.key }); setMessage(REMINDER_TEMPLATES[r.key] ?? '') }} className="border rounded-td p-3.5 cursor-pointer flex items-center gap-[11px]" style={{ background: active ? 'var(--color-td-tint-blue)' : 'var(--color-td-card)', borderColor: active ? 'var(--color-td-primary)' : 'var(--color-td-border)' }}>
               <Icon name={r.icon} size={21} className="shrink-0" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-muted)' }} />
               <span className="text-td-small font-semibold" style={{ color: active ? 'var(--color-td-primary)' : 'var(--color-td-text)' }}>{r.label}</span>
             </button>
@@ -621,7 +624,16 @@ export function RemindersScreen() {
         <textarea rows={4} value={message} onChange={e => setMessage(e.target.value)} className="td-field resize-none mb-[18px]" />
       </label>
 
-      <PrimaryButton onClick={async () => { await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}>Send to students</PrimaryButton>
+      <ConfirmDialog
+        open={confirmSend}
+        tone="primary"
+        title="Send this reminder?"
+        body={`It goes to ${sendCount} ${sendCount === 1 ? 'family' : 'families'} straight away and cannot be taken back.`}
+        confirmLabel="Send"
+        onConfirm={async () => { setConfirmSend(false); await saveReminder(reminderType, message, 'all', filter); loadReminderHistory() }}
+        onCancel={() => setConfirmSend(false)}
+      />
+      <PrimaryButton onClick={() => setConfirmSend(true)}>Send to students</PrimaryButton>
 
       <div className="text-td-body td-strong mt-7 mb-3">Recently sent</div>
       {reminderHistory.length === 0 ? (
@@ -629,7 +641,7 @@ export function RemindersScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {reminderHistory.map(r => (
-            <div key={r.dbId} className="td-card rounded-td-md p-3.5">
+            <div key={r.dbId} className="td-card rounded-td p-3.5">
               <div className="flex items-center gap-2 mb-1">
                 <span className="td-tag text-td-primary bg-td-tint-blue py-[3px]">{r.type}</span>
                 <span className="text-td-caption text-td-muted">{r.when}</span>

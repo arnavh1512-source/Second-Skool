@@ -9,6 +9,12 @@ import { Icon, type IconName } from './Icon'
 import { LastUpdated } from './LastUpdated'
 import { ThemeToggle } from './ThemeToggle'
 
+// A class's tag: finished, running, or the time it starts.
+const SCHEDULE_TONE: Record<string, string> = {
+  Done: 'bg-td-tint-green text-td-on-green',
+  Ongoing: 'bg-td-tint-blue text-td-primary',
+}
+
 // "TUE 16 SEP 2026". Built by hand because en-GB now spells September "Sept".
 const today = () => {
   const d = new Date()
@@ -75,6 +81,13 @@ export function HomeScreen() {
   // exists only while somebody is on it — an alarm that is always on is
   // furniture. The teacher sees the absences too: she is the one who knows why.
   const attention = [
+    // A family already waiting to be let in is the quickest win on the screen:
+    // one tap and a parent is using the app today.
+    ...(pendingStudents.length > 0 ? [{
+      key: 'pending', title: `${pendingStudents.length} ${pendingStudents.length === 1 ? 'student' : 'students'} waiting`,
+      sub: 'Asked to join · approve to let them in', tag: 'Approve', tone: 'amber' as const,
+      onClick: () => go('studentRequests', 'home'),
+    }] : []),
     ...students.filter(s => atRisk[s.dbId ?? '']).map(s => ({
       key: `a-${s.dbId}`, title: s.name, sub: `${s.klass} · stopped coming`, tag: `${atRisk[s.dbId!].missed} absent`, tone: 'red' as const,
       onClick: () => goFrom('students', 'students', 'atRisk'),
@@ -106,6 +119,18 @@ export function HomeScreen() {
     { icon: 'homework', label: 'Assignment', screen: 'assign' },
     { icon: 'reminder', label: 'Reminder', screen: 'reminder' },
   ]
+
+  // The teacher opens the app to do something, the head to check on things.
+  const actions = (
+    <div className="grid grid-cols-2 gap-px bg-td-border border border-td-border mb-6 lg:max-w-md">
+      {quickActions.map(a => (
+        <button key={a.label} onClick={() => go(a.screen, 'home')} className="td-plain bg-td-card p-3.5 min-h-14 flex items-center gap-3 cursor-pointer text-left">
+          <Icon name={a.icon} size={20} color="var(--color-td-dark)" />
+          <span className="text-td-body font-semibold text-td-dark">{a.label}</span>
+        </button>
+      ))}
+    </div>
+  )
 
   return (
     <div className="td-wide td-screen">
@@ -141,6 +166,8 @@ export function HomeScreen() {
         ) : <span />}
         <LastUpdated />
       </div>
+
+      {!isAdmin && actions}
 
       <div className="lg:max-w-md">
         {steps.length > 0 && (
@@ -180,7 +207,7 @@ export function HomeScreen() {
         ) : (
           <button onClick={() => go('attendance')} aria-label={`Attendance today: ${pct}%, ${present} present, ${absent} absent, ${Math.max(0, students.length - marks.length)} not marked`} className="td-plain w-full text-left cursor-pointer block">
             <span className="flex items-end gap-3.5">
-              <span className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-dark">{pct}%</span>
+              <span className="td-hero">{pct}%</span>
               <span className="pb-0.5">
                 <span className="td-num block text-td-body font-medium text-td-on-green">{present} present</span>
                 {/* The figure is of the students marked so far; say how many are still
@@ -197,19 +224,30 @@ export function HomeScreen() {
           </button>
         )}
 
-        {isAdmin && collected + due > 0 && (
+        {isAdmin && (
           <>
             <div className="td-h2 mb-3.5">Fees</div>
-            <button onClick={() => go('fees')} className="td-plain w-full text-left cursor-pointer grid grid-cols-2 bg-td-card border border-td-border shadow-td-card mb-6">
-              <span className="block px-[15px] py-3.5 border-r border-td-border">
-                <span className="block text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">Collected</span>
-                <span className="td-num block text-td-title font-semibold text-td-on-green mt-[7px]">{rupee(collected)}</span>
-              </span>
-              <span className="block px-[15px] py-3.5">
-                <span className="block text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">Due</span>
-                <span className="td-num block text-td-title font-semibold text-td-on-red mt-[7px]">{rupee(due)}</span>
-              </span>
-            </button>
+            {collected + due > 0 ? (
+              <button onClick={() => go('fees')} className="td-plain w-full text-left cursor-pointer grid grid-cols-2 bg-td-card border border-td-border shadow-td-card mb-6">
+                <span className="block px-4 py-3.5 border-r border-td-border">
+                  <span className="block td-eyebrow">Collected</span>
+                  <span className="td-num block text-td-title font-semibold text-td-on-green mt-2">{rupee(collected)}</span>
+                </span>
+                <span className="block px-4 py-3.5">
+                  <span className="block td-eyebrow">Due</span>
+                  <span className="td-num block text-td-title font-semibold text-td-on-red mt-2">{rupee(due)}</span>
+                </span>
+              </button>
+            ) : (
+              <button onClick={() => go('fees')} className="td-plain td-row w-full text-left cursor-pointer mb-6">
+                <span className="flex-1">
+                  <span className="block text-td-body font-semibold text-td-dark">No fees added yet</span>
+                  <span className="block text-td-small text-td-muted mt-px">Add one and parents see what is due</span>
+                </span>
+                <span className="text-td-small font-semibold text-td-primary">Add fee</span>
+                <ChevronRight />
+              </button>
+            )}
           </>
         )}
 
@@ -239,7 +277,7 @@ export function HomeScreen() {
             {chips.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {chips.map(c => (
-                  <button key={c.stage} onClick={() => goFrom('students', 'students', c.stage)} className="td-plain cursor-pointer flex items-center gap-1.5 border border-td-border bg-td-card py-1.5 px-2.5 min-h-9">
+                  <button key={c.stage} onClick={() => goFrom('students', 'students', c.stage)} className="td-plain cursor-pointer flex items-center gap-1.5 border border-td-border bg-td-card py-1.5 px-2.5 min-h-11">
                     <span className="td-num text-td-small font-semibold text-td-dark">{c.n}</span>
                     <span className="text-td-small text-td-muted">{c.label}</span>
                   </button>
@@ -250,22 +288,15 @@ export function HomeScreen() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-px bg-td-border border border-td-border mb-[26px] lg:max-w-md">
-        {quickActions.map(a => (
-          <button key={a.label} onClick={() => go(a.screen, 'home')} className="td-plain bg-td-card p-3.5 min-h-14 flex items-center gap-[11px] cursor-pointer text-left">
-            <Icon name={a.icon} size={20} color="var(--color-td-dark)" />
-            <span className="text-td-body font-semibold text-td-dark">{a.label}</span>
-          </button>
-        ))}
-      </div>
+      {isAdmin && actions}
 
       <div className="td-h2 mb-0">Today&apos;s schedule</div>
       {schedule.length === 0 ? (
         <div className="td-none">No classes scheduled for today</div>
       ) : (
-        <div className="mb-[26px]">
+        <div className="mb-6">
           {schedule.map((c, i) => (
-            <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="flex items-center gap-3 py-3 border-b border-td-line min-h-14">
+            <div key={`${c.time}${c.ampm}-${c.subject}-${c.klass}-${i}`} className="td-row">
               <div className="td-num shrink-0 w-[60px] text-td-small font-semibold text-td-dark">
                 {c.time}<span className="text-td-caption text-td-muted font-normal"> {c.ampm}</span>
               </div>
@@ -273,7 +304,7 @@ export function HomeScreen() {
                 <div className="text-td-body font-semibold text-td-dark truncate">{c.subject}</div>
                 <div className="text-td-small text-td-muted mt-px truncate">{c.klass} · {c.room}</div>
               </div>
-              <span className="td-tag shrink-0" style={{ color: c.statusColor, background: c.statusBg }}>{c.status}</span>
+              <span className={`td-tag shrink-0 ${SCHEDULE_TONE[c.status] ?? 'bg-td-soft text-td-muted'}`}>{c.status}</span>
             </div>
           ))}
         </div>

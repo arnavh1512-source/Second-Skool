@@ -11,7 +11,7 @@ let toastTimer: ReturnType<typeof setTimeout> | null = null
 // glance.
 // Screens that are a bottom-nav tab. Opening any other screen (attendance from
 // Home, say) keeps the tab the teacher came from lit, instead of lighting none.
-const TAB_SCREENS = new Set<Screen>(['home', 'timetable', 'students', 'teachers', 'more', 'stuHome', 'stuResults', 'stuRanking', 'stuTeachers', 'stuProfile'])
+const TAB_SCREENS = new Set<Screen>(['home', 'timetable', 'students', 'teachers', 'more', 'stuHome', 'stuResults', 'stuFees', 'stuTeachers', 'stuProfile'])
 
 const TOAST_MS: Record<ToastKind, number> = { info: 2600, error: 9000 }
 

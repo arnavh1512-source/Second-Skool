@@ -17,12 +17,14 @@
   --color-td-primary: #2c3e8f;
   --color-td-dark: #14161a;
   --color-td-green: #1f7a4d;
-  --color-td-red: #c8463c;
-  --color-td-amber: #b7791f;
+  /* Red and amber are deep enough to pass 4.5:1 as small text on every light
+     surface, tints included - they are read as warnings, not just seen. */
+  --color-td-red: #b83e35;
+  --color-td-amber: #8f6212;
   --color-td-bg: #f2f3f0;
   --color-td-border: #c9ccc6;
   --color-td-muted: #5e646b;
-  --color-td-subtle: #6e757e;
+  --color-td-subtle: #686f77;
   --color-td-text: #33373d;
 
   /* Surfaces. td-card is what `bg-white` used to be: the raised sheet a list,
@@ -32,14 +34,19 @@
   --color-td-soft: #f2f3f0;
   --color-td-line: #dde0da;
   --color-td-faint: #9098a1;
+  /* The edge of anything you type into. td-border is a decorative hairline at
+     1.6:1; a field's boundary is a control and needs 3:1 to be found at all on
+     a dim phone in daylight. */
+  --color-td-field-edge: #80868d;
+  /* The dim layer under a sheet or dialog, the WhatsApp brand green, and the
+     desktop phone bezel - one value each, the same in both themes. */
+  --color-td-scrim: rgba(20,22,26,.45);
+  --color-td-whatsapp: #25D366;
+  --color-td-bezel: #0b0d12;
 
   /* The heavy rule above a section label. Ink on paper, but softened in dark:
      a full-white 2px line reads as a divider shouting over the content. */
   --color-td-rule: #14161a;
-
-  /* The one surface that is dark in both themes: white text sits on it.
-     It is not td-dark — that is an ink, and an ink inverts. */
-  --color-td-ink: #14161a;
 
   /* Text on a solid green, red or blue fill. White on the light theme's deep
      fills; near-black on the dark theme's, which are lifted too far for white. */
@@ -50,8 +57,6 @@
   --color-td-tint-green: #e1f0e8;
   --color-td-tint-red: #f7e3e0;
   --color-td-tint-amber: #f6ecd9;
-  --color-td-tint-indigo: #e6e9f4;
-  --color-td-indigo: #2c3e8f;
   --color-td-wash-red: #fcefec;
   --color-td-edge-red: #e2a79f;
   --color-td-edge-blue: #b9c2e6;
@@ -70,7 +75,7 @@
      block. No line-height companions on purpose: the arbitrary sizes these
      replace set font-size alone, and a companion would move every row. */
   --text-td-caption: 12px;
-  --text-td-small: 13px;
+  --text-td-small: 14px;
   --text-td-body: 15px;
   --text-td-title: 18px;
   --text-td-heading: 24px;
@@ -78,15 +83,14 @@
 
   /* A register is ruled, not rounded: 4px on anything you press or type into,
      pills only where the design draws a pill. */
-  --radius-td-sm: 4px;
-  --radius-td-md: 4px;
-  --radius-td-lg: 4px;
+  --radius-td: 4px;
 
   --shadow-td-card: 0 1px 2px rgba(20,22,26,.06);
   --shadow-td-raised: 0 2px 10px rgba(20,22,26,.14);
   --shadow-td-overlay: 0 14px 36px rgba(20,22,26,.28);
   /* Bottom sheets cast upward, so they cannot share the overlay shadow. */
   --shadow-td-sheet: 0 -10px 40px rgba(20,22,26,.2);
+  --shadow-td-bezel: 0 40px 90px -20px rgba(20,30,60,.45);
 
   /* Set on <body> by next/font in layout.tsx. */
   --font-sans: var(--font-archivo), system-ui, sans-serif;
@@ -116,21 +120,19 @@
   --color-td-line: #2a2e33;
   --color-td-border: #383d43;
   --color-td-faint: #6e757e;
+  --color-td-field-edge: #707780;
   --color-td-rule: #6e757e;
-  --color-td-ink: #33373d;
   --color-td-on-solid: #15171a;
 
   --color-td-dark: #f2f3f0;
   --color-td-text: #c9cdd2;
   --color-td-muted: #9098a1;
-  --color-td-subtle: #9098a1;
+  --color-td-subtle: #838a93;
 
   --color-td-tint-blue: #1e2438;
   --color-td-tint-green: #143024;
   --color-td-tint-red: #3d1e1a;
   --color-td-tint-amber: #3a2c13;
-  --color-td-tint-indigo: #1e2438;
-  --color-td-indigo: #a6b2ee;
   --color-td-wash-red: #2a1513;
   --color-td-edge-red: #7a3a33;
   --color-td-edge-blue: #2f3a66;
@@ -140,6 +142,7 @@
   --color-td-on-red: #ffb3aa;
   --color-td-on-green: #7fd3a5;
   --color-td-on-amber: #f0cc8a;
+  --color-td-scrim: rgba(0,0,0,.6);
 
   /* A shadow on a near-black ground is invisible, and a lighter one reads as a
      glow. Cards in dark are separated by their border alone. */
@@ -208,7 +211,7 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 .td-label { display: block; font-size: var(--text-td-small); line-height: 1.125rem; font-weight: 500; letter-spacing: .01em; color: var(--color-td-muted); margin-bottom: 7px; }
 /* 16px, not the design's 15: iOS zooms the page into any input under 16px on
    focus, and the viewport cannot turn that off without also blocking pinch. */
-.td-field { width: 100%; background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-md); padding: 14px 16px; min-height: 52px; font-size: 16px; color: var(--color-td-dark); outline: none; }
+.td-field { width: 100%; background: var(--color-td-card); border: 1px solid var(--color-td-field-edge); border-radius: var(--radius-td); padding: 14px 16px; min-height: 52px; font-size: 16px; color: var(--color-td-dark); outline: none; }
 /* The focus line belongs to the field, not to every site that uses one. Sixty-odd
    elements carried a `focus:border-td-primary` utility that never fired: a rule
    outside a cascade layer beats one inside Tailwind's, so .td-field's own border
@@ -237,12 +240,12 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 
 /* The small solid button that lives in a card header, as opposed to
    PrimaryButton at the foot of a form. */
-.td-btn-sm { border: none; background: var(--color-td-dark); color: var(--color-td-bg); font-size: var(--text-td-small); font-weight: 600; padding: 10px 15px; border-radius: var(--radius-td-md); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.td-btn-sm { border: none; background: var(--color-td-dark); color: var(--color-td-bg); font-size: var(--text-td-small); font-weight: 600; padding: 10px 16px; border-radius: var(--radius-td); cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
 /* Every Remove / Delete / Sign out button: the outlined red one that asks to be
    read twice. Only the colours and the pointer are here - these come in five
    sizes and three radii, so size, weight and radius stay on the element. */
-.td-danger { border: 1px solid var(--color-td-edge-red); background: var(--color-td-wash-red); color: var(--color-td-red); cursor: pointer; }
+.td-danger { border: 1px solid var(--color-td-edge-red); background: var(--color-td-wash-red); color: var(--color-td-on-red); cursor: pointer; }
 
 /* Every list of cards in the staff console: one column on a phone, two on a
    laptop, three on a wide screen. Twelve lists made that decision separately,
@@ -256,7 +259,7 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    seven agree on the radius, the padding and the spacing between rows, so those
    are here; the margin below, and the desktop width cap two of them want, stay
    on the element. */
-.td-form-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 17px; display: flex; flex-direction: column; gap: 14px; }
+.td-form-card { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td); padding: 17px; display: flex; flex-direction: column; gap: 14px; }
 
 /* One ruled line of a register: an icon or avatar, then text, with a hairline
    under it. The student app is built almost entirely out of these. */
@@ -291,11 +294,18 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
      why this sits in the layer: a text or width utility has to win. */
   .td-avatar { flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: var(--color-td-tint-blue); color: var(--color-td-primary); font-weight: 600; font-size: var(--text-td-small); }
   /* The square header button: back, bell, theme. */
-  .td-icon-btn { width: 44px; height: 44px; border-radius: var(--radius-td-md); border: 1px solid var(--color-td-border); background: var(--color-td-card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .td-icon-btn { width: 44px; height: 44px; border-radius: var(--radius-td); border: 1px solid var(--color-td-border); background: var(--color-td-card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
   /* An unread count. */
   .td-count { min-width: 20px; height: 20px; padding-inline: 6px; border-radius: 9999px; background: var(--color-td-red); color: var(--color-td-on-solid); font-size: var(--text-td-caption); font-weight: 600; font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
   /* A short status or type label; its colour comes from the call site. */
   .td-tag { padding: 4px 8px; border-radius: 2px; font-family: var(--font-mono); font-size: var(--text-td-caption); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
   /* A number over its label. */
-  .td-stat { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td-lg); padding: 14px; text-align: center; }
+  .td-stat { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td); padding: 14px; text-align: center; }
+  /* The one big number a screen is about: attendance, collected, pending. */
+  .td-hero { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 40px; line-height: 40px; font-weight: 600; letter-spacing: -.03em; color: var(--color-td-dark); }
+  /* The small caps label over a hero or a card. */
+  .td-eyebrow { font-size: var(--text-td-caption); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-td-muted); }
+  /* A filter toggle; aria-pressed carries the state so it reads out too. */
+  .td-chip { flex-shrink: 0; font-size: var(--text-td-small); font-weight: 500; padding: 12px 16px; min-height: 44px; border-radius: 9999px; cursor: pointer; border: 1px solid var(--color-td-border); background: var(--color-td-card); color: var(--color-td-text); }
+  .td-chip[aria-pressed='true'] { font-weight: 600; background: var(--color-td-dark); color: var(--color-td-bg); border-color: var(--color-td-dark); }
 }

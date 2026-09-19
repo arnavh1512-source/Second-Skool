@@ -4,6 +4,7 @@ import type { IconName } from '../../components/Icon'
 import { dbErr } from '../db'
 import { timeAgo } from '../format'
 import type { Slice } from '../slice'
+import { reminderTargets } from '../../lib/reminders'
 
 export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass' | 'loadReminderHistory'> = (set, get) => ({
   saveReminder: async (type, message, targetClass, filter) => {
@@ -16,18 +17,7 @@ export const createNotificationsSlice: Slice<'saveReminder' | 'notifyClass' | 'l
     const icon: IconName = icons[type] ?? 'reminder'
     const title = type === 'Notice' ? 'Notice' : `${type} Reminder`
 
-    let targets = students.filter(s => s.dbId)
-    // Not `attendance === 0`. A student added this morning has no attendance
-    // rows yet, so the mapper leaves the percentage at its 0 default — and an
-    // "Absence Reminder" to a parent on their child's first day is exactly the
-    // kind of wrong that loses a centre. Only students who have actually been
-    // marked at least once, and who missed at least one of those days, count.
-    if (filter === 'absentees') targets = targets.filter(s => (s.attendanceMarked ?? 0) > 0 && s.attendance < 100)
-    else if (filter === 'fees_due') targets = targets.filter(s => s.feeStatus !== 'Paid')
-    // Narrows whatever the filter left, rather than being the alternative to
-    // it. A head chasing fees inside one class asked for both conditions, and
-    // the class used to be dropped the moment a filter was present.
-    if (targetClass && targetClass !== 'all') targets = targets.filter(s => s.klass === targetClass)
+    const targets = reminderTargets(students, filter, targetClass)
 
     const label = type === 'Notice' ? 'Notice' : `${type} reminder`
 

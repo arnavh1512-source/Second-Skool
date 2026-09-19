@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { studentKey } from '../lib/student-key'
+import { reminderTargets } from '../lib/reminders'
 import { useDashboard, REMINDER_TEMPLATES, parseDay, feeTag, rupee, isoDay, LIMITS, clampText } from '../store'
 import { PLAN_INTERVALS, isOverdue, splitPlan, summariseFees, validatePlan, type PlanInterval } from '../lib/fee-plan'
 import { ScreenHeader, PrimaryButton, EmptyState, ConfirmDialog, Chip, classesOf } from './Shell'
@@ -33,6 +34,8 @@ export function FeesScreen() {
   const [openFees, setOpenFees] = useState<string | null>(null)
   const [confirmFee, setConfirmFee] = useState<{ id: string; studentId: string; student: string; label: string } | null>(null)
   const [confirmPlan, setConfirmPlan] = useState<{ planId: string; studentId: string; student: string; count: number } | null>(null)
+  const [confirmPaid, setConfirmPaid] = useState<{ key: string; student: string; amount: number } | null>(null)
+  const [confirmAlert, setConfirmAlert] = useState(false)
   // Fees are chased one class at a time — a class shares a fee amount, a
   // parent group and usually a collection day. The two totals follow the chip
   // so "what is Class 10 still owing" is a tap, not arithmetic.
@@ -43,6 +46,7 @@ export function FeesScreen() {
   const inClass = klass ? students.filter(s => s.klass === klass) : students
   const paidCount = inClass.filter(s => s.feeStatus === 'Paid').length
   const pendingCount = inClass.length - paidCount
+  const alertCount = reminderTargets(students, 'fees_due', klass || 'all').length
   const totalCollected = inClass.reduce((n, s) => n + (s.feeCollected ?? 0), 0)
   const totalRemaining = inClass.reduce((n, s) => n + (s.feeDue ?? 0), 0)
   const rows = [...inClass.filter(d => d.feeStatus !== 'Paid'), ...inClass.filter(d => d.feeStatus === 'Paid')]
@@ -95,6 +99,26 @@ export function FeesScreen() {
         onConfirm={() => { const t = confirmPlan; setConfirmPlan(null); if (t) deleteFeePlan(t.planId, t.studentId) }}
         onCancel={() => setConfirmPlan(null)}
       />
+      {/* Paid is what the parent sees. A mis-tap here tells a family their
+          money arrived when it did not, so it asks first. Back to Due stays one tap. */}
+      <ConfirmDialog
+        open={!!confirmPaid}
+        tone="primary"
+        title="Mark as collected?"
+        body={`Mark ${rupee(confirmPaid?.amount ?? 0)} from ${confirmPaid?.student ?? ''} as collected? Their parent will see it as paid.`}
+        confirmLabel="Mark collected"
+        onConfirm={() => { const t = confirmPaid; setConfirmPaid(null); if (t) toggleFeeStatus(t.key) }}
+        onCancel={() => setConfirmPaid(null)}
+      />
+      <ConfirmDialog
+        open={confirmAlert}
+        tone="primary"
+        title="Send fee alert?"
+        body={`${alertCount} ${alertCount === 1 ? 'family' : 'families'} with a fee due${klass ? ` in ${klass}` : ''} will get a reminder.`}
+        confirmLabel="Send alert"
+        onConfirm={() => { setConfirmAlert(false); saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }}
+        onCancel={() => setConfirmAlert(false)}
+      />
       <ScreenHeader title="Fees" onBack={back} right={
         <button onClick={() => setShowForm(f => !f)} className="td-btn-sm">
           <span className="text-td-body leading-none">{showForm ? '×' : '+'}</span> {showForm ? 'Close' : 'Add fee'}
@@ -113,8 +137,8 @@ export function FeesScreen() {
       {/* What is still owed leads; what came in is the line under it, and the
           bar shows the split without making her do the sum. */}
       <div className="bg-td-card border border-td-border p-4 mb-[18px] shadow-td-card lg:max-w-md">
-        <div className="text-td-caption font-semibold tracking-[.12em] uppercase text-td-muted">Outstanding total</div>
-        <div className="td-num text-[40px] leading-10 font-semibold tracking-[-.03em] text-td-on-red mt-[9px]">{rupee(totalRemaining)}</div>
+        <div className="td-eyebrow">Outstanding total</div>
+        <div className="td-hero text-td-on-red mt-[9px]">{rupee(totalRemaining)}</div>
         <div className="td-num text-td-small text-td-muted mt-2">{rupee(totalCollected)} collected of {rupee(totalCollected + totalRemaining)} · {pendingCount} pending, {paidCount} paid</div>
         {totalCollected + totalRemaining > 0 && (
           <div className="flex gap-0.5 h-2 mt-3" aria-hidden>
@@ -126,7 +150,7 @@ export function FeesScreen() {
 
       {showForm && (
         <div className="td-form-card mb-[18px] lg:max-w-lg">
-          <div className="flex gap-1.5 p-1 bg-td-soft rounded-td-md">
+          <div className="flex gap-1.5 p-1 bg-td-soft rounded-td">
             {[{ on: false, label: 'One fee' }, { on: true, label: 'Installment plan' }].map(t => (
               <button key={t.label} onClick={() => setPlanMode(t.on)}
                 className={`flex-1 text-td-caption font-semibold py-2 min-h-11 border-none cursor-pointer ${planMode === t.on ? 'bg-td-card text-td-dark' : 'bg-transparent text-td-muted'}`}>
@@ -179,7 +203,7 @@ export function FeesScreen() {
                 <input type="date" value={planFirstDue} onChange={e => setPlanFirstDue(e.target.value)} className="td-field" />
               </label>
               {planPreview.length > 0 && (
-                <div className="bg-td-soft rounded-td-md p-3 text-td-caption text-td-muted leading-relaxed">
+                <div className="bg-td-soft rounded-td p-3 text-td-caption text-td-muted leading-relaxed">
                   <span className="td-strong text-td-dark">{planPreview.length} installments</span>
                   {' · '}{planPreview[0].period} to {planPreview[planPreview.length - 1].period}
                   <div className="mt-1">
@@ -196,7 +220,7 @@ export function FeesScreen() {
       {/* The class the head is looking at is the class the alert goes to. A
           button that says "all pending" under a list showing one class would
           message families she never meant to chase. */}
-      <button onClick={() => { if (pendingCount === 0) { notify('No pending fees', 'error'); return } saveReminder('Fee', REMINDER_TEMPLATES.Fee, klass || 'all', 'fees_due') }} className="w-full lg:max-w-md min-h-11 border border-td-red bg-td-card text-td-on-red text-td-small font-semibold p-[13px] cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
+      <button onClick={() => { if (alertCount === 0) { notify('No pending fees — nobody to remind'); return } setConfirmAlert(true) }} className="w-full lg:max-w-md min-h-11 border border-td-red bg-td-card text-td-on-red text-td-small font-semibold p-[13px] cursor-pointer mb-[18px]">{klass ? `Send alert to pending in ${klass}` : 'Send alert to all pending'}</button>
 
       {rows.length === 0 && klass ? (
         <EmptyState title={`Nobody in ${klass}`} hint="No student in that class, so there is nothing to collect from it. Pick another class, or go back to all of them." />
@@ -225,7 +249,7 @@ export function FeesScreen() {
                   </button>
                   <div className="shrink-0 text-right">
                     <div className="td-num text-td-body font-semibold text-td-dark">{rupee((d.feeDue ?? 0) > 0 ? d.feeDue! : d.feeCollected ?? 0)}</div>
-                    <button onClick={() => toggleFeeStatus(studentKey(d))} aria-label={`${d.name}: ${d.feeStatus}, tap to change`} className={`td-tag mt-1 px-[7px] py-[3px] border-none cursor-pointer ${feeTag(d.feeStatus)}`}>{d.feeStatus}</button>
+                    <button onClick={() => d.feeStatus === 'Paid' ? toggleFeeStatus(studentKey(d)) : setConfirmPaid({ key: studentKey(d), student: d.name, amount: d.feeDue ?? 0 })} aria-label={`${d.name}: ${d.feeStatus}, tap to change`} className={`td-tag mt-1 px-[7px] py-[3px] border-none cursor-pointer ${feeTag(d.feeStatus)}`}>{d.feeStatus}</button>
                   </div>
                 </div>
 

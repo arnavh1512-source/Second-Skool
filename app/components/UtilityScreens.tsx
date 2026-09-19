@@ -28,7 +28,7 @@ function EnablePushButton() {
 
   if (!pushSupported()) return null
   return (
-    <button onClick={turnOn} disabled={on || busy} className="w-full border border-td-border bg-td-card text-td-dark text-td-small font-semibold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
+    <button onClick={turnOn} disabled={on || busy} className="w-full border border-td-border bg-td-card text-td-dark text-td-small font-semibold p-[15px] rounded-td cursor-pointer mt-3 flex items-center justify-center gap-2 disabled:opacity-60">
       <Icon name="reminder" size={17} color="var(--color-td-primary)" />
       {on ? 'Notifications enabled' : busy ? 'Enabling…' : 'Enable notifications on this device'}
     </button>
@@ -80,8 +80,8 @@ export function MeetingsScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {meetingsList.map((m, i) => (
-            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="td-card rounded-td-md p-3.5 flex items-center gap-[13px]">
-              <div className="w-[46px] text-center shrink-0 bg-td-tint-blue rounded-td-sm py-2">
+            <div key={m.dbId ?? `${m.title}-${m.day}-${i}`} className="td-card rounded-td p-3.5 flex items-center gap-[13px]">
+              <div className="w-[46px] text-center shrink-0 bg-td-tint-blue rounded-td py-2">
                 <div className="text-td-body font-semibold text-td-primary leading-none">{m.day}</div>
                 <div className="text-td-caption text-td-primary font-semibold mt-0.5">{m.mon}</div>
               </div>
@@ -90,7 +90,7 @@ export function MeetingsScreen() {
                 <div className="text-td-caption text-td-muted mt-0.5">{m.time} · {m.kind}</div>
               </div>
               {isAdmin && m.dbId && (
-                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 td-danger text-td-caption font-semibold py-1.5 px-3 rounded-td-sm">Cancel</button>
+                <button onClick={() => setConfirmCancel({ id: m.dbId!, title: m.title })} className="shrink-0 td-danger text-td-small font-semibold min-h-11 px-3.5 rounded-td">Cancel</button>
               )}
             </div>
           ))}
@@ -155,7 +155,7 @@ export function RankingsScreen() {
           <div className="td-h2 mb-0">Top three</div>
           <div className="bg-td-card border border-td-border border-t-0 shadow-td-card">
             {rows.slice(0, 3).map((r, i) => (
-              <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] px-[15px] py-3.5 min-h-14 border-b border-td-line last:border-b-0">
+              <div key={r.id ?? `${r.name}-${i}`} className="flex items-center gap-[13px] px-4 py-3.5 min-h-14 border-b border-td-line last:border-b-0">
                 <div className="td-num w-[22px] shrink-0 text-td-title font-semibold text-td-dark">{i + 1}</div>
                 <div className="w-9 h-9 shrink-0 rounded-full bg-td-tint-blue text-td-primary flex items-center justify-center text-td-small font-semibold">{initials(r.name)}</div>
                 <div className="flex-1 min-w-0 truncate text-td-body font-semibold text-td-dark">{r.name}</div>
@@ -196,25 +196,25 @@ export function MoreScreen() {
     { icon: 'attendance', label: 'Mark attendance', tint: 'var(--color-td-tint-green)', screen: 'attendance' },
     { icon: 'results', label: 'Enter results', tint: 'var(--color-td-tint-blue)', screen: 'results' },
     { icon: 'homework', label: 'Assignments', tint: 'var(--color-td-tint-amber)', screen: 'assign' },
-    { icon: 'notes', label: 'Study material', tint: 'var(--color-td-tint-indigo)', screen: 'notes' },
+    { icon: 'notes', label: 'Study material', tint: 'var(--color-td-tint-blue)', screen: 'notes' },
     { icon: 'reminder', label: 'Send reminders', tint: 'var(--color-td-tint-red)', screen: 'reminder' },
   ]
   const management: MoreItem[] = [
-    { icon: 'approvals', label: 'Staff access & approvals', tint: 'var(--color-td-tint-indigo)', screen: 'staffApprovals', badge: pendingCount },
+    { icon: 'approvals', label: 'Staff access & approvals', tint: 'var(--color-td-tint-blue)', screen: 'staffApprovals', badge: pendingCount },
     { icon: 'reports', label: 'Weekly report', tint: 'var(--color-td-tint-green)', screen: 'reports' },
     { icon: 'fees', label: 'Fees & alerts', tint: 'var(--color-td-tint-green)', screen: 'fees' },
     { icon: 'rankings', label: 'Rankings', tint: 'var(--color-td-tint-amber)', screen: 'rankings' },
     { icon: 'meetings', label: 'Meetings', tint: 'var(--color-td-tint-blue)', screen: 'meetings' },
-    { icon: 'branches', label: 'Branches', tint: 'var(--color-td-tint-indigo)', screen: 'branches' },
+    { icon: 'branches', label: 'Branches', tint: 'var(--color-td-tint-blue)', screen: 'branches' },
     { icon: 'subjects', label: 'Subjects', tint: 'var(--color-td-tint-blue)', screen: 'subjects' },
     { icon: 'batches', label: 'Batches', tint: 'var(--color-td-tint-green)', screen: 'batches' },
   ]
 
   const card = (list: MoreItem[]) => (
-    <div className="td-card rounded-td-lg overflow-hidden">
+    <div className="td-card rounded-td overflow-hidden">
       {list.map(m => (
         <button key={m.label} onClick={() => goFrom(m.screen, 'more', 'more')} className="td-plain w-full text-left border-b border-td-line p-[15px] px-[17px] flex items-center gap-3.5 cursor-pointer last:border-b-0">
-          <div className="w-10 h-10 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
+          <div className="w-10 h-10 rounded-td shrink-0 flex items-center justify-center" style={{ background: m.tint, color: ink(m.tint) }}><Icon name={m.icon} size={20} /></div>
           <div className="flex-1 text-td-small font-semibold text-td-dark">{m.label}</div>
           {!!m.badge && m.badge > 0 && <span className="td-count">{m.badge}</span>}
           <ChevronRight />
@@ -227,7 +227,7 @@ export function MoreScreen() {
     <div className="td-screen">
       <div className="td-title mt-1.5 mb-[18px]">More tools</div>
 
-      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left td-card rounded-td-lg p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
+      <button onClick={() => goFrom('staffProfile', 'more', 'more')} className="w-full text-left td-card rounded-td p-3.5 flex items-center gap-3.5 cursor-pointer mb-4">
         <div className="w-[46px] h-[46px] td-avatar text-td-body">{initials(profileName)}</div>
         <div className="flex-1 min-w-0">
           <div className="text-td-small td-strong truncate">{profileName}</div>
@@ -250,7 +250,7 @@ export function MoreScreen() {
         {card([{ icon: 'warning', label: 'Report a problem', tint: 'var(--color-td-tint-red)', screen: 'support' }])}
       </div>
 
-      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td-md mt-4 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td mt-4 flex items-center justify-center gap-[9px]">
         <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>
@@ -262,19 +262,20 @@ export function MoreScreen() {
 // student self-registration requests, and (head only) staff access requests —
 // plus a device push toggle. Mirrors the student notifications bell.
 export function NotificationsScreen() {
-  const { go, role, pendingStudents, staffList, loadStaff, refreshData } = useDashboard()
+  const { go, role, pendingStudents, studentDevices, staffList, loadStaff, refreshData } = useDashboard()
   const isAdmin = role === 'admin'
 
   // Pull fresh counts on open so the list reflects reality, not stale state.
   useEffect(() => { refreshData(); if (isAdmin) loadStaff() }, [refreshData, loadStaff, isAdmin])
 
   const studentCount = pendingStudents.length
+  const phoneCount = studentDevices.filter(d => !d.allowed).length
   const staffCount = isAdmin ? staffList.filter(s => s.status === 'pending').length : 0
-  const empty = studentCount === 0 && staffCount === 0
+  const empty = studentCount === 0 && phoneCount === 0 && staffCount === 0
 
   const row = (icon: IconName, tint: string, label: string, count: number, screen: Screen) => (
-    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none td-card rounded-td-lg p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
-      <div className="w-11 h-11 rounded-td-sm shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
+    <button onClick={() => go(screen, 'home')} className="w-full text-left border-none td-card rounded-td p-4 flex items-center gap-3.5 cursor-pointer mb-2.5">
+      <div className="w-11 h-11 rounded-td shrink-0 flex items-center justify-center" style={{ background: tint, color: ink(tint) }}><Icon name={icon} size={22} /></div>
       <div className="flex-1 min-w-0">
         <div className="text-td-small td-strong">{label}</div>
         <div className="text-td-caption text-td-muted mt-0.5">{count} waiting for your review</div>
@@ -290,16 +291,17 @@ export function NotificationsScreen() {
 
       {empty ? (
         <div className="flex flex-col items-center text-center py-14">
-          <div className="w-16 h-16 rounded-td-lg bg-td-tint-green flex items-center justify-center mb-4">
+          <div className="w-16 h-16 rounded-td bg-td-tint-green flex items-center justify-center mb-4">
             <Icon name="reminder" size={30} color="var(--color-td-green)" />
           </div>
           <div className="text-td-title td-strong">You&apos;re all caught up</div>
-          <div className="text-td-small text-td-muted mt-1 max-w-[240px]">New student and staff requests will show up here.</div>
+          <div className="text-td-small text-td-muted mt-1 max-w-[240px]">New student, phone and staff requests will show up here.</div>
         </div>
       ) : (
         <>
           {studentCount > 0 && row('requests', 'var(--color-td-tint-green)', 'Student join requests', studentCount, 'studentRequests')}
-          {staffCount > 0 && row('approvals', 'var(--color-td-tint-indigo)', 'Staff access requests', staffCount, 'staffApprovals')}
+          {phoneCount > 0 && row('phone', 'var(--color-td-tint-amber)', 'New phones for a student', phoneCount, 'studentRequests')}
+          {staffCount > 0 && row('approvals', 'var(--color-td-tint-blue)', 'Staff access requests', staffCount, 'staffApprovals')}
         </>
       )}
 
@@ -309,10 +311,11 @@ export function NotificationsScreen() {
 }
 
 export function StaffProfileScreen() {
-  const { go, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, notify, setMyPassword } = useDashboard()
+  const { back, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'
   const logoInput = useRef<HTMLInputElement>(null)
   const [logoBusy, runLogo] = useBusy()
+  const [confirmLogo, setConfirmLogo] = useState(false)
   const pickLogo = (file?: File) => runLogo(async () => {
     if (!file) return
     try { await saveCentreLogo(await fileToLogoDataUrl(file)) }
@@ -354,13 +357,21 @@ export function StaffProfileScreen() {
 
   return (
     <div className="td-screen">
-      <ScreenHeader title="My Profile" onBack={() => go('more', 'more')} />
+      <ScreenHeader title="My Profile" onBack={back} />
+      <ConfirmDialog
+        open={confirmLogo}
+        title="Remove the centre logo?"
+        body="Students go back to seeing your centre's initials. You can upload a logo again any time."
+        confirmLabel="Remove"
+        onConfirm={() => { setConfirmLogo(false); runLogo(() => saveCentreLogo('')) }}
+        onCancel={() => setConfirmLogo(false)}
+      />
 
       <div className="flex flex-col items-center text-center mb-6">
         <div className="w-[76px] h-[76px] td-avatar text-td-display mb-3">{initials(displayName)}</div>
         <div className="text-td-title td-strong">{displayName}</div>
         <div className="text-td-caption text-td-muted mt-0.5">{googleEmail}</div>
-        <div className="inline-flex items-center gap-[6px] bg-td-tint-green rounded-td-lg py-[5px] px-[11px] mt-2.5">
+        <div className="inline-flex items-center gap-[6px] bg-td-tint-green rounded-td py-[5px] px-[11px] mt-2.5">
           <span className="w-1.5 h-1.5 rounded-full bg-td-green" />
           <span className="text-td-caption font-semibold text-td-green">{isAdmin ? 'Head teacher' : 'Teacher'}</span>
         </div>
@@ -377,8 +388,8 @@ export function StaffProfileScreen() {
         {isAdmin && (
           <div role="group" aria-label="Centre logo">
             <div className="td-label">Centre logo</div>
-            <div className="flex items-center gap-3.5 border border-td-border rounded-td-md p-3">
-              <div className="w-14 h-14 rounded-td-md overflow-hidden shrink-0 flex items-center justify-center bg-td-soft border border-td-border">
+            <div className="flex items-center gap-3.5 border border-td-border rounded-td p-3">
+              <div className="w-14 h-14 rounded-td overflow-hidden shrink-0 flex items-center justify-center bg-td-soft border border-td-border">
                 {centreLogo
                   // eslint-disable-next-line @next/next/no-img-element
                   ? <img src={centreLogo} alt="Centre logo" className="w-full h-full object-cover" />
@@ -386,9 +397,9 @@ export function StaffProfileScreen() {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex gap-2">
-                  <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-td-card text-td-dark text-td-caption font-semibold py-2 px-3.5 rounded-td-sm cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
+                  <button onClick={() => logoInput.current?.click()} disabled={logoBusy} className="border border-td-border bg-td-card text-td-dark text-td-small font-semibold min-h-11 px-3.5 rounded-td cursor-pointer disabled:opacity-60">{logoBusy ? 'Uploading…' : centreLogo ? 'Change' : 'Upload'}</button>
                   {centreLogo && !logoBusy && (
-                    <button onClick={() => saveCentreLogo('')} className="td-danger text-td-caption font-semibold py-2 px-3.5 rounded-td-sm">Remove</button>
+                    <button onClick={() => setConfirmLogo(true)} className="td-danger text-td-small font-semibold min-h-11 px-3.5 rounded-td">Remove</button>
                   )}
                 </div>
                 <p className="text-td-caption text-td-muted mt-1.5 leading-snug">Students who log in with your centre code see this logo.</p>
@@ -397,7 +408,7 @@ export function StaffProfileScreen() {
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2.5 bg-td-soft border border-td-border rounded-td-md p-3">
+        <div className="flex items-center gap-2.5 bg-td-soft border border-td-border rounded-td p-3">
           <Icon name="info" size={15} color="var(--color-td-subtle)" />
           <span className="text-td-caption text-td-muted">Your email is managed by Google and can&apos;t be changed here.</span>
         </div>
@@ -408,24 +419,24 @@ export function StaffProfileScreen() {
       <EnablePushButton />
 
       {!pwOpen ? (
-        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-td-small font-semibold p-[15px] rounded-td-md cursor-pointer mt-3 flex items-center justify-center gap-2">
+        <button onClick={() => setPwOpen(true)} className="w-full border border-td-border bg-td-card text-td-dark text-td-small font-semibold p-[15px] rounded-td cursor-pointer mt-3 flex items-center justify-center gap-2">
           <Icon name="lock" size={17} color="var(--color-td-primary)" />
           Set password for phone login
         </button>
       ) : (
-        <div className="border border-td-border rounded-td-md p-4 mt-3">
+        <div className="border border-td-border rounded-td p-4 mt-3">
           <div className="text-td-small td-strong">Set a password</div>
           <p className="text-td-caption text-td-muted mt-1 leading-snug">Then sign in on the home-screen app with your email + this password — it keeps you logged in.</p>
           <input value={pw} type="password" autoComplete="new-password" onChange={e => setPw(e.target.value)} placeholder={`New password (min ${MIN_PASSWORD_LENGTH} chars)`} className="td-field mt-3" />
           <input value={pw2} type="password" autoComplete="new-password" onChange={e => setPw2(e.target.value)} onKeyDown={e => e.key === 'Enter' && !pwBusy && savePassword()} placeholder="Confirm password" className="td-field mt-2.5" />
           <div className="flex gap-2 mt-3">
-            <button onClick={savePassword} disabled={pwBusy} className="td-pill flex-1 text-td-small font-semibold py-[12px] rounded-td-sm cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
-            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-[12px] px-4 rounded-td-sm cursor-pointer">Cancel</button>
+            <button onClick={savePassword} disabled={pwBusy} className="td-pill flex-1 text-td-small font-semibold py-[12px] rounded-td cursor-pointer disabled:opacity-60">{pwBusy ? 'Saving…' : 'Save password'}</button>
+            <button onClick={() => { setPwOpen(false); setPw(''); setPw2('') }} className="border border-td-border bg-td-card text-td-muted text-td-small font-semibold py-[12px] px-4 rounded-td cursor-pointer">Cancel</button>
           </div>
         </div>
       )}
 
-      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td-md mt-3 flex items-center justify-center gap-[9px]">
+      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td mt-3 flex items-center justify-center gap-[9px]">
         <Icon name="signOut" size={17} color="var(--color-td-red)" />
         Sign out
       </button>

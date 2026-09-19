@@ -78,7 +78,7 @@ export function NotesScreen() {
           </div>
           <label className="block"><span className="td-label">Note <span className="text-td-subtle font-semibold">· type here (free)</span></span><textarea rows={3} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the note, or leave blank if attaching a file/link…" className="td-field resize-none" /></label>
           <label className="block"><span className="td-label">Attach PDF/image <span className="text-td-subtle font-semibold">· optional, max 10 MB</span></span>
-            <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-td-caption text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-td-sm file:border-none file:bg-td-tint-blue file:text-td-primary file:font-semibold file:text-td-caption" />
+            <input type="file" accept="application/pdf,image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} className="w-full text-td-caption text-td-muted file:mr-3 file:py-2 file:px-3 file:rounded-td file:border-none file:bg-td-tint-blue file:text-td-primary file:font-semibold file:text-td-caption" />
           </label>
           <label className="block"><span className="td-label">Video link <span className="text-td-subtle font-semibold">· optional (YouTube / Drive)</span></span><input value={link} onChange={e => setLink(e.target.value)} placeholder="https://youtu.be/…" className="td-field" /></label>
           <PrimaryButton onClick={save}>{busy ? 'Sharing…' : 'Share with class'}</PrimaryButton>
@@ -90,13 +90,13 @@ export function NotesScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {notesList.map(n => (
-            <div key={n.dbId} className="td-card rounded-td-lg p-4">
+            <div key={n.dbId} className="td-card rounded-td p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="text-td-body td-strong">{n.title}</div>
                   <div className="text-td-caption text-td-muted mt-0.5">{n.klass}{n.subject ? ` · ${n.subject}` : ''}</div>
                 </div>
-                <button onClick={() => n.dbId && setRemoving({ id: n.dbId, title: n.title })} className="td-danger text-td-caption font-semibold py-1.5 px-3 rounded-td-sm shrink-0">Remove</button>
+                <button onClick={() => n.dbId && setRemoving({ id: n.dbId, title: n.title })} className="td-danger text-td-small font-semibold min-h-11 px-3.5 rounded-td shrink-0">Remove</button>
               </div>
               {n.body && <div className="text-td-small text-td-text leading-relaxed mt-2">{n.body}</div>}
               <div className="flex gap-2 mt-2.5">
@@ -129,9 +129,9 @@ export function StuNotesScreen() {
       ) : (
         <div className="flex flex-col gap-2.5">
           {stuNotes.map((n, i) => (
-            <div key={`${n.date}-${n.title}-${i}`} className="td-card rounded-td-lg p-4">
+            <div key={`${n.date}-${n.title}-${i}`} className="td-card rounded-td p-4">
               <div className="flex items-center gap-[11px]">
-                <div className="w-9 h-9 rounded-td-sm shrink-0 flex items-center justify-center bg-td-tint-blue" style={{ color: ink('var(--color-td-tint-blue)') }}><Icon name="notes" size={19} /></div>
+                <div className="w-9 h-9 rounded-td shrink-0 flex items-center justify-center bg-td-tint-blue" style={{ color: ink('var(--color-td-tint-blue)') }}><Icon name="notes" size={19} /></div>
                 <div className="flex-1 min-w-0">
                   <div className="text-td-body td-strong">{n.title}</div>
                   {n.subject && <div className="text-td-caption text-td-muted mt-0.5">{n.subject}</div>}
@@ -139,8 +139,8 @@ export function StuNotesScreen() {
               </div>
               {n.body && <div className="text-td-small text-td-text leading-relaxed mt-2.5">{n.body}</div>}
               <div className="flex gap-2.5 mt-2.5">
-                {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border border-td-primary text-td-primary text-td-caption font-semibold py-2 rounded-td-sm">Open file</a>}
-                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-td-red text-td-on-solid text-td-caption font-semibold py-2 rounded-td-sm flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
+                {n.fileUrl && <a href={n.fileUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border border-td-primary text-td-primary text-td-caption font-semibold min-h-11 py-2 rounded-td flex items-center justify-center">Open file</a>}
+                {n.linkUrl && <a href={n.linkUrl} target="_blank" rel="noreferrer" className="flex-1 text-center border-none bg-td-primary text-td-on-solid text-td-caption font-semibold min-h-11 py-2 rounded-td flex items-center justify-center gap-1.5"><Icon name="next" size={14} />Watch video</a>}
               </div>
             </div>
           ))}

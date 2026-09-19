@@ -69,7 +69,7 @@ export function mapSnapshot(snap: Snapshot): Partial<State> {
     const si = STATUS_ICONS[status] ?? STATUS_ICONS.Present
     return {
       day: isNaN(d.getTime()) ? '' : d.toLocaleString('en', { weekday: 'long' }),
-      date: fmtDate(a.date ?? ''), status, ...si,
+      date: fmtDate(a.date ?? ''), iso: a.date ?? '', status, ...si,
     }
   })
 

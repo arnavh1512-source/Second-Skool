@@ -14,7 +14,7 @@ function StudentRoster({ list }: { list: Student[] }) {
   return (
     <div className="flex flex-col gap-2 mt-1">
       {list.map(s => (
-        <div key={s.dbId ?? s.id} className="bg-td-bg border border-td-border rounded-td-md p-[11px] px-3 flex items-center gap-3">
+        <div key={s.dbId ?? s.id} className="bg-td-bg border border-td-border rounded-td p-[11px] px-3 flex items-center gap-3">
           <div className="w-9 h-9 td-avatar">{initials(s.name)}</div>
           <div className="flex-1 min-w-0">
             <div className="text-td-small font-semibold text-td-dark truncate">{s.name}</div>
@@ -69,7 +69,7 @@ export function BranchesScreen() {
             <input value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" className="td-field" />
           </label>
           <label className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-td-primary rounded" />
+            <input type="checkbox" checked={isMain} onChange={e => setIsMain(e.target.checked)} className="w-5 h-5 accent-td-primary rounded-td" />
             <span className="text-td-small font-semibold text-td-dark">Set as main branch</span>
           </label>
           <PrimaryButton onClick={handleAdd}>Add branch</PrimaryButton>
@@ -84,10 +84,10 @@ export function BranchesScreen() {
             const roster = students.filter(s => s.branch === b.name)
             const open = openBranch === b.name
             return (
-            <div key={b.dbId ?? b.name} className="td-card rounded-td-lg p-4">
+            <div key={b.dbId ?? b.name} className="td-card rounded-td p-4">
               <div className="flex items-center justify-between mb-2.5">
                 <div className="text-td-body td-strong">{b.name}</div>
-                {b.main && <span className="text-td-caption font-semibold text-td-primary bg-td-tint-blue py-1 px-[9px] rounded-td-lg">Main</span>}
+                {b.main && <span className="text-td-caption font-semibold text-td-primary bg-td-tint-blue py-1 px-[9px] rounded-td">Main</span>}
               </div>
               <div className="text-td-caption text-td-muted mb-3">{b.address}</div>
               <div className="flex items-center justify-between">
@@ -95,7 +95,7 @@ export function BranchesScreen() {
                   <div><div className="text-td-body td-strong">{roster.length}</div><div className="text-td-caption text-td-subtle font-semibold">Students {roster.length > 0 && <span className="text-td-primary">{open ? '▲' : '▼'}</span>}</div></div>
                   <div><div className="text-td-body td-strong">{b.staff}</div><div className="text-td-caption text-td-subtle font-semibold">Staff</div></div>
                 </button>
-                {b.dbId && <button onClick={() => setRemoving({ id: b.dbId!, name: b.name })} className="td-danger text-td-caption font-semibold py-2 px-3.5 rounded-td-sm">Remove</button>}
+                {b.dbId && <button onClick={() => setRemoving({ id: b.dbId!, name: b.name })} className="td-danger text-td-small font-semibold min-h-11 px-3.5 rounded-td">Remove</button>}
               </div>
               {open && <StudentRoster list={roster} />}
             </div>
@@ -148,7 +148,7 @@ function NameListScreen({ noun, plural, placeholder, rows, add, remove, confirmB
         <div className="text-td-small td-strong">Add {noun}</div>
         <div className="flex gap-[11px]">
           <input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="td-field flex-1" onKeyDown={e => e.key === 'Enter' && handleAdd()} />
-          <button onClick={handleAdd} className="td-pill text-td-small font-semibold py-[13px] px-5 rounded-td-md cursor-pointer shrink-0">Add</button>
+          <button onClick={handleAdd} className="td-pill text-td-small font-semibold py-[13px] px-5 rounded-td cursor-pointer shrink-0">Add</button>
         </div>
       </div>
 
@@ -161,7 +161,7 @@ function NameListScreen({ noun, plural, placeholder, rows, add, remove, confirmB
             const list = roster?.(r.name)
             const open = openRow === r.name
             return (
-              <div key={r.dbId ?? r.name} className="td-card rounded-td-md p-[13px] px-[15px]">
+              <div key={r.dbId ?? r.name} className="td-card rounded-td p-[13px] px-4">
                 <div className="flex items-center gap-[13px]">
                   <div className="w-10 h-10 td-avatar text-td-body">{r.name[0]}</div>
                   {list ? (
@@ -172,7 +172,7 @@ function NameListScreen({ noun, plural, placeholder, rows, add, remove, confirmB
                   ) : (
                     <div className="flex-1 text-td-body font-semibold text-td-dark truncate">{r.name}</div>
                   )}
-                  {r.dbId && <button onClick={() => setConfirm({ id: r.dbId!, name: r.name })} className="td-danger text-td-caption font-semibold py-1.5 px-3 rounded-td-sm shrink-0">Remove</button>}
+                  {r.dbId && <button onClick={() => setConfirm({ id: r.dbId!, name: r.name })} className="td-danger text-td-small font-semibold min-h-11 px-3.5 rounded-td shrink-0">Remove</button>}
                 </div>
                 {list && open && <StudentRoster list={list} />}
               </div>

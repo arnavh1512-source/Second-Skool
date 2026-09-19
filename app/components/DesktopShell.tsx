@@ -27,7 +27,7 @@ function NavRow({ item }: { item: NavItem }) {
   return (
     <button
       onClick={() => go(item.screen, item.tab)}
-      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-td-sm cursor-pointer transition-colors ${
+      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-td cursor-pointer transition-colors ${
         on ? 'bg-td-tint-blue text-td-primary' : 'text-td-text hover:bg-td-soft'
       }`}
     >
@@ -82,7 +82,7 @@ function Sidebar() {
       <div className="flex items-center gap-2.5 px-5 pt-6 pb-4">
         {centreLogo
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-td-sm object-cover shrink-0" />
+          ? <img src={centreLogo} alt={centreName || 'Centre'} className="w-9 h-9 rounded-td object-cover shrink-0" />
           : <div className="w-9 h-9 flex items-center justify-center bg-td-dark text-td-bg font-semibold text-td-body shrink-0">S</div>}
         <div className="min-w-0">
           <div className="text-td-body td-strong truncate">{centreName || 'Second Skool'}</div>
@@ -103,7 +103,7 @@ function Sidebar() {
       </nav>
 
       <div className="border-t border-td-border p-3">
-        <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-td-sm hover:bg-td-soft cursor-pointer mb-1">
+        <button onClick={() => go('staffProfile')} className="w-full text-left flex items-center gap-2.5 px-2 py-2 rounded-td hover:bg-td-soft cursor-pointer mb-1">
           <div className="w-9 h-9 td-avatar">{initials(name)}</div>
           <div className="min-w-0 flex-1">
             <div className="text-td-small td-strong truncate">{name}</div>
@@ -113,7 +113,7 @@ function Sidebar() {
         {/* On a phone this lives on More; the desktop shell has no More, so
             without this row a laptop user has no way to report anything. */}
         <NavRow item={{ icon: 'warning', label: 'Report a problem', screen: 'support' }} />
-        <button onClick={signOut} className="w-full td-danger text-td-small font-semibold py-2.5 rounded-td-sm flex items-center justify-center gap-2 mt-1">
+        <button onClick={signOut} className="w-full td-danger text-td-small font-semibold min-h-11 py-2.5 rounded-td flex items-center justify-center gap-2 mt-1">
           <Icon name="signOut" size={16} color="var(--color-td-red)" />
           Sign out
         </button>
