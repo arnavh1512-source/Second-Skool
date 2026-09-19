@@ -66,6 +66,11 @@ const CAP = 1000
 export function createRateLimiter(limit: number, windowMs: number, now: () => number = Date.now) {
   const log = new Map<string, number[]>()
   return {
+    /** Whether `key` is already at its limit, without counting this look. */
+    blocked(key: string): boolean {
+      const t = now()
+      return (log.get(key) ?? []).filter(ts => t - ts < windowMs).length >= limit
+    },
     limited(key: string): boolean {
       const t = now()
       const recent = (log.get(key) ?? []).filter(ts => t - ts < windowMs)
@@ -161,7 +166,7 @@ function fellBack(reason: string): null {
   return null
 }
 
-async function sharedCount(key: string, windowMs: number): Promise<number | null> {
+async function sharedCount(key: string, windowMs: number, count = true): Promise<number | null> {
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
   // Not configured is a deployment choice, not a fault — nothing to report.
@@ -171,7 +176,7 @@ async function sharedCount(key: string, windowMs: number): Promise<number | null
     const res = await fetch(`${url}/pipeline`, {
       method: 'POST',
       headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      body: JSON.stringify([['INCR', bucket], ['PEXPIRE', bucket, String(windowMs * 2)]]),
+      body: JSON.stringify(count ? [['INCR', bucket], ['PEXPIRE', bucket, String(windowMs * 2)]] : [['GET', bucket]]),
       cache: 'no-store',
       // A rate limiter is in front of the work, not instead of it. One second
       // is already longer than the request it is guarding deserves to wait.
@@ -180,6 +185,8 @@ async function sharedCount(key: string, windowMs: number): Promise<number | null
     if (!res.ok) return fellBack(`http ${res.status}`)
     const out = await res.json()
     const n = Array.isArray(out) ? out[0]?.result : null
+    // GET answers with a string, or null for a window nobody has counted in yet.
+    if (!count) return n == null ? 0 : Number(n)
     return typeof n === 'number' ? n : fellBack('unreadable response')
   } catch (e) {
     return fellBack(e instanceof Error ? e.name : 'unreachable')
@@ -190,11 +197,29 @@ async function sharedCount(key: string, windowMs: number): Promise<number | null
 export async function rateLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
   const shared = await sharedCount(key, windowMs)
   if (shared !== null) return shared > limit
+  return limiterFor(limit, windowMs).limited(key)
+}
+
+// Whether `key` is already over `limit`, without counting this call. For a
+// limit on failures: look before the work, count only when the work fails.
+export async function rateBlocked(key: string, limit: number, windowMs: number): Promise<boolean> {
+  const shared = await sharedCount(key, windowMs, false)
+  if (shared !== null) return shared >= limit
+  return limiterFor(limit, windowMs).blocked(key)
+}
+
+function limiterFor(limit: number, windowMs: number) {
   const id = `${limit}:${windowMs}`
   let l = limiters.get(id)
   if (!l) { l = createRateLimiter(limit, windowMs); limiters.set(id, l) }
-  return l.limited(key)
+  return l
 }
+
+// The caller's address. On Vercel the platform overwrites x-forwarded-for with
+// the address it saw, so the first entry cannot be forged by the client; behind
+// any other proxy this is only as honest as that proxy.
+export const clientIp = (req: Request): string =>
+  req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
 
 // ---------------------------------------------------------------------------
 // Signing a notification with the centre it came from.

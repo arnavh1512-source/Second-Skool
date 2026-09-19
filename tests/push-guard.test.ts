@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { safeLink, isPushServiceEndpoint, signWithCentre, validatePushBody, validateStudentRequest, createRateLimiter, rateLimit } from '../app/lib/push-guard'
+import { safeLink, isPushServiceEndpoint, signWithCentre, validatePushBody, validateStudentRequest, createRateLimiter, rateLimit, rateBlocked, clientIp } from '../app/lib/push-guard'
 
 describe('isPushServiceEndpoint', () => {
   it('accepts the endpoints real browsers produce', () => {
@@ -122,6 +122,16 @@ describe('createRateLimiter', () => {
     expect(rl.limited('u1')).toBe(false)
   })
 
+  it('blocked() looks without counting the look', () => {
+    // The push route peeks before every request and counts only the rejected
+    // ones. A peek that counted would put a NAT full of real teachers over the
+    // limit on their own valid requests.
+    const rl = createRateLimiter(2, 1000, () => 0)
+    for (let i = 0; i < 10; i++) expect(rl.blocked('ip')).toBe(false)
+    rl.limited('ip'); rl.limited('ip')
+    expect(rl.blocked('ip')).toBe(true)
+  })
+
   // The memory cap used to clear the whole map, which handed an allowance back
   // to every caller in it at the exact moment the limiter was busiest. Trimming
   // now spares the callers close to their limit, so the one actually hammering
@@ -158,6 +168,30 @@ describe('rateLimit (in-memory fallback)', () => {
     expect(await rateLimit(a, 1, 30_000)).toBe(false)
     expect(await rateLimit(a, 1, 30_000)).toBe(true)
     expect(await rateLimit(b, 1, 30_000)).toBe(false) // b has its own budget
+  })
+
+  it('rateBlocked only trips once the failures have been counted', async () => {
+    const key = `bad-${Math.random()}`
+    expect(await rateBlocked(key, 2, 60_000)).toBe(false)
+    expect(await rateBlocked(key, 2, 60_000)).toBe(false)
+    await rateLimit(key, 2, 60_000)
+    expect(await rateBlocked(key, 2, 60_000)).toBe(false)
+    await rateLimit(key, 2, 60_000)
+    expect(await rateBlocked(key, 2, 60_000)).toBe(true)
+  })
+})
+
+describe('clientIp', () => {
+  const req = (xff?: string) => new Request('https://x.test', { headers: xff ? { 'x-forwarded-for': xff } : {} })
+
+  it('takes the first address the proxy chain reports', () => {
+    expect(clientIp(req('203.0.113.7, 10.0.0.1'))).toBe('203.0.113.7')
+    expect(clientIp(req('  198.51.100.2 '))).toBe('198.51.100.2')
+  })
+
+  it('falls back to one shared bucket when there is no address', () => {
+    expect(clientIp(req())).toBe('unknown')
+    expect(clientIp(req(''))).toBe('unknown')
   })
 })
 

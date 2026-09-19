@@ -31,6 +31,11 @@ export type QueuedBatch = {
    *  under Wednesday would mark a class that never met and leave Tuesday blank. */
   date: string
   marks: QueuedMark[]
+  /** The account that marked it. A phone signed out by an expired session keeps
+   *  its queue, and the next person to sign in on it must not send somebody
+   *  else's register under their own name. Missing on batches queued before
+   *  this field existed. */
+  owner?: string
 }
 
 /** A queued mark that was not applied, because the register already had an
@@ -110,6 +115,7 @@ const isBatch = (b: unknown): b is QueuedBatch => {
   return !!v && typeof v.id === 'string' && !!v.id
     && typeof v.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.date)
     && Array.isArray(v.marks) && v.marks.every(isMark)
+    && (v.owner === undefined || typeof v.owner === 'string')
 }
 
 /** Validated on the way in, every time. This is localStorage: the user can edit
@@ -157,6 +163,12 @@ export function queuedMarksForDay(queue: readonly QueuedBatch[], day: string): R
   }
   return out
 }
+
+/** The batches this account may see and send. An unowned batch predates the
+ *  owner field and is kept as the current account's: sign-out clears the
+ *  queue, so it was almost certainly theirs. */
+export const ownedBy = (queue: readonly QueuedBatch[], uid: string | null): QueuedBatch[] =>
+  queue.filter(b => b.owner === undefined || b.owner === uid)
 
 /** Marks, not batches — "3 registers waiting" means nothing to her, "84 marks
  *  waiting" is the size of what she would lose. */

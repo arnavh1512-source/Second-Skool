@@ -14,7 +14,7 @@
 
 import { beforeAll, afterAll, describe, expect, it } from 'vitest'
 import pg from 'pg'
-import { DB_URL, act, denied, owner, seedCentre, type Centre } from './harness'
+import { DB_URL, act, denied, newAccount, owner, seedCentre, type Centre } from './harness'
 
 const suite = DB_URL ? describe : describe.skip
 
@@ -96,6 +96,29 @@ suite('tenant isolation', () => {
     const n = await act(c, { uid: b.head }, async q =>
       (await q('update public.centres set name = $1 where id = $2', ['Stolen', a.id])).rowCount)
     expect(n).toBe(0)
+  })
+
+  it('a pending teacher cannot read the centre row or its join codes', async () => {
+    // Anyone who types the staff code lands here as pending, before the head
+    // has looked at them. The codes are the head's to hand out, not theirs.
+    const pending = await newAccount(c, 'Beta Pending')
+    const { rows: [{ join_code }] } = await c.query('select join_code from public.centres where id = $1', [b.id])
+    await act(c, { uid: pending, commit: true }, q => q('select public.join_centre($1)', [join_code]))
+
+    const rows = await act(c, { uid: pending }, async q =>
+      (await q('select id from public.centres where id = $1', [b.id])).rows)
+    expect(rows).toHaveLength(0)
+
+    const mine = await act(c, { uid: pending }, async q =>
+      (await q('select public.my_centre() as r')).rows[0].r)
+    expect(mine?.join_code ?? null).toBeNull()
+    expect(mine?.student_join_code ?? null).toBeNull()
+  })
+
+  it('a notes file link must point into the notes bucket', async () => {
+    const msg = await denied(() => act(c, { uid: b.head }, q =>
+      q(`insert into public.notes (class, title, file_url) values ('10', 'x', 'javascript:alert(1)')`)))
+    expect(msg).toMatch(/notes_file_url_bucket/)
   })
 
   it('a head cannot change their own join code', async () => {

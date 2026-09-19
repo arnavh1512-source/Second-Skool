@@ -42,7 +42,7 @@
 -- fresh bucket, and a block that misbehaves shuts only itself out. A school on
 -- one NAT address shares a bucket, which is why it is 60 and not 25: only
 -- WRONG codes count, and sixty children mistyping in the same minute is not a
--- thing that happens. A student code is eight characters from a 32-letter
+-- thing that happens. A student code is eight characters from a 31-letter
 -- alphabet; at 60 a minute from every /24 an attacker could rent, guessing one
 -- is still out of reach.
 --

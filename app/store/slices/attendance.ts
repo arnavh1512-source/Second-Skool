@@ -2,7 +2,7 @@ import { supabase } from '../../lib/supabase'
 import { sendPush } from '../../lib/push'
 import { studentKey } from '../../lib/student-key'
 import { absenceDayLabel } from '../../lib/attendance'
-import { loadQueue, saveQueue, resolveBatch, type QueuedBatch, type QueuedMark } from '../../lib/att-queue'
+import { loadQueue, saveQueue, resolveBatch, ownedBy, type QueuedBatch, type QueuedMark } from '../../lib/att-queue'
 import { dbErr } from '../db'
 import { looksOffline } from '../errors'
 import { isoDay } from '../format'
@@ -54,16 +54,18 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
   // screens render. Writing the disk first means a phone that dies between the
   // save and the next paint still has the register on it — which is the entire
   // reason this exists.
+  // The disk keeps every account's batches; the screens see only this one's.
+  const mine = (queue: QueuedBatch[]) => ownedBy(queue, get().supabaseUserId)
   const commit = (queue: QueuedBatch[]) => {
     saveQueue(queue)
-    set({ attQueue: queue })
+    set({ attQueue: mine(queue) })
   }
 
   // The id is what the drain deletes by, so two batches saved in the same
   // millisecond must not share one — a collision would delete a register that
   // was never sent.
   const enqueue = (date: string, marks: QueuedMark[]) => {
-    const batch: QueuedBatch = { id: `${date}-${crypto.randomUUID()}`, date, marks }
+    const batch: QueuedBatch = { id: `${date}-${crypto.randomUUID()}`, date, marks, owner: get().supabaseUserId ?? undefined }
     commit([...loadQueue(), batch])
     get().notify(`Saved on this phone · ${marks.length} marks. They will sync by themselves once you are back online.`)
   }
@@ -160,12 +162,17 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
     // disk rather than off `attQueue` is what makes the mount call double as the
     // hydration: before this runs the store has never seen what is on the phone.
     syncAttQueue: async () => {
-      const queue = loadQueue()
+      const queue = mine(loadQueue())
       if (!queue.length) { if (get().attQueue.length) set({ attQueue: [] }); return }
       set({ attQueue: queue })
       if (!get().online || !get().role || draining) return
 
       draining = true
+      const uid = get().supabaseUserId
+      // Signing out mid-drain hands the store to somebody else. Everything
+      // after an await checks this, so her conflicts and toasts never land on
+      // the next person's screen.
+      const signedOut = () => get().supabaseUserId !== uid
       const notify = get().notify
       // What the drain finished with, rather than what it means to keep. The
       // two are not the same set: a drain that stops early has said nothing
@@ -193,6 +200,9 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
             p_overwrite: false,
           })
           if (error) {
+            // Not her toast to show, and not her flag to flip: the batch stays
+            // for when she is back.
+            if (signedOut()) break
             // The connection is still not real. Keep the batch and try again on
             // the next reconnect — dropping it here would lose the register for
             // a reason she never sees.
@@ -205,18 +215,23 @@ export const createAttendanceSlice: Slice<'toggleAtt' | 'saveAttendance' | 'sync
             continue
           }
 
+          // Written, so it leaves the queue whoever is signed in now. The parent
+          // push is skipped: it would go out under the next person's session.
+          done.add(batch.id)
+          if (signedOut()) break
           const saved = (data as SaveResult | null) ?? { written: 0, existing: [] }
           const { absent, conflicts: found } = resolveBatch(batch, saved.existing)
           conflicts.push(...found)
           written += saved.written
           await tellParents(absent, batch.date, notify)
-          done.add(batch.id)
+          if (signedOut()) break
         }
       } finally {
         draining = false
       }
 
       commit(loadQueue().filter(b => !done.has(b.id)))
+      if (signedOut()) return
       set({ attConflicts: conflicts })
 
       // The conflicts are not toasted. A toast is gone in four seconds and this

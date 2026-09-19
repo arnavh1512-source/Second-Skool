@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { adminClient, adminConfigured } from '@/app/lib/supabase-admin'
-import { rateLimit } from '@/app/lib/push-guard'
+import { rateLimit, clientIp } from '@/app/lib/push-guard'
 import { logError, validateCrashReport } from '@/app/lib/log'
 
 export const runtime = 'nodejs'
@@ -27,8 +27,7 @@ export async function POST(req: NextRequest) {
   const parsed = validateCrashReport(raw)
   if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  if (await rateLimit(`log:${ip}`, PER_IP.limit, PER_IP.windowMs)
+  if (await rateLimit(`log:${clientIp(req)}`, PER_IP.limit, PER_IP.windowMs)
     || await rateLimit('log:all', GLOBAL.limit, GLOBAL.windowMs)) {
     return NextResponse.json({ error: 'too many requests — slow down' }, { status: 429 })
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveBatch, parseQueue, queuedMarkCount, queuedMarksForDay, type QueuedBatch } from '../app/lib/att-queue'
+import { resolveBatch, parseQueue, ownedBy, queuedMarkCount, queuedMarksForDay, type QueuedBatch } from '../app/lib/att-queue'
 
 const mark = (studentId: string, status: 'Present' | 'Absent', name = studentId) =>
   ({ studentId, code: `TUT-${studentId}`, name, status })
@@ -74,6 +74,13 @@ describe('parseQueue', () => {
     expect(parseQueue(good)).toHaveLength(1)
   })
 
+  it('keeps the owner it was saved with, and drops a batch whose owner is not a string', () => {
+    const owned = JSON.stringify([{ id: 'b1', date: '2026-08-31', marks: [mark('s1', 'Absent')], owner: 'u1' }])
+    expect(parseQueue(owned)[0].owner).toBe('u1')
+    const bad = JSON.stringify([{ id: 'b1', date: '2026-08-31', marks: [mark('s1', 'Absent')], owner: 7 }])
+    expect(parseQueue(bad)).toEqual([])
+  })
+
   it('survives an empty, absent or unparseable value', () => {
     for (const raw of [null, '', 'not json', '{', 'null', '42', '"a string"', '{"not":"an array"}'])
       expect(parseQueue(raw)).toEqual([])
@@ -134,5 +141,24 @@ describe('queuedMarksForDay', () => {
 
   it('is empty when nothing is waiting', () => {
     expect(queuedMarksForDay([], '2026-08-31')).toEqual({})
+  })
+})
+
+describe('ownedBy', () => {
+  const q: QueuedBatch[] = [
+    { ...batch([mark('s1', 'Absent')]), id: 'mine', owner: 'u1' },
+    { ...batch([mark('s2', 'Absent')]), id: 'theirs', owner: 'u2' },
+    { ...batch([mark('s3', 'Absent')]), id: 'legacy' },
+  ]
+
+  it("never hands one account another account's register", () => {
+    // A session that expires without a sign-out leaves its queue on the phone.
+    // The next person to sign in must not send it under their own name.
+    expect(ownedBy(q, 'u1').map(b => b.id)).toEqual(['mine', 'legacy'])
+    expect(ownedBy(q, 'u2').map(b => b.id)).toEqual(['theirs', 'legacy'])
+  })
+
+  it('shows a signed-out phone only the batches nobody claimed', () => {
+    expect(ownedBy(q, null).map(b => b.id)).toEqual(['legacy'])
   })
 })
