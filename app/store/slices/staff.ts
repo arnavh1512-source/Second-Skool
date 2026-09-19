@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase'
 import { logError } from '../../lib/log'
 import { clearStudentCred } from '../../lib/student-cred'
+import { saveQueue } from '../../lib/att-queue'
 import { changedNothing, NOT_SAVED } from '../db'
 import { friendlyError } from '../errors'
 import { initialState } from '../initial-state'
@@ -68,6 +69,9 @@ export const createStaffSlice: Slice<Keys> = (set, get) => ({
   signOut: () => {
     supabase.auth.signOut()
     clearStudentCred()
+    // Unsynced marks belong to whoever made them. Left on disk they would
+    // replay under the next person to sign in on this phone.
+    saveQueue([])
     set({
       ...initialState,
       // The two things that must not come back as their initial value: the app

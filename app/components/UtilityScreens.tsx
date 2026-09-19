@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useBusy } from '../lib/use-busy'
 import { useDashboard, initials, MIN_PASSWORD_LENGTH, type Screen } from '../store'
-import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog, Chip } from './Shell'
+import { ScreenHeader, PrimaryButton, ChevronRight, EmptyState, ConfirmDialog, Chip, SignOutButton } from './Shell'
 import { Icon, ink, type IconName } from './Icon'
 import { enablePush, pushSupported, testNotification } from '../lib/push'
 import { fileToLogoDataUrl } from '../lib/image'
@@ -181,7 +181,7 @@ export function RankingsScreen() {
 type MoreItem = { icon: IconName; label: string; tint: string; screen: Screen; badge?: number }
 
 export function MoreScreen() {
-  const { goFrom, signOut, role, myName, googleEmail, staffList, loadStaff, pendingStudents, studentDevices } = useDashboard()
+  const { goFrom, role, myName, googleEmail, staffList, loadStaff, pendingStudents, studentDevices } = useDashboard()
   const isAdmin = role === 'admin'
   const profileName = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
 
@@ -250,10 +250,7 @@ export function MoreScreen() {
         {card([{ icon: 'warning', label: 'Report a problem', tint: 'var(--color-td-tint-red)', screen: 'support' }])}
       </div>
 
-      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td mt-4 flex items-center justify-center gap-[9px]">
-        <Icon name="signOut" size={17} color="var(--color-td-red)" />
-        Sign out
-      </button>
+      <SignOutButton className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td mt-4 flex items-center justify-center gap-[9px]" iconSize={17} />
     </div>
   )
 }
@@ -311,7 +308,7 @@ export function NotificationsScreen() {
 }
 
 export function StaffProfileScreen() {
-  const { back, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, signOut, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, notify, setMyPassword } = useDashboard()
+  const { back, role, myName, myPhone, mySubject, myQualification, googleEmail, saveStaffProfile, centreName, centreLogo, loadMyCentre, renameCentre, saveCentreLogo, notify, setMyPassword } = useDashboard()
   const isAdmin = role === 'admin'
   const logoInput = useRef<HTMLInputElement>(null)
   const [logoBusy, runLogo] = useBusy()
@@ -436,10 +433,7 @@ export function StaffProfileScreen() {
         </div>
       )}
 
-      <button onClick={signOut} className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td mt-3 flex items-center justify-center gap-[9px]">
-        <Icon name="signOut" size={17} color="var(--color-td-red)" />
-        Sign out
-      </button>
+      <SignOutButton className="w-full td-danger text-td-small font-semibold p-[15px] rounded-td mt-3 flex items-center justify-center gap-[9px]" iconSize={17} />
     </div>
   )
 }

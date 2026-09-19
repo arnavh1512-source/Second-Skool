@@ -4,6 +4,7 @@ import { useRef, useCallback, useState, useEffect } from 'react'
 import { useDashboard, type Screen, type Tab } from '../store'
 import { whatsappShareUrl } from '../lib/share'
 import { Icon } from './Icon'
+import { queuedMarkCount } from '../lib/att-queue'
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
@@ -331,6 +332,32 @@ export function ConfirmDialog({ open, title, body, confirmLabel, onConfirm, onCa
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * Sign-out for staff. Signing out clears attendance still waiting for a
+ * connection, so when there is any, it asks first instead of losing a register.
+ */
+export function SignOutButton({ className, iconSize }: { className: string; iconSize: number }) {
+  const { signOut, attQueue } = useDashboard()
+  const [asking, setAsking] = useState(false)
+  const pending = queuedMarkCount(attQueue)
+  return (
+    <>
+      <button onClick={() => pending ? setAsking(true) : signOut()} className={className}>
+        <Icon name="signOut" size={iconSize} color="var(--color-td-red)" />
+        Sign out
+      </button>
+      <ConfirmDialog
+        open={asking}
+        title="Sign out and lose unsynced attendance?"
+        body={`Attendance marks not yet synced: ${pending}. Signing out deletes them from this phone — connect to the internet first to keep them.`}
+        confirmLabel="Sign out anyway"
+        onConfirm={() => { setAsking(false); signOut() }}
+        onCancel={() => setAsking(false)}
+      />
+    </>
   )
 }
 

@@ -246,7 +246,7 @@ export function LoginScreen() {
           <div className="flex flex-col gap-3 mt-6">
             <div>
               <label htmlFor="reg-code" className="td-label">Student code <span className="text-td-red">*</span></label>
-              <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9Q" className="td-field td-num tracking-[.08em] font-medium" />
+              <input id="reg-code" required aria-required="true" aria-describedby="reg-code-hint" value={stuSignup.joinCode} onChange={e => setStuSignup({ joinCode: e.target.value.toUpperCase() })} placeholder="e.g. 7X2K9QMP" className="td-field td-num tracking-[.08em] font-medium" />
               <div id="reg-code-hint" className="text-td-caption text-td-subtle mt-1">The code your teacher shared with you to register.</div>
             </div>
             <div>

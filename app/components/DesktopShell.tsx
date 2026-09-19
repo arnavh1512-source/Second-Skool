@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useDashboard, initials, type Screen, type Tab } from '../store'
 import { Icon, type IconName } from './Icon'
+import { SignOutButton } from './Shell'
 
 // Desktop breakpoint (lg). Starts false so SSR/hydration match the phone
 // layout; the media query resolves during the auth-loading phase, well before
@@ -45,7 +46,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 function Sidebar() {
-  const { role, go, signOut, centreName, centreLogo, myName, googleEmail, staffList, pendingStudents, studentDevices, loadMyCentre } = useDashboard()
+  const { role, go, centreName, centreLogo, myName, googleEmail, staffList, pendingStudents, studentDevices, loadMyCentre } = useDashboard()
   const isAdmin = role === 'admin'
   useEffect(() => { if (!centreName) loadMyCentre() }, [centreName, loadMyCentre])
   const name = myName || googleEmail?.split('@')[0] || (isAdmin ? 'Head teacher' : 'Teacher')
@@ -113,10 +114,7 @@ function Sidebar() {
         {/* On a phone this lives on More; the desktop shell has no More, so
             without this row a laptop user has no way to report anything. */}
         <NavRow item={{ icon: 'warning', label: 'Report a problem', screen: 'support' }} />
-        <button onClick={signOut} className="w-full td-danger text-td-small font-semibold min-h-11 py-2.5 rounded-td flex items-center justify-center gap-2 mt-1">
-          <Icon name="signOut" size={16} color="var(--color-td-red)" />
-          Sign out
-        </button>
+        <SignOutButton className="w-full td-danger text-td-small font-semibold min-h-11 py-2.5 rounded-td flex items-center justify-center gap-2 mt-1" iconSize={16} />
       </div>
     </aside>
   )

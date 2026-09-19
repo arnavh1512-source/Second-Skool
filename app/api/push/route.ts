@@ -10,6 +10,7 @@ export const runtime = 'nodejs'
 // Per-caller rate limit: 30 sends/min. Shared across serverless instances when
 // Upstash is configured; falls back to per-instance in-memory otherwise.
 const RATE = { limit: 30, windowMs: 60_000 }
+const IP_RATE = { limit: 60, windowMs: 60_000 }
 
 export async function POST(req: NextRequest) {
   if (!adminConfigured() || !pushConfigured()) return NextResponse.json({ error: 'not configured' }, { status: 500 })
@@ -20,6 +21,10 @@ export async function POST(req: NextRequest) {
     logError('push.unauthorized', { reason: 'no_token' })
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
+  // Per-IP limit before the token is checked, so a flood of junk tokens costs
+  // neither an auth round trip nor a log line each.
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  if (await rateLimit(`push-ip:${ip}`, IP_RATE.limit, IP_RATE.windowMs)) return NextResponse.json({ error: 'too many requests — slow down' }, { status: 429 })
   const admin = adminClient()
   const { data: userData, error: authErr } = await admin.auth.getUser(token)
   const uid = userData.user?.id
@@ -37,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
   if (await rateLimit(uid, RATE.limit, RATE.windowMs)) return NextResponse.json({ error: 'too many requests — slow down' }, { status: 429 })
-  const { data: me } = await admin.from('profiles').select('centre_id, staff_status').eq('id', uid).single()
+  const { data: me } = await admin.from('profiles').select('centre_id, staff_status, full_name').eq('id', uid).single()
   const centre = me?.centre_id
   if (!centre) return NextResponse.json({ error: 'no centre' }, { status: 403 })
 
@@ -78,7 +83,10 @@ export async function POST(req: NextRequest) {
   // their own name on a join request they are waiting for is just noise.
   const { sent, undelivered } = await deliver(admin, [
     { subs: studentSubs, payload: JSON.stringify({ ...signWithCentre(centreName, title, text ?? ''), url: linkPath, centre: centreName }) },
-    { subs: heads, payload: JSON.stringify({ title, body: text ?? '', url: linkPath, centre: centreName }) },
+    // The head's message is written here, not taken from the caller: a pending
+    // teacher may reach the head before anyone has vetted them, so they get to
+    // pick nothing about what the head's phone says.
+    { subs: heads, payload: JSON.stringify({ title: 'New access request', body: `${me?.full_name || 'A teacher'} is requesting access to your centre.`, url: '/', centre: centreName }) },
   ], centre)
 
   return NextResponse.json({ sent, ...(undelivered ? { undelivered } : {}) })
