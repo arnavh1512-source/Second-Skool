@@ -86,7 +86,7 @@ export function AttendanceScreen() {
   // What the register looked like when she last seeded or saved it, so leaving
   // a class can tell her taps apart from what the centre already has.
   const baseline = useRef<Record<string, string>>({})
-  const [leaving, setLeaving] = useState<string | null>(null)
+  const [leaving, setLeaving] = useState<(() => void) | null>(null)
   useEffect(() => {
     if (!ready) return
     const seedKey = `${day}|${selClass}`
@@ -96,19 +96,22 @@ export function AttendanceScreen() {
     set({ attClass: selClass, att: baseline.current })
   }, [ready, day, selClass, roster, recorded, attQueue, set])
   const switchClass = (name: string) => set({ attClass: name, att: {} })
-  const pickClass = (name: string) => {
-    if (name === selClass) return
+  // Every way off this register (another class, another day, Back) reseeds it,
+  // so each one asks first when marks are unsaved.
+  const guard = (leave: () => void) => {
     const unsaved = roster.some(s => att[studentKey(s)] !== baseline.current[studentKey(s)])
-    if (unsaved) setLeaving(name)
-    else switchClass(name)
+    if (unsaved) setLeaving(() => leave)
+    else leave()
   }
+  const pickClass = (name: string) => { if (name !== selClass) guard(() => switchClass(name)) }
+  const pickDay = (d: string) => guard(() => { setDay(d); setLoadFailed(false) })
   const absentCount = roster.reduce((a, s) => a + (att[studentKey(s)] === 'absent' ? 1 : 0), 0)
   const presentCount = roster.length - absentCount
 
   return (
     <div className="td-screen td-wide">
       <div className="flex items-center gap-3.5 mb-[18px]">
-        <button onClick={back} aria-label="Back" className="td-icon-btn shrink-0">
+        <button onClick={() => guard(back)} aria-label="Back" className="td-icon-btn shrink-0">
           <Icon name="back" size={18} color="var(--color-td-dark)" />
         </button>
         <div>
@@ -129,11 +132,11 @@ export function AttendanceScreen() {
           max={today}
           min={isoDay(earliestMarkableDay(new Date()))}
           disabled={!online}
-          onChange={e => { setDay(e.target.value || today); setLoadFailed(false) }}
+          onChange={e => pickDay(e.target.value || today)}
           className="td-num border border-td-border bg-td-card rounded-td px-3 py-2 min-h-11 text-td-small text-td-dark disabled:opacity-60"
         />
         {correcting && (
-          <button onClick={() => { setDay(today); setLoadFailed(false) }} className="td-plain text-td-small font-semibold text-td-dark underline min-h-11 cursor-pointer">
+          <button onClick={() => pickDay(today)} className="td-plain text-td-small font-semibold text-td-dark underline min-h-11 cursor-pointer">
             Back to today
           </button>
         )}
@@ -190,7 +193,7 @@ export function AttendanceScreen() {
             title={`Leave ${selClass} without saving?`}
             body="The marks you changed in this class are not saved yet and will be lost."
             confirmLabel="Leave without saving"
-            onConfirm={() => { if (leaving) switchClass(leaving); setLeaving(null) }}
+            onConfirm={() => { leaving?.(); setLeaving(null) }}
             onCancel={() => setLeaving(null)}
           />
           <div className="flex flex-wrap gap-[7px] mb-5">

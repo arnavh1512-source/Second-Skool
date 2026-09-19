@@ -34,7 +34,7 @@ export function FeesScreen() {
   const [openFees, setOpenFees] = useState<string | null>(null)
   const [confirmFee, setConfirmFee] = useState<{ id: string; studentId: string; student: string; label: string } | null>(null)
   const [confirmPlan, setConfirmPlan] = useState<{ planId: string; studentId: string; student: string; count: number } | null>(null)
-  const [confirmPaid, setConfirmPaid] = useState<{ key: string; student: string; amount: number } | null>(null)
+  const [confirmPaid, setConfirmPaid] = useState<{ key: string; student: string; amount: number; undo?: boolean } | null>(null)
   const [confirmAlert, setConfirmAlert] = useState(false)
   // Fees are chased one class at a time — a class shares a fee amount, a
   // parent group and usually a collection day. The two totals follow the chip
@@ -100,13 +100,16 @@ export function FeesScreen() {
         onCancel={() => setConfirmPlan(null)}
       />
       {/* Paid is what the parent sees. A mis-tap here tells a family their
-          money arrived when it did not, so it asks first. Back to Due stays one tap. */}
+          money arrived when it did not, so it asks first. So does taking it back,
+          which tells the same family they owe money again. */}
       <ConfirmDialog
         open={!!confirmPaid}
         tone="primary"
-        title="Mark as collected?"
-        body={`Mark ${rupee(confirmPaid?.amount ?? 0)} from ${confirmPaid?.student ?? ''} as collected? Their parent will see it as paid.`}
-        confirmLabel="Mark collected"
+        title={confirmPaid?.undo ? 'Mark as not paid?' : 'Mark as collected?'}
+        body={confirmPaid?.undo
+          ? `${confirmPaid.student}'s fee goes back to due. Their parent will see it as owed again.`
+          : `Mark ${rupee(confirmPaid?.amount ?? 0)} from ${confirmPaid?.student ?? ''} as collected? Their parent will see it as paid.`}
+        confirmLabel={confirmPaid?.undo ? 'Mark not paid' : 'Mark collected'}
         onConfirm={() => { const t = confirmPaid; setConfirmPaid(null); if (t) toggleFeeStatus(t.key) }}
         onCancel={() => setConfirmPaid(null)}
       />
@@ -249,7 +252,7 @@ export function FeesScreen() {
                   </button>
                   <div className="shrink-0 text-right">
                     <div className="td-num text-td-body font-semibold text-td-dark">{rupee((d.feeDue ?? 0) > 0 ? d.feeDue! : d.feeCollected ?? 0)}</div>
-                    <button onClick={() => d.feeStatus === 'Paid' ? toggleFeeStatus(studentKey(d)) : setConfirmPaid({ key: studentKey(d), student: d.name, amount: d.feeDue ?? 0 })} aria-label={`${d.name}: ${d.feeStatus}, tap to change`} className={`td-tag mt-1 px-[7px] py-[3px] border-none cursor-pointer ${feeTag(d.feeStatus)}`}>{d.feeStatus}</button>
+                    <button onClick={() => setConfirmPaid({ key: studentKey(d), student: d.name, amount: d.feeDue ?? 0, undo: d.feeStatus === 'Paid' })} aria-label={`${d.name}: ${d.feeStatus}, tap to change`} className={`td-tag mt-1 px-[7px] py-[3px] border-none cursor-pointer ${feeTag(d.feeStatus)}`}>{d.feeStatus}</button>
                   </div>
                 </div>
 

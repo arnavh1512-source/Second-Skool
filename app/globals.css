@@ -74,7 +74,8 @@
      of six and three, so a reskin had to touch 600 call sites instead of one
      block. No line-height companions on purpose: the arbitrary sizes these
      replace set font-size alone, and a companion would move every row. */
-  --text-td-caption: 12px;
+  --text-td-label: 12px;
+  --text-td-caption: 13px;
   --text-td-small: 14px;
   --text-td-body: 15px;
   --text-td-title: 18px;
@@ -111,7 +112,7 @@
 
   --color-td-primary: #a6b2ee;
   --color-td-green: #3fa873;
-  --color-td-red: #e8695e;
+  --color-td-red: #ec7468;
   --color-td-amber: #e0a94a;
 
   --color-td-bg: #15171a;
@@ -127,7 +128,7 @@
   --color-td-dark: #f2f3f0;
   --color-td-text: #c9cdd2;
   --color-td-muted: #9098a1;
-  --color-td-subtle: #838a93;
+  --color-td-subtle: #8e959e;
 
   --color-td-tint-blue: #1e2438;
   --color-td-tint-green: #143024;
@@ -203,7 +204,7 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 
 /* The one section heading in the app: the label above a list or a card group,
    set as a register's column head - a heavy rule above, a hairline below. */
-.td-h2 { border-top: 2px solid var(--color-td-rule); border-bottom: 1px solid var(--color-td-border); padding: 6px 0; font-size: var(--text-td-caption); line-height: 1rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-td-text); margin-bottom: 12px; }
+.td-h2 { border-top: 2px solid var(--color-td-rule); border-bottom: 1px solid var(--color-td-border); padding: 6px 0; font-size: var(--text-td-label); line-height: 1rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-td-text); margin-bottom: 12px; }
 
 /* The two halves of every form row in the app, written out 120-odd times
    before this. The field owns its size and fill: this rule is unlayered, so a
@@ -240,7 +241,7 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
 
 /* The small solid button that lives in a card header, as opposed to
    PrimaryButton at the foot of a form. */
-.td-btn-sm { border: none; background: var(--color-td-dark); color: var(--color-td-bg); font-size: var(--text-td-small); font-weight: 600; padding: 10px 16px; border-radius: var(--radius-td); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.td-btn-sm { border: none; background: var(--color-td-dark); color: var(--color-td-bg); font-size: var(--text-td-small); font-weight: 600; padding: 10px 16px; min-height: 44px; border-radius: var(--radius-td); cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
 /* Every Remove / Delete / Sign out button: the outlined red one that asks to be
    read twice. Only the colours and the pointer are here - these come in five
@@ -282,6 +283,7 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
    still wins; mouse and touch taps never trigger :focus-visible on buttons. */
 @layer base {
   :focus-visible { outline: 2px solid var(--color-td-primary); outline-offset: 2px; }
+  ::placeholder { color: var(--color-td-subtle); opacity: 1; }
 }
 
 /* Shapes that were copy-pasted onto three or more elements. Layered, unlike the
@@ -296,15 +298,15 @@ option { background-color: var(--color-td-card); color: var(--color-td-dark); }
   /* The square header button: back, bell, theme. */
   .td-icon-btn { width: 44px; height: 44px; border-radius: var(--radius-td); border: 1px solid var(--color-td-border); background: var(--color-td-card); display: flex; align-items: center; justify-content: center; cursor: pointer; }
   /* An unread count. */
-  .td-count { min-width: 20px; height: 20px; padding-inline: 6px; border-radius: 9999px; background: var(--color-td-red); color: var(--color-td-on-solid); font-size: var(--text-td-caption); font-weight: 600; font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
+  .td-count { min-width: 20px; height: 20px; padding-inline: 6px; border-radius: 9999px; background: var(--color-td-red); color: var(--color-td-on-solid); font-size: var(--text-td-label); font-weight: 600; font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; }
   /* A short status or type label; its colour comes from the call site. */
-  .td-tag { padding: 4px 8px; border-radius: 2px; font-family: var(--font-mono); font-size: var(--text-td-caption); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .td-tag { padding: 4px 8px; border-radius: 2px; font-family: var(--font-mono); font-size: var(--text-td-label); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
   /* A number over its label. */
   .td-stat { background: var(--color-td-card); border: 1px solid var(--color-td-border); border-radius: var(--radius-td); padding: 14px; text-align: center; }
   /* The one big number a screen is about: attendance, collected, pending. */
   .td-hero { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 40px; line-height: 40px; font-weight: 600; letter-spacing: -.03em; color: var(--color-td-dark); }
   /* The small caps label over a hero or a card. */
-  .td-eyebrow { font-size: var(--text-td-caption); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-td-muted); }
+  .td-eyebrow { font-size: var(--text-td-label); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-td-muted); }
   /* A filter toggle; aria-pressed carries the state so it reads out too. */
   .td-chip { flex-shrink: 0; font-size: var(--text-td-small); font-weight: 500; padding: 12px 16px; min-height: 44px; border-radius: 9999px; cursor: pointer; border: 1px solid var(--color-td-border); background: var(--color-td-card); color: var(--color-td-text); }
   .td-chip[aria-pressed='true'] { font-weight: 600; background: var(--color-td-dark); color: var(--color-td-bg); border-color: var(--color-td-dark); }

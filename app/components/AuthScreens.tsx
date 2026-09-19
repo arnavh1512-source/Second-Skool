@@ -170,6 +170,7 @@ export function LoginScreen() {
 
           <div className="td-h2 mt-8 mb-4">Staff</div>
           {!standalone && <button onClick={signInWithGoogle} className="w-full border border-td-border bg-td-card rounded-td px-4 py-3.5 min-h-[52px] flex items-center justify-center gap-[11px] cursor-pointer shadow-td-card">
+            {/* Google's brand colours, fixed by its sign-in guidelines: the one place a hex belongs in a component. */}
             <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h11.8c-.5 2.7-2 5-4.4 6.6v5.5h7.1c4.1-3.8 6.6-9.4 6.6-16.1z"/><path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.4l-7.1-5.5c-2 1.3-4.5 2.1-7.4 2.1-5.7 0-10.5-3.8-12.2-9H4.5v5.7C8.1 41.1 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.8 28.2c-.4-1.3-.7-2.7-.7-4.2s.2-2.9.7-4.2v-5.7H4.5C3 17.3 2.2 20.6 2.2 24s.8 6.7 2.3 9.9l7.3-5.7z"/><path fill="#EA4335" d="M24 10.8c3.2 0 6.1 1.1 8.4 3.3l6.3-6.3C34.9 4.1 29.9 2 24 2 15.4 2 8.1 6.9 4.5 14.1l7.3 5.7c1.7-5.2 6.5-9 12.2-9z"/></svg>
             <span className="text-td-body font-semibold text-td-dark">Continue with Google</span>
           </button>}
@@ -418,7 +419,7 @@ export function NotificationGateScreen() {
           <div className="text-td-title td-strong tracking-[0.15em] mt-1">{code}</div>
         </div>
       )}
-      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-semibold py-3 cursor-pointer">Sign out</button>
+      <button onClick={signOut} className="td-plain mt-auto text-td-small text-td-muted font-semibold py-3 min-h-11 cursor-pointer">Sign out</button>
     </GateNotice>
   )
 }
@@ -468,7 +469,7 @@ export function StuPendingScreen() {
       )}
 
       <button onClick={checkNow} disabled={busy} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td cursor-pointer mt-6 disabled:opacity-60">{busy ? 'Checking…' : 'Check approval'}</button>
-      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer mt-2">Use a different code</button>
+      <button onClick={signOut} className="td-plain text-td-small text-td-muted font-semibold py-3 min-h-11 cursor-pointer mt-2">Use a different code</button>
     </GateNotice>
   )
 }
@@ -554,7 +555,7 @@ export function ProfileSetupScreen() {
         <PrimaryButton onClick={submit}>{busy ? 'Saving…' : 'Continue'}</PrimaryButton>
       </div>
 
-      <button onClick={signOut} className="td-plain mt-auto text-td-caption text-td-muted font-semibold py-3 cursor-pointer">Sign out</button>
+      <button onClick={signOut} className="td-plain mt-auto text-td-small text-td-muted font-semibold py-3 min-h-11 cursor-pointer">Sign out</button>
     </div>
   )
 }
@@ -617,7 +618,7 @@ export function RegisterScreen() {
 
       <div className="mt-auto pt-6 flex flex-col items-center">
         <HelpLine />
-        <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer">Sign out</button>
+        <button onClick={signOut} className="td-plain text-td-small text-td-muted font-semibold py-3 min-h-11 cursor-pointer">Sign out</button>
       </div>
     </div>
   )
@@ -664,7 +665,7 @@ export function PendingScreen() {
       <button onClick={checkAgain} disabled={checking} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td cursor-pointer mt-7 disabled:opacity-60">{checking ? 'Checking…' : 'Check again'}</button>
       {stillWaiting && <p role="status" className="text-td-small text-td-muted mt-3">Still waiting. We&apos;ll let you in the moment they approve.</p>}
       <HelpLine />
-      <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer mt-2">Sign out</button>
+      <button onClick={signOut} className="td-plain text-td-small text-td-muted font-semibold py-3 min-h-11 cursor-pointer mt-2">Sign out</button>
     </GateNotice>
   )
 }
@@ -686,7 +687,7 @@ export function DeniedScreen() {
           <div className="td-sub max-w-[300px]">This account isn&apos;t part of a centre yet. Enter a join code to request access, or sign out and use a student code instead.</div>
           <button onClick={() => setMode('join')} className="td-pill text-td-body font-semibold py-[13px] px-8 rounded-td cursor-pointer mt-7">Enter a join code</button>
           <HelpLine />
-          <button onClick={signOut} className="td-plain text-td-caption text-td-muted font-semibold py-3 cursor-pointer mt-2">Sign out</button>
+          <button onClick={signOut} className="td-plain text-td-small text-td-muted font-semibold py-3 min-h-11 cursor-pointer mt-2">Sign out</button>
         </>
       )}
 
